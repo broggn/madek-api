@@ -11,17 +11,22 @@
 
 (def SUPPORTED_META_DATA_TYPES
   #{
-      "MetaDatum::Groups"
+      "MetaDatum::Groups" ; old: migrated to: people
       "MetaDatum::JSON"
-      "MetaDatum::Keywords"
-      "MetaDatum::Licenses"
-      ;"MetaDatum::MediaEntry"
+      "MetaDatum::Keywords" ; TODO Frage: feature multi language ?
+      "MetaDatum::Licenses" ; old: migrated to: keywords
+      ;"MetaDatum::MediaEntry" ; TODO reintegrate
       "MetaDatum::People"
-      "MetaDatum::Roles"
+      "MetaDatum::Roles" ; are multi language via h-store
       "MetaDatum::Text"
+      ; TODO future: check if multi-language implementation
+      ; is possible with new API2
+      ; and backwards compatible with current web-app
+      ; and does not require sql schema changes.
+      ;"MetaDatum::TextML"
       "MetaDatum::TextDate"
-      "MetaDatum::Users"
-      "MetaDatum::Vocables"
+      "MetaDatum::Users" ; old: migrated to: people
+      "MetaDatum::Vocables" ; old: migrated to: keywords
     })
 
 (def DEFAULT_LOGGING_CONFIG
@@ -35,7 +40,7 @@
 
 (declare DEFAULT_STORAGE_DIR
          FILE_STORAGE_DIR
-         THUMBNAIL_STORAGE_DIR )
+         THUMBNAILS_STORAGE_DIR )
 
 (defn presence [v]
   "Returns nil if v is a blank string. Returns v otherwise."

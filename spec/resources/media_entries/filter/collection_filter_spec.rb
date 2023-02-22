@@ -1,16 +1,17 @@
 require 'spec_helper'
 
 describe 'filtering media entries' do
-  let :media_entries_relation do
-    client.get.relation('media-entries')
-  end
+  #let :media_entries_relation do
+  #  client.get.relation('media-entries')
+  #end
 
   def get_media_entries(filter = nil)
-    media_entries_relation.get(filter).data['media-entries']
+    #media_entries_relation.get(filter).data['media-entries']
+    client.get('/api/media-entries', filter).body['media_entries']
   end
 
   context 'by collection_id' do
-    include_context :json_roa_client_for_authenticated_user do
+    include_context :json_client_for_authenticated_user do
       it 'as single filter option' do
         collection = FactoryBot.create(:collection)
         5.times do
@@ -41,6 +42,7 @@ describe 'filtering media entries' do
 
         response = get_media_entries('collection_id' => collection.id,
                                      'me_get_metadata_and_previews' => true)
+
         expect(response.count).to be == 2
         response.each do |me|
           media_entry = MediaEntry.unscoped.find(me['id'])

@@ -6,16 +6,12 @@
     ))
 
 
-(defn- auth-info [request]
+(defn auth-info [request]
   (if-let [auth-entity (:authenticated-entity request)]
-    {:body (merge {}
+    {:status 200 :body (merge {}
                   (select-keys auth-entity [:type :id :login :created_at :email_address])
                   (select-keys request [:authentication-method :session-expiration-seconds]))}
-    {:status 401}))
-
-(def routes
-  (cpj/routes
-    (cpj/GET "/auth-info" _ auth-info)))
+    {:status 401 :body {:message "Not authorized"}}))
 
 
 ;### Debug ####################################################################

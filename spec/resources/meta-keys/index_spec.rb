@@ -1,9 +1,9 @@
 require 'spec_helper'
 
 describe 'index' do
-  include_context :json_roa_client_for_authenticated_user do
+  include_context :json_client_for_authenticated_user do
     let :meta_keys_resource do
-      json_roa_client.get.relation('meta-keys').get
+      client.get('/api/meta-keys/')
     end
 
     it 'should return 200 with only viewable by public meta-keys' do
@@ -11,8 +11,12 @@ describe 'index' do
       meta_key = FactoryBot.create(:meta_key,
                                     id: "#{vocab.id}:#{Faker::Lorem.word}",
                                     vocabulary: vocab)
-      expect(meta_keys_resource.response.status).to be == 200
-      expect(meta_keys_resource.data['meta-keys'].count).to be == 0
+      expect(meta_keys_resource.status).to be == 200
+
+      meta_keys_resource.body['meta-keys'].each do |mk|
+        expect(mk['id']).not_to be == meta_key.id
+      end
+
     end
 
     context 'when user is authenticated' do
@@ -26,11 +30,10 @@ describe 'index' do
           Permissions::VocabularyUserPermission.create!(user_id: user.id,
                                                         view: true,
                                                         vocabulary: vocabulary)
-
-          data = client.get.relation('meta-keys').get.data['meta-keys'].first
-
-          expect(data).to have_key 'id'
-          expect(data['id']).to eq meta_key.id
+          data = meta_keys_resource.body['meta-keys'].map{|mk| mk["id"]}
+          expect(data).to include meta_key.id
+          #expect(data).to have_key 'id'
+          #expect(data['id']).to eq meta_key.id
         end
 
         it 'returns meta key in collection through the group permissions' do
@@ -45,10 +48,8 @@ describe 'index' do
                                                          view: true,
                                                          vocabulary: vocabulary)
 
-          data = client.get.relation('meta-keys').get.data['meta-keys'].first
-
-          expect(data).to have_key 'id'
-          expect(data['id']).to eq meta_key.id
+          data = meta_keys_resource.body['meta-keys'].map{|mk| mk["id"]}
+          expect(data).to include meta_key.id
         end
       end
 
@@ -63,9 +64,8 @@ describe 'index' do
                                                         view: false,
                                                         vocabulary: vocabulary)
 
-          data = client.get.relation('meta-keys').get.data['meta-keys']
-
-          expect(data.count).to be_zero
+          data = meta_keys_resource.body['meta-keys'].map{|mk| mk["id"]}
+          expect(data).not_to include meta_key.id
         end
 
         it 'does not return meta key through the group permissions' do
@@ -76,13 +76,12 @@ describe 'index' do
                                         vocabulary: vocabulary)
           group = FactoryBot.create :group
           group.users << user
-          Permissions::VocabularyGroupPermission.create!(group_id: group.id,
-                                                                      view: false,
-                                                                      vocabulary: vocabulary)
+          vgp = Permissions::VocabularyGroupPermission.create!(group_id: group.id,
+                                                               view: false,
+                                                               vocabulary: vocabulary)
 
-          data = client.get.relation('meta-keys').get.data['meta-keys']
-
-          expect(data.count).to be_zero
+          data = meta_keys_resource.body['meta-keys'].map{|mk| mk["id"]}
+          expect(data).not_to include meta_key.id
         end
       end
     end

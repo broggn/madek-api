@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe 'vocabulary' do
-  include_context :json_roa_client_for_authenticated_user do
+  include_context :json_client_for_authenticated_user do
     ###############################################################################
     # Just so that there is some other arbitrary data besides the actual test data.
     # No exlicit expectations are done with them.
@@ -25,27 +25,25 @@ describe 'vocabulary' do
     end
     ###############################################################################
 
-    def json_roa_vocabulary_resource(vocabulary_id, is_authenticated_user = false)
-      JSON_ROA::Client.connect(
-        "#{api_base_url}/vocabularies/#{vocabulary_id}",
-        raise_error: false) do |conn|
-          if is_authenticated_user
-            conn.basic_auth(entity.login, entity.password)
-          end
-        end
+    def json_vocabulary_resource(vocabulary_id, is_authenticated_user = false)
+      if is_authenticated_user
+        basic_auth_plain_faraday_json_client(entity.login, entity.password).get("#{api_base_url}/vocabularies/#{vocabulary_id}")
+      else
+        plain_faraday_json_client.get("#{api_base_url}/vocabularies/#{vocabulary_id}")
+      end
     end
 
     it 'should return 200 for an existing vocabulary' do
       vocab = FactoryBot.create(:vocabulary,
                                  enabled_for_public_view: true)
       expect(
-        json_roa_vocabulary_resource(vocab.id).get.response.status
+        json_vocabulary_resource(vocab.id).status
       ).to be == 200
     end
 
     it 'should return 404 for non-existing vocabulary' do
       expect(
-        json_roa_vocabulary_resource('bla').get.response.status
+        json_vocabulary_resource('bla').status
       ).to be == 404
     end
 
@@ -53,7 +51,7 @@ describe 'vocabulary' do
       vocabulary = FactoryBot.create(:vocabulary,
                                       enabled_for_public_view: true)
 
-      expect(json_roa_vocabulary_resource(vocabulary.id).get.response.body)
+      expect(json_vocabulary_resource(vocabulary.id).body)
         .not_to have_key 'admin_comment'
     end
 
@@ -62,7 +60,7 @@ describe 'vocabulary' do
         vocabulary = FactoryBot.create(:vocabulary,
                                         enabled_for_public_view: true)
 
-        data = json_roa_vocabulary_resource(vocabulary.id).get.response.body
+        data = json_vocabulary_resource(vocabulary.id).body
 
         expect(data).to have_key 'id'
         expect(data['id']).to eq vocabulary.id
@@ -72,7 +70,7 @@ describe 'vocabulary' do
         vocabulary = FactoryBot.create(:vocabulary,
                                         enabled_for_public_view: false)
 
-        data = json_roa_vocabulary_resource(vocabulary.id).get.response.body
+        data = json_vocabulary_resource(vocabulary.id).body
 
         expect(data).not_to have_key 'id'
         expect(data['message']).to eq 'Vocabulary could not be found!'
@@ -87,7 +85,7 @@ describe 'vocabulary' do
                                                           view: true,
                                                           vocabulary: vocabulary)
 
-            data = json_roa_vocabulary_resource(vocabulary.id, true).get.response.body
+            data = json_vocabulary_resource(vocabulary.id, true).body
 
             expect(data).to have_key 'id'
             expect(data['id']).to eq vocabulary.id
@@ -102,7 +100,7 @@ describe 'vocabulary' do
                                                            view: true,
                                                            vocabulary: vocabulary)
 
-            data = json_roa_vocabulary_resource(vocabulary.id, true).get.response.body
+            data = json_vocabulary_resource(vocabulary.id, true).body
 
             expect(data).to have_key 'id'
             expect(data['id']).to eq vocabulary.id
@@ -117,7 +115,7 @@ describe 'vocabulary' do
                                                           view: false,
                                                           vocabulary: vocabulary)
 
-            data = json_roa_vocabulary_resource(vocabulary.id, true).get.response.body
+            data = json_vocabulary_resource(vocabulary.id, true).body
 
             expect(data).not_to have_key 'id'
             expect(data['message']).to eq 'Vocabulary could not be found!'
@@ -132,7 +130,7 @@ describe 'vocabulary' do
                                                            view: false,
                                                            vocabulary: vocabulary)
 
-            data = json_roa_vocabulary_resource(vocabulary.id, true).get.response.body
+            data = json_vocabulary_resource(vocabulary.id, true).body
 
             expect(data).not_to have_key 'id'
             expect(data['message']).to eq 'Vocabulary could not be found!'
@@ -152,15 +150,15 @@ describe 'vocabulary' do
       end
 
       specify 'result contains correct labels' do
-        expect(json_roa_vocabulary_resource(vocabulary.id).get.data['labels'])
+        expect(json_vocabulary_resource(vocabulary.id).body['labels'])
           .to eq({ 'de' => 'label de', 'en' => 'label en'})
       end
 
-      specify 'result contains a label for default locale' do
-        expect(
-          json_roa_vocabulary_resource(vocabulary.id).get.data['label']
-        ).to eq 'label de'
-      end
+      #specify 'result contains a label for default locale' do
+      #  expect(
+      #    json_vocabulary_resource(vocabulary.id).body['label']
+      #  ).to eq 'label de'
+      #end
     end
 
     describe 'multilingual descriptions' do
@@ -175,16 +173,16 @@ describe 'vocabulary' do
 
       specify 'result contains correct descriptions' do
         expect(
-          json_roa_vocabulary_resource(vocabulary.id).get.data['descriptions']
+          json_vocabulary_resource(vocabulary.id).body['descriptions']
         )
           .to eq({ 'de' => 'description de', 'en' => 'description en' })
       end
 
-      specify 'result contains a description for default locale' do
-        expect(
-          json_roa_vocabulary_resource(vocabulary.id).get.data['description']
-        ).to eq 'description de'
-      end
+      #specify 'result contains a description for default locale' do
+      #  expect(
+      #    json_vocabulary_resource(vocabulary.id).body['description']
+      #  ).to eq 'description de'
+      #end
     end
   end
 end

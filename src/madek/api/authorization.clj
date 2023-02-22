@@ -1,16 +1,15 @@
 (ns madek.api.authorization
   (:require
-    [clojure.java.jdbc :as jdbc]
     [clojure.tools.logging :as logging]
     [logbug.catcher :as catcher]
     [logbug.debug :as debug]
     [logbug.thrown :as thrown]
     [madek.api.resources.collections.permissions :as collection-perms :only [viewable-by-auth-entity?]]
     [madek.api.resources.media-entries.permissions :as media-entry-perms :only [viewable-by-auth-entity?]]
-    [madek.api.utils.rdbms :as rdbms]
-    ))
+    [madek.api.resources.media-resources.permissions :as mr-permissions]
+  ))
 
-(defn authorized? [auth-entity resource]
+(defn authorized-view? [auth-entity resource]
   (case (:type resource)
     "MediaEntry" (media-entry-perms/viewable-by-auth-entity?
                    resource auth-entity)
@@ -18,9 +17,52 @@
                    resource auth-entity)
     false))
 
-(defn authorized?! [request resource]
-  (or authorized?
+(defn authorized-download? [auth-entity resource]
+  (case (:type resource)
+    "MediaEntry" (media-entry-perms/downloadable-by-auth-entity?
+                  resource auth-entity)
+    false))
+
+(defn authorized-edit-metadata? [auth-entity resource]
+  (let [auth-res (case (:type resource)
+                   "MediaEntry" (media-entry-perms/editable-meta-data-by-auth-entity?
+                                 resource auth-entity)
+                   "Collection" (collection-perms/editable-meta-data-by-auth-entity?
+                                 resource auth-entity)
+                   ;"Collection" (mr-permissions/permission-by-auth-entity?
+                   ;              resource auth-entity :edit_metadata_and_relations "collection")
+                   false)]
+    (logging/info "auth-edit-metadata" auth-res)
+    auth-res))
+
+(defn authorized-edit-permissions? [auth-entity resource]
+  (case (:type resource)
+    "MediaEntry" (media-entry-perms/editable-permissions-by-auth-entity?
+                  resource auth-entity)
+    "Collection" (collection-perms/editable-permissions-by-auth-entity?
+                  resource auth-entity)
+    false))
+
+(defn authorized-view?! [request resource]
+  (or authorized-view?
       (throw (ex-info "Forbidden" {:status 403}))))
+
+(defn authorized? [auth-entity resource scope]
+  (let [auth-res (case scope
+                   :view (authorized-view? auth-entity resource)
+                   :download (authorized-download? auth-entity resource)
+                   :edit-md (authorized-edit-metadata? auth-entity resource)
+                   :edit-perm (authorized-edit-permissions? auth-entity resource)
+                   false)]
+    (logging/info 'authorized? scope auth-res)
+    auth-res)
+  )
+  
+(defn wrap-authorized-user [handler]
+  (fn [request]
+    (if-let [id (-> request :authenticated-entity :id)]
+      (handler request)
+      {:status 401 :body {:message "Not authorized. Please login."}})))
 
 (def destructive-methods #{:post :put :delete})
 

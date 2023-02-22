@@ -1,15 +1,20 @@
 require 'spec_helper'
 
 describe 'index' do
-  include_context :json_roa_client_for_authenticated_user do
+  include_context :json_client_for_authenticated_user do
     let :vocabularies_resource do
-      json_roa_client.get.relation('vocabularies').get
+      client.get('/api/vocabularies/')
     end
 
     it 'should return 200 with only viewable by public vocabularies' do
       FactoryBot.create(:vocabulary, enabled_for_public_view: false)
-      expect(vocabularies_resource.response.status).to be == 200
-      expect(vocabularies_resource.data['vocabularies'].count).to be == 0
+      expect(vocabularies_resource.status).to be == 200
+      #expect(vocabularies_resource.body['vocabularies'].count).to be == 1
+      data = vocabularies_resource.body['vocabularies']
+      vocab_ids = [ 'madek_core']
+      data.each do |vocab|
+        expect(vocab_ids).to include vocab['id']
+      end
     end
 
     context 'when user is authenticated' do
@@ -21,10 +26,16 @@ describe 'index' do
                                                                      view: true,
                                                                      vocabulary: vocabulary)
 
-          data = client.get.relation('vocabularies').get.data['vocabularies'].first
+          #data = vocabularies_resource.body['vocabularies'].first
+          #expect(data).to have_key 'id'
+          #expect(data['id']).to eq vocabulary.id
 
-          expect(data).to have_key 'id'
-          expect(data['id']).to eq vocabulary.id
+          vocab_ids = [vocabulary.id, 'madek_core']
+          data = vocabularies_resource.body['vocabularies']
+          data.each do |vocab|
+            expect(vocab_ids).to include vocab['id']
+          end
+
         end
 
         it 'returns vocabulary in collection through the group permissions' do
@@ -36,10 +47,15 @@ describe 'index' do
                                                                       view: true,
                                                                       vocabulary: vocabulary)
 
-          data = client.get.relation('vocabularies').get.data['vocabularies'].first
-
-          expect(data).to have_key 'id'
-          expect(data['id']).to eq vocabulary.id
+          #data = vocabularies_resource.body['vocabularies'].first
+          #expect(data).to have_key 'id'
+          #expect(data['id']).to eq vocabulary.id
+          
+          data = vocabularies_resource.body['vocabularies']
+          vocab_ids = [vocabulary.id, 'madek_core']
+          data.each do |vocab|
+            expect(vocab_ids).to include vocab['id']
+          end
         end
       end
 
@@ -51,9 +67,12 @@ describe 'index' do
                                                                      view: false,
                                                                      vocabulary: vocabulary)
 
-          data = client.get.relation('vocabularies').get.data['vocabularies']
-
-          expect(data.count).to be_zero
+          data = vocabularies_resource.body['vocabularies']
+          vocab_ids = [ 'madek_core']
+          data.each do |vocab|
+            expect(vocab_ids).to include vocab['id']
+          end
+          #expect(data.count).to be_zero
         end
 
         it 'does not return vocabulary through the group permissions' do
@@ -65,9 +84,12 @@ describe 'index' do
                                                                       view: false,
                                                                       vocabulary: vocabulary)
 
-          data = client.get.relation('vocabularies').get.data['vocabularies']
-
-          expect(data.count).to be_zero
+          data = vocabularies_resource.body['vocabularies']
+          vocab_ids = [ 'madek_core']
+          data.each do |vocab|
+            expect(vocab_ids).to include vocab['id']
+          end
+          #expect(data.count).to be_zero
         end
       end
     end

@@ -12,7 +12,9 @@
     [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
     [madek.api.utils.sql :as sql]
     [ring.util.response :as ring-response]
-    ))
+    [cheshire.core :as json]
+    
+    [madek.api.resources.shared :as sd]))
 
 ;### people ###################################################################
 
@@ -32,7 +34,7 @@
                   (sql/merge-where
                     [:= :meta_data_people.meta_datum_id (:id meta-datum)])
                   (sql/format))]
-    (jdbc/query (rdbms/get-ds) query)))
+    (jdbc/query (get-ds) query)))
 
 
 
@@ -50,7 +52,7 @@
                   (sql/merge-where
                     [:= :meta_data_roles.meta_datum_id (:id meta-datum)])
                   (sql/format))]
-    (jdbc/query (rdbms/get-ds) query))
+    (jdbc/query (get-ds) query))
   )
 
 (defn- find-meta-datum-role
@@ -60,13 +62,14 @@
                   (sql/merge-where
                     [:= :meta_data_roles.id id])
                   (sql/format))]
-    (first (jdbc/query (rdbms/get-ds) query))))
+    (first (jdbc/query (get-ds) query))))
 
 (defn- prepare-meta-datum [meta-datum]
   (merge (select-keys meta-datum [:id :meta_key_id :type])
          {:value (let [meta-datum-type (:type meta-datum)]
                    (case meta-datum-type
-                     "MetaDatum::JSON" (:json meta-datum)
+                     "MetaDatum::JSON"  (json/generate-string (:json meta-datum) {:escape-non-ascii false})
+                     ; TODO meta-data json value transport Q as string
                      "MetaDatum::Text" (:string meta-datum)
                      "MetaDatum::TextDate" (:string meta-datum)
                      (map #(select-keys % [:id])
@@ -87,9 +90,12 @@
   ))
 
 (defn get-meta-datum [request]
-  (let [meta-datum (:meta-datum request)]
-    {:body (prepare-meta-datum meta-datum)}))
+  (let [meta-datum (:meta-datum request)
+        result (prepare-meta-datum meta-datum)]
+    (logging/info "get-meta-datum" "\nresult\n" result)
+    (sd/response_ok result)))
 
+; TODO Q? why no response status
 (defn get-meta-datum-data-stream [request]
   (let [meta-datum (:meta-datum request)
         content-type (case (-> request :meta-datum :type)
@@ -102,10 +108,12 @@
                       (ring-response/header "Content-Type" content-type))
       :else {:body value})))
 
-(defn get-meta-datum-role
-  [request]
-  (let [meta-datum-role-id (-> request :params :meta_datum_id)]
-    {:body (prepare-meta-datum-role meta-datum-role-id)}))
+
+(defn handle_get-meta-datum-role
+  [req]
+  (let [id (-> req :parameters :path :meta_datum_id)
+        result (prepare-meta-datum-role id)]
+    (sd/response_ok result)))
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

@@ -1,36 +1,29 @@
 (ns madek.api.resources.keywords.keyword
   (:require
     [clojure.java.jdbc :as jdbc]
-    [clojure.tools.logging :as logging]
-    [logbug.debug :as debug]
     [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
     [madek.api.utils.sql :as sql]
+    [madek.api.resources.shared :as sd] 
+    [madek.api.pagination :as pagination]
     ))
 
-(defn find-keyword-sql
-  [id]
-  (->
-    (sql/select :*)
-    (sql/from :keywords)
-    (sql/merge-where [:= :keywords.id id])
-    sql/format))
 
-(defn get-keyword
-  [request]
-  (let [id
-          (->
-            request
-            :params
-            :id)
-        keyword (first (jdbc/query (rdbms/get-ds) (find-keyword-sql id)))]
-    {:body
-       (->
-         keyword
-         (select-keys
-           [:id :meta_key_id :term :description :external_uris :rdf_class
-            :created_at])
-         (assoc ; support old (singular) version of field
-           :external_uri (first (keyword :external_uris))))}))
+(defn db-keywords-get-one [id]
+  (sd/query-eq-find-one :keywords :id id))
+
+(defn db-keywords-query [query]
+  (let [dbq (->
+             (sql/select :*)
+             (sql/from :keywords)
+             (sd/build-query-param query :id)
+             (sd/build-query-param query :rdf_class)
+             (sd/build-query-param-like query :meta_key_id)
+             (sd/build-query-param-like query :term)
+             (sd/build-query-param-like query :description)
+             (pagination/add-offset-for-honeysql query)
+             sql/format)]
+    ; (logging/info "db-keywords-query" dbq)
+    (jdbc/query (get-ds) dbq)))
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)
