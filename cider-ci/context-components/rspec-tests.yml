@@ -1,0 +1,37 @@
+generate_tasks:
+  include_match: spec/.*_spec.rb
+
+task_defaults:
+  include:
+    - cider-ci/task-components/service.yml
+    - cider-ci/task-components/ruby-setup.yml
+    - cider-ci/task-components/configure-database.yml
+    - submodule: [datalayer]
+      path: cider-ci/task-components/database.yml
+    - cider-ci/task-components/env.yml
+
+  ports:
+    API_HTTP_PORT:
+      min: 3100
+      max: 3200
+
+  git_options:
+    submodules:
+      include_match: ^.*$
+
+  trial_attachments:
+    config:
+      content_type: text/yaml
+      include_match: config\/.*\.ya?ml$
+    logs:
+      include_match: logs?\/.*\.log$
+      content_type: text/plain
+
+  scripts:
+
+    test:
+      body: |
+        set -eux
+        ./bin/rspec $CIDER_CI_TASK_FILE
+
+

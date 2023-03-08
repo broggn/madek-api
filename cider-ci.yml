@@ -7,12 +7,12 @@ jobs:
         type: branch
         include_match: ^.+$
     context:
-      include: cider-ci/uberjar.yml
+      include: cider-ci/context-components/uberjar.yml
 
   rspec-tests:
     name: "RSpec Tests"
     context:
-      include: cider-ci/rspec-tests.yml
+      include: cider-ci/context-components/rspec-tests.yml
     depends_on: &UBERJAR
       rspec tests: { type: job, job_key: build-uberjar, states: [passed]}
     run_when: *UBERJAR
@@ -26,6 +26,7 @@ jobs:
     run_when: *DEFAULT_TRIGGERS
     context:
       task_defaults:
+        include: [cider-ci/task-components/env.yml]
         environment_variables:
           GIT_LINEAR_HISTORY_CHECK_START_SHA: d9b3e6a1d0397d7294e85a4a189d86aa843f1dfc
       contexts:
@@ -66,8 +67,9 @@ jobs:
     priority: 999 # "delivery" job = high priority
     context:
       include:
-        - path: cider-ci/context-components/merge-checks.yml
-          submodule: [datalayer]
+        - path: cider-ci/context-components/env.yml
+        - submodule: [datalayer]
+          path: cider-ci/context-components/merge-checks.yml
     depends_on:
       all-tests: {job_key: all-tests, type: job, states: [passed]}
       good to merge of the datalayer: {job_key: good-to-merge, type: job, submodule: [datalayer], states: [passed]}
