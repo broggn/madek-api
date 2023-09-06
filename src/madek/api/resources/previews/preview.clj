@@ -10,17 +10,26 @@
     [madek.api.utils.sql :as sql]
     ))
 
-(defn get-preview [request]
-  (let [id (-> request :params :preview_id)
-        query (-> (sql/select :*)
+(defn db-get-preview [id]
+  (let [query (-> (sql/select :*)
                   (sql/from :previews)
                   (sql/merge-where
-                    [:= :previews.id id])
+                   [:= :previews.id id])
                   (sql/format))]
-    {:body (first (jdbc/query (rdbms/get-ds) query))}))
+    (first (jdbc/query (rdbms/get-ds) query))
+    ))
+
+(defn get-preview [request]
+  (let [id (or (-> request :params :preview_id) (-> request :parameters :path :preview_id))
+        result (db-get-preview id)]
+                  (logging/info "get-preview" "\nid\n" id "\nresult\n" result)
+    {:body result}))
 
 (defn- preview-file-path [preview]
-  (let [filename (:filename preview)
+  (let [; TODO why is this needed for compojure
+        ;filename (:filename preview)
+        ; TODO why is this needed for reitit
+         filename (:filename preview)
         [first-char] filename]
     (clojure.string/join
       (java.io.File/separator)
@@ -29,7 +38,9 @@
 (defn get-preview-file-data-stream [request]
   (catcher/snatch {}
     (when-let [preview (:preview request)]
+      (logging/info "get-preview-file-ds" "\npreview\n" preview)
       (when-let [file-path (preview-file-path preview)]
+        (logging/info "get-preview-file-ds" "\nfilepath\n" file-path)
         (data-streaming/respond-with-file file-path
                                           (:content_type preview))))))
 

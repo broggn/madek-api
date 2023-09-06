@@ -13,7 +13,8 @@
     [logbug.debug :as debug]
     [logbug.thrown :as thrown]
     [taoensso.timbre :refer [debug info warn error spy]]
-    ))
+    
+    [madek.api.resources.shared :as sd]))
 
 (defn- get-session-secret []
   (-> (get-config) :madek_master_secret))
@@ -27,7 +28,7 @@
 (defn- get-madek-session-cookie-name []
   (or (-> (get-config) :madek_session_cookie_name keyword)
       (throw (IllegalStateException.
-               ("The  madek_session_cookie_name is not configured.")))))
+              "The  madek_session_cookie_name is not configured."))))
 
 (defn- session-signature-valid? [user session-object]
   (valid? (-> session-object :signature)
@@ -76,19 +77,21 @@
     (if-let [session-object (decrypt-cookie cookie-value)]
       (if-let [user (-> session-object :user_id get-user)]
         (if-not (session-signature-valid? user session-object)
-          {:status 401 :body "The session is invalid!"}
+          {:status 401 :body {:message "The session is invalid!"}}
           (let [expiration-time (session-expiration-time
                                   session-object (get-validity-duration-secs))
                 now (time/now)]
             (if (time/after? now expiration-time)
-              {:status 401 :body "The session has expired!"}
+              {:status 401 :body {:message "The session has expired!"}}
               (handler (assoc request
                               :authenticated-entity user
+                              ; TODO move into ae
+                              :is_admin (sd/is-admin (:id user))
                               :authentication-method "Session"
                               :session-expiration-seconds
                               (in-seconds now expiration-time))))))
-        {:status 401 :body "The user was not found!"})
-      {:status 401 :body "Decryption of the session cookie failed!"})
+        {:status 401 :body {:message "The user was not found!"}})
+      {:status 401 :body {:message "Decryption of the session cookie failed!"}})
     (handler request)))
 
 (defn wrap [handler]

@@ -23,25 +23,35 @@
 
 ;### query ####################################################################
 
-(def ^:private base-query
-  (-> (sql/select :collections.id, :collections.created_at)
-      (sql/from :collections)))
+(defn ^:private base-query [full-data]
+  (let [toselect (if (true? full-data)
+                   (sql/select :*)
+                   (sql/select :collections.id, :collections.created_at))]
+    (-> toselect
+        (sql/from :collections)))
+  )
 
 (defn- set-order [query query-params]
   (if (some #{"desc"} [(-> query-params :order)])
-    (-> query (sql/order-by [:collections.created-at :desc]))
-    (-> query (sql/order-by [:collections.created-at :asc]))))
+    (-> query (sql/order-by [:collections.created_at :desc]))
+    (-> query (sql/order-by [:collections.created_at :asc]))))
 
+; TODO test query and paging
 (defn- build-query [request]
   (let [query-params (:query-params request)
-        authenticated-entity (:authenticated-entity request)]
-    (-> base-query
-        (set-order query-params)
-        (filter-by-collection-id query-params)
-        (permissions/filter-by-query-params query-params
-                                            authenticated-entity)
-        (pagination/add-offset-for-honeysql query-params)
-        sql/format)))
+        authenticated-entity (:authenticated-entity request)
+        sql-query (-> (base-query (:full_data query-params))
+                      (set-order query-params)
+                      (filter-by-collection-id query-params)
+                      (permissions/filter-by-query-params query-params
+                                                          authenticated-entity)
+                      (pagination/add-offset-for-honeysql query-params)
+                      sql/format)]
+    ;(logging/info "build-query"
+    ;              "\nquery\n" query-params
+    ;              "\nsql query:\n" sql-query)
+    sql-query
+    ))
 
 (defn- query-index-resources [request]
   (jdbc/query (rdbms/get-ds) (build-query request)))

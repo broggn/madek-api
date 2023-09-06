@@ -7,6 +7,7 @@
     [madek.api.resources.vocabularies.permissions :as permissions]
     [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
     [madek.api.utils.sql :as sql]
+    [madek.api.resources.shared :as sd]
     ))
 
 (defn- where-clause
@@ -20,20 +21,28 @@
 
 (defn- base-query
   [user-id]
-  (-> (sql/select :id)
+  (-> (sql/select :*);:id)
       (sql/from :vocabularies)
       (sql/merge-where (where-clause user-id))
       sql/format))
 
 (defn- query-index-resources [request]
   (let [user-id (-> request :authenticated-entity :id)]
-    (jdbc/query (rdbms/get-ds) (base-query user-id))))
+    (jdbc/query (get-ds) (base-query user-id))))
+
+(defn transform_ml [vocab]
+  (assoc vocab
+         :labels (sd/transform_ml (:labels vocab))
+         :descriptions (sd/transform_ml (:descriptions vocab))))
 
 (defn get-index [request]
   (catcher/with-logging {}
-    {:body
-     {:vocabularies
-      (query-index-resources request)}}))
+    (let [db-result (query-index-resources request)
+          result (->> db-result 
+                      (map transform_ml)
+                      (map sd/remove-internal-keys)
+                      )]
+      (sd/response_ok {:vocabularies result}))))
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)
