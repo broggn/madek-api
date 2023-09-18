@@ -75,6 +75,7 @@
 
         (sd/build-query-param-like query-params :name)
         (sd/build-query-param-like query-params :institutional_name)
+        (sd/build-query-param-like query-params :institution)
         (sd/build-query-param-like query-params :searchable)
         (pagination/add-offset-for-honeysql query-params)
         sql/format)))
@@ -93,15 +94,16 @@
    (s/optional-key :type) (s/enum "Group" "AuthenticationGroup" "InstitutionalGroup")
    (s/optional-key :institutional_id) (s/maybe s/Str)
    (s/optional-key :institutional_name) (s/maybe s/Str)
+   (s/optional-key :institution) (s/maybe s/Str)
    (s/optional-key :person_id) (s/maybe s/Uuid)})
 
 (def schema_update-group
-  {(s/optional-key :id) s/Str
+  {
    (s/optional-key :name) s/Str
-   ;:type (s/enum "Group" "AuthenticationGroup" "InstitutionalGroup")
    (s/optional-key :type) (s/enum "Group" "AuthenticationGroup" "InstitutionalGroup")
    (s/optional-key :institutional_id) (s/maybe s/Str)
    (s/optional-key :institutional_name) (s/maybe s/Str)
+   (s/optional-key :institution) (s/maybe s/Str)
    (s/optional-key :person_id) (s/maybe s/Uuid)})
 
 (def schema_export-group
@@ -110,6 +112,7 @@
    (s/optional-key :type) s/Str ; TODO enum
    (s/optional-key :institutional_id) (s/maybe s/Str)
    (s/optional-key :institutional_name) (s/maybe s/Str)
+   (s/optional-key :institution) (s/maybe s/Str)
    (s/optional-key :person_id) (s/maybe s/Uuid)
    (s/optional-key :searchable) s/Str
    })
@@ -147,6 +150,7 @@
    (s/optional-key :type) s/Str
    (s/optional-key :institutional_id) s/Str
    (s/optional-key :institutional_name) s/Str
+   (s/optional-key :institution) s/Str
    (s/optional-key :person_id) s/Uuid
    (s/optional-key :searchable) s/Str
    (s/optional-key :full_data) s/Bool   
@@ -225,7 +229,7 @@
                   :responses {403 {:body s/Any}
                               204 {:body s/Any}}}
 
-         :patch {:summary "Get group by id"
+         :put {:summary "Get group by id"
                  :description "Get group by id. Returns 404, if no such group exists."
                  
                  :content-type "application/json"
@@ -247,8 +251,10 @@
                             :handler group-users/handle_get-group-users
                             :middleware [wrap-authorize-admin!]
                             :coercion reitit.coercion.schema/coercion
-                            :parameters {:path {:group-id s/Str}}
-                            :responses {200 {:body schema_export-group} ; TODO schema
+                            :parameters {:path {:group-id s/Str}
+                                         :query {(s/optional-key :page) s/Int
+                                                 (s/optional-key :count) s/Int}}
+                            :responses {200 {:body {:users [group-users/schema_export-group-user-simple]}} ; TODO schema
                                         404 {:body s/Str}}}
 
           ; TODO works with tests, but not with the swagger ui
@@ -260,11 +266,7 @@
                             :handler group-users/handle_update-group-users
                             :coercion reitit.coercion.schema/coercion
                             :parameters {:path {:group-id s/Str}
-                                         :body {:users
-                                                [s/Any]}}
-                                    ;[{:id s/Str
-                                    ;  :institutional_id s/Str
-                                    ;  :email s/Str}]
+                                         :body group-users/schema_update-group-user-list}
 
                              ;:body {:users [s/Any]}}
                             :responses {200 {:body s/Any} ;groups/schema_export-group}
@@ -278,7 +280,7 @@
                                     :middleware [wrap-authorize-admin!]
                                     :coercion reitit.coercion.schema/coercion
                                     :parameters {:path {:group-id s/Str :user-id s/Str}}
-                                    :responses {200 {:body group-users/schema_export-group-user}
+                                    :responses {200 {:body group-users/schema_export-group-user-simple}
                                                 404 {:body s/Any}}} ; TODO error handling
 
                               :put {:summary "Get group user by group-id and user-id"
@@ -289,7 +291,7 @@
                                     :middleware [wrap-authorize-admin!]
                                     :coercion reitit.coercion.schema/coercion
                                     :parameters {:path {:group-id s/Str :user-id s/Str}}
-                                    :responses {200 {:body group-users/schema_export-group-user-simple}
+                                    :responses {200 {:body {:users [group-users/schema_export-group-user-simple]}}
                                                 404 {:body s/Any}}} ; TODO error handling
 
                               :delete {:summary "Deletes a group-user by group-id and user-id"
@@ -300,7 +302,7 @@
                                        :middleware [wrap-authorize-admin!]
                                        :coercion reitit.coercion.schema/coercion
                                        :parameters {:path {:group-id s/Str :user-id s/Str}}
-                                       :responses {204 {:body s/Any}
+                                       :responses {200 {:body {:users [group-users/schema_export-group-user-simple]}}
                                                    406 {:body s/Str}}}}] ; TODO error handling
 
    ])
