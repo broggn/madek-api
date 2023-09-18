@@ -33,7 +33,11 @@ describe 'generated runs' do
                 " #{client_entity.attributes}"
 
               example.exception.message << "\n  URL: #{post_url} " \
-                " #{client_entity.attributes}"
+                " #{delete_url}"
+              example.exception.message << "\n  Meta-Key #{meta_key} " \
+              " #{meta_key.attributes}"
+
+              
             end
           end
 
