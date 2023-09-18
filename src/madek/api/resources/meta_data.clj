@@ -23,8 +23,16 @@
            (col-key-for-mr-type mr)
            (str (-> mr :id))))
 
+(defn- sql-cls-upd-meta-data [mr mk-id]
+  (let [md-sql (-> (sql/where [:and
+                               [:= :meta_key_id mk-id]
+                               [:= (col-key-for-mr-type mr) (str (-> mr :id))]])
+                   sql/format
+                   sd/hsql-upd-clause-format)]
+    md-sql))
+
         
-(defn sql-cls-upd-meta-data-typed-id [mr mk-id md-type]
+(defn- sql-cls-upd-meta-data-typed-id [mr mk-id md-type]
   (let [md-sql (-> (sql/where [:and
                                [:= :meta_key_id mk-id]
                                [:= :type md-type]
@@ -70,29 +78,39 @@
      nil))
 
   ([db mr meta-key-id md-type user-id]
-   (logging/info "db-create-meta-data: " "MK-ID: " meta-key-id "Type:" md-type "User: " user-id)
+   ;(logging/info "db-create-meta-data: " "MK-ID: " meta-key-id "Type:" md-type "User: " user-id)
    (db-create-meta-data db (fabric-meta-data mr meta-key-id md-type user-id)))
 
   ([db mr meta-key-id md-type user-id meta-data]
-   (logging/info "db-create-meta-data: " "MK-ID: " meta-key-id "Type:" md-type "User: " user-id "MD: " meta-data)
+   ;(logging/info "db-create-meta-data: " "MK-ID: " meta-key-id "Type:" md-type "User: " user-id "MD: " meta-data)
    (let [md (merge (fabric-meta-data mr meta-key-id md-type user-id) meta-data)]
-     (logging/info "db-create-meta-data: "
-                   "MK-ID: " meta-key-id
-                   "Type:" md-type
-                   "User: " user-id
-                   "MD: " meta-data
-                   "MD-new: " md)
+     ;(logging/info "db-create-meta-data: "
+     ;              "MK-ID: " meta-key-id
+     ;              "Type:" md-type
+     ;              "User: " user-id
+     ;              "MD: " meta-data
+     ;              "MD-new: " md)
      (db-create-meta-data db md))))
+
+(defn- handle-delete-meta-data [req]
+  (let [mr (-> req :media-resource)
+        meta-data (-> req :meta-data)
+        meta-key-id (:meta_key_id meta-data)
+        del-clause (sql-cls-upd-meta-data mr meta-key-id)
+        del-result (jdbc/delete! (rdbms/get-ds) :meta_data del-clause)]
+    (if (= 1 (first del-result))
+      (sd/response_ok meta-data)
+      (sd/response_failed "Could not delete meta_data." 406))))
 
 (defn- handle_update-meta-data-text-base
   [req md-type upd-data]
   (try
     (catcher/with-logging {}
       (let [mr (-> req :media-resource)
-            upd-data2 (assoc upd-data (col-key-for-mr-type mr) (:id mr))
+            ;upd-data2 (assoc upd-data (col-key-for-mr-type mr) (:id mr))
             meta-key-id (-> req :parameters :path :meta_key_id)
             upd-clause (sql-cls-upd-meta-data-typed-id mr meta-key-id md-type)
-            upd-result (jdbc/update! (rdbms/get-ds) :meta_data upd-data2 upd-clause)
+            upd-result (jdbc/update! (rdbms/get-ds) :meta_data upd-data upd-clause)
             result-data (db-get-meta-data mr meta-key-id md-type)]
 
         (sd/logwrite req (str "handle_update-meta-data-text-base:"
@@ -100,6 +118,7 @@
                               " mr-type: " (:type mr)
                               " md-type: " md-type
                               " meta-key-id: " meta-key-id
+                              " upd-clause: " upd-clause
                               " upd-result: " upd-result))
         
         (if (= 1 (first upd-result))
@@ -185,7 +204,8 @@
             json-data (-> req :parameters :body :json)
             json-parsed (cheshire/parse-string json-data)
             md-type "MetaDatum::JSON"
-            mdnew {:json json-parsed}
+            ;mdnew {:json json-parsed}
+            mdnew {:json (with-meta json-parsed {:pgtype "jsonb"})}
             ins-result (db-create-meta-data (rdbms/get-ds) mr meta-key-id md-type user-id mdnew)]
         
         (sd/logwrite req (str "handle_create-meta-data-json:"
@@ -202,7 +222,8 @@
   [req]
   (let [text-data (-> req :parameters :body :json)
         json-parsed (cheshire/parse-string text-data)
-        upd-data {:json json-parsed}
+        ;upd-data {:json json-parsed}
+        upd-data {:json (with-meta json-parsed {:pgtype "jsonb"})}
         md-type "MetaDatum::JSON"]
     (logging/info "handle_update-meta-data-json"
                   "\nupd-data\n" upd-data)
@@ -215,19 +236,19 @@
               :keyword_id kw-id
               :created_by_id user-id}
         result (jdbc/insert! db :meta_data_keywords data)]
-    ;(logging/info "db-create-meta-data-keyword"
-    ;              "\nkw-data\n" data
-    ;              "\nresult\n" result)
+    (logging/info "db-create-meta-data-keyword"
+                  "\nkw-data\n" data
+                  "\nresult\n" result)
     result))
 
 (defn- db-delete-meta-data-keyword
   [db md-id kw-id]
   (let [query ["meta_datum_id = ? AND keyword_id = ?" md-id kw-id]
         result (jdbc/delete! db :meta_data_keywords query)]
-    ;(logging/info "db-delete-meta-data-keyword"
-    ;              "\nmd-id\n" md-id
-    ;              "\nkw-id\n" kw-id
-    ;              "\nresult\n" result)
+    (logging/info "db-delete-meta-data-keyword"
+                  "\nmd-id\n" md-id
+                  "\nkw-id\n" kw-id
+                  "\nresult\n" result)
     result
     )
   )
@@ -273,8 +294,9 @@
             user-id (-> req :authenticated-entity :id str)]
 
         (if-let [result (create_md_and_keyword mr meta-key-id kw-id user-id)]
-          ((sd/logwrite req  (str "handle_create-meta-data-keyword:" "mr-id: " (:id mr) "kw-id: " kw-id "result: " result))
-           (sd/response_ok result))
+          ;((sd/logwrite req  (str "handle_create-meta-data-keyword:" "mr-id: " (:id mr) "kw-id: " kw-id "result: " result))
+           (sd/response_ok result)
+          ;)
           (if-let [retryresult (create_md_and_keyword mr meta-key-id kw-id user-id)]
             ((sd/logwrite req  (str "handle_create-meta-data-keyword:" "mr-id: " (:id mr) "kw-id: " kw-id "result: " retryresult))
              (sd/response_ok retryresult))
@@ -310,16 +332,17 @@
     (catcher/with-logging {}
       (let [mr (-> req :media-resource)
             meta-key-id (-> req :parameters :path :meta_key_id)
-            mdkw-id (-> req :parameters :path :keyword_id)
+            kw-id (-> req :parameters :path :keyword_id)
             md (db-get-meta-data mr meta-key-id MD_TYPE_KEYWORDS)
             md-id (-> md :id)
-            delete-result (db-delete-meta-data-keyword (rdbms/get-ds) md-id mdkw-id)
+            delete-result (db-delete-meta-data-keyword (rdbms/get-ds) md-id kw-id)
             mdr (db-get-meta-data-keywords md-id)]
 
         (sd/logwrite req (str "handle_delete-meta-data-keyword:"
                               "mr-id: " (:id mr)
+                              "md-id: " md-id
                               "meta-key: " meta-key-id
-                              "keyword-id: " mdkw-id
+                              "keyword-id: " kw-id
                               "result: " delete-result))
 
         (if (= 1 (first delete-result))
@@ -379,19 +402,19 @@
             user-id (-> req :authenticated-entity :id str)]
 
         (if-let [result (create_md_and_people mr meta-key-id person-id user-id)]
-          ((sd/logwrite req (str "handle_create-meta-data-people:"
-                                 "mr-id: " (:id mr)
-                                 "meta-key: " meta-key-id
-                                 "person-id:" person-id
-                                 "result: " result))
-           (sd/response_ok result))
+          ;((sd/logwrite req (str "handle_create-meta-data-people:"
+          ;                       "mr-id: " (:id mr)
+          ;                       "meta-key: " meta-key-id
+          ;                       "person-id:" person-id
+          ;                       "result: " result))
+          (sd/response_ok result);)
           (if-let [retryresult (create_md_and_people mr meta-key-id person-id user-id)]
-            ((sd/logwrite req (str "handle_create-meta-data-people:"
-                                   "mr-id: " (:id mr)
-                                   "meta-key: " meta-key-id
-                                   "person-id:" person-id
-                                   "result: " retryresult))
-             (sd/response_ok retryresult))
+            ;((sd/logwrite req (str "handle_create-meta-data-people:"
+            ;                       "mr-id: " (:id mr)
+            ;                       "meta-key: " meta-key-id
+            ;                       "person-id:" person-id
+            ;                       "result: " retryresult))
+            (sd/response_ok retryresult);)
             (sd/response_failed "Could not create md people" 406)))))
     (catch Exception ex (sd/response_exception ex))))
 
@@ -426,17 +449,18 @@
       (let [mr (-> req :media-resource)
             meta-key-id (-> req :parameters :path :meta_key_id)
             person-id (-> req :parameters :path :person_id)
-          ;md-type MD_TYPE_PEOPLE
             md (db-get-meta-data mr meta-key-id MD_TYPE_PEOPLE)
             md-id (-> md :id)
             mdr-clause ["meta_datum_id = ? AND person_id = ?" md-id person-id]
             del-result (jdbc/delete! (rdbms/get-ds) :meta_data_people mdr-clause)]
 
         (sd/logwrite req (str "handle_delete-meta-data-people:"
-                              "mr-id: " (:id mr)
-                              "meta-key: " meta-key-id
-                              "person-id:" person-id
-                              "result: " del-result))
+                              " mr-id: " (:id mr)
+                              " meta-key: " meta-key-id
+                              " person-id: " person-id
+                              " upd-cls: " mdr-clause
+                              " result: " del-result)
+                     )
 
         (if (= 1 (first del-result))
           (sd/response_ok {:meta_data md
@@ -574,12 +598,17 @@
           md-type (:type result)
 
           md-type-kw (case md-type
-                       "MetaDatum::Keywords" "md_keywords"
-                       "MetaDatum::People" "md_people"
-                       "MetaDatum::Roles" "md_roles"
-                       "default")
+                       "MetaDatum::Keywords" MD_KEY_KW_DATA
+                       "MetaDatum::People" MD_KEY_PEOPLE_DATA
+                       "MetaDatum::Roles" MD_KEY_ROLES_DATA
+                       "defaultmetadata")
 
-          md-type-kw-data (apply str md-type-kw "_data")
+          md-type-kw-data (case md-type
+                            "MetaDatum::Keywords" MD_KEY_KWS
+                            "MetaDatum::People" MD_KEY_PEOPLE
+                            "MetaDatum::Roles" MD_KEY_ROLES
+                            "defaultdata")
+          ;(apply str md-type-kw "_data")
 
           mde (case md-type
                 "MetaDatum::Keywords" (db-get-meta-data-keywords md-id)
@@ -602,11 +631,8 @@
                                          (map #(sd/query-eq-find-one :roles :id %)))
                      "default")
           mde-result {:meta-data result
-                      ;(keyword md-type) mde
                       (keyword md-type-kw) mde
-                      (keyword md-type-kw-data) mde-data
-                      ;(keyword (apply str md-type "-data")) mde-data
-                      }
+                      (keyword md-type-kw-data) mde-data}
           ]
       ;(logging/info "handle_get-meta-key-meta-data"
       ;              "\nmedia id " md-id
@@ -663,6 +689,17 @@
                  :meta_key_id
                  :meta_data
                  :media_entry_id
+                 :meta_key_id
+                 :meta-data
+                 false)))
+
+(defn wrap-col-add-meta-data [handler]
+  (fn [request] (sd/req-find-data2
+                 request handler
+                 :collection_id
+                 :meta_key_id
+                 :meta_data
+                 :collection_id
                  :meta_key_id
                  :meta-data
                  false)))
@@ -749,20 +786,31 @@
                                 (s/optional-key :meta_keys) s/Str}}
            :responses {200 {:body s/Any}}}}]
    
-   ["/:collection_id/meta-data/:meta_key_id"
-    {:get {:summary "Get meta-data for collection and meta-key."
-           :handler handle_get-meta-key-meta-data
+   ["/:collection_id/meta-datum"
+    ["/:meta_key_id"
+     {:get {:summary "Get meta-data for collection and meta-key."
+            :handler handle_get-meta-key-meta-data
 
-           :middleware [wrap-add-meta-key
-                        wrap-check-vocab
-                        sd/ring-wrap-add-media-resource
-                        sd/ring-wrap-authorization-view]
-           :coercion reitit.coercion.schema/coercion
-           :parameters {:path {:collection_id s/Str
-                               :meta_key_id s/Str}}
-           :responses {200 {:body s/Any}}}}]
+            :middleware [wrap-add-meta-key
+                         wrap-check-vocab
+                         sd/ring-wrap-add-media-resource
+                         sd/ring-wrap-authorization-view]
+            :coercion reitit.coercion.schema/coercion
+            :parameters {:path {:collection_id s/Str
+                                :meta_key_id s/Str}}
+            :responses {200 {:body s/Any}}}
+
+      :delete {:summary "Delete meta-data for collection and meta-key"
+               :handler handle-delete-meta-data
+               :middleware [sd/ring-wrap-add-media-resource
+                            sd/ring-wrap-authorization-view
+                            wrap-col-add-meta-data]
+               :coercion reitit.coercion.schema/coercion
+               :parameters {:path {:collection_id s/Str
+                                   :meta_key_id s/Str}}
+               :responses {200 {:body s/Any}}}}]
    
-   ["/:collection_id/meta-data/:meta_key_id/text"
+   ["/:meta_key_id/text"
     
     {:post {:summary "Create meta-data text for collection."
             :handler handle_create-meta-data-text
@@ -793,14 +841,10 @@
                                }
                         :body {:string s/Str} 
                         }
-           ;:coercion reitit.coercion.spec/coercion
-           ;:parameters {:path {:collection_id string?
-           ;                    :meta_key_id string?}
-           ;             :body {:string string?}}
            :responses {200 {:body s/Any}}}
      }]
 
-   ["/:collection_id/meta-data/:meta_key_id/text-date"
+   ["/:meta_key_id/text-date"
     {:post {:summary "Create meta-data json for collection."
             :handler handle_create-meta-data-text-date
             :middleware [sd/ring-wrap-add-media-resource
@@ -821,7 +865,7 @@
            :responses {200 {:body s/Any}}}
      }]
 
-   ["/:collection_id/meta-data/:meta_key_id/json"
+   ["/:meta_key_id/json"
     {:post {:summary "Create meta-data json for collection."
             :handler handle_create-meta-data-json
             :middleware [sd/ring-wrap-add-media-resource
@@ -829,7 +873,7 @@
             :coercion reitit.coercion.schema/coercion
             :parameters {:path {:collection_id s/Str
                                 :meta_key_id s/Str}
-                         :body {:json s/Str}}
+                         :body {:json s/Any}}
             :responses {200 {:body s/Any}}}
      :put {:summary "Update meta-data json for collection."
            :handler handle_update-meta-data-json
@@ -838,11 +882,22 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:collection_id s/Str
                                :meta_key_id s/Str}
-                        :body {:json s/Str}}
+                        :body {:json s/Any}}
            :responses {200 {:body s/Any}}}
      }]
    
-   ["/:collection_id/meta-data/:meta_key_id/keyword/:keyword_id"
+   ["/:meta_key_id/keyword"
+    {:get {:summary "Get meta-data keywords for collection meta-key"
+           :handler handle_get-meta-data-keywords
+           :middleware [;wrap-me-add-meta-data
+                        sd/ring-wrap-add-media-resource
+                        sd/ring-wrap-authorization-view]
+           :coercion reitit.coercion.schema/coercion
+           :parameters {:path {:collection_id s/Str
+                               :meta_key_id s/Str}}
+           :responses {200 {:body s/Any}}}}]
+   
+   ["/:meta_key_id/keyword/:keyword_id"
     {:post {:summary "Create meta-data keyword for collection."
             :handler handle_create-meta-data-keyword
             :middleware [;wrap-me-add-meta-data
@@ -854,6 +909,7 @@
                                 :meta_key_id s/Str
                                 :keyword_id s/Str}}
             :responses {200 {:body s/Any}}}
+     
      :delete {:summary "Delete meta-data keyword for collection."
               :handler handle_delete-meta-data-keyword
               :middleware [wrap-add-keyword
@@ -866,7 +922,18 @@
               :responses {200 {:body s/Any}}}
      }]
    
-   ["/:collection_id/meta-data/:meta_key_id/people/:person_id"
+   ["/:meta_key_id/people"
+    {:get {:summary "Get meta-data people for collection meta-key."
+           :handler handle_get-meta-data-people
+           :middleware [;wrap-me-add-meta-data
+                        sd/ring-wrap-add-media-resource
+                        sd/ring-wrap-authorization-edit-metadata]
+           :coercion reitit.coercion.schema/coercion
+           :parameters {:path {:collection_id s/Str
+                               :meta_key_id s/Str}}
+           :responses {200 {:body s/Any}}}}]
+   
+   ["/:meta_key_id/people/:person_id"
     {:post {:summary "Create meta-data people for media-entry"
             :handler handle_create-meta-data-people
             :middleware [;wrap-me-add-meta-data
@@ -891,7 +958,7 @@
               :responses {200 {:body s/Any}}}
      }]
    ; TODO meta-data roles
-   ["/:collection_id/meta-data/:meta_key_id/role/:role_id"
+   ["/:meta_key_id/role/:role_id"
     {:post {:summary "Create meta-data role for media-entry"
             :handler handle_create-meta-data-role
             :middleware [wrap-add-role
@@ -902,6 +969,7 @@
                                 :meta_key_id s/Str
                                 :role_id s/Str}}
             :responses {200 {:body s/Any}}}}]
+   ]
   ])
    
 (def media-entry-routes
@@ -919,10 +987,10 @@
                                 (s/optional-key :meta_keys) s/Str}}
            :responses {200 {:body s/Any}}}}]
    
-   ["/:media_entry_id/meta-data/:meta_key_id"
+   ["/:media_entry_id/meta-datum"
+    ["/:meta_key_id"
     {:get {:summary "Get meta-data for media-entry and meta-key."
            :handler handle_get-meta-key-meta-data
-                                                 
            :middleware [wrap-add-meta-key
                         ;wrap-check-vocab
                         sd/ring-wrap-add-media-resource
@@ -932,8 +1000,20 @@
            :parameters {:path {:media_entry_id s/Str
                                :meta_key_id s/Str}
                         }
-           :responses {200 {:body s/Any}}}}]
-   ["/:media_entry_id/meta-data/:meta_key_id/text/"
+           :responses {200 {:body s/Any}}}
+
+     :delete
+     {:summary "Delete meta-data for media-entry and meta-key"
+      :handler handle-delete-meta-data
+      :middleware [sd/ring-wrap-add-media-resource
+                   sd/ring-wrap-authorization-view
+                   wrap-me-add-meta-data]
+      :coercion reitit.coercion.schema/coercion
+      :parameters {:path {:media_entry_id s/Str
+                          :meta_key_id s/Str}}
+      :responses {200 {:body s/Any}}}}]
+   
+   ["/:meta_key_id/text"
     {:post {:summary "Create meta-data text for media-entry"
             :handler handle_create-meta-data-text
             :middleware [sd/ring-wrap-add-media-resource
@@ -958,7 +1038,7 @@
      }
     ]
    
-   ["/:media_entry_id/meta-data/:meta_key_id/text-date/"
+   ["/:meta_key_id/text-date"
     {:post {:summary "Create meta-data text-date for media-entry"
             :handler handle_create-meta-data-text-date
             :middleware [sd/ring-wrap-add-media-resource
@@ -979,7 +1059,7 @@
            :responses {200 {:body s/Any}}}
      }]
    
-   ["/:media_entry_id/meta-data/:meta_key_id/json/"
+   ["/:meta_key_id/json"
     {:post {:summary "Create meta-data json for media-entry"
             :handler handle_create-meta-data-json
             :middleware [sd/ring-wrap-add-media-resource
@@ -987,7 +1067,7 @@
             :coercion reitit.coercion.schema/coercion
             :parameters {:path {:media_entry_id s/Str
                                 :meta_key_id s/Str}
-                         :body {:json s/Str}}
+                         :body {:json s/Any}}
             :responses {200 {:body s/Any}}}
      
      :put {:summary "Update meta-data json for media-entry"
@@ -997,22 +1077,22 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Str
                                :meta_key_id s/Str}
-                        :body {:json s/Str}}
+                        :body {:json s/Any}}
            :responses {200 {:body s/Any}}}
      }]
    
-   ["/:media_entry_id/meta-data/:meta_key_id/keyword"
+   ["/:meta_key_id/keyword"
     {:get {:summary "Get meta-data keywords for media-entries meta-key"
            :handler handle_get-meta-data-keywords
            :middleware [;wrap-me-add-meta-data
                         sd/ring-wrap-add-media-resource
-                        sd/ring-wrap-authorization-edit-metadata]
+                        sd/ring-wrap-authorization-view]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Str
                                :meta_key_id s/Str}}
            :responses {200 {:body s/Any}}}}]
    
-   ["/:media_entry_id/meta-data/:meta_key_id/keyword/:keyword_id"
+   ["/:meta_key_id/keyword/:keyword_id"
     {:post {:summary "Create meta-data keyword for media-entry."
             :handler handle_create-meta-data-keyword
             :middleware [;wrap-me-add-meta-data
@@ -1037,18 +1117,18 @@
               :responses {200 {:body s/Any}}}
      }]
    
-   ["/:media_entry_id/meta-data/:meta_key_id/people"
+   ["/:meta_key_id/people"
     {:get {:summary "Get meta-data people for media-entries meta-key."
            :handler handle_get-meta-data-people
            :middleware [;wrap-me-add-meta-data
                         sd/ring-wrap-add-media-resource
-                        sd/ring-wrap-authorization-edit-metadata]
+                        sd/ring-wrap-authorization-view]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Str
                                :meta_key_id s/Str}}
            :responses {200 {:body s/Any}}}}]
    
-   ["/:media_entry_id/meta-data/:meta_key_id/people/:person_id"
+   ["/:meta_key_id/people/:person_id"
     {:post {:summary "Create meta-data people for a media-entries meta-key."
             :handler handle_create-meta-data-people
             :middleware [wrap-add-person
@@ -1074,17 +1154,17 @@
               :responses {200 {:body s/Any}}}
      }]
    ; TODO meta-data roles
-   ["/:media_entry_id/meta-data/:meta_key_id/role"
+   ["/:meta_key_id/role"
     {:get {:summary "Get meta-data role for media-entry."
            :handler handle_get-meta-data-roles
            :middleware [sd/ring-wrap-add-media-resource
-                        sd/ring-wrap-authorization-edit-metadata]
+                        sd/ring-wrap-authorization-view]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Str
                                :meta_key_id s/Str}}
            :responses {200 {:body s/Any}}}}]
    
-   ["/:media_entry_id/meta-data/:meta_key_id/role/:role_id/:person_id"
+   ["/:meta_key_id/role/:role_id/:person_id"
     {:delete {:summary "Delete meta-data role for media-entry."
               :handler handle_delete-meta-data-role
               :middleware [wrap-add-role
@@ -1098,7 +1178,7 @@
                                   :person_id s/Uuid}}
               :responses {200 {:body s/Any}}}}]
    
-   ["/:media_entry_id/meta-data/:meta_key_id/role/:role_id/:person_id/:position"
+   ["/:meta_key_id/role/:role_id/:person_id/:position"
     {:post {:summary "Create meta-data role for media-entry."
             :handler handle_create-meta-data-role
             :middleware [wrap-add-role
@@ -1114,7 +1194,7 @@
                                 }}
             :responses {200 {:body s/Any}}}
      }]
-
+   ]
    ])
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

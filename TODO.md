@@ -1,18 +1,39 @@
 # Todos and Notes
 
+## TODO Review (by Alex)
+
+- groups
+- media_file
+- previews
+- meta_keys
+
 ## Fragen
 
-### Frage: wer darf full-texts anlegen? nur der admin? wird das generiert?
+### FRAGE: code: wie weiter organisieren
 
-### FRAGE: user auth: create token for user
+### FRAGE: subprojekte: browser, vendor, docs, docs-source, datalayer
 
-### FRAGE: user create password via admin?
+### FRAGE: datalayer: casts: enum-types
 
-### FRAGE: fix token only auth (method and admin)
+### FRAGE: Tests: auth_system? Auth
 
-### FRAGE: fix session auth (new cookie)
+### FRAGE: Permissions: user auth: create token for user?
 
-### FRAGE: user self edit?
+### FRAGE: Permissions: user self edit? Welche Felder? Neues Passwort ?
+
+### FRAGE: Permissions: user create password via admin?
+
+### FRAGE: fix token only auth (method and admin): Was wird eh ersetzt?
+
+### FRAGE: fix session auth (new cookie): Was wird eh ersetzt?
+
+###### Andere
+
+### Frage: Permissions: wer darf full-texts anlegen? nur der admin? wird das generiert?
+
+### FRAGE: Oettli: delegations
+
+#### FRAGE: Oettli: delegations_workflows
 
 ## TODO datalayer
 
@@ -30,12 +51,9 @@ CREATE CAST (varchar AS collection_sorting) WITH INOUT AS IMPLICIT;
 ### col-col-arc
 ### col-me-arc
 ### cols
-### context_keys
 ### contexts
 ### custom_urls
 ### edit_sessions
-### io_interfaces
-### io_mappings
 ### favorites
 ### full_texts
 ### [groups]
@@ -80,11 +98,9 @@ Description, docu:
 
 ### TODO usage_terms: get the most recent one ?!? order by updated_at ?
 
-### meta_data try catch logwrite text/json
+### workflows - response coercion: jsonb not hstore conversion problem
 
-### workflows - jsonb not hstore conversion problem
-
-### users_workflows
+### updated_at created_at coercion
 
 ### meta_data_type MediaEntry
 
@@ -102,97 +118,36 @@ Description, docu:
 
 - edit self
 
+### confidential_links
+
 ### rdf_classes
 
-### users-workflows
+### sections
+
+### users_workflows
+
+### visualizations
 
 ## Admin aspects
 
-### FRAGE: delegations
-
-#### FRAGE: delegations_workflows
-
-## Notes on setup
-
-### setup db (old datalayer)
-
-* copy `datalayer/config/database_developer_example.yml`
-* to `datalayer/config/database.yml`
-* edit and adapt for db connection.
-* run setup script
-
-~~~ setup db
-cd datalayer
-RAILS_ENV=development ./bin/setup
-~~~
-
-* for sql check constraint error, comment out structure.sql in line 1568
-
-~~~ disable constraint
---CONSTRAINT check_allowed_people_subtypes_not_empty_for_meta_datum_people CHECK ((((allowed_people_subtypes IS NOT NULL) AND (COALESCE(array_length(allowed_people_subtypes, 1), 0) > 0)) OR (meta_datum_object_type <> 'MetaDatum::People'::text))),
-~~~
-
-* if it creates only the development db
-* edit `datalayer/config/database.yml` and exchange
-
-~~~ setup test db
-  #database: madek_development
-  database: madek_test
-~~~
-
-* do migrations
-
-* setup seeds
-
-edit in datalayer/bin/rerun_db_migrations
-RAILS_ENV=development rails db:migrate
-
-run
-RAILS_ENV=development ./bin/rerun_db_migrations
-
-edit in datalayer/bin/rerun_db_migrations
-RAILS_ENV=test rails db:migrate
-
-run
-RAILS_ENV=test ./bin/rerun_db_migrations
-
-* drop dbs
-
-~~~ drop dbs
-bundle exec rails db:drop
-~~~
-
-### run api
-
-./bin/clj-run
-
-### run clojure tests to add two users for testing
-
-clj -X:test :dirs '["test"]'
 
 
+## DONE Tests
 
+### user
+#### app-settings
+#### context-keys
+#### keywords
+#### roles
+#### person
 
-
-
-## TODO
-Review:
-groups
-keywords
-
-media entries
-media file
-- download or show/stream headers
-meta_keys
-
-people
-- normal user create person
-previews
-
-users
-- edit self
-rdf_classes
-meta_data_type MediaEntry
-
-users-workflows
-rdf-classes
+### admin
+#### app-settings
+#### admins
+#### context-keys
+#### io-interfaces
+#### io-mappings
+#### keywords
+#### people
+#### users
+#### groups

@@ -21,7 +21,9 @@
 
 (defn transform_ml [hashMap]
   "Builds Map with keys as keywords and values from HashMap (sql-hstore)"
-  (keywordize-keys (zipmap (.keySet hashMap) (.values hashMap))))
+  (if (nil? hashMap)
+    nil
+    (keywordize-keys (zipmap (.keySet hashMap) (.values hashMap)))))
 
 ; begin db-helpers
 ; TODO move to sql file
@@ -228,7 +230,7 @@
    If it exists it is associated with the request as reqkey"
   [request handler path-param db_table db_col_name reqkey send404]
   (let [search (-> request :parameters :path path-param)]
-    (logging/info "req-find-data: " search " " db_table " " db_col_name)
+    ;(logging/info "req-find-data: " search " " db_table " " db_col_name)
     (if-let [result-db (query-eq-find-one db_table db_col_name search)]
       (handler (assoc request reqkey result-db))
       (if (= true send404)
@@ -348,7 +350,7 @@
 (defn- ring-add-meta-datum-with-media-resource [request handler]
   (if-let [meta-datum (query-meta-datum request)]
     (let [media-resource (query-media-resource-for-meta-datum meta-datum)]
-      (logging/info "add-meta-datum-with-media-resource" "\nmeta-datum\n" meta-datum "\nmedia-resource\n" media-resource)
+      ;(logging/info "add-meta-datum-with-media-resource" "\nmeta-datum\n" meta-datum "\nmedia-resource\n" media-resource)
       (handler (assoc request
                       :meta-datum meta-datum
                       :media-resource media-resource)))

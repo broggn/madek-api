@@ -189,7 +189,7 @@
        :parameters {:path {:collection_id s/Uuid}}
        :responses {200 {:body {:collection-media-entry-arcs [schema_collection-media-entry-arc-export]}}}
        }}]
-    ["/media-entry-arcs/:media_entry_id"
+    ["/media-entry-arc/:media_entry_id"
      {:post
       {:summary (sd/sum_usr "Create collection media-entry arc")
        :handler handle_create-col-me-arc
@@ -205,6 +205,7 @@
                            :media_entry_id s/Uuid}
                     :body schema_collection-media-entry-arc-create}
        :responses {200 {:body s/Any}
+                   404 {:body s/Any}
                    406 {:body s/Any}
                    500 {:body s/Any}}}
        
@@ -214,7 +215,9 @@
        :middleware [wrap-add-col-me-arc
                     sd/ring-wrap-add-media-resource
                     sd/ring-wrap-authorization-edit-metadata]
-       :swagger {:produces "application/json"}
+       :swagger {:produces "application/json" :consumes "application/json"}
+       :accept "application/json"
+       :content-type "application/json"
        :coercion reitit.coercion.schema/coercion
        :parameters {:path {:collection_id s/Uuid
                            :media_entry_id s/Uuid}

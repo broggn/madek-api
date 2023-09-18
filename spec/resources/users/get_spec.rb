@@ -7,10 +7,10 @@ context 'users' do
   end
 
   context 'non admin user' do
+    # TODO Frage definition API2: users can retrieve users or we need query user id by person id
     include_context :json_client_for_authenticated_user do
       it 'is forbidden to retrieve any user' do
         expect(
-          #client.get.relation('user').get(id: @user.id).response.status
           client.get("/api/users/#{CGI.escape(@user.id)}").status
         ).to be==403
       end
@@ -23,17 +23,12 @@ context 'users' do
       context 'retriving a standard user' do
         let :get_user_result do
           #client.get.relation('user').get(id: @user.id)
-          client.get("/api/users/#{CGI.escape(@user.id)}")
+          client.get("/api/admin/users/#{CGI.escape(@user.id)}")
         end
 
         it 'works' do
           expect(get_user_result.status).to be==200
         end
-
-        # TODO json roa remove: test links
-        #it 'lets us navigate to the user itself via the self-relation' do
-        #  expect(get_user_result.json_roa_data['self-relation']['href']).to match /#{@user.id}/
-        #end
 
         it 'has the proper data, sans :searchable and :previous_id' do
           expect(get_user_result.body.with_indifferent_access \
@@ -48,7 +43,6 @@ context 'users' do
           FactoryBot.create :user, is_deactivated: true
         end
         let :get_user_result do
-          #client.get.relation('user').get(id: deactivated_user.id)
           client.get("/api/users/#{CGI.escape(deactivated_user.id)}")
         end
 
@@ -65,11 +59,9 @@ context 'users' do
         end
         it 'can be retrieved by the institutional_id' do
           expect(
-            #client.get.relation('user').get(id: @inst_user.institutional_id).response.status
             client.get("/api/users/#{CGI.escape(@inst_user.institutional_id)}").status
           ).to be== 200
           expect(
-            #client.get.relation('user').get(id: @inst_user.institutional_id).data["id"]
             client.get("/api/users/#{CGI.escape(@inst_user.institutional_id)}").body["id"]
           ).to be== @inst_user["id"]
         end
@@ -97,11 +89,9 @@ context 'users' do
         it 'can be retrieved by the email_address' do
           @users.each do |user|
             expect(
-              #client.get.relation('user').get(id: user.email).response.status
               client.get("/api/users/#{CGI.escape(user.email)}").status
             ).to be== 200
             expect(
-              #client.get.relation('user').get(id: user.email ).data["id"]
               client.get("/api/users/#{CGI.escape(user.email)}").body["id"]
             ).to be== user["id"]
           end
