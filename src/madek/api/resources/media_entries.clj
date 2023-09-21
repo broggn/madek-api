@@ -1,23 +1,20 @@
 (ns madek.api.resources.media-entries
-  (:require
-    [clojure.java.io :as io]
-   [clojure.java.jdbc :as jdbc]
-   [clojure.tools.logging :as logging]
-   [madek.api.resources.app-settings :refer [db_get-app-settings]]
-   [madek.api.resources.media-entries.index :refer [get-index, get-index_related_data]]
-   [madek.api.resources.media-entries.media-entry :refer [get-media-entry]]
-   [madek.api.resources.shared :as sd]
-   [madek.api.utils.rdbms :as rdbms]
-   [reitit.coercion.schema]
-   [reitit.coercion.spec]
-   [clojure.spec.alpha :as sa]
-   [reitit.ring.middleware.multipart :as multipart]
-   [schema.core :as s]
-   ;[pantomime.mime :refer [mime-type-of]]
-   
-   [madek.api.resources.app-settings :as app-settings]
-   [madek.api.resources.context-keys :as context_keys]
-   [madek.api.authorization :as authorization])
+  (:require [clojure.java.io :as io]
+            [clojure.java.jdbc :as jdbc]
+            [clojure.spec.alpha :as sa]
+            [clojure.tools.logging :as logging]
+            [madek.api.authorization :as authorization]
+            [madek.api.constants :refer [FILE_STORAGE_DIR]]
+            [madek.api.resources.media-entries.index :refer [get-index
+                                                             get-index_related_data]]
+            [madek.api.resources.media-entries.media-entry :refer [get-media-entry]]
+            [madek.api.resources.shared :as sd]
+            [madek.api.utils.rdbms :as rdbms]
+            [reitit.coercion.schema]
+            [reitit.coercion.spec]
+            [reitit.ring.middleware.multipart :as multipart]
+            [schema.core :as s] ;[pantomime.mime :refer [mime-type-of]]
+)
   )
 
 (defn handle_query_media_entry [req]
@@ -134,7 +131,7 @@
 
 (defn original-store-location [mf]
   (let [guid (:guid mf)
-        loc (apply str MC-FILE_STORAGE_DIR "/" (first guid) "/" guid)]
+        loc (apply str FILE_STORAGE_DIR "/" (first guid) "/" guid)]
     ;(logging/info "\nstore-location\n" "\nmf\n" mf "\nguid\n" guid "\nloc\n" loc)
     loc))
 

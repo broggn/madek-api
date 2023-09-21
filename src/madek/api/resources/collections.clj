@@ -124,6 +124,14 @@
    (s/optional-key :full_data) s/Bool
    (s/optional-key :collection_id) s/Str
    (s/optional-key :order) s/Str
+
+   (s/optional-key :creator_id) s/Uuid
+   (s/optional-key :responsible_user_id) s/Uuid
+
+   (s/optional-key :clipboard_user_id) s/Uuid
+   (s/optional-key :workflow_id) s/Uuid
+   (s/optional-key :responsible_delegation_id) s/Uuid
+
    
    (s/optional-key :public_get_metadata_and_previews) s/Bool
    (s/optional-key :me_get_metadata_and_previews) s/Bool
@@ -133,28 +141,28 @@
 (def schema_collection-export
   {
    :id s/Uuid
-   :get_metadata_and_previews s/Bool
+   (s/optional-key :get_metadata_and_previews) s/Bool
    
-   :layout schema_layout_types
-   :is_master s/Bool
-   :sorting schema_sorting_types
+   (s/optional-key :layout) schema_layout_types
+   (s/optional-key :is_master) s/Bool
+   (s/optional-key :sorting) schema_sorting_types
    
-   :responsible_user_id (s/maybe s/Uuid)
-   :creator_id s/Uuid
+   (s/optional-key :responsible_user_id) (s/maybe s/Uuid)
+   (s/optional-key :creator_id) s/Uuid
    
-   :default_context_id (s/maybe s/Uuid)
+   (s/optional-key :default_context_id) (s/maybe s/Uuid)
 
    
-   :created_at s/Any
-   :updated_at s/Any
-   :meta_data_updated_at s/Any
-   :edit_session_updated_at s/Any
+   (s/optional-key :created_at) s/Any
+   (s/optional-key :updated_at) s/Any
+   (s/optional-key :meta_data_updated_at) s/Any
+   (s/optional-key :edit_session_updated_at) s/Any
    
-   :default_resource_type s/Any
+   (s/optional-key :default_resource_type) s/Any
 
-   :clipboard_user_id (s/maybe s/Uuid)
-   :workflow_id (s/maybe s/Uuid)
-   :responsible_delegation_id (s/maybe s/Uuid)
+   (s/optional-key :clipboard_user_id) (s/maybe s/Uuid)
+   (s/optional-key :workflow_id) (s/maybe s/Uuid)
+   (s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)
    
   })
 
