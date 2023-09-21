@@ -11,7 +11,8 @@
             [madek.api.utils.rdbms :as rdbms]
             [madek.api.utils.sql :as sql]
             reitit.coercion.schema
-            [schema.core :as s]))
+            [schema.core :as s]
+            [madek.api.resources.shared :as sd]))
 
 
 
@@ -61,16 +62,27 @@
 
 ;### index ####################################################################
 ; TODO test query and paging
-(defn build-index-query [{query-params :query-params}]
-  (-> (sql/select :id)
-      (sql/from :groups)
-      (sql/order-by [:id :asc])
-      (pagination/add-offset-for-honeysql query-params)
-      sql/format))
+(defn build-index-query [req]
+  (let [query-params (-> req :parameters :query)]
+    (-> (if (true? (:full_data query-params))
+          (sql/select :*)
+          (sql/select :id)) 
+        (sql/from :groups)
+        (sql/order-by [:id :asc])
+        (sd/build-query-param query-params :id)
+        (sd/build-query-param query-params :institutional_id)
+        (sd/build-query-param query-params :type)
+        (sd/build-query-param query-params :person_id)
+
+        (sd/build-query-param-like query-params :name)
+        (sd/build-query-param-like query-params :institutional_name)
+        (sd/build-query-param-like query-params :searchable)
+        (pagination/add-offset-for-honeysql query-params)
+        sql/format)))
 
 (defn index [request]
-  {:body
-   {:groups (jdbc/query (rdbms/get-ds) (build-index-query request))}})
+  (let [result (jdbc/query (rdbms/get-ds) (build-index-query request))]
+    (sd/response_ok {:groups result})))
 
 
 ;### routes ###################################################################
@@ -95,11 +107,13 @@
 
 (def schema_export-group
   {:id s/Uuid
-   :name s/Str
-   :type s/Str ; TODO enum
-   :institutional_id (s/maybe s/Str)
-   :institutional_name (s/maybe s/Str)
-   :person_id (s/maybe s/Uuid)})
+   (s/optional-key :name) s/Str
+   (s/optional-key :type) s/Str ; TODO enum
+   (s/optional-key :institutional_id) (s/maybe s/Str)
+   (s/optional-key :institutional_name) (s/maybe s/Str)
+   (s/optional-key :person_id) (s/maybe s/Uuid)
+   (s/optional-key :searchable) s/Str
+   })
 
 (defn handle_create-group
   "TODO  catch errors"
@@ -128,6 +142,43 @@
     ;(logging/info "handle_update-group" "\nid\n" id "\nbody\n" body)
     (patch-group {:params {:group-id id} :body body})))
 
+(def schema_query-groups
+  {(s/optional-key :id) s/Uuid
+   (s/optional-key :name) s/Str
+   (s/optional-key :type) s/Str
+   (s/optional-key :institutional_id) s/Str
+   (s/optional-key :institutional_name) s/Str
+   (s/optional-key :person_id) s/Uuid
+   (s/optional-key :searchable) s/Str
+   (s/optional-key :full_data) s/Bool   
+   (s/optional-key :page) s/Int
+   (s/optional-key :count) s/Int})
+
+(def user-routes 
+  [
+   ["/groups"
+    ["/" {:get {:summary "Get all group ids"
+                :description "Get list of group ids. Paging is used as you get a limit of 100 entries."
+                :handler index
+                :middleware [wrap-authorize-admin!]
+                :swagger {:produces "application/json"}
+                :content-type "application/json"
+                :parameters {:query schema_query-groups}
+                   ;:accept "application/json"
+                :coercion reitit.coercion.schema/coercion
+                :responses {200 {:body {:groups [schema_export-group]}}}}}
+     ]
+    ["/:id" {:get {:summary "Get group by id"
+                   :description "Get group by id. Returns 404, if no such group exists."
+                   :swagger {:produces "application/json"}
+                   :content-type "application/json"
+                   :handler handle_get-group
+                   :middleware [wrap-authorize-admin!]
+                   :coercion reitit.coercion.schema/coercion
+                   :parameters {:path {:id s/Str}}
+                   :responses {200 {:body schema_export-group}
+                               404 {:body s/Str}}}}]
+  ]])
 
 (def ring-routes
   ["/groups"
@@ -136,7 +187,7 @@
                :handler index
                :middleware [wrap-authorize-admin!]
                :swagger {:produces "application/json"}
-               :parameters {:query {(s/optional-key :page) s/Int}}
+               :parameters {:query schema_query-groups}
                 ;:content-type "application/json"
                 ;:accept "application/json"
                :coercion reitit.coercion.schema/coercion

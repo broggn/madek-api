@@ -281,7 +281,7 @@
    :edit_session_updated_at s/Any
    :meta_data_updated_at s/Any
 
-   ;:responsible_delegation_id (s/maybe s/Uuid)
+   (s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)
   })
 
 (def schema_export_col_arc
@@ -402,6 +402,8 @@
                         sd/ring-wrap-authorization-view]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Uuid}}
+           :responses {200 {:body schema_export_media_entry}
+                       404 {:body s/Any}}
            }
      
 

@@ -158,7 +158,7 @@
   {:id s/Uuid
    :subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
    (s/optional-key :first_name) (s/maybe s/Str)
-   (s/optional-key :last_name) s/Str
+   (s/optional-key :last_name) (s/maybe s/Str)
    (s/optional-key :searchable) s/Str
 
    (s/optional-key :institutional_id) (s/maybe s/Str)
