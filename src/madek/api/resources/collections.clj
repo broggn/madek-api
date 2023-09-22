@@ -69,7 +69,7 @@
             delresult (jdbc/delete! (rdbms/get-ds) :collections delquery)]
         (sd/logwrite req (str "handle_delete-collection: " col-id delresult))
         (if (= 1 (first delresult))
-          (sd/response_ok collection)
+          (sd/response_ok (dissoc collection :type :table-name))
           (sd/response_failed (str "Could not delete collection: " col-id) 422))))
     (catch Exception ex
       (sd/response_failed (str "Could not delete collection: " (ex-message ex)) 500))))
