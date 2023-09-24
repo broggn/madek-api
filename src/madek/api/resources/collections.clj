@@ -119,7 +119,7 @@
    })
 
 (def schema_collection-query 
-  {(s/optional-key :page) s/Str
+  {(s/optional-key :page) s/Int
    (s/optional-key :count) s/Int
    (s/optional-key :full_data) s/Bool
    (s/optional-key :collection_id) s/Str
