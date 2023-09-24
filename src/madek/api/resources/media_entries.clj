@@ -171,7 +171,6 @@
                 :creator_id (str user-id)
                 :is_published false}
         ]
-    ; TODO authorize me
     ; handle workflow authorize 
 
     (jdbc/with-db-transaction [tx (rdbms/get-ds)]
@@ -195,12 +194,17 @@
 
 
 
-; TODO try catch
-; use redirect to web-app
+; this is only for dev
+; no collection add
+; no meta data / entry clone
+; no workflows
+; no preview generation
+; no file media conversion
+; use madek web-app to upload files and create entries.
 (defn handle_create-media-entry [req]
   (let [copy-md-id (-> req :parameters :query :copy_me_id)
         collection-id (-> req :parameters :query :collection_id)
-        ; TODO collection id
+
         file (-> req :parameters :multipart :file)
         file-content-type (-> file :content-type)
         temppath (.getPath (:tempfile file))
@@ -220,21 +224,17 @@
       (logging/info "handle_create-media-entry" "\nmime-type\n" mime)
       (if (nil? auth)
         (sd/response_failed "Not authed" 406)
-        ; TODO move response handling here
-        ; TODO move coll create here
         (create-media_entry file auth mime collection-id)))))
 
-;(when-let [mime (mime-type-of tempfile)]
-       ;  (sd/response_ok {:file file :mime-type mime}))
-       ;(sd/response_ok {:file file :mime-type "none"}))
-    ;(mime-type-of (java.io.File. "some/file/without/extension"))
 
 
 
 (def schema_query_media_entries 
   {(s/optional-key :collection_id) s/Uuid
+   ; TODO order enum docu
    ;(s/optional-key :order) (s/enum "desc" "asc" "title_asc" "title_desc" "last_change" "manual_asc" "manual_desc" "stored_in_collection")
    (s/optional-key :order) s/Any
+   ; TODO filterby json docu
    (s/optional-key :filter_by) s/Str
    ;(s/optional-key :filter_by)
    ; {
@@ -261,7 +261,7 @@
    (s/optional-key :public_get_full_size) s/Bool
    (s/optional-key :page) s/Int
    (s/optional-key :count) s/Int
-   (s/optional-key :with_full_data) s/Bool})
+   (s/optional-key :full_data) s/Bool})
 
 (def schema_export_media_entry
   {
@@ -334,7 +334,7 @@
 (def schema_query_media_entries_related_result
   {:media_entries [schema_export_media_entry]
    :meta_data [ [ schema_export_meta_data]]
-   :media_files [[ schema_export_media_file ]]
+   :media_files [schema_export_media_file]
    :previews [[ s/Any]] ; schema_export_preview]]
    (s/optional-key :col_arcs) [schema_export_col_arc]
    (s/optional-key :col_meta_data) [schema_export_meta_data]})

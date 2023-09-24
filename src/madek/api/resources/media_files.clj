@@ -16,6 +16,9 @@
 (defn- query-media-file [media-file-id]
   (sd/query-eq-find-one :media_files :id media-file-id))
 
+(defn query-media-file-by-media-entry-id [media-entry-id]
+  (sd/query-eq-find-one :media_files :media_entry_id media-entry-id))
+
 (defn query-media-files-by-media-entry-id [media-entry-id]
   (sd/query-eq-find-all :media_files :media_entry_id media-entry-id))
 

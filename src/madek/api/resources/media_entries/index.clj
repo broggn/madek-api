@@ -228,29 +228,35 @@
 
 ;### index ####################################################################
 
-  (defn- get-me-list [data]
-    (let [me-list (->> data
-                       (map #(select-keys % [:media_entry_id
-                                             :media_entry_created_at
-                                             :media_entry_updated_at
-                                             :media_entry_edit_session_updated_at
-                                             :media_entry_meta_data_updated_at
-                                             :media_entry_creator_id
-                                             :media_entry_responsible_user_id
-                                             :media_entry_is_published
-                                             :media_entry_get_metadata_and_previews
-                                             :media_entry_get_full_size]))
-                       (map #(rename-keys % {:media_entry_id :id
-                                             :media_entry_created_at :created_at
-                                             :media_entry_updated_at :updated_at
-                                             :media_entry_edit_session_updated_at :edit_session_updated_at
-                                             :media_entry_meta_data_updated_at :meta_data_updated_at
-                                             :media_entry_creator_id :creator_id
-                                             :media_entry_responsible_user_id :responsible_user_id
-                                             :media_entry_is_published :is_published
-                                             :media_entry_get_metadata_and_previews :get_metadata_and_previews
-                                             :media_entry_get_full_size :get_full_size})))]
-    ;(logging/info "get-me-list" me-list)
+  (defn- get-me-list [full-data data]
+    (let [me-list (if (true? full-data)
+                    (->> data
+                         (map #(select-keys % [:media_entry_id
+                                               :media_entry_created_at
+                                               :media_entry_updated_at
+                                               :media_entry_edit_session_updated_at
+                                               :media_entry_meta_data_updated_at
+                                               :media_entry_creator_id
+                                               :media_entry_responsible_user_id
+                                               :media_entry_is_published
+                                               :media_entry_get_metadata_and_previews
+                                               :media_entry_get_full_size]))
+                         (map #(rename-keys % {:media_entry_id :id
+                                               :media_entry_created_at :created_at
+                                               :media_entry_updated_at :updated_at
+                                               :media_entry_edit_session_updated_at :edit_session_updated_at
+                                               :media_entry_meta_data_updated_at :meta_data_updated_at
+                                               :media_entry_creator_id :creator_id
+                                               :media_entry_responsible_user_id :responsible_user_id
+                                               :media_entry_is_published :is_published
+                                               :media_entry_get_metadata_and_previews :get_metadata_and_previews
+                                               :media_entry_get_full_size :get_full_size})))
+                    ; else get only ids
+                    (->> data
+                         (map #(select-keys % [:media_entry_id]))
+                         (map #(rename-keys % {:media_entry_id :id})))
+                    )]
+    (logging/info "get-me-list: fd: " full-data " list:" me-list)
       me-list))
 
   (defn get-arc-list [data]
@@ -267,9 +273,12 @@
                                :arc_created_at :created_at
                                :arc_updated_at :updated_at}))))
 
-  (defn get-files4me-list [melist]
-    (let [file-list (map #(media-files/query-media-files-by-media-entry-id (:id %)) melist)]
-      file-list))
+  (defn- get-files4me-list [melist]
+  (let [file-list (map #(media-files/query-media-file-by-media-entry-id (:id %)) melist)]
+    file-list)
+    ;(let [file-list (map #(media-files/query-media-files-by-media-entry-id (:id %)) melist)]
+    ;  file-list)
+    )
 
   (defn get-preview-list [file-list]
     (let [preview-list (map #(sd/query-eq-find-all :previews :media_file_id (:id %)) file-list)]
@@ -291,8 +300,8 @@
   (defn build-result-related-data
     "Builds all the query result related data into the response:
   files, previews, meta-data for entries and a collection"
-    [collection-id user-id data]
-    (let [me-list (get-me-list data)
+    [collection-id user-id full-data data]
+    (let [me-list (get-me-list full-data data)
         ; TODO compute only on demand
           files (get-files4me-list me-list)
           previews (get-preview-list files)
@@ -319,12 +328,12 @@
       ;(catch Exception e (sd/response_exception e)))
     )
 
- (defn get-index_related_data [{{{collection-id :collection_id} :query} :parameters :as request}]
+ (defn get-index_related_data [{{{collection-id :collection_id full-data :full_data} :query} :parameters :as request}]
    ;(try
      (catcher/with-logging {}
        (let [user-id (-> request :authenticated-entity :id)
              data (query-index-resources request)
-             result (build-result-related-data collection-id user-id data)]
+             result (build-result-related-data collection-id user-id full-data data)]
          (sd/response_ok result)))
      ;(catch Exception e (sd/response_exception e)))
    )
