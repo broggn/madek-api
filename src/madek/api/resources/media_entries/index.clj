@@ -288,8 +288,8 @@
     (let [md-list (map #(meta-data.index/get-media-entry-meta-data (:id %) user-id) melist)]
       md-list))
 
-  (defn build-result [collection-id data]
-    (let [me-list (get-me-list data)
+  (defn build-result [collection-id full-data data]
+    (let [me-list (get-me-list full-data data)
           result (merge
                   {:media_entries me-list}
                   (when collection-id
@@ -319,11 +319,11 @@
                      :col_arcs (get-arc-list data)}))]
       result))
 
-  (defn get-index [{{{collection-id :collection_id} :query} :parameters :as request}]
+  (defn get-index [{{{collection-id :collection_id full-data :full_data} :query} :parameters :as request}]
     ;(try
       (catcher/with-logging {}
         (let [data (query-index-resources request)
-              result (build-result collection-id data)]
+              result (build-result collection-id full-data data)]
           (sd/response_ok result)))
       ;(catch Exception e (sd/response_exception e)))
     )

@@ -266,17 +266,17 @@
 (def schema_export_media_entry
   {
    :id s/Uuid
-   :creator_id s/Uuid
-   :responsible_user_id s/Uuid
-   :get_full_size s/Bool
-   :get_metadata_and_previews s/Bool
-   :is_published s/Bool
+   (s/optional-key :creator_id) s/Uuid
+   (s/optional-key :responsible_user_id) s/Uuid
+   (s/optional-key :get_full_size) s/Bool
+   (s/optional-key :get_metadata_and_previews) s/Bool
+   (s/optional-key :is_published) s/Bool
 
-   :created_at s/Any
-   :updated_at s/Any
+   (s/optional-key :created_at) s/Any
+   (s/optional-key :updated_at) s/Any
    
-   :edit_session_updated_at s/Any
-   :meta_data_updated_at s/Any
+   (s/optional-key :edit_session_updated_at) s/Any
+   (s/optional-key :meta_data_updated_at) s/Any
 
    (s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)
   })
