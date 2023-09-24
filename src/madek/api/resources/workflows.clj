@@ -1,13 +1,13 @@
 (ns madek.api.resources.workflows
-  (:require
-   [clojure.java.jdbc :as jdbc]
-   [clojure.tools.logging :as logging]
-   [madek.api.resources.shared :as sd]
-   [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   [reitit.coercion.schema]
-   [schema.core :as s]
-   [logbug.catcher :as catcher]
-   [cheshire.core :as cheshire]))
+  (:require [cheshire.core :as cheshire]
+            [clojure.java.jdbc :as jdbc]
+            [clojure.tools.logging :as logging]
+            [logbug.catcher :as catcher]
+            [madek.api.authorization :as authorization]
+            [madek.api.resources.shared :as sd]
+            [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+            [reitit.coercion.schema]
+            [schema.core :as s]))
 
 
 (defn handle_list-workflows
@@ -23,7 +23,7 @@
 (defn handle_get-workflow
   [req]
   (let [workflow (-> req :workflow)]
-    ;(logging/info "handle_get-workflow" workflow)
+    (logging/info "handle_get-workflow" workflow)
     ; TODO hide some fields
     (sd/response_ok workflow)))
 
@@ -32,9 +32,11 @@
     (try
       (catcher/with-logging {}
         (let [data (-> req :parameters :body)
-              conf-json (sd/try-as-json (:configuration data))
+              conf-data-or-str (:configuration data)
+              ;conf-parsed (cheshire/parse-string conf-data)
+              conf-data (sd/try-as-json conf-data-or-str)
               uid (-> req :authenticated-entity :id)
-              ins-data (assoc data :creator_id uid :configuration {})
+              ins-data (assoc data :creator_id uid :configuration (with-meta conf-data {:pgtype "jsonb"}))
               ins-res (jdbc/insert! (rdbms/get-ds) :workflows ins-data)]
 
           (logging/info "handle_create-workflow: "
@@ -81,7 +83,7 @@
   (fn [handler]
     (fn [request] (sd/req-find-data request handler param
                                     :workflows :id
-                                    :workflows true))))
+                                    :workflow true))))
 
 
 (def schema_create_workflow
@@ -90,7 +92,8 @@
    :name s/Str
    ;:creator_id s/Uuid
    (s/optional-key :is_active) s/Bool
-   (s/optional-key :configuration) s/Any ; TODO is jsonb
+   ; TODO docu is json
+   (s/optional-key :configuration) s/Any
    
   })
 
@@ -99,7 +102,8 @@
    ;:id s/Uuid
    (s/optional-key :name) s/Str
    (s/optional-key :is_active) s/Bool
-   (s/optional-key :configuration) s/Str
+   ; TODO docu is json
+   (s/optional-key :configuration) s/Any
    })
 
 ; TODO Inst coercion
@@ -108,7 +112,8 @@
    :id s/Uuid
    (s/optional-key :name) s/Str
    (s/optional-key :is_active) s/Bool
-   (s/optional-key :configuration) s/Any ; TODO is jsonb
+   ; TODO docu is json
+   (s/optional-key :configuration) s/Any
    (s/optional-key :creator_id) s/Uuid
    (s/optional-key :created_at) s/Any ; TODO as Inst
    (s/optional-key :updated_at) s/Any
@@ -124,7 +129,7 @@
    ["/"
     {:post {:summary (sd/sum_adm "Create workflow.")
             :handler handle_create-workflow
-                   
+            :middleware [authorization/wrap-authorized-user]
             :coercion reitit.coercion.schema/coercion
             :parameters {:body schema_create_workflow}
             :responses {200 {:body schema_export_workflow}
@@ -133,6 +138,7 @@
     
      :get {:summary  (sd/sum_adm "List workflows.")
            :handler handle_list-workflows
+           :middleware [authorization/wrap-authorized-user]
            :coercion reitit.coercion.schema/coercion
            :parameters {:query {;(s/optional-key :name) s/Str ; TODO query by name
                                 (s/optional-key :full_data) s/Bool}}
@@ -142,7 +148,8 @@
    ["/:id"
     {:get {:summary (sd/sum_adm "Get workflow by id.")
            :handler handle_get-workflow
-           :middleware [(wwrap-find-workflow :id)]
+           :middleware [authorization/wrap-authorized-user
+                        (wwrap-find-workflow :id)]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Uuid}}
            :responses {200 {:body schema_export_workflow}
@@ -151,7 +158,8 @@
 
      :put {:summary (sd/sum_adm "Update workflow with id.")
            :handler handle_update-workflow
-           :middleware [(wwrap-find-workflow :id)]
+           :middleware [authorization/wrap-authorized-user
+                        (wwrap-find-workflow :id)]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Uuid}
                         :body schema_update_workflow}
@@ -163,7 +171,8 @@
      :delete {:summary (sd/sum_adm "Delete workflow by id.")
               :coercion reitit.coercion.schema/coercion
               :handler handle_delete-workflow
-              :middleware [(wwrap-find-workflow :id)]
+              :middleware [authorization/wrap-authorized-user
+                           (wwrap-find-workflow :id)]
               :parameters {:path {:id s/Uuid}}
               :responses {200 {:body schema_export_workflow}
                           404 {:body s/Any}}
