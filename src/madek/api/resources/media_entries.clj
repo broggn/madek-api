@@ -246,6 +246,12 @@
    ;  (s/optional-key :permissions) {(s/optional-key :public) s/Bool
    ;                                 (s/optional-key :responsible_user) s/Uuid
    ;                                 (s/optional-key :entrusted_to_user) s/Uuid
+   ; TODO
+   ;                                 (s/optional-key :view_to_user) s/Uuid
+   ;                                 (s/optional-key :download_to_user) s/Uuid
+   ;                                 (s/optional-key :edit_md_to_user) s/Uuid
+   ;                                 (s/optional-key :edit_perms_to_user) s/Uuid
+   ;                                 (s/optional-key :entrusted_to_group) s/Uuid
    ;                                }
    ;  (s/optional-key :meta_data) [{(s/optional-key :type) s/Str
    ;                               (s/optional-key :key) s/Str
@@ -257,6 +263,10 @@
 
    (s/optional-key :me_get_metadata_and_previews) s/Bool
    (s/optional-key :me_get_full_size) s/Bool
+
+   (s/optional-key :me_edit_metadata) s/Bool
+   (s/optional-key :me_edit_permissions) s/Bool
+
    (s/optional-key :public_get_metadata_and_previews) s/Bool
    (s/optional-key :public_get_full_size) s/Bool
    (s/optional-key :page) s/Int
@@ -315,8 +325,21 @@
    :created_at s/Any
   })
 
+
 (def schema_export_preview
-  { })
+  {:id s/Uuid
+   :media_file_id s/Uuid
+   :media_type s/Str
+   :content_type s/Str
+   ;(s/enum "small" "small_125" "medium" "large" "x-large" "maximum")
+   :thumbnail s/Str 
+   :width s/Int
+   :height s/Int
+   :filename s/Str
+   :conversion_profile (s/maybe s/Str)
+   :updated_at s/Any
+   :created_at s/Any
+   })
 
 (def schema_export_meta_data
   {:id s/Uuid
@@ -334,8 +357,8 @@
 (def schema_query_media_entries_related_result
   {:media_entries [schema_export_media_entry]
    :meta_data [ [ schema_export_meta_data]]
-   :media_files [schema_export_media_file]
-   :previews [[ s/Any]] ; schema_export_preview]]
+   :media_files [(s/maybe schema_export_media_file)]
+   :previews [[ schema_export_preview]] 
    (s/optional-key :col_arcs) [schema_export_col_arc]
    (s/optional-key :col_meta_data) [schema_export_meta_data]})
 

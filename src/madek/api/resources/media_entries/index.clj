@@ -256,7 +256,7 @@
                          (map #(select-keys % [:media_entry_id]))
                          (map #(rename-keys % {:media_entry_id :id})))
                     )]
-    (logging/info "get-me-list: fd: " full-data " list:" me-list)
+    ;(logging/info "get-me-list: fd: " full-data " list:" me-list)
       me-list))
 
   (defn get-arc-list [data]
@@ -273,20 +273,24 @@
                                :arc_created_at :created_at
                                :arc_updated_at :updated_at}))))
 
-  (defn- get-files4me-list [melist]
-  (let [file-list (map #(media-files/query-media-file-by-media-entry-id (:id %)) melist)]
-    file-list)
-    ;(let [file-list (map #(media-files/query-media-files-by-media-entry-id (:id %)) melist)]
-    ;  file-list)
-    )
+(defn- get-files4me-list [melist auth-entity]
+  (let [auth-list (remove nil? (map #(when (true? (media-entry-perms/downloadable-by-auth-entity? % auth-entity))
+                          (media-files/query-media-file-by-media-entry-id (:id %))) melist))]
+    ;(logging/info "get-files4me-list: \n" auth-list)
+    auth-list))
 
-  (defn get-preview-list [file-list]
-    (let [preview-list (map #(sd/query-eq-find-all :previews :media_file_id (:id %)) file-list)]
-      preview-list))
+(defn get-preview-list [melist auth-entity]
+  (let [auth-list (map #(when (true? (media-entry-perms/viewable-by-auth-entity? % auth-entity))
+                          (sd/query-eq-find-all :previews :media_file_id
+                                                (:id (media-files/query-media-file-by-media-entry-id (:id %))))) melist)]
+    ;(logging/info "get-preview-list" auth-list)
+    auth-list))
 
-  (defn get-md4me-list [melist user-id]
-    (let [md-list (map #(meta-data.index/get-media-entry-meta-data (:id %) user-id) melist)]
-      md-list))
+(defn get-md4me-list [melist auth-entity]
+  (let [user-id (:id auth-entity)
+        auth-list (map #(when (true? (media-entry-perms/viewable-by-auth-entity? % auth-entity))
+                          (meta-data.index/get-media-entry-meta-data (:id %) user-id)) melist)]
+    auth-list))
 
   (defn build-result [collection-id full-data data]
     (let [me-list (get-me-list full-data data)
@@ -300,15 +304,17 @@
   (defn build-result-related-data
     "Builds all the query result related data into the response:
   files, previews, meta-data for entries and a collection"
-    [collection-id user-id full-data data]
-    (let [me-list (get-me-list full-data data)
+    [collection-id auth-entity full-data data]
+    (let [me-list (get-me-list true data)
+          result-me-list (get-me-list full-data data)
+          user-id (:id auth-entity)
         ; TODO compute only on demand
-          files (get-files4me-list me-list)
-          previews (get-preview-list files)
-          me-md (get-md4me-list me-list user-id)
+          files (get-files4me-list me-list auth-entity)
+          previews (get-preview-list me-list auth-entity)
+          me-md (get-md4me-list me-list auth-entity)
           col-md (meta-data.index/get-collection-meta-data collection-id user-id)
           result (merge
-                  {:media_entries me-list
+                  {:media_entries result-me-list
                  ; TODO add only on demand
                    :meta_data me-md
                    :media_files files
@@ -329,11 +335,11 @@
     )
 
  (defn get-index_related_data [{{{collection-id :collection_id full-data :full_data} :query} :parameters :as request}]
-   ;(try
+   ;(try 
      (catcher/with-logging {}
-       (let [user-id (-> request :authenticated-entity :id)
+       (let [auth-entity (-> request :authenticated-entity)
              data (query-index-resources request)
-             result (build-result-related-data collection-id user-id full-data data)]
+             result (build-result-related-data collection-id auth-entity full-data data)]
          (sd/response_ok result)))
      ;(catch Exception e (sd/response_exception e)))
    )
