@@ -17,7 +17,9 @@
      [madek.api.utils.sql :as sql]
      [madek.api.resources.shared :as sd]
      [madek.api.resources.meta-data.index :as meta-data.index]
-     [madek.api.resources.media-files :as media-files]))
+     [madek.api.resources.media-files :as media-files]
+     [madek.api.resources.media-entries.permissions :as media-entry-perms]
+     ))
 
 ;### collection_id ############################################################
 
