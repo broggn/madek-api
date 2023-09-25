@@ -19,11 +19,14 @@
 (defn wrap-audit [handler]
   (fn [request]
     (logging/info "wrap auth "
-                  "\n - path: " (request/path-info request)
-                  "\n - method: " (:request-method request)
-                  "\n - auth-method: " (-> request :authentication-method)
-                  "\n - auth-entity: " (-> request :authenticated-entity :id)
-                  "\n - is_admin: " (:is_admin request)
+                  " - method: " (:request-method request)
+                  " - path: " (request/path-info request)
+                  
+                  " - auth-method: " (-> request :authentication-method)
+                  " - type: " (-> request :authenticated-entity :type)
+                  " - is_admin: " (:is_admin request)
+                  " - auth-entity: " (-> request :authenticated-entity :id)
+                  
                   ;"\n - response status: " (:status response)
                   )
     (handler request)

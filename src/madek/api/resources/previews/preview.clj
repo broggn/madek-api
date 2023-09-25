@@ -20,9 +20,9 @@
     ))
 
 (defn get-preview [request]
-  (let [id (or (-> request :params :preview_id) (-> request :parameters :path :preview_id))
+  (let [id (-> request :parameters :path :preview_id)
         result (db-get-preview id)]
-                  (logging/info "get-preview" "\nid\n" id "\nresult\n" result)
+    (logging/info "get-preview" "\nid\n" id "\nresult\n" result)
     {:body result}))
 
 (defn- preview-file-path [preview]
