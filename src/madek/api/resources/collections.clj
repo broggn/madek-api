@@ -87,6 +87,9 @@
           "manual ASC"
           "manual DESC"))
 
+(def schema_default_resource_type
+  (s/enum "collection" "entries" "all"))
+
 (def schema_collection-import 
   {
    ;(s/optional-key :id) s/Uuid
@@ -99,7 +102,9 @@
    (s/optional-key :responsible_user_id) s/Uuid
    ;(s/optional-key :clipboard_user_id) (s/maybe s/Uuid)
    (s/optional-key :workflow_id) (s/maybe s/Uuid)
-   ;(s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)
+   (s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)
+
+   (s/optional-key :default_resource_type) schema_default_resource_type
    })
 
 (def schema_collection-update
@@ -116,6 +121,8 @@
    ;(s/optional-key :clipboard_user_id) (s/maybe s/Uuid)
    (s/optional-key :workflow_id) (s/maybe s/Uuid)
    ;(s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)
+
+   (s/optional-key :default_resource_type) schema_default_resource_type
    })
 
 (def schema_collection-query 
@@ -157,13 +164,12 @@
    (s/optional-key :updated_at) s/Any
    (s/optional-key :meta_data_updated_at) s/Any
    (s/optional-key :edit_session_updated_at) s/Any
-   
-   (s/optional-key :default_resource_type) s/Any
-
+      
    (s/optional-key :clipboard_user_id) (s/maybe s/Uuid)
    (s/optional-key :workflow_id) (s/maybe s/Uuid)
    (s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)
    
+   (s/optional-key :default_resource_type) schema_default_resource_type
   })
 
 

@@ -1,5 +1,6 @@
 (ns madek.api.resources.media-entries
-  (:require [clojure.java.io :as io]
+  (:require clj-uuid
+            [clojure.java.io :as io]
             [clojure.java.jdbc :as jdbc]
             [clojure.spec.alpha :as sa]
             [clojure.tools.logging :as logging]
@@ -333,8 +334,8 @@
    :content_type s/Str
    ;(s/enum "small" "small_125" "medium" "large" "x-large" "maximum")
    :thumbnail s/Str 
-   :width s/Int
-   :height s/Int
+   :width (s/maybe s/Int)
+   :height (s/maybe s/Int)
    :filename s/Str
    :conversion_profile (s/maybe s/Str)
    :updated_at s/Any

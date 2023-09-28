@@ -7,8 +7,6 @@
     [clj-commons-exec :as commons-exec]
     [clojure.data.json :as json]
     [clojure.tools.logging :as logging]
-    [compojure.core :as cpj]
-    [compojure.handler :as cpj.handler]
     [logbug.debug :as debug]
     [madek.api.utils.rdbms :as rdbms]
     [madek.api.utils.runtime :as runtime]
@@ -25,7 +23,3 @@
      :body body
      :headers {"content-type" "application/json; charset=utf-8"}}))
 
-(defn wrap [default-handler]
-  (cpj/routes
-    (cpj/GET "/status" request #'status-handler)
-    (cpj/ANY "*" request default-handler)))

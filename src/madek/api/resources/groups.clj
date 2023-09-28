@@ -2,10 +2,9 @@
   (:require [clj-uuid]
             [clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as logging]
-            [compojure.core :as cpj]
             [madek.api.pagination :as pagination]
             [madek.api.resources.groups.shared :as groups]
-            [madek.api.resources.groups.users :as users]
+            ;[madek.api.resources.groups.users :as users]
             [madek.api.resources.groups.users :as group-users]
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
             [madek.api.utils.rdbms :as rdbms]
@@ -177,7 +176,7 @@
                    :coercion reitit.coercion.schema/coercion
                    :parameters {:path {:id s/Str}}
                    :responses {200 {:body schema_export-group}
-                               404 {:body s/Str}}}}]
+                               404 {:body s/Any}}}}]
   ]])
 
 (def ring-routes
@@ -188,10 +187,9 @@
                :middleware [wrap-authorize-admin!]
                :swagger {:produces "application/json"}
                :parameters {:query schema_query-groups}
-                ;:content-type "application/json"
-                ;:accept "application/json"
+               :content-type "application/json"
                :coercion reitit.coercion.schema/coercion
-               :responses {200 {:body {:groups [{:id s/Uuid}]}}}}
+               :responses {200 {:body {:groups [schema_export-group]}}}}
 
          :post {:summary "Create a group"
                 :description "Create a group."
@@ -202,8 +200,8 @@
                 :accept "application/json"
                 :coercion reitit.coercion.schema/coercion
                 :parameters {:body schema_import-group}
-                :responses {201 {:body schema_export-group} ;{:id s/Uuid}} ; api1 returns created data
-                            500 {:body {:msg s/Any}}}}}] ; TODO error handling
+                :responses {201 {:body schema_export-group}
+                            500 {:body s/Any}}}}]
 
 
 ["/:id" {:get {:summary "Get group by id"
@@ -216,7 +214,7 @@
                :coercion reitit.coercion.schema/coercion
                :parameters {:path {:id s/Str}}
                :responses {200 {:body schema_export-group}
-                           404 {:body s/Str}}}
+                           404 {:body s/Any}}}
 
          :delete {:summary "Deletes a group by id"
                   :description "Delete a group by id"

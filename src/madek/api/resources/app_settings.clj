@@ -104,7 +104,7 @@
    (s/optional-key :catalog_subtitles) sd/schema_ml_list
    (s/optional-key :about_pages) sd/schema_ml_list
    (s/optional-key :support_urls) sd/schema_ml_list
-   (s/optional-key :provenance_notices) sd/schema_ml_list
+   (s/optional-key :provenance_notices) (s/maybe sd/schema_ml_list)
    (s/optional-key :time_zone) s/Str
    (s/optional-key :copyright_notice_templates) [s/Str]
    (s/optional-key :copyright_notice_default_text) (s/maybe s/Str)
@@ -114,7 +114,7 @@
    })
 
 (def schema_export-app-settings
-  {:id s/Int
+  {(s/optional-key :id) s/Int
    (s/optional-key :featured_set_id) (s/maybe s/Uuid)
    (s/optional-key :splashscreen_slideshow_set_id) (s/maybe s/Uuid)
    (s/optional-key :teaser_set_id) (s/maybe s/Uuid)
@@ -158,7 +158,7 @@
    (s/optional-key :catalog_subtitles) (s/maybe sd/schema_ml_list)
    (s/optional-key :about_pages) (s/maybe sd/schema_ml_list)
    (s/optional-key :support_urls) (s/maybe sd/schema_ml_list)
-   (s/optional-key :provenance_notices) sd/schema_ml_list
+   (s/optional-key :provenance_notices) (s/maybe sd/schema_ml_list)
    (s/optional-key :time_zone) s/Str
    (s/optional-key :copyright_notice_templates) [s/Str]
    (s/optional-key :copyright_notice_default_text) (s/maybe s/Str)

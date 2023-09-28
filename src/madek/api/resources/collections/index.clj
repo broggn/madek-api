@@ -2,7 +2,6 @@
   (:require
     [clojure.java.jdbc :as jdbc]
     [clojure.tools.logging :as logging]
-    [compojure.core :as cpj]
     [logbug.catcher :as catcher]
     [logbug.debug :as debug]
     [madek.api.pagination :as pagination]

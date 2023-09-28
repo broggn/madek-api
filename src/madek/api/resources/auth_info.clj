@@ -1,7 +1,6 @@
 (ns madek.api.resources.auth-info
   (:require
     [clojure.tools.logging :as logging]
-    [compojure.core :as cpj]
     [logbug.debug :as debug]
     ))
 

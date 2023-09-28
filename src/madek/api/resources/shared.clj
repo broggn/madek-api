@@ -4,7 +4,6 @@
             [clojure.tools.logging :as logging]
             [clojure.walk :refer [keywordize-keys]]
             [java-time.api :as jt]
-            [compojure.core :as cpj]
             [logbug.catcher :as catcher]
             [schema.core :as s]
             [madek.api.utils.sql :as sql]
@@ -43,22 +42,12 @@
 
     (let [zoneid (java.time.ZoneId/systemDefault)
           parsed2 (jt/local-date-time (jt/offset-date-time dt_string) zoneid)
-          ;parsed (or
-          ;        (try (.atZoneSameInstant (java.time.OffsetDateTime/parse dt_string) zoneid)
-          ;             (catch Exception ex nil))
-          ;        (try (java.time.ZonedDateTime/of (java.time.LocalDateTime/parse dt_string) zoneid)
-          ;             (catch Exception ex nil)))
-
-          ;local (.toLocalDateTime zoned)
-          ;local (.toLocalDateTime parsed)
           pcas (.toString parsed2)]
       (logging/info "try-parse-date-time "
                     dt_string
                     "\n zoneid " zoneid
-                    "\n parsed2 " parsed2
-                    ;"\n zoned " zoned
-                    ;"\n local " local
-                    "\n pcas " pcas)
+                    "\n parsed " parsed2
+                    "\n result:  " pcas)
       pcas)
 
     (catch Exception ex

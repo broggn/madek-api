@@ -2,18 +2,13 @@
   (:require
     [clojure.java.jdbc :as jdbc]
     [clojure.tools.logging :as logging]
-    [compojure.core :as cpj]
     [logbug.catcher :as catcher]
     [logbug.debug :as debug]
-    [madek.api.authorization :as authorization]
-    [madek.api.pagination :as pagination]
     [madek.api.resources.keywords.index :as keywords]
-    [madek.api.resources.shared :as shared]
     [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
     [madek.api.utils.sql :as sql]
     [ring.util.response :as ring-response]
     [cheshire.core :as json]
-    
     [madek.api.resources.shared :as sd]))
 
 ;### people ###################################################################
@@ -74,7 +69,7 @@
                      "MetaDatum::TextDate" (:string meta-datum)
                      (map #(select-keys % [:id])
                           ((case meta-datum-type
-                             "MetaDatum::Groups" groups-with-ids
+                             ;"MetaDatum::Groups" groups-with-ids
                              "MetaDatum::Keywords" keywords/get-index
                              "MetaDatum::People" get-people-index
                              "MetaDatum::Roles" find-meta-data-roles)
