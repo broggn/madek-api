@@ -24,10 +24,12 @@
   [req]
   (let [media-file (-> req :media-file)
         id (:id media-file)
-        size (or (-> req :parameters :query :size) "small")
-        preview (sd/query-eq2-find-one  :previews :media_file_id id :thumbnail size)]
-    (logging/info "handle_get-preview" "\nid\n" id "\nmf\n" media-file "\npreviews\n" preview)
-    (sd/response_ok preview)
+        size (or (-> req :parameters :query :size) "small")]
+    (if-let [preview (sd/query-eq2-find-one  :previews :media_file_id id :thumbnail size)]
+      (sd/response_ok preview)
+      (sd/response_not_found "No such preview file"))
+    ;(logging/info "handle_get-preview" "\nid\n" id "\nmf\n" media-file "\npreviews\n" preview)
+    
     ))
 
 (defn add-preview-for-media-file [handler request]
@@ -106,7 +108,8 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Str}
                         :query {(s/optional-key :size) s/Str}}
-           :responses {200 {:body schema_export_preview}}}}]
+           :responses {200 {:body schema_export_preview}
+                       404 {:body s/Any}}}}]
    ; TODO media-entry preview auth
    ["/:media_entry_id/preview/data-stream"
     {:get {:summary "Get preview for media-entry id."

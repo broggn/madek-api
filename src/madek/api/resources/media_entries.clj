@@ -359,7 +359,7 @@
   {:media_entries [schema_export_media_entry]
    :meta_data [ [ schema_export_meta_data]]
    :media_files [(s/maybe schema_export_media_file)]
-   :previews [[ schema_export_preview]] 
+   :previews [[ (s/maybe schema_export_preview)]] 
    (s/optional-key :col_arcs) [schema_export_col_arc]
    (s/optional-key :col_meta_data) [schema_export_meta_data]})
 

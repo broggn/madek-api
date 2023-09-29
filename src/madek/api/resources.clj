@@ -1,13 +1,11 @@
 (ns madek.api.resources
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as logging]
-            ;[compojure.core :as cpj]
             ;[logbug.catcher :as catcher]
             [logbug.debug :as debug]
             [madek.api.utils.config :refer [get-config]]
             [madek.api.authentication :as authentication]
             [madek.api.resources.admins :as admins]
-            [madek.api.utils.auth :refer [wrap-authorize-admin!]]
             [madek.api.resources.app-settings :as app-settings]
             [madek.api.resources.collection-collection-arcs :as collection-collection-arcs]
             [madek.api.resources.collection-media-entry-arcs :as collection-media-entry-arcs]
