@@ -3,6 +3,7 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as logging]
             [clojure.walk :refer [keywordize-keys]]
+            ;[honeysql.helpers :as h2helpers]
             [java-time.api :as jt]
             [logbug.catcher :as catcher]
             [schema.core :as s]
@@ -81,12 +82,18 @@
     )
   ))
 
-(defn build-query-param-like [query query-params param]
+; TODO use honeysql 2.x for ilike feature
+(defn build-query-param-like 
+  ([query query-params param]
+   (build-query-param-like query query-params param param))
+  ([query query-params param db-param]
   (let [pval (-> query-params param mc/presence)
         qval (str "%" pval "%")]
     (if (nil? pval)
       query
-      (-> query (sql/merge-where [:like param qval])))))
+      (-> query (sql/merge-where [:like db-param qval]))
+      ;(-> query (h2helpers/merge-where [:like param qval]))
+      ))))
 
 
 (defn- sql-query-find-eq
@@ -123,7 +130,6 @@
                      sql/format)
         db-result (jdbc/query (get-ds) db-query)
         ]
-    ;(logging/info "query-find-all" "\ndb-query\n" db-query "\ndb-result\n" db-result)
     db-result))
 
 (defn query-eq-find-all [table-name col-name row-data] 
@@ -153,8 +159,10 @@
 (def internal-keys [:admin_comment])
 
 (defn remove-internal-keys
-  [resource]
-  (apply dissoc resource internal-keys))
+  ([resource]
+  (remove-internal-keys resource internal-keys))
+  ([resource keys]
+   (apply dissoc resource keys)))
 
 
 (defn response_ok 
