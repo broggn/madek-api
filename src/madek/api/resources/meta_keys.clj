@@ -213,6 +213,7 @@
    (s/optional-key :meta_datum_object_type) s/Str ; TODO enum
    (s/optional-key :is_enabled_for_collections) s/Bool
    (s/optional-key :is_enabled_for_media_entries) s/Bool
+   (s/optional-key :scope) (s/enum "view" "use")
    (s/optional-key :page) s/Int
    (s/optional-key :count) s/Int
   })
