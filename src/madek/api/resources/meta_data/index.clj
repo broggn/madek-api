@@ -111,13 +111,12 @@
   ;(logging/info "get-index" "\nmedia-resource\n" (:media-resource request))
   (when-let [media-resource (:media-resource request)]
     (when-let [meta-data (get-meta-data request media-resource)]
-
-      {:body
-       (conj
-        {:meta-data meta-data}
-        (case (:type media-resource)
-          "MediaEntry" {:media_entry_id (:id media-resource)}
-          "Collection" {:collection_id (:id media-resource)}))})))
+      (let [data (conj
+                  {:meta-data meta-data}
+                  (case (:type media-resource)
+                    "MediaEntry" {:media_entry_id (:id media-resource)}
+                    "Collection" {:collection_id (:id media-resource)}))]
+        (sd/response_ok data)))))
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)
