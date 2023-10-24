@@ -83,7 +83,7 @@
                                  :collection_media_entry_arcs
                                  data whcl)]
         (if (= 1 (first result))
-          (sd/response_ok (sd/query-eq2-find-one
+          (sd/response_ok (sd/query-eq-find-one
                            :collection_media_entry_arcs
                            :collection_id col-id
                            :media_entry_id me-id))

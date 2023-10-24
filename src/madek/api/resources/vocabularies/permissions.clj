@@ -96,7 +96,7 @@
 (defn handle_get-vocab-user-perms [req]
   (let [id (-> req :parameters :path :id)
         uid (-> req :parameters :path :user_id)]
-    (if-let [result (sd/query-eq2-find-one
+    (if-let [result (sd/query-eq-find-one
                      :vocabulary_user_permissions
                      :vocabulary_id id
                      :user_id uid)]
@@ -131,7 +131,7 @@
                                      :vocabulary_user_permissions
                                      upd-data upd-clause)]
         (if (= 1 (first upd-result))
-          (sd/response_ok (sd/query-eq2-find-one 
+          (sd/response_ok (sd/query-eq-find-one 
                            :vocabulary_user_permissions
                            :vocabulary_id vid
                            :user_id uid))
@@ -143,7 +143,7 @@
     (catcher/with-logging {}
       (let [vid (-> req :parameters :path :id)
             uid (-> req :parameters :path :user_id)]
-        (if-let [old-data (sd/query-eq2-find-one
+        (if-let [old-data (sd/query-eq-find-one
                            :vocabulary_user_permissions
                            :vocabulary_id vid
                            :user_id uid)]
@@ -167,7 +167,7 @@
 (defn handle_get-vocab-group-perms [req]
   (let [id (-> req :parameters :path :id)
         gid (-> req :parameters :path :group_id)]
-    (if-let [result (sd/query-eq2-find-one
+    (if-let [result (sd/query-eq-find-one
                      :vocabulary_group_permissions
                      :vocabulary_id id
                      :group_id gid)]
@@ -196,7 +196,7 @@
     (catcher/with-logging {}
       (let [vid (-> req :parameters :path :id)
             gid (-> req :parameters :path :group_id)]
-        (if-let [old-data (sd/query-eq2-find-one
+        (if-let [old-data (sd/query-eq-find-one
                            :vocabulary_group_permissions
                            :vocabulary_id vid
                            :group_id gid)]
@@ -208,7 +208,7 @@
                                          :vocabulary_group_permissions
                                          upd-data upd-clause)]
             (if (= 1 (first upd-result))
-              (sd/response_ok (sd/query-eq2-find-one
+              (sd/response_ok (sd/query-eq-find-one
                                :vocabulary_group_permissions
                                :vocabulary_id vid
                                :group_id gid))
@@ -221,7 +221,7 @@
     (catcher/with-logging {}
       (let [vid (-> req :parameters :path :id)
             gid (-> req :parameters :path :group_id)]
-        (if-let [old-data (sd/query-eq2-find-one
+        (if-let [old-data (sd/query-eq-find-one
                            :vocabulary_group_permissions
                            :vocabulary_id vid
                            :group_id gid)]

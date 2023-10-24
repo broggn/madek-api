@@ -58,7 +58,7 @@
        ))
 
 (defn- check-has-meta-data-for-context-key [meId mkId]
- (let [md (sd/query-eq2-find-one :meta_data :media_entry_id (str meId) :meta_key_id mkId)
+ (let [md (sd/query-eq-find-one :meta_data :media_entry_id (str meId) :meta_key_id mkId)
        hasMD (not (nil? md))
        result {(keyword mkId) hasMD}]
    ;(logging/info "check-has-meta-data-for-context-key:" meId  ":"  result)

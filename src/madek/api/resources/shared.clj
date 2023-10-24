@@ -38,10 +38,34 @@
       query
       (-> query (sql/merge-where [:= param pval])))))
 
+
+
+(defn try-instant-on-presence [data keyword]
+  (try
+    ;(logging/info "try-instant-on-presence " data keyword)
+    (if-not (nil? (-> data keyword))
+      (assoc data keyword (-> data keyword .toInstant))
+      data)
+    (catch Exception ex
+      (logging/error "Invalid instant data" (ex-message ex))
+      data)))
+
+(defn try-instant [dinst]
+  (try
+    ;(logging/info "try-instant " dinst)
+    (if-not (nil? dinst)
+      (.toInstant dinst)
+      nil)
+    (catch Exception ex
+      (logging/error "Invalid instant data" dinst (ex-message ex))
+      nil)))
+
 (defn try-parse-date-time [dt_string]
   (try
-
+(logging/info "try-parse-date-time "
+              dt_string)
     (let [zoneid (java.time.ZoneId/systemDefault)
+          
           parsed2 (jt/local-date-time (jt/offset-date-time dt_string) zoneid)
           pcas (.toString parsed2)]
       (logging/info "try-parse-date-time "
@@ -60,7 +84,9 @@
   (let [pval (-> query-params param mc/presence)]
     (if (nil? pval)
       query
-      (let [parsed (try-parse-date-time pval)]
+      ;(let [parsed (try-parse-date-time pval)]
+      (let [parsed (try-instant pval)]
+        (logging/info "build-query-created-or-updated-after: " pval ":" parsed)
         (if (nil? parsed)
           query
           (-> query (sql/merge-where 
@@ -71,7 +97,9 @@
   (let [pval (-> query-params param mc/presence)]
     (if (nil? pval)
       query
-      (let [parsed (try-parse-date-time pval)]
+      ;(let [parsed (try-parse-date-time pval)]
+      (let [parsed (try-instant pval)]
+        (logging/info "build-query-created-or-updated-after: " pval ":" parsed )
         (if (nil? parsed)
           query
           (-> query (sql/merge-where [:or
@@ -132,23 +160,35 @@
         ]
     db-result))
 
-(defn query-eq-find-all [table-name col-name row-data] 
+(defn query-eq-find-all 
+  ([table-name col-name row-data]
+   (catcher/snatch {}
+                   (jdbc/query
+                    (get-ds)
+                    (sql-query-find-eq table-name col-name row-data))))
+  
+  ([table-name col-name row-data col-name2 row-data2]
   (catcher/snatch {}
                   (jdbc/query
                    (get-ds)
-                   (sql-query-find-eq table-name col-name row-data))))
+                   (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))
+  )
 
-(defn query-eq-find-one [table-name col-name row-data]
-  (first (query-eq-find-all table-name col-name row-data)))
+(defn query-eq-find-one 
+  ([table-name col-name row-data]
+   (first (query-eq-find-all table-name col-name row-data)))
+  ([table-name col-name row-data col-name2 row-data2]
+   (first (query-eq-find-all table-name col-name row-data col-name2 row-data2)))
+  )
 
-(defn query-eq2-find-all [table-name col-name row-data col-name2 row-data2]
+#_(defn query-eq2-find-all [table-name col-name row-data col-name2 row-data2]
   (catcher/snatch {}
                   (jdbc/query
                    (get-ds)
                    (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))
 
-(defn query-eq2-find-one [table-name col-name row-data col-name2 row-data2]
-  (first (query-eq2-find-all table-name col-name row-data col-name2 row-data2)))
+#_(defn query-eq2-find-one [table-name col-name row-data col-name2 row-data2]
+  (first (query-eq-find-all table-name col-name row-data col-name2 row-data2)))
 
 ; end db-helpers
 
@@ -240,7 +280,7 @@
    If it exists it is associated with the request as reqkey"
   [request handler search search2 db_table db_col_name db_col_name2 reqkey send404]
     (logging/info "req-find-data-search2" "\nc1: " db_col_name "\ns1: " search "\nc2: " db_col_name2 "\ns2: " search2)
-    (if-let [result-db (query-eq2-find-one db_table db_col_name search db_col_name2 search2)]
+    (if-let [result-db (query-eq-find-one db_table db_col_name search db_col_name2 search2)]
       (handler (assoc request reqkey result-db))
       (if (= true send404)
         (response_not_found (str "No such entity in " db_table " as " db_col_name " with " search " and " db_col_name2 " with " search2))
@@ -257,7 +297,7 @@
         search2 (-> request :parameters :path path-param2 str)]
     
     ;(logging/info "req-find-data2" "\nc1: " db_col_name "\ns1: " search "\nc2: " db_col_name2 "\ns2: " search2)
-    (if-let [result-db (query-eq2-find-one db_table db_col_name search db_col_name2 search2)]
+    (if-let [result-db (query-eq-find-one db_table db_col_name search db_col_name2 search2)]
       (handler (assoc request reqkey result-db))
       (if (= true send404)
         (response_not_found (str "No such entity in " db_table " as " db_col_name " with " search " and " db_col_name2 " with " search2))
