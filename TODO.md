@@ -42,6 +42,22 @@ add cast for collection layout and sorting types
 CREATE CAST (varchar AS collection_layout) WITH INOUT AS IMPLICIT;
 CREATE CAST (varchar AS collection_sorting) WITH INOUT AS IMPLICIT;
 
+io_mappings.rb for datalayer/spec/factories
+
+'
+FactoryBot.define do
+
+  factory :io_mapping do
+    io_interface { IoInterface.first || create(:io_interface) }
+    key_map { Faker::Lorem.word }
+    meta_key { MetaKey.first || create(:meta_key)}
+  end
+
+end
+'
+
+madek_open_session.rb still needed
+
 ## TODO docu
 
 ## TODO tests
@@ -60,6 +76,7 @@ CREATE CAST (varchar AS collection_sorting) WITH INOUT AS IMPLICIT;
 ### media_entries
 ### [media_files]
 ### meta_data
+#### meta-data edit people
 ### meta_keys
 ### [people]
 ### permissions
@@ -140,6 +157,12 @@ Description, docu:
 #### keywords
 #### roles
 #### person
+
+#### meta-data edit text
+#### meta-data edit text-date
+#### meta-data edit json
+#### meta-data edit keywords
+#### meta-data edit people
 
 ### admin
 #### app-settings

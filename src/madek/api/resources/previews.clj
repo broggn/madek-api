@@ -25,7 +25,7 @@
   (let [media-file (-> req :media-file)
         id (:id media-file)
         size (or (-> req :parameters :query :size) "small")]
-    (if-let [preview (sd/query-eq2-find-one  :previews :media_file_id id :thumbnail size)]
+    (if-let [preview (sd/query-eq-find-one :previews :media_file_id id :thumbnail size)]
       (sd/response_ok preview)
       (sd/response_not_found "No such preview file"))
     ;(logging/info "handle_get-preview" "\nid\n" id "\nmf\n" media-file "\npreviews\n" preview)
