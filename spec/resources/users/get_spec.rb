@@ -9,10 +9,10 @@ context 'users' do
   context 'non admin user' do
     # TODO Frage definition API2: users can retrieve users or we need query user id by person id
     include_context :json_client_for_authenticated_user do
-      it 'is forbidden to retrieve any user' do
+      it 'is allowed to retrive any user' do
         expect(
           client.get("/api/users/#{CGI.escape(@user.id)}").status
-        ).to be==403
+        ).to be==200
       end
     end
   end
