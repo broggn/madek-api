@@ -16,6 +16,9 @@
 (defn- query-media-file [media-file-id]
   (sd/query-eq-find-one :media_files :id media-file-id))
 
+(defn query-media-file-by-media-entry-id [media-entry-id]
+  (sd/query-eq-find-one :media_files :media_entry_id media-entry-id))
+
 (defn query-media-files-by-media-entry-id [media-entry-id]
   (sd/query-eq-find-all :media_files :media_entry_id media-entry-id))
 
@@ -42,58 +45,81 @@
          (sd/response_not_found "No media-file for media_entry_id")))))
 
 
+(def schema_export-media-file
+  {:id s/Uuid
+   :media_entry_id s/Uuid
+   :media_type (s/maybe s/Str)
+   :content_type s/Str
+   :filename s/Str
+
+   :previews s/Any
+   :size s/Int
+   ;:width s/Int
+   ;:height s/Int
+   ;:access_hash s/Str
+   ;:meta_data s/Str
+   ;:uploader_id s/Uuid
+   ;:conversion_profiles [s/Str]
+   :created_at s/Any
+   :updated_at s/Any
+
+   })
+
 ;##############################################################################
 
 (def media-file-routes
   ["/media-file"
-   ["/:media_file_id" 
-    {:get {:summary "Get media-file for id."
+   ["/:media_file_id"
+    {:get {:summary (sd/sum_usr_pub "Get media-file for id.")
            :swagger {:produces "application/json"}
            :content-type "application/json"
            :handler media-file/get-media-file
            :middleware [wrap-find-and-add-media-file
                         media-files.authorization/wrap-auth-media-file-metadata-and-previews]
            :coercion reitit.coercion.schema/coercion
-               :parameters {:path {:media_file_id s/Str}}}}
-   ]
+           :parameters {:path {:media_file_id s/Str}}
+           :responses {200 {:body schema_export-media-file}
+                       404 {:body s/Any}}}}]
 
    ["/:media_file_id/data-stream"
-    {:get {:summary "Get media-file data-stream for id."
+    {:get {:summary (sd/sum_usr_pub "Get media-file data-stream for id.")
            :handler media-file/get-media-file-data-stream
            :middleware [wrap-find-and-add-media-file
                         media-files.authorization/wrap-auth-media-file-full_size]
            :coercion reitit.coercion.schema/coercion
-           :parameters {:path {:media_file_id s/Str}}}}
-   ]
-  ])
+           :parameters {:path {:media_file_id s/Str}}
+           ;:responses {:200 {:body s/Any}
+           ;            :404 {:body s/Any}}
+           }}]
+   ])
 
 (def media-entry-routes
   ["/media-entry"
    ["/:media_entry_id/media-file"
     {:get
-     {:summary "Get media-file for media-entry id."
+     {:summary (sd/sum_usr_pub "Get media-file for media-entry id.")
       :handler media-file/get-media-file
       :middleware [wrap-find-and-add-media-file-by-media-entry-id
-                   ; TODO switch to shared me auth
                    sd/ring-wrap-add-media-resource
-                   sd/ring-wrap-authorization-view
-                   ;media-files.authorization/wrap-auth-media-file-metadata-and-previews
-                   ]
+                   sd/ring-wrap-authorization-view]
       :coercion reitit.coercion.schema/coercion
-      :parameters {:path {:media_entry_id s/Str}}}}]
+      :parameters {:path {:media_entry_id s/Str}}
+      :responses {200 {:body schema_export-media-file}
+                  404 {:body s/Any}}}}]
    
    ["/:media_entry_id/media-file/data-stream"
     {:get
-     {:summary "TODO: Get media-file data-stream for media-entry id."
+     {:summary (sd/sum_usr_pub "Get media-file data-stream for media-entry id.")
       :handler media-file/get-media-file-data-stream
       :middleware [wrap-find-and-add-media-file-by-media-entry-id
-                   ; TODO switch to shared me auth
                    sd/ring-wrap-add-media-resource
-                   sd/ring-wrap-authorization-download
-                   ;media-files.authorization/wrap-auth-media-file-full_size
-                   ]
+                   sd/ring-wrap-authorization-download]
       :coercion reitit.coercion.schema/coercion
-      :parameters {:path {:media_entry_id s/Str}}}}]
+      :parameters {:path {:media_entry_id s/Str}}
+      ;:responses {:200 {:body s/Any}
+      ;            :404 {:body s/Any}}
+      }}]
   ])
+
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

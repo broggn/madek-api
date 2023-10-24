@@ -1,23 +1,21 @@
 (ns madek.api.resources.media-entries
-  (:require
-    [clojure.java.io :as io]
-   [clojure.java.jdbc :as jdbc]
-   [clojure.tools.logging :as logging]
-   [madek.api.resources.app-settings :refer [db_get-app-settings]]
-   [madek.api.resources.media-entries.index :refer [get-index, get-index_related_data]]
-   [madek.api.resources.media-entries.media-entry :refer [get-media-entry]]
-   [madek.api.resources.shared :as sd]
-   [madek.api.utils.rdbms :as rdbms]
-   [reitit.coercion.schema]
-   [reitit.coercion.spec]
-   [clojure.spec.alpha :as sa]
-   [reitit.ring.middleware.multipart :as multipart]
-   [schema.core :as s]
-   ;[pantomime.mime :refer [mime-type-of]]
-   
-   [madek.api.resources.app-settings :as app-settings]
-   [madek.api.resources.context-keys :as context_keys]
-   [madek.api.authorization :as authorization])
+  (:require clj-uuid
+            [clojure.java.io :as io]
+            [clojure.java.jdbc :as jdbc]
+            [clojure.spec.alpha :as sa]
+            [clojure.tools.logging :as logging]
+            [madek.api.authorization :as authorization]
+            [madek.api.constants :refer [FILE_STORAGE_DIR]]
+            [madek.api.resources.media-entries.index :refer [get-index
+                                                             get-index_related_data]]
+            [madek.api.resources.media-entries.media-entry :refer [get-media-entry]]
+            [madek.api.resources.shared :as sd]
+            [madek.api.utils.rdbms :as rdbms]
+            [reitit.coercion.schema]
+            [reitit.coercion.spec]
+            [reitit.ring.middleware.multipart :as multipart]
+            [schema.core :as s] ;[pantomime.mime :refer [mime-type-of]]
+)
   )
 
 (defn handle_query_media_entry [req]
@@ -60,7 +58,7 @@
        ))
 
 (defn- check-has-meta-data-for-context-key [meId mkId]
- (let [md (sd/query-eq2-find-one :meta_data :media_entry_id (str meId) :meta_key_id mkId)
+ (let [md (sd/query-eq-find-one :meta_data :media_entry_id (str meId) :meta_key_id mkId)
        hasMD (not (nil? md))
        result {(keyword mkId) hasMD}]
    ;(logging/info "check-has-meta-data-for-context-key:" meId  ":"  result)
@@ -134,7 +132,7 @@
 
 (defn original-store-location [mf]
   (let [guid (:guid mf)
-        loc (apply str MC-FILE_STORAGE_DIR "/" (first guid) "/" guid)]
+        loc (apply str FILE_STORAGE_DIR "/" (first guid) "/" guid)]
     ;(logging/info "\nstore-location\n" "\nmf\n" mf "\nguid\n" guid "\nloc\n" loc)
     loc))
 
@@ -174,7 +172,6 @@
                 :creator_id (str user-id)
                 :is_published false}
         ]
-    ; TODO authorize me
     ; handle workflow authorize 
 
     (jdbc/with-db-transaction [tx (rdbms/get-ds)]
@@ -198,12 +195,17 @@
 
 
 
-; TODO try catch
-; use redirect to web-app
+; this is only for dev
+; no collection add
+; no meta data / entry clone
+; no workflows
+; no preview generation
+; no file media conversion
+; use madek web-app to upload files and create entries.
 (defn handle_create-media-entry [req]
   (let [copy-md-id (-> req :parameters :query :copy_me_id)
         collection-id (-> req :parameters :query :collection_id)
-        ; TODO collection id
+
         file (-> req :parameters :multipart :file)
         file-content-type (-> file :content-type)
         temppath (.getPath (:tempfile file))
@@ -223,21 +225,17 @@
       (logging/info "handle_create-media-entry" "\nmime-type\n" mime)
       (if (nil? auth)
         (sd/response_failed "Not authed" 406)
-        ; TODO move response handling here
-        ; TODO move coll create here
         (create-media_entry file auth mime collection-id)))))
 
-;(when-let [mime (mime-type-of tempfile)]
-       ;  (sd/response_ok {:file file :mime-type mime}))
-       ;(sd/response_ok {:file file :mime-type "none"}))
-    ;(mime-type-of (java.io.File. "some/file/without/extension"))
 
 
 
 (def schema_query_media_entries 
   {(s/optional-key :collection_id) s/Uuid
+   ; TODO order enum docu
    ;(s/optional-key :order) (s/enum "desc" "asc" "title_asc" "title_desc" "last_change" "manual_asc" "manual_desc" "stored_in_collection")
    (s/optional-key :order) s/Any
+   ; TODO filterby json docu
    (s/optional-key :filter_by) s/Str
    ;(s/optional-key :filter_by)
    ; {
@@ -249,6 +247,12 @@
    ;  (s/optional-key :permissions) {(s/optional-key :public) s/Bool
    ;                                 (s/optional-key :responsible_user) s/Uuid
    ;                                 (s/optional-key :entrusted_to_user) s/Uuid
+   ; TODO
+   ;                                 (s/optional-key :view_to_user) s/Uuid
+   ;                                 (s/optional-key :download_to_user) s/Uuid
+   ;                                 (s/optional-key :edit_md_to_user) s/Uuid
+   ;                                 (s/optional-key :edit_perms_to_user) s/Uuid
+   ;                                 (s/optional-key :entrusted_to_group) s/Uuid
    ;                                }
    ;  (s/optional-key :meta_data) [{(s/optional-key :type) s/Str
    ;                               (s/optional-key :key) s/Str
@@ -260,28 +264,32 @@
 
    (s/optional-key :me_get_metadata_and_previews) s/Bool
    (s/optional-key :me_get_full_size) s/Bool
+
+   (s/optional-key :me_edit_metadata) s/Bool
+   (s/optional-key :me_edit_permissions) s/Bool
+
    (s/optional-key :public_get_metadata_and_previews) s/Bool
    (s/optional-key :public_get_full_size) s/Bool
    (s/optional-key :page) s/Int
    (s/optional-key :count) s/Int
-   (s/optional-key :with_full_data) s/Bool})
+   (s/optional-key :full_data) s/Bool})
 
 (def schema_export_media_entry
   {
    :id s/Uuid
-   :creator_id s/Uuid
-   :responsible_user_id s/Uuid
-   :get_full_size s/Bool
-   :get_metadata_and_previews s/Bool
-   :is_published s/Bool
+   (s/optional-key :creator_id) s/Uuid
+   (s/optional-key :responsible_user_id) s/Uuid
+   (s/optional-key :get_full_size) s/Bool
+   (s/optional-key :get_metadata_and_previews) s/Bool
+   (s/optional-key :is_published) s/Bool
 
-   :created_at s/Any
-   :updated_at s/Any
+   (s/optional-key :created_at) s/Any
+   (s/optional-key :updated_at) s/Any
    
-   :edit_session_updated_at s/Any
-   :meta_data_updated_at s/Any
+   (s/optional-key :edit_session_updated_at) s/Any
+   (s/optional-key :meta_data_updated_at) s/Any
 
-   ;:responsible_delegation_id (s/maybe s/Uuid)
+   (s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)
   })
 
 (def schema_export_col_arc
@@ -318,8 +326,21 @@
    :created_at s/Any
   })
 
+
 (def schema_export_preview
-  { })
+  {:id s/Uuid
+   :media_file_id s/Uuid
+   :media_type s/Str
+   :content_type s/Str
+   ;(s/enum "small" "small_125" "medium" "large" "x-large" "maximum")
+   :thumbnail s/Str 
+   :width (s/maybe s/Int)
+   :height (s/maybe s/Int)
+   :filename s/Str
+   :conversion_profile (s/maybe s/Str)
+   :updated_at s/Any
+   :created_at s/Any
+   })
 
 (def schema_export_meta_data
   {:id s/Uuid
@@ -337,8 +358,8 @@
 (def schema_query_media_entries_related_result
   {:media_entries [schema_export_media_entry]
    :meta_data [ [ schema_export_meta_data]]
-   :media_files [[ schema_export_media_file ]]
-   :previews [[ s/Any]] ; schema_export_preview]]
+   :media_files [(s/maybe schema_export_media_file)]
+   :previews [[ (s/maybe schema_export_preview)]] 
    (s/optional-key :col_arcs) [schema_export_col_arc]
    (s/optional-key :col_meta_data) [schema_export_meta_data]})
 
@@ -402,6 +423,8 @@
                         sd/ring-wrap-authorization-view]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Uuid}}
+           :responses {200 {:body schema_export_media_entry}
+                       404 {:body s/Any}}
            }
      
 

@@ -82,7 +82,7 @@
                                  :collection_collection_arcs
                                  data whcl)]
         (if (= 1 (first result))
-          (sd/response_ok (sd/query-eq2-find-one
+          (sd/response_ok (sd/query-eq-find-one
                            :collection_collection_arcs
                            :parent_id parent-id
                            :child_id child-id))
@@ -94,7 +94,7 @@
      (catcher/with-logging {}
        (let [parent-id (-> req :parameters :path :parent_id)
              child-id (-> req :parameters :path :child_id)
-             olddata (sd/query-eq2-find-one
+             olddata (sd/query-eq-find-one
                       :collection_collection_arcs
                       :parent_id parent-id
                       :child_id child-id)

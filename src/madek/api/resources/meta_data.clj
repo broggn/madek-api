@@ -5,12 +5,14 @@
             [logbug.catcher :as catcher]
             [madek.api.resources.meta-data.index :as meta-data.index]
             [madek.api.resources.meta-data.meta-datum :as meta-datum]
+            
             [madek.api.resources.shared :as sd]
             [madek.api.utils.rdbms :as rdbms]
             [madek.api.utils.sql :as sql]
             [reitit.coercion.schema]
             [reitit.coercion.spec]
-            [schema.core :as s]))
+            [schema.core :as s]
+            ))
 
 (defn- col-key-for-mr-type [mr]
   (let [mr-type (-> mr :type)]
@@ -630,7 +632,7 @@
                                          (map (-> :role_id))
                                          (map #(sd/query-eq-find-one :roles :id %)))
                      "default")
-          mde-result {:meta-data result
+          mde-result {:meta_data result
                       (keyword md-type-kw) mde
                       (keyword md-type-kw-data) mde-data}
           ]
@@ -656,6 +658,13 @@
   )
 )
 
+(defn handle_get-mr-meta-data-with-related [request]
+  ;(logging/info "get-index" "\nmedia-resource\n" (:media-resource request))
+  (when-let [media-resource (:media-resource request)]
+    (when-let [meta-data (meta-data.index/get-meta-data request media-resource)]
+      (let [extra (map #(add-meta-data-extra %) meta-data)
+            data extra]
+        (sd/response_ok data)))))
 
 (defn wrap-add-keyword [handler]
   (fn [request] (sd/req-find-data
@@ -782,7 +791,19 @@
                                                    ; TODO 401s test fails
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:collection_id s/Str}
-                        :query {(s/optional-key :updated_after) s/Str
+                        :query {(s/optional-key :updated_after) s/Inst
+                                (s/optional-key :meta_keys) s/Str}}
+           :responses {200 {:body s/Any}}}}]
+   
+   ["/:collection_id/meta-data-related"
+    {:get {:summary "Get meta-data for collection."
+           :handler handle_get-mr-meta-data-with-related
+           :middleware [sd/ring-wrap-add-media-resource
+                        sd/ring-wrap-authorization-view]
+                                                      ; TODO 401s test fails
+           :coercion reitit.coercion.schema/coercion
+           :parameters {:path {:collection_id s/Str}
+                        :query {(s/optional-key :updated_after) s/Inst
                                 (s/optional-key :meta_keys) s/Str}}
            :responses {200 {:body s/Any}}}}]
    
@@ -977,13 +998,23 @@
    ["/:media_entry_id/meta-data"
     {:get {:summary "Get meta-data for media-entry."
            :handler meta-data.index/get-index
-                                                      ; TODO 401s test fails
+; TODO 401s test fails
            :middleware [sd/ring-wrap-add-media-resource
-                        sd/ring-wrap-authorization-view
-                        ]
+                        sd/ring-wrap-authorization-view]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Str}
-                        :query {(s/optional-key :updated_after) s/Str
+                        :query {(s/optional-key :updated_after) s/Inst
+                                (s/optional-key :meta_keys) s/Str}}
+           :responses {200 {:body s/Any}}}}]
+   
+   ["/:media_entry_id/meta-data-related"
+    {:get {:summary "Get meta-data for media-entry."
+           :handler handle_get-mr-meta-data-with-related
+           :middleware [sd/ring-wrap-add-media-resource
+                        sd/ring-wrap-authorization-view]
+           :coercion reitit.coercion.schema/coercion
+           :parameters {:path {:media_entry_id s/Str}
+                        :query {(s/optional-key :updated_after) s/Inst
                                 (s/optional-key :meta_keys) s/Str}}
            :responses {200 {:body s/Any}}}}]
    

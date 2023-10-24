@@ -19,14 +19,14 @@ services:
     http:
 
       host: localhost
-      port: 3102
+      port: 3104
       context: ""
-      sub_context: /api
+      sub_context: ""
       ssl: false
 
     nrepl:
       port: 7802
       bind: "127.0.0.1"
-      enabled: true
+      enabled: false
 
 

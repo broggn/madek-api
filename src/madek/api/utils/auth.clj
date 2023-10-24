@@ -3,7 +3,6 @@
     [clj-uuid]
     [clojure.java.jdbc :as jdbc]
     [clojure.tools.logging :as logging]
-    [compojure.core :as cpj]
     [logbug.debug :as debug]
     [madek.api.utils.rdbms :as rdbms]
     [madek.api.utils.sql :as sql]

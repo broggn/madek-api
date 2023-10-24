@@ -1,6 +1,7 @@
 (ns madek.api.resources.people
   (:require [clj-uuid]
             [clojure.java.jdbc :as jdbc]
+            [next.jdbc :as njdbc]
             [clojure.tools.logging :as log]
             [madek.api.pagination :as pagination]
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
@@ -92,7 +93,9 @@
   (let [query-params (-> request :parameters :query)
         sql-query (build-index-query query-params)
         db-result (jdbc/query (rdbms/get-ds) sql-query)
+        ;db-result (njdbc/execute! (rdbms/get-ds) sql-query)
         result (map transform_export db-result)]
+    ;(logging/info "handle_query-people: \n" sql-query)
     (sd/response_ok {:people result})))
 
 
@@ -158,7 +161,7 @@
   {:id s/Uuid
    :subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
    (s/optional-key :first_name) (s/maybe s/Str)
-   (s/optional-key :last_name) s/Str
+   (s/optional-key :last_name) (s/maybe s/Str)
    (s/optional-key :searchable) s/Str
 
    (s/optional-key :institutional_id) (s/maybe s/Str)

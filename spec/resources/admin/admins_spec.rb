@@ -83,7 +83,7 @@ context 'admin users' do
         it 'responds 404 with non-existing id' do
           # TODO build non-existent uuid
           response = client.get("/api/admin/admins/#{user.id}")
-          expect(response.body).to be == 404
+          expect(response.status).to be == 404
         end
 
         describe 'existing id' do

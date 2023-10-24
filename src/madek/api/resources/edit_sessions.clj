@@ -55,7 +55,7 @@
   [req]
   (let [id (-> req :parameters :path :id)
         u-id (-> req :authenticated-entity :id)]
-    (if-let [result (sd/query-eq2-find-one :edit_sessions :id id :user_id u-id)]
+    (if-let [result (sd/query-eq-find-one :edit_sessions :id id :user_id u-id)]
       (sd/response_ok result)
       (sd/response_not_found (str "No such edit_session for id: " id)))))
 
@@ -78,7 +78,7 @@
         mr-id (-> mr :id str)
         col-key (if (= mr-type "MediaEntry") :media_entry_id :collection_id)]
     ;(logging/info "handle_get-edit-sessions" "\ntype\n" mr-type "\nmr-id\n" mr-id "\ncol-name\n" col-name)
-    (if-let [result (sd/query-eq2-find-all :edit_sessions col-key mr-id :user_id u-id)]
+    (if-let [result (sd/query-eq-find-all :edit_sessions col-key mr-id :user_id u-id)]
       (sd/response_ok result)
       (sd/response_not_found (str "No such edit_session for " mr-type " with id: " mr-id)))
     ))

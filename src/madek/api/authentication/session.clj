@@ -1,20 +1,25 @@
 (ns madek.api.authentication.session
-  (:require
-    [madek.api.legacy.session.encryptor :refer [decrypt]]
-    [madek.api.legacy.session.signature :refer [valid?]]
-    [madek.api.utils.config :refer [get-config parse-config-duration-to-seconds]]
-    [madek.api.utils.rdbms :as rdbms]
-    [clj-time.core :as time]
-    [clj-time.format :as time-format]
-    [clojure.java.jdbc :as jdbc]
-    [clojure.tools.logging :as logging]
-    [clojure.walk :refer [keywordize-keys]]
-    [logbug.catcher :as catcher]
-    [logbug.debug :as debug]
-    [logbug.thrown :as thrown]
-    [taoensso.timbre :refer [debug info warn error spy]]
-    
-    [madek.api.resources.shared :as sd]))
+  (:require 
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [next.jdbc :as njdbc]
+            [buddy.core.codecs :refer [bytes->b64 bytes->str]]
+            [buddy.core.hash :as hash]
+            [clj-time.core :as time]
+            [clj-time.format :as time-format]
+            [clojure.java.jdbc :as jdbc]
+            [clojure.walk :refer [keywordize-keys]]
+            [logbug.catcher :as catcher]
+            [madek.api.legacy.session.encryptor :refer [decrypt]]
+            [madek.api.legacy.session.signature :refer [valid?]]
+            [madek.api.resources.shared :as sd]
+            [madek.api.utils.config :refer [get-config
+                                            parse-config-duration-to-seconds]]
+            [madek.api.utils.rdbms :as rdbms]
+            ;[madek.api.utils.sql :as sql] ;[honey.sql :refer [format] :rename {format sql-format}]
+            [taoensso.timbre :refer [debug spy]]
+            [clojure.tools.logging :as logging]
+            ))
 
 (defn- get-session-secret []
   (-> (get-config) :madek_master_secret))
@@ -61,6 +66,46 @@
                   (session-expiration-time session-object
                                            (get-validity-duration-secs)))))
 
+(defn- token-hash [token]
+  (-> token hash/sha256 bytes->b64 bytes->str))
+
+(def expiration-sql-expr
+  [:+ :user_sessions.created_at
+   [:* :auth_systems.session_max_lifetime_hours [:raw "INTERVAL '1 hour'"]]])
+
+(def selects
+  [[:auth_systems.id :auth_system_id]
+   [:auth_systems.name :auth_system_name]
+   [:people.first_name :person_first_name]
+   [:people.institutional_id :person_institutional_id]
+   [:people.last_name :person_last_name]
+   [:people.pseudonym :person_pseudonym]
+   [:user_sessions.created_at :session_created_at]
+   [:user_sessions.id :session_id]
+   [:users.email :user_email]
+   [:users.id :user_id]
+   [:users.institutional_id :user_institutional_id]
+   [:users.login :user_login]
+   [expiration-sql-expr :session_expires_at]
+   ])
+
+(defn user-session-query [token-hash]
+  (-> (apply sql/select selects)
+      (sql/from :user_sessions)
+      (sql/join :users [:= :user_sessions.user_id :users.id])
+      (sql/join :people [:= :people.id :users.person_id])
+      (sql/join :auth_systems [:= :user_sessions.auth_system_id :auth_systems.id])
+      (sql/where [:= :user_sessions.token_hash token-hash])
+      (sql/where [:<= [:now] expiration-sql-expr])
+      ))
+
+(defn user-session [token-hash ]
+  (-> token-hash
+      user-session-query
+      (sql-format :inline true)
+      spy
+      (#(njdbc/execute! (rdbms/get-ds) %))))
+
 (defn- session-enbabled? []
   (-> (get-config) :madek_api_session_enabled boolean))
 
@@ -74,24 +119,49 @@
 (defn- handle [request handler]
   (debug 'handle request)
   (if-let [cookie-value (and (session-enbabled?) (get-cookie-value request))]
-    (if-let [session-object (decrypt-cookie cookie-value)]
-      (if-let [user (-> session-object :user_id get-user)]
-        (if-not (session-signature-valid? user session-object)
-          {:status 401 :body {:message "The session is invalid!"}}
-          (let [expiration-time (session-expiration-time
-                                  session-object (get-validity-duration-secs))
-                now (time/now)]
-            (if (time/after? now expiration-time)
-              {:status 401 :body {:message "The session has expired!"}}
-              (handler (assoc request
-                              :authenticated-entity user
-                              ; TODO move into ae
-                              :is_admin (sd/is-admin (:id user))
-                              :authentication-method "Session"
-                              :session-expiration-seconds
-                              (in-seconds now expiration-time))))))
-        {:status 401 :body {:message "The user was not found!"}})
-      {:status 401 :body {:message "Decryption of the session cookie failed!"}})
+    (let [token-hash (token-hash cookie-value)
+          ;expiration-time (session-expiration-time
+          ;                 session-object (get-validity-duration-secs))
+          ;now (time/now)
+          ]
+      (if-let [user-sessions (user-session token-hash)]
+        (let [user-session (first user-sessions)
+              user-id (:users/user_id user-session)
+              user (assoc (sd/query-eq-find-one :users :id user-id) :type "User")]
+          ;(logging/info "handle session: "
+                        ;"\nfound user session:\n " user-session
+          ;              "\n user-id:  " user-id
+          ;              "\n user: " user)
+          (handler (assoc request
+                          :authenticated-entity user
+                          :is_admin (sd/is-admin user-id)
+                          :authentication-method "Session"
+                          :session-expiration-seconds 3600 ; TODO
+                                  ;(in-seconds now expiration-time)
+                          ))
+          )
+        
+        {:status 401 :body {:message "The session is invalid!"}}
+        )
+      )
+    ;(if-let [session-object (decrypt-cookie cookie-value)]
+    ;  (if-let [user (-> session-object :user_id get-user)]
+    ;    (if-not (session-signature-valid? user session-object)
+    ;      {:status 401 :body {:message "The session is invalid!"}}
+    ;      (let [expiration-time (session-expiration-time
+    ;                              session-object (get-validity-duration-secs))
+    ;            now (time/now)]
+    ;        (if (time/after? now expiration-time)
+    ;          {:status 401 :body {:message "The session has expired!"}}
+    ;          (handler (assoc request
+    ;                          :authenticated-entity user
+    ;                          ; TODO move into ae
+    ;                          :is_admin (sd/is-admin (:id user))
+    ;                          :authentication-method "Session"
+    ;                          :session-expiration-seconds
+    ;                          (in-seconds now expiration-time))))))
+    ;    {:status 401 :body {:message "The user was not found!"}})
+      ;{:status 401 :body {:message "Decryption of the session cookie failed!"}})
     (handler request)))
 
 (defn wrap [handler]

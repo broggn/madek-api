@@ -1,8 +1,6 @@
 (ns madek.api.management
   (:require
-    [clojure.java.jdbc :as jdbc]
     [clojure.tools.logging :as logging]
-    [compojure.core :as cpj]
     [logbug.debug :as debug]
     [logbug.thrown :as thrown]
     [madek.api.authentication.basic :as basic-auth]

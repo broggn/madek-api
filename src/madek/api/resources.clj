@@ -1,17 +1,15 @@
 (ns madek.api.resources
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as logging]
-            ;[compojure.core :as cpj]
             ;[logbug.catcher :as catcher]
             [logbug.debug :as debug]
-            [madek.api.utils.config :refer [get-config]]
             [madek.api.authentication :as authentication]
             [madek.api.resources.admins :as admins]
-            [madek.api.utils.auth :refer [wrap-authorize-admin!]]
             [madek.api.resources.app-settings :as app-settings]
             [madek.api.resources.collection-collection-arcs :as collection-collection-arcs]
             [madek.api.resources.collection-media-entry-arcs :as collection-media-entry-arcs]
             [madek.api.resources.collections :as collections]
+            [madek.api.resources.confidential-links :as confidential-links]
             [madek.api.resources.context-keys :as context_keys]
             [madek.api.resources.contexts :as contexts]
             [madek.api.resources.custom-urls :as custom-urls]
@@ -31,18 +29,17 @@
             [madek.api.resources.meta-data :as meta-data]
             [madek.api.resources.meta-keys :as meta-keys]
             [madek.api.resources.people :as people]
+            [madek.api.resources.permissions :as permissions]
             [madek.api.resources.previews :as previews]
             [madek.api.resources.roles :as roles]
             [madek.api.resources.shared :as sd]
-            [madek.api.resources.usage-terms :as usage-terms]
             [madek.api.resources.static-pages :as static-pages]
+            [madek.api.resources.usage-terms :as usage-terms]
             [madek.api.resources.users :as users]
             [madek.api.resources.vocabularies :as vocabularies]
             [madek.api.resources.workflows :as workflows]
             [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-            [reitit.coercion.schema]
-            
-            [madek.api.resources.permissions :as permissions]))
+            [reitit.coercion.schema]))
             
 
 
@@ -169,10 +166,10 @@
    collection-collection-arcs/ring-routes
 
    full-texts/collection-routes
-   
+   confidential-links/user-col-routes
    custom-urls/query-routes
 
-   
+
    edit-sessions/query-routes
 
    ; favorites
@@ -180,19 +177,20 @@
    favorite-collections/favorite-routes
 
    full-texts/query-routes
-   
+
    ;media_entries
    media-entries/ring-routes
    media-entries/media-entry-routes
    previews/media-entry-routes
    meta-data/media-entry-routes
+   confidential-links/user-me-routes
    custom-urls/media-entry-routes
    edit-sessions/media-entry-routes
    favorite-media-entries/media-entry-routes
    media-files/media-entry-routes
    permissions/media-entry-routes
    full-texts/entry-routes
-   
+
    ;media_files
    media-files/media-file-routes
 
@@ -202,15 +200,13 @@
    previews/preview-routes
 
    roles/user-routes
-   
+
    users/user-routes
+   groups/user-routes
    usage-terms/user-routes
 
    vocabularies/user-routes
    workflows/user-routes
-   
-
-   
    ]) 
 
 
