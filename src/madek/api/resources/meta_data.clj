@@ -307,6 +307,15 @@
 (defn db-get-meta-data-keywords 
   [md-id]
   (sd/query-eq-find-all :meta_data_keywords :meta_datum_id md-id))
+  #_(let [query (-> (sd/build-query-base :meta_data_keywords :*)
+                  (sql/merge-where [:= :meta_datum_id md-id])
+                  (sql/merge-join :keywords [:= :keywords.id :meta_data_keywords.keyword_id])
+                  (sql/order-by [:keywords.term :asc])
+                  sql/format)]
+    (logging/info "db-get-meta-data-keywords:\n" query)
+    (let [result (jdbc/query (rdbms/get-ds) query)]
+      (logging/info "db-get-meta-data-keywords:\n" result))
+    )
 
 ; TODO only some results
 (defn handle_get-meta-data-keywords
@@ -656,6 +665,13 @@
   )
 )
 
+(defn handle_get-mr-meta-data-with-related [request]
+  ;(logging/info "get-index" "\nmedia-resource\n" (:media-resource request))
+  (when-let [media-resource (:media-resource request)]
+    (when-let [meta-data (meta-data.index/get-meta-data request media-resource)]
+      (let [extra (map #(add-meta-data-extra %) meta-data)
+            data extra]
+        (sd/response_ok data)))))
 
 (defn wrap-add-keyword [handler]
   (fn [request] (sd/req-find-data
@@ -737,9 +753,16 @@
         (handler req)
         ))))
 
+(def schema_export_meta-datum
+     {:id s/Uuid
+      :meta_key_id s/Str
+      :type s/Str
+      :value [{:id s/Uuid}]
+      (s/optional-key :media_entry_id) s/Uuid
+      (s/optional-key :collection_id) s/Uuid})
 
 ; TODO response coercion
-(def ring-routes
+(def meta-data-routes
   ["/meta-data"
    ["/:meta_datum_id" {:get {:handler meta-datum/get-meta-datum
                              :middleware [sd/ring-wrap-add-meta-datum-with-media-resource
@@ -748,8 +771,7 @@
                              :description "Get meta-data for id. TODO: should return 404, if no such meta-data role exists."
                              :coercion reitit.coercion.schema/coercion
                              :parameters {:path {:meta_datum_id s/Str}}
-                              ; TODO response coercion
-                             :responses {200 {:body s/Any}
+                             :responses {200 {:body schema_export_meta-datum}
                                          401 {:body s/Any}
                                          403 {:body s/Any}
                                          500 {:body s/Any}}}}]
@@ -764,14 +786,27 @@
                                          :parameters {:path {:meta_datum_id s/Str}}}}]
                                           ;:responses {200 {:body s/Any}
                                                       ;422 {:body s/Any}}
-   ["/:meta_datum_id/role" {:get {:summary "Get meta-data role for id"
-                                  :handler meta-datum/handle_get-meta-datum-role
-                                  :description "Get meta-data role for id. TODO: should return 404, if no such meta-data role exists."
-                                  :coercion reitit.coercion.schema/coercion
-                                  :parameters {:path {:meta_datum_id s/Str}}
-                                  :responses {200 {:body s/Any}}}}]
-  ])
    
+     ])
+   
+(def schema_export_mdrole
+  {:id s/Uuid
+   :meta_datum_id s/Uuid
+   :person_id s/Uuid
+   :role_id (s/maybe s/Uuid)
+   :position s/Int})
+
+(def role-routes
+  ["/meta-data-role/:meta_data_role_id"
+   {:get {:summary " Get meta-data role for id "
+          :handler meta-datum/handle_get-meta-datum-role
+          :description " Get meta-datum-role for id. returns 404, if no such meta-data role exists. "
+          :coercion reitit.coercion.schema/coercion
+          :parameters {:path {:meta_data_role_id s/Str}}
+          :responses {200 {:body schema_export_mdrole}
+                      404 {:body s/Any}}}}
+   ])
+
 (def collection-routes
   ["/collection"
    ["/:collection_id/meta-data"
@@ -782,7 +817,19 @@
                                                    ; TODO 401s test fails
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:collection_id s/Str}
-                        :query {(s/optional-key :updated_after) s/Str
+                        :query {(s/optional-key :updated_after) s/Inst
+                                (s/optional-key :meta_keys) s/Str}}
+           :responses {200 {:body s/Any}}}}]
+   
+   ["/:collection_id/meta-data-related"
+    {:get {:summary "Get meta-data for collection."
+           :handler handle_get-mr-meta-data-with-related
+           :middleware [sd/ring-wrap-add-media-resource
+                        sd/ring-wrap-authorization-view]
+                                                      ; TODO 401s test fails
+           :coercion reitit.coercion.schema/coercion
+           :parameters {:path {:collection_id s/Str}
+                        :query {(s/optional-key :updated_after) s/Inst
                                 (s/optional-key :meta_keys) s/Str}}
            :responses {200 {:body s/Any}}}}]
    
@@ -965,7 +1012,7 @@
                          sd/ring-wrap-add-media-resource
                          sd/ring-wrap-authorization-edit-metadata]
             :coercion reitit.coercion.schema/coercion
-            :parameters {:path {:media_entry_id s/Str
+            :parameters {:path {:collection_id s/Str
                                 :meta_key_id s/Str
                                 :role_id s/Str}}
             :responses {200 {:body s/Any}}}}]
@@ -977,13 +1024,23 @@
    ["/:media_entry_id/meta-data"
     {:get {:summary "Get meta-data for media-entry."
            :handler meta-data.index/get-index
-                                                      ; TODO 401s test fails
+; TODO 401s test fails
            :middleware [sd/ring-wrap-add-media-resource
-                        sd/ring-wrap-authorization-view
-                        ]
+                        sd/ring-wrap-authorization-view]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Str}
-                        :query {(s/optional-key :updated_after) s/Str
+                        :query {(s/optional-key :updated_after) s/Inst
+                                (s/optional-key :meta_keys) s/Str}}
+           :responses {200 {:body s/Any}}}}]
+   
+   ["/:media_entry_id/meta-data-related"
+    {:get {:summary "Get meta-data for media-entry."
+           :handler handle_get-mr-meta-data-with-related
+           :middleware [sd/ring-wrap-add-media-resource
+                        sd/ring-wrap-authorization-view]
+           :coercion reitit.coercion.schema/coercion
+           :parameters {:path {:media_entry_id s/Str}
+                        :query {(s/optional-key :updated_after) s/Inst
                                 (s/optional-key :meta_keys) s/Str}}
            :responses {200 {:body s/Any}}}}]
    

@@ -3,8 +3,8 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as logging]
             [clojure.walk :refer [keywordize-keys]]
+            ;[honeysql.helpers :as h2helpers]
             [java-time.api :as jt]
-            [compojure.core :as cpj]
             [logbug.catcher :as catcher]
             [schema.core :as s]
             [madek.api.utils.sql :as sql]
@@ -38,27 +38,41 @@
       query
       (-> query (sql/merge-where [:= param pval])))))
 
+
+
+(defn try-instant-on-presence [data keyword]
+  (try
+    ;(logging/info "try-instant-on-presence " data keyword)
+    (if-not (nil? (-> data keyword))
+      (assoc data keyword (-> data keyword .toInstant))
+      data)
+    (catch Exception ex
+      (logging/error "Invalid instant data" (ex-message ex))
+      data)))
+
+(defn try-instant [dinst]
+  (try
+    ;(logging/info "try-instant " dinst)
+    (if-not (nil? dinst)
+      (.toInstant dinst)
+      nil)
+    (catch Exception ex
+      (logging/error "Invalid instant data" dinst (ex-message ex))
+      nil)))
+
 (defn try-parse-date-time [dt_string]
   (try
-
+(logging/info "try-parse-date-time "
+              dt_string)
     (let [zoneid (java.time.ZoneId/systemDefault)
+          
           parsed2 (jt/local-date-time (jt/offset-date-time dt_string) zoneid)
-          ;parsed (or
-          ;        (try (.atZoneSameInstant (java.time.OffsetDateTime/parse dt_string) zoneid)
-          ;             (catch Exception ex nil))
-          ;        (try (java.time.ZonedDateTime/of (java.time.LocalDateTime/parse dt_string) zoneid)
-          ;             (catch Exception ex nil)))
-
-          ;local (.toLocalDateTime zoned)
-          ;local (.toLocalDateTime parsed)
           pcas (.toString parsed2)]
       (logging/info "try-parse-date-time "
                     dt_string
                     "\n zoneid " zoneid
-                    "\n parsed2 " parsed2
-                    ;"\n zoned " zoned
-                    ;"\n local " local
-                    "\n pcas " pcas)
+                    "\n parsed " parsed2
+                    "\n result:  " pcas)
       pcas)
 
     (catch Exception ex
@@ -70,7 +84,9 @@
   (let [pval (-> query-params param mc/presence)]
     (if (nil? pval)
       query
-      (let [parsed (try-parse-date-time pval)]
+      ;(let [parsed (try-parse-date-time pval)]
+      (let [parsed (try-instant pval)]
+        (logging/info "build-query-created-or-updated-after: " pval ":" parsed)
         (if (nil? parsed)
           query
           (-> query (sql/merge-where 
@@ -81,7 +97,9 @@
   (let [pval (-> query-params param mc/presence)]
     (if (nil? pval)
       query
-      (let [parsed (try-parse-date-time pval)]
+      ;(let [parsed (try-parse-date-time pval)]
+      (let [parsed (try-instant pval)]
+        (logging/info "build-query-created-or-updated-after: " pval ":" parsed )
         (if (nil? parsed)
           query
           (-> query (sql/merge-where [:or
@@ -92,12 +110,18 @@
     )
   ))
 
-(defn build-query-param-like [query query-params param]
+; TODO use honeysql 2.x for ilike feature
+(defn build-query-param-like 
+  ([query query-params param]
+   (build-query-param-like query query-params param param))
+  ([query query-params param db-param]
   (let [pval (-> query-params param mc/presence)
         qval (str "%" pval "%")]
     (if (nil? pval)
       query
-      (-> query (sql/merge-where [:like param qval])))))
+      (-> query (sql/merge-where [:like db-param qval]))
+      ;(-> query (h2helpers/merge-where [:like param qval]))
+      ))))
 
 
 (defn- sql-query-find-eq
@@ -134,26 +158,37 @@
                      sql/format)
         db-result (jdbc/query (get-ds) db-query)
         ]
-    ;(logging/info "query-find-all" "\ndb-query\n" db-query "\ndb-result\n" db-result)
     db-result))
 
-(defn query-eq-find-all [table-name col-name row-data] 
+(defn query-eq-find-all 
+  ([table-name col-name row-data]
+   (catcher/snatch {}
+                   (jdbc/query
+                    (get-ds)
+                    (sql-query-find-eq table-name col-name row-data))))
+  
+  ([table-name col-name row-data col-name2 row-data2]
   (catcher/snatch {}
                   (jdbc/query
                    (get-ds)
-                   (sql-query-find-eq table-name col-name row-data))))
+                   (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))
+  )
 
-(defn query-eq-find-one [table-name col-name row-data]
-  (first (query-eq-find-all table-name col-name row-data)))
+(defn query-eq-find-one 
+  ([table-name col-name row-data]
+   (first (query-eq-find-all table-name col-name row-data)))
+  ([table-name col-name row-data col-name2 row-data2]
+   (first (query-eq-find-all table-name col-name row-data col-name2 row-data2)))
+  )
 
-(defn query-eq2-find-all [table-name col-name row-data col-name2 row-data2]
+#_(defn query-eq2-find-all [table-name col-name row-data col-name2 row-data2]
   (catcher/snatch {}
                   (jdbc/query
                    (get-ds)
                    (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))
 
-(defn query-eq2-find-one [table-name col-name row-data col-name2 row-data2]
-  (first (query-eq2-find-all table-name col-name row-data col-name2 row-data2)))
+#_(defn query-eq2-find-one [table-name col-name row-data col-name2 row-data2]
+  (first (query-eq-find-all table-name col-name row-data col-name2 row-data2)))
 
 ; end db-helpers
 
@@ -164,8 +199,10 @@
 (def internal-keys [:admin_comment])
 
 (defn remove-internal-keys
-  [resource]
-  (apply dissoc resource internal-keys))
+  ([resource]
+  (remove-internal-keys resource internal-keys))
+  ([resource keys]
+   (apply dissoc resource keys)))
 
 
 (defn response_ok 
@@ -243,7 +280,7 @@
    If it exists it is associated with the request as reqkey"
   [request handler search search2 db_table db_col_name db_col_name2 reqkey send404]
     (logging/info "req-find-data-search2" "\nc1: " db_col_name "\ns1: " search "\nc2: " db_col_name2 "\ns2: " search2)
-    (if-let [result-db (query-eq2-find-one db_table db_col_name search db_col_name2 search2)]
+    (if-let [result-db (query-eq-find-one db_table db_col_name search db_col_name2 search2)]
       (handler (assoc request reqkey result-db))
       (if (= true send404)
         (response_not_found (str "No such entity in " db_table " as " db_col_name " with " search " and " db_col_name2 " with " search2))
@@ -260,7 +297,7 @@
         search2 (-> request :parameters :path path-param2 str)]
     
     ;(logging/info "req-find-data2" "\nc1: " db_col_name "\ns1: " search "\nc2: " db_col_name2 "\ns2: " search2)
-    (if-let [result-db (query-eq2-find-one db_table db_col_name search db_col_name2 search2)]
+    (if-let [result-db (query-eq-find-one db_table db_col_name search db_col_name2 search2)]
       (handler (assoc request reqkey result-db))
       (if (= true send404)
         (response_not_found (str "No such entity in " db_table " as " db_col_name " with " search " and " db_col_name2 " with " search2))
@@ -326,8 +363,8 @@
 ; begin meta-data helpers
 
 (defn query-meta-datum [request]
-  (let [id (or (-> request :params :meta_datum_id) (-> request :parameters :path :meta_datum_id))]
-    (logging/info "query-meta-datum" "\nid\n" id)
+  (let [id (-> request :parameters :path :meta_datum_id)]
+    #_(logging/info "query-meta-datum" "\nid\n" id)
     (or (-> (jdbc/query (get-ds)
                         [(str "SELECT * FROM meta_data "
                               "WHERE id = ? ") id])

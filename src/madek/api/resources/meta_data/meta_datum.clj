@@ -2,18 +2,13 @@
   (:require
     [clojure.java.jdbc :as jdbc]
     [clojure.tools.logging :as logging]
-    [compojure.core :as cpj]
     [logbug.catcher :as catcher]
     [logbug.debug :as debug]
-    [madek.api.authorization :as authorization]
-    [madek.api.pagination :as pagination]
     [madek.api.resources.keywords.index :as keywords]
-    [madek.api.resources.shared :as shared]
     [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
     [madek.api.utils.sql :as sql]
     [ring.util.response :as ring-response]
     [cheshire.core :as json]
-    
     [madek.api.resources.shared :as sd]))
 
 ;### people ###################################################################
@@ -74,7 +69,6 @@
                      "MetaDatum::TextDate" (:string meta-datum)
                      (map #(select-keys % [:id])
                           ((case meta-datum-type
-                             "MetaDatum::Groups" groups-with-ids
                              "MetaDatum::Keywords" keywords/get-index
                              "MetaDatum::People" get-people-index
                              "MetaDatum::Roles" find-meta-data-roles)
@@ -92,7 +86,7 @@
 (defn get-meta-datum [request]
   (let [meta-datum (:meta-datum request)
         result (prepare-meta-datum meta-datum)]
-    (logging/info "get-meta-datum" "\nresult\n" result)
+    #_(logging/info "get-meta-datum" "\nresult\n" result)
     (sd/response_ok result)))
 
 ; TODO Q? why no response status
@@ -111,9 +105,12 @@
 
 (defn handle_get-meta-datum-role
   [req]
-  (let [id (-> req :parameters :path :meta_datum_id)
+  (let [id (-> req :parameters :path :meta_data_role_id)
         result (prepare-meta-datum-role id)]
-    (sd/response_ok result)))
+    (if-let [id (:id result)]
+      (sd/response_ok result)
+      (sd/response_not_found "No such meta-data-role"))
+    ))
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

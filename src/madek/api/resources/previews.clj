@@ -1,9 +1,6 @@
 (ns madek.api.resources.previews
   (:require
-    ;[clojure.java.jdbc :as jdbc]
     [clojure.tools.logging :as logging]
-    ;[compojure.core :as cpj]
-    ;[logbug.catcher :as catcher]
     ;[logbug.debug :as debug]
     [madek.api.resources.previews.preview :as preview]
     [madek.api.resources.shared :as sd]
@@ -12,29 +9,6 @@
     [schema.core :as s]
     [madek.api.resources.media-files :as media-files]
     ))
-
-;(defn- query-preview [preview-id]
-  ; we wrap this since badly formated preview-id strings can cause an
-  ; exception, note that 404 is in that case a correct response
-;  (catcher/snatch {}
-;    (-> (jdbc/query
-;          (get-ds)
-;          ["SELECT * FROM previews WHERE id = ?" preview-id])
-;        first)))
-
-;(defn- wrap-find-and-add-preview
-;  ([handler] #(wrap-find-and-add-preview % handler))
-;  ([request handler]
-;   (when-let [preview-id (-> request :route-params :preview_id)]
-;     (when-let [preview (query-preview preview-id)]
-;       (handler (assoc request :preview preview))))))
-
-;(def routes
-;  (-> (cpj/routes
-;        (cpj/GET "/previews/:preview_id" _ preview/get-preview)
-;        (cpj/GET "/previews/:preview_id/data-stream" _ preview/get-preview-file-data-stream)
-;        (cpj/ANY "*" _ sd/dead-end-handler))
-;      wrap-find-and-add-preview))
 
 (defn ring-wrap-find-and-add-preview
   ([handler] #(ring-wrap-find-and-add-preview % handler))
@@ -49,10 +23,12 @@
   [req]
   (let [media-file (-> req :media-file)
         id (:id media-file)
-        previews (sd/query-eq-find-all  :previews :media_file_id id)
-        pfirst (first previews)]
-    (logging/info "handle_get-preview" "\nid\n" id "\nmf\n" media-file "\npreviews\n" pfirst)
-    (sd/response_ok pfirst)
+        size (or (-> req :parameters :query :size) "small")]
+    (if-let [preview (sd/query-eq-find-one :previews :media_file_id id :thumbnail size)]
+      (sd/response_ok preview)
+      (sd/response_not_found "No such preview file"))
+    ;(logging/info "handle_get-preview" "\nid\n" id "\nmf\n" media-file "\npreviews\n" preview)
+    
     ))
 
 (defn add-preview-for-media-file [handler request]
@@ -78,6 +54,20 @@
   (fn [request]
     (ring-add-media-resource-preview request handler)))
 
+
+(def schema_export_preview
+  {:id s/Uuid
+   :media_file_id s/Uuid
+   :media_type s/Str
+   :content_type s/Str
+   ;(s/enum "small" "small_125" "medium" "large" "x-large" "maximum")
+   :thumbnail s/Str
+   :width (s/maybe s/Int)
+   :height (s/maybe s/Int)
+   :filename s/Str
+   :conversion_profile (s/maybe s/Str)
+   :updated_at s/Any
+   :created_at s/Any})
 
 ; TODO tests
 (def preview-routes
@@ -116,7 +106,9 @@
                         ]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Str}
-                        :query {(s/optional-key :size) s/Str}}}}]
+                        :query {(s/optional-key :size) s/Str}}
+           :responses {200 {:body schema_export_preview}
+                       404 {:body s/Any}}}}]
    ; TODO media-entry preview auth
    ["/:media_entry_id/preview/data-stream"
     {:get {:summary "Get preview for media-entry id."

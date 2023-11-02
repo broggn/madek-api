@@ -60,47 +60,52 @@ shared_context :random_resource_type do |_ctx|
     end  
   end
   def resource_url_typed_ided_personed_positioned(meta_key_id, type, id, person_id, position)
+    mkid = CGI.escape(meta_key_id)
     case media_resource
     when MediaEntry
-      "/api/media-entry/#{media_resource.id}/meta-data/#{meta_key_id}/#{type}/#{id}/#{person_id}/#{position}"
+      "/api/media-entry/#{media_resource.id}/meta-datum/#{mkid}/#{type}/#{id}/#{person_id}/#{position}"
     when Collection
-      "/api/collection/#{media_resource.id}/meta-data/#{meta_key_id}/#{type}/#{id}/#{person_id}/#{position}"
+      "/api/collection/#{media_resource.id}/meta-datum/#{mkid}/#{type}/#{id}/#{person_id}/#{position}"
     end
   end
 
   def resource_url_typed_ided_personed(meta_key_id, type, id, person_id)
+    mkid = CGI.escape(meta_key_id)
     case media_resource
     when MediaEntry
-      "/api/media-entry/#{media_resource.id}/meta-data/#{meta_key_id}/#{type}/#{id}/#{person_id}"
+      "/api/media-entry/#{media_resource.id}/meta-datum/#{mkid}/#{type}/#{id}/#{person_id}"
     when Collection
-      "/api/collection/#{media_resource.id}/meta-data/#{meta_key_id}/#{type}/#{id}/#{person_id}"
+      "/api/collection/#{media_resource.id}/meta-datum/#{mkid}/#{type}/#{id}/#{person_id}"
     end
   end
 
   def resource_url_typed_ided(meta_key_id, type, id)
+    mkid = CGI.escape(meta_key_id)
     case media_resource
     when MediaEntry
-      "/api/media-entry/#{media_resource.id}/meta-data/#{meta_key_id}/#{type}/#{id}"
+      "/api/media-entry/#{media_resource.id}/meta-datum/#{mkid}/#{type}/#{id}"
     when Collection
-      "/api/collection/#{media_resource.id}/meta-data/#{meta_key_id}/#{type}/#{id}"
+      "/api/collection/#{media_resource.id}/meta-datum/#{mkid}/#{type}/#{id}"
     end
   end
 
   def resource_url_typed(meta_key_id, type)
+    mkid = CGI.escape(meta_key_id)
     case media_resource
     when MediaEntry
-      "/api/media-entry/#{media_resource.id}/meta-data/#{meta_key_id}/#{type}"
+      "/api/media-entry/#{media_resource.id}/meta-datum/#{mkid}/#{type}"
     when Collection
-      "/api/collection/#{media_resource.id}/meta-data/#{meta_key_id}/#{type}"
+      "/api/collection/#{media_resource.id}/meta-datum/#{mkid}/#{type}"
     end
   end
 
   def resource_url(meta_key_id)
+    mkid = CGI.escape(meta_key_id)
     case media_resource
     when MediaEntry
-      "/api/media-entry/#{media_resource.id}/meta-data/#{meta_key_id}"
+      "/api/media-entry/#{media_resource.id}/meta-datum/#{mkid}"
     when Collection
-      "/api/collection/#{media_resource.id}/meta-data/#{meta_key_id}"
+      "/api/collection/#{media_resource.id}/meta-datum/#{mkid}"
     end
   end
 end

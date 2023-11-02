@@ -6,33 +6,33 @@
     [madek.api.utils.sql :as sql]
     ))
 
-; (defn- delegation-ids-subquery [user_id]
-;   {:union
-;     [
-;       (-> (sql/select :delegation_id)
-;           (sql/from :delegations_groups)
-;           (sql/where [:in :delegations_groups.group_id (->
-;             (sql/select :group_id)
-;             (sql/from :groups_users)
-;             (sql/where [:= :groups_users.user_id user_id])
-;           )])
-;       )
-;       (-> (sql/select :delegation_id)
-;           (sql/from :delegations_users)
-;           (sql/where [:= :delegations_users.user_id user_id])
-;       )
-;     ]
-;   }
-; )
+ (defn- delegation-ids-subquery [user_id]
+   {:union
+     [
+       (-> (sql/select :delegation_id)
+           (sql/from :delegations_groups)
+           (sql/where [:in :delegations_groups.group_id (->
+             (sql/select :group_id)
+             (sql/from :groups_users)
+             (sql/where [:= :groups_users.user_id user_id])
+           )])
+       )
+       (-> (sql/select :delegation_id)
+           (sql/from :delegations_users)
+           (sql/where [:= :delegations_users.user_id user_id])
+       )
+     ]
+   }
+)
 
-(defn- api-client-authorized-condition [perm id]
-  [:or
-   [:= (keyword (str "media_entries." perm)) true]
-   [:exists (-> (sql/select true)
-                (sql/from [:media_entry_api_client_permissions :meacp])
-                (sql/merge-where [:= :meacp.media_entry_id :media_entries.id])
-                (sql/merge-where [:= (keyword (str "meacp." perm)) true])
-                (sql/merge-where [:= :meacp.api_client_id id]))]])
+;(defn- api-client-authorized-condition [perm id]
+;  [:or
+;   [:= (keyword (str "media_entries." perm)) true]
+;   [:exists (-> (sql/select true)
+;                (sql/from [:media_entry_api_client_permissions :meacp])
+;                (sql/merge-where [:= :meacp.media_entry_id :media_entries.id])
+;                (sql/merge-where [:= (keyword (str "meacp." perm)) true])
+;                (sql/merge-where [:= :meacp.api_client_id id]))]])
 
 (defn- group-permission-exists-condition [perm id]
   [:exists (-> (sql/select true)
@@ -64,22 +64,46 @@
   [:or
    [:= (keyword (str "media_entries." perm)) true]
    [:= :media_entries.responsible_user_id id]
-   ; [:in :media_entries.responsible_delegation_id (delegation-ids-subquery id)]
+   [:in :media_entries.responsible_delegation_id (delegation-ids-subquery id)]
    (user-permission-exists-condition perm id)
    (group-permission-for-user-exists-condition perm id)])
+
+(defn- user-authorized-condition-edit-md [perm id]
+  ; (println (sql/format (delegation-ids-subquery id)))
+  [:or
+   ;[:= (keyword (str "media_entries." perm)) true]
+   [:= :media_entries.responsible_user_id id]
+   [:in :media_entries.responsible_delegation_id (delegation-ids-subquery id)]
+   (user-permission-exists-condition perm id)
+   (group-permission-for-user-exists-condition perm id)])
+
+(defn- user-authorized-condition-edit-perms [perm id]
+  ; (println (sql/format (delegation-ids-subquery id)))
+  [:or
+   ;[:= (keyword (str "media_entries." perm)) true]
+   [:= :media_entries.responsible_user_id id]
+   [:in :media_entries.responsible_delegation_id (delegation-ids-subquery id)]
+   (user-permission-exists-condition perm id)
+   ;(group-permission-for-user-exists-condition perm id)
+   ])
 
 (defn- filter-by-permission-for-auth-entity [sqlmap permission authenticated-entity]
   (case (:type authenticated-entity)
     "User" (sql/merge-where sqlmap (user-authorized-condition
                                      permission (:id authenticated-entity)))
-    "ApiClient" (sql/merge-where sqlmap (api-client-authorized-condition
-                                          permission (:id authenticated-entity)))
+    ; TODO token
+    ; TODO session
+    ;"ApiClient" (sql/merge-where sqlmap (api-client-authorized-condition
+    ;                                      permission (:id authenticated-entity)))
     (throw (ex-info (str "Filtering for " permission " requires a signed-in entity." )
                                {:status 422}))))
 
 (defn filter-by-query-params [sqlmap query-params authenticated-entity]
 
-  (doseq [true_param ["me_get_full_size"  "me_get_metadata_and_previews"]]
+  (doseq [true_param ["me_get_full_size"
+                      "me_get_metadata_and_previews"
+                      "me_edit_metadata"
+                      "me_edit_permissions"]]
     (when (contains? query-params (keyword true_param))
       (when (not= (get query-params (keyword true_param)) true)
         (throw (ex-info (str "Value of " true_param " must be true when present." )
@@ -97,7 +121,19 @@
       (filter-by-permission-for-auth-entity "get_full_size" authenticated-entity)
 
     (= (:me_get_metadata_and_previews query-params) true)
-      (filter-by-permission-for-auth-entity "get_metadata_and_previews" authenticated-entity)))
+      (filter-by-permission-for-auth-entity "get_metadata_and_previews" authenticated-entity)
+    
+    (= (:me_edit_metadata query-params) true)
+      ;(filter-by-permission-for-auth-entity "edit_metadata" authenticated-entity)
+      (sql/merge-where (user-authorized-condition-edit-md
+                              "edit_metadata" (:id authenticated-entity)))
+    
+    (= (:me_edit_permissions query-params) true)
+      ;(filter-by-permission-for-auth-entity "edit_permissions" authenticated-entity)
+      (sql/merge-where (user-authorized-condition-edit-perms
+                               "edit_permissions" (:id authenticated-entity)))
+
+    ))
 
 (defn- sql-merge-where-permission-spec [sqlmap permission-spec]
   (case (:key permission-spec)

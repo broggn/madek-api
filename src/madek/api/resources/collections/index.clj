@@ -2,14 +2,13 @@
   (:require
     [clojure.java.jdbc :as jdbc]
     [clojure.tools.logging :as logging]
-    [compojure.core :as cpj]
     [logbug.catcher :as catcher]
     [logbug.debug :as debug]
     [madek.api.pagination :as pagination]
     [madek.api.resources.collections.advanced-filter.permissions :as permissions :refer [filter-by-query-params]]
     [madek.api.utils.rdbms :as rdbms]
     [madek.api.utils.sql :as sql]
-    ))
+    [madek.api.resources.shared :as sd]))
 
 ;### collection_id ############################################################
 
@@ -42,6 +41,8 @@
         authenticated-entity (:authenticated-entity request)
         sql-query (-> (base-query (:full_data query-params))
                       (set-order query-params)
+                      (sd/build-query-param query-params :creator_id)
+                      (sd/build-query-param query-params :responsible_user_id)
                       (filter-by-collection-id query-params)
                       (permissions/filter-by-query-params query-params
                                                           authenticated-entity)

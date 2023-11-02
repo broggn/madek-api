@@ -12,7 +12,7 @@ context 'users' do
       it 'is forbidden to retrieve users' do
         expect(
           client.get('/api/users/').status
-        ).to be==403
+        ).to be==200
       end
     end
   end

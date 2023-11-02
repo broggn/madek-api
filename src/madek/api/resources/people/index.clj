@@ -2,11 +2,10 @@
   (:require
     [clojure.java.jdbc :as jdbc]
     [clojure.tools.logging :as logging]
-    [compojure.core :as cpj]
     [logbug.catcher :as catcher]
     [logbug.debug :as debug]
     [madek.api.pagination :as pagination]
-    [madek.api.resources.shared :as shared]
+
     [madek.api.utils.rdbms :as rdbms]
     [madek.api.utils.sql :as sql]
     ))

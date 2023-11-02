@@ -227,9 +227,9 @@
       :handler handle_adm-list-context_keys
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
-      :parameters {:query {(s/optional-key :changed_after) s/Str
-                           (s/optional-key :created_after) s/Str
-                           (s/optional-key :updated_after) s/Str
+      :parameters {:query {(s/optional-key :changed_after) s/Inst
+                           (s/optional-key :created_after) s/Inst
+                           (s/optional-key :updated_after) s/Inst
                            (s/optional-key :page) s/Int
                            (s/optional-key :count) s/Int
                            (s/optional-key :id) s/Uuid
