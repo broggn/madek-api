@@ -757,7 +757,7 @@
      {:id s/Uuid
       :meta_key_id s/Str
       :type s/Str
-      :value [{:id s/Uuid}]
+      :value (s/->Either [[{:id s/Uuid}] s/Str]) 
       (s/optional-key :media_entry_id) s/Uuid
       (s/optional-key :collection_id) s/Uuid})
 
