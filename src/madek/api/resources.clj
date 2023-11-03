@@ -22,7 +22,7 @@
             [madek.api.resources.full-texts :as full-texts]
             [madek.api.resources.groups :as groups]
             [madek.api.resources.io-interfaces :as io-interfaces]
-            [madek.api.resources.io-mappings :as io-mappings]
+            ;[madek.api.resources.io-mappings :as io-mappings]
             [madek.api.resources.keywords :as keywords]
             [madek.api.resources.media-entries :as media-entries]
             [madek.api.resources.media-files :as media-files]
@@ -125,7 +125,7 @@
 
    groups/ring-routes
    io-interfaces/admin-routes
-   io-mappings/admin-routes
+   ;io-mappings/admin-routes
    keywords/admin-routes
 
    meta-keys/admin-routes
