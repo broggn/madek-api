@@ -1,19 +1,20 @@
 (ns madek.api.main
   (:gen-class)
   (:require
-    [clojure.pprint :refer [pprint]]
     [clojure.java.jdbc :as jdbc]
+    [clojure.pprint :refer [pprint]]
     [clojure.tools.cli :as cli]
     [clojure.tools.logging :as logging]
     [logbug.catcher :as catcher]
     [logbug.debug :as debug]
     [logbug.thrown]
     [madek.api.constants :as constants]
-    [madek.api.web :as web]
+    [madek.api.db.core :as db]
     [madek.api.utils.config :as config :refer [get-config]]
     [madek.api.utils.exit :as exit]
     [madek.api.utils.nrepl :as nrepl]
     [madek.api.utils.rdbms :as rdbms]
+    [madek.api.web :as web]
     [madek.api.web]
     [pg-types.all]
     [taoensso.timbre :as timbre :refer []]
@@ -29,6 +30,7 @@
     exit/cli-options
     nrepl/cli-options
     web/cli-options
+    db/cli-options
     ))
 
 (defn main-usage [options-summary & more]
@@ -68,9 +70,11 @@
                    "../config/settings.local.yml"]})
     (logging/info "Effective startup options " options)
     (logging/info "Effective startup config " (get-config))
+    ; WIP switching to new db container; remove old rdbms later 
     (rdbms/initialize (config/get-db-spec :api))
+    (db/init options)
+    ;
     (nrepl/init options)
-    
     (madek.api.constants/initialize (get-config)) 
     (madek.api.web/initialize options)
     (logging/info 'madek.api.main "... initialized")))

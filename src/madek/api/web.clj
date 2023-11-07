@@ -10,6 +10,8 @@
     [environ.core :refer [env]]
     [madek.api.utils.cli :refer [long-opt-for-key]]
 
+    [madek.api.db.core :refer [wrap-tx]]
+
     [logbug.catcher :as catcher]
     [logbug.debug :as debug :refer [I> I>>]]
     [logbug.ring :as logbug-ring :refer [wrap-handler-with-logging]]
@@ -217,6 +219,8 @@
                        authentication/wrap
                        authentication/wrap-audit
 
+                       wrap-tx
+
                        rrc/coerce-exceptions-middleware
                        rrc/coerce-request-middleware
                        rrc/coerce-response-middleware
@@ -244,7 +248,6 @@
    (rr/routes
     (rr/redirect-trailing-slash-handler)
     (rr/create-default-handler))))
-
 
 
 (def api-defaults
