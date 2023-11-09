@@ -35,12 +35,12 @@
 
 ;;; weave in bogus status wrapper ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn wrap-status 
+(defn wrap-status
   ([handler]
    (fn [request]
      (wrap-status handler request)))
   ([handler request]
-   (info "STATUS" request)
+   (debug "STATUS" request)
    (if (string/starts-with? (:uri request) "/api-v2/status")
      {:status 200
       :headers {"Content-Type" "application/json; charset=utf-8"}

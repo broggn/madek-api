@@ -1,106 +1,74 @@
 (ns madek.api.web
   (:require
-    ;[clojure.data.json :as json]
-    ;[clojure.java.io :as io]
     [clj-yaml.core :as yaml]
-    [clojure.tools.logging :as logging]
     [clojure.walk :refer [keywordize-keys]]
-    ;[environ.core :refer [env]]
-    
     [environ.core :refer [env]]
-    [madek.api.utils.cli :refer [long-opt-for-key]]
-
-    [madek.api.db.core :refer [wrap-tx]]
-
     [logbug.catcher :as catcher]
     [logbug.debug :as debug :refer [I> I>>]]
     [logbug.ring :as logbug-ring :refer [wrap-handler-with-logging]]
     [logbug.thrown :as thrown]
     [madek.api.authentication :as authentication]
-    ;[madek.api.authorization :as authorization]
-    [madek.api.resources.auth-info :as auth-info]
-    [madek.api.json-protocol]
-    
-    [madek.api.management :as management]
-    [madek.api.resources]
-    ;[madek.api.semver :as semver]
-    [madek.api.utils.config :refer [get-config]]
+    [madek.api.db.core :as db]
     [madek.api.http.server :as http-server]
-        
-    [ring.middleware.cors :as cors-middleware]
-    [ring.middleware.json]
-
-    [ring.middleware.reload :refer [wrap-reload]]
-    [reitit.ring.spec :as rs]
-    [reitit.ring :as rr]
-    [reitit.ring.middleware.exception :as re]
-    [reitit.ring.middleware.parameters :as rmp]
+    [madek.api.json-protocol]
+    [madek.api.management :as management]
+    [madek.api.resources.auth-info :as auth-info]
+    [madek.api.resources]
+    [madek.api.utils.cli :refer [long-opt-for-key]]
+    [madek.api.utils.config :refer [get-config]]
     [muuntaja.core :as m]
+    [reitit.coercion.schema]
+    [reitit.coercion.spec]
+    [reitit.ring :as rr]
+    [reitit.ring.coercion :as rrc]
+    [reitit.ring.middleware.exception :as re]
+    [reitit.ring.middleware.multipart :as multipart]
     [reitit.ring.middleware.muuntaja :as muuntaja]
-   
+    [reitit.ring.middleware.parameters :as rmp]
+    [reitit.ring.spec :as rs]
     [reitit.swagger :as swagger]
     [reitit.swagger-ui :as swagger-ui]
-    [reitit.coercion.spec]
-   
-    [reitit.ring.coercion :as rrc]
-    [reitit.coercion.schema]
+    [ring.middleware.cors :as cors-middleware]
     [ring.middleware.defaults :as ring-defaults]
-    
-    [reitit.ring.middleware.multipart :as multipart]))
-
-;### helper ###################################################################
-
-;(defn wrap-keywordize-request [handler]
-;  (fn [request]
-;    (-> request keywordize-keys handler)))
+    [ring.middleware.json]
+    [ring.middleware.reload :refer [wrap-reload]]
+    [taoensso.timbre :refer [debug error info spy warn]]))
 
 
-
-;### exeption #################################################################
+;### exception ################################################################
 
 (defonce last-ex* (atom nil))
 
-; TODO Q? why not with msg/message
-(defn- wrap-exception
-  ([handler]
-   (fn [request]
-     (wrap-exception request handler)))
-  ([request handler]
-   (try
-     (handler request)
-     (catch clojure.lang.ExceptionInfo ei
-       (reset! last-ex* ei)
-       (logging/error "Cought ExceptionInfo in Webstack" (thrown/stringify ei))
-       (if-let [status (-> ei ex-data :status)]
-         {:status status
-          :body {:msg (ex-message ei)}}
-         {:status 500
-          :body {:msg (ex-message ei)}}))
-     (catch Exception ex
-       (reset! last-ex* ex)
-       (logging/error "Cought ExceptionInfo in Webstack" (thrown/stringify ex))
-       {:status 500
-        :body {:msg (ex-message ex)}}))))
+(defn- server-error-response [exception]
+  ; server-error should be an unexpected exception
+  ; log message as error and log trace as warning
+  (error "Exception" (ex-message exception))
+  (warn "Exception" (thrown/stringify exception))
+  {:status 500
+   :body {:msg (ex-message exception)}})
 
+(defn- status-error-response [status exception]
+  ; status error response can be due to missing authorization etc
+  ; log message as warn and trance as debug
+  (warn "Exception" (ex-message exception))
+  (debug "Exception" (thrown/stringify exception))
+  {:status status
+   :body {:msg (ex-message exception)}})
 
-
-
-;### wrap json encoded query params ###########################################
-
-(defn try-as-json [value]
-  (try (cheshire.core/parse-string value)
-       (catch Exception _
-         value)))
-
-(defn- *wrap-parse-json-query-parameters [request handler]
-  (handler (assoc request :query-params
-                  (->> request :query-params
-                       (map (fn [[k v]] [k (try-as-json v)] ))
-                       (into {})))))
-
-(defn- wrap-parse-json-query-parameters [handler]
+(defn- wrap-catch-exception
+  [handler]
   (fn [request]
-    (*wrap-parse-json-query-parameters request handler)))
+    (try
+      (handler request)
+      (catch clojure.lang.ExceptionInfo ei
+        (reset! last-ex* ei)
+        (if-let [status (-> ei ex-data :status)]
+          (status-error-response status ei)
+          (server-error-response ei)))
+      (catch Exception ex
+        (reset! last-ex* ex)
+        (server-error-response ex)))))
+
 
 ;### wrap CORS ###############################################################
 
@@ -121,32 +89,9 @@
 
 ;##############################################################################
 
-;(defn build-site [context]
-;  (I> wrap-handler-with-logging
-;      dead-end-handler
-;      ; madek.api.resources/wrap-api-routes
-;      authorization/wrap-authorize-http-method
-;      authentication/wrap
-;      management/wrap
-;      web.browser/wrap
-;      wrap-public-routes
-;      wrap-keywordize-request
-;      (wrap-roa-req-if-configured (-> (get-config) :services :api :json_roa_enabled))
-;      wrap-parse-json-query-parameters
-;      (wrap-cors-if-configured (-> (get-config) :services :api :cors_enabled))
-;      status/wrap
-;      site
-;      (wrap-context context)
-;      (wrap-roa-res-if-configured (-> (get-config) :services :api :json_roa_enabled))
-;      (ring.middleware.json/wrap-json-body {:keywords? true})
-;      ring.middleware.json/wrap-json-response
-;      wrap-exception
-;      ))
-
-
 
 (def auth-info-route
-  ["/api/auth-info" 
+  ["/api/auth-info"
    {:get
     {:summary "Authentication help and info."
      :handler auth-info/auth-info
@@ -158,7 +103,7 @@
    ["/exception"
     {:get (fn [_] (throw (ex-info "test exception" {})))
      :skip-auth true}]
-   ["/ok" 
+   ["/ok"
     {:get (constantly {:status 200 :body {:ok "ok"}})
      :skip-auth true}]])
 
@@ -203,24 +148,15 @@
   {:validate rs/validate
    #_#_:compile coercion/compile-request-coercers
    :data {:middleware [swagger/swagger-feature
-  
                        ring-wrap-cors
                        rmp/parameters-middleware
-                           ;ring-wrap-parse-json-query-parameters 
                        muuntaja/format-negotiate-middleware
                        muuntaja/format-response-middleware
-                           ;(ring.middleware.json/wrap-json-body {:keywords? true})
-                           ;ring.middleware.json/wrap-json-response
-                       wrap-exception
+                       wrap-catch-exception
                        muuntaja/format-request-middleware
-                           ;auth/wrap-auth-madek-deps
-                       ;authorization/wrap-authorize-http-method 
-                       
                        authentication/wrap
-                       authentication/wrap-audit
-
-                       wrap-tx
-
+                       authentication/wrap-log
+                       db/wrap-tx
                        rrc/coerce-exceptions-middleware
                        rrc/coerce-request-middleware
                        rrc/coerce-response-middleware
@@ -228,7 +164,7 @@
           :muuntaja m/instance}})
 
 
-(def app-all 
+(def app-all
   (rr/ring-handler
    (rr/router get-router-data-all get-router-options)
    (rr/routes
@@ -261,15 +197,8 @@
   (ring-defaults/wrap-defaults handler api-defaults))
 
 
-;(defn- wrap-deps [handler db]
-;  (fn [req]
-;    (handler (assoc req :db db ))))
-
 (defn middleware [handler]
   (-> handler wrap-defaults))
-  ;[handler ds]
-  ;(-> handler (wrap-deps ds) wrap-defaults))
-
 
 
 ;### server ###################################################################
@@ -283,7 +212,7 @@
   (concat http-server/cli-options
           [[nil (long-opt-for-key http-resources-scope-key)
             "Either ALL, ADMIN or USER"
-            :default (or (some-> http-resources-scope-key env) 
+            :default (or (some-> http-resources-scope-key env)
                          "ALL")
             :validate [#(some #{%} ["ALL" "ADMIN" "USER"]) "scope must be ALL, ADMIN or USER"]
             ]]))
@@ -310,6 +239,7 @@
                   "ADMIN" (middleware app-admin)
                   "USER" (middleware app-user))]
     (http-server/start handler options)))
+
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

@@ -2,14 +2,14 @@
   (:require
     #?(:clj
        [taoensso.timbre.tools.logging]
-       [logbug.thrown :as thrown]
-       )
+       [logbug.thrown :as thrown])
     [taoensso.timbre.appenders.core :as appenders]
     [taoensso.timbre :as timbre :refer [debug info]]))
 
 
 (def LOGGING_CONFIG
   {:min-level [[#{
+                  ;"madek.api.authentication" ;
                   ;"madek.api.resources.*"
                   ;"madek.api.web"
                   } :debug]
