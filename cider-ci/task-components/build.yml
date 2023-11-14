@@ -7,5 +7,5 @@ scripts:
     body: |
       #/bin/env bash
       set -euo pipefail
-      cd $API_DIR
+      cd $API_V2_DIR
       ./bin/build

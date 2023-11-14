@@ -17,30 +17,29 @@ scripts:
 
   api-database-configure:
     start_when:
-      api-bundle-ruby passed: 
-        script_key: api-bundle-ruby 
+      api-bundle-ruby passed:
+        script_key: api-bundle-ruby
     body: |
       #!/usr/bin/env ruby
       require 'yaml'
-      settings_local= YAML.load_file "#{ENV['API_DIR']}/config/settings.local.yml"
+      settings_local= YAML.load_file "#{ENV['API_V2_DIR']}/config/settings.local.yml"
       settings_local['database']['subname']= "//localhost:#{ENV['PG15PORT']}/#{ENV['DATABASE']}"
       settings_local['database']['user']= ENV['PG15USER']
       settings_local['database']['password']= ENV['PG15PASSWORD']
-      IO.write "#{ENV['API_DIR']}/config/settings.local.yml", settings_local.to_yaml
+      IO.write "#{ENV['API_V2_DIR']}/config/settings.local.yml", settings_local.to_yaml
 
-  api-run:
+  api-v2-run:
     start_when:
       api-database-configure passed:
         script_key: api-database-configure
 
-  api-run:
+  api-v2-run:
     body: |
       #!/usr/bin/env bash
       set -euo pipefail
-      cd $API_DIR
-      export CLASSPATH="../config:madek-api.jar"
-      HTTP_SERVER_PORT=${API_V2_HTTP_PORT} \
-        java madek.api.main
+      cd $API_V2_DIR
+      source datalayer/cider-ci/bin/pg_env_set
+      HTTP_SERVER_PORT=${API_V2_HTTP_PORT} java -jar madek-api-v2.jar
     start_when:
       the database has been created:
         script_key: create-database
@@ -49,7 +48,7 @@ scripts:
       api-build:
         script_key: api-build
 
-  api-is-running:
+  api-v2-is-running:
     body: |
       #!/usr/bin/env bash
       set -euo pipefail
@@ -59,10 +58,10 @@ scripts:
       done
     start_when:
       run api is executing:
-        script_key: api-run
+        script_key: api-v2-run
         states: [executing]
 
-  api-shutdown:
+  api-v2-shutdown:
     start_when:
       test is terminal:
         script_key: test
@@ -76,5 +75,5 @@ scripts:
   test:
     start_when:
       the api is running:
-        script_key: api-is-running
+        script_key: api-v2-is-running
 

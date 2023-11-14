@@ -8,6 +8,7 @@
 /config/settings.local.yml
 /log
 /madek-api.jar
+/madek-api-v2.jar
 /target
 /tmp
 pom.xml

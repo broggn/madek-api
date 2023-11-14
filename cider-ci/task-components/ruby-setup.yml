@@ -9,8 +9,8 @@ scripts:
     body: |
       #!/usr/bin/env bash
       set -euo pipefail
-      cd $API_DIR
-      ./bin/env/ruby-setup 
+      cd $API_V2_DIR
+      ./bin/env/ruby-setup
 
   test:
     start_when:

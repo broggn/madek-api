@@ -1,6 +1,6 @@
 task_defaults:
   environment_variables:
-    API_DIR: "{{CIDER_CI_WORKING_DIR}}"
+    API_V2_DIR: "{{CIDER_CI_WORKING_DIR}}"
   include:
     - cider-ci/task-components/build.yml
 
