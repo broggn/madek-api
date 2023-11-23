@@ -30,8 +30,7 @@
              :documentation_urls (sd/transform_ml (:documentation_urls meta-key))
 
              :labels_2 (sd/transform_ml (:labels_2 meta-key))
-             :descriptions_2 (sd/transform_ml (:descriptions_2 meta-key))
-             )))
+             :descriptions_2 (sd/transform_ml (:descriptions_2 meta-key)))))
 
 (defn user-export-meta-key [meta-key]
   (-> meta-key
@@ -54,11 +53,10 @@
              :documentation_urls (sd/transform_ml (:documentation_urls meta-key))
 
              :labels_2 (sd/transform_ml (:labels_2 meta-key))
-             :descriptions_2 (sd/transform_ml (:descriptions_2 meta-key))
-             )))
+             :descriptions_2 (sd/transform_ml (:descriptions_2 meta-key)))))
 
 (defn handle_adm-query-meta-keys [req]
-  (let [db-result (mkindex/db-query-meta-keys req) 
+  (let [db-result (mkindex/db-query-meta-keys req)
         result (map adm-export-meta-key-list db-result)]
     (sd/response_ok {:meta-keys result})))
 
@@ -79,41 +77,35 @@
                 (user-export-meta-key mk) (:id mk))]
     (sd/response_ok result)))
 
-
 (defn handle_create_meta-key [req]
   (let [data (-> req :parameters :body)
         db-result (jdbc/insert! (rdbms/get-ds) :meta_keys data)]
-    
-    (sd/response_ok (first db-result))
-    ))
+
+    (sd/response_ok (first db-result))))
 
 (defn handle_update_meta-key [req]
   (let [;old-data (-> req :meta_key)
         data (-> req :parameters :body)
         id (-> req :parameters :path :id)
-        dwid (assoc data :id id) 
-        ]
+        dwid (assoc data :id id)]
     (logging/info "handle_update_meta-key:"
                   "\nid: " id
                   "\ndwid\n" dwid)
     (if-let [db-result (jdbc/update! (rdbms/get-ds)
-                        :meta_keys dwid ["id = ?" id])]
+                                     :meta_keys dwid ["id = ?" id])]
       (let [new-data (sd/query-eq-find-one :meta_keys :id id)]
-        (logging/info "handle_update_meta-key:" 
+        (logging/info "handle_update_meta-key:"
                       "\ndb-result:\n" db-result
                       "\nnew-data:\n" new-data)
         (sd/response_ok new-data))
-      (sd/response_failed "Could not update meta_key." 406))
-  ))
+      (sd/response_failed "Could not update meta_key." 406))))
 
 (defn handle_delete_meta-key [req]
   (let [meta-key (-> req :meta_key)
         db-result (jdbc/delete! (rdbms/get-ds) :meta_keys ["id = ?" (:id meta-key)])]
     (if (= 1 (first db-result))
       (sd/response_ok meta-key)
-      (sd/response_failed "Could not delete meta-key." 406))
-    ))
-
+      (sd/response_failed "Could not delete meta-key." 406))))
 
 (def schema_create-meta-key
   {:id s/Str
@@ -139,9 +131,7 @@
    (s/optional-key :hints) (s/maybe sd/schema_ml_list)
    (s/optional-key :documentation_urls) (s/maybe sd/schema_ml_list)
 
-   (s/optional-key :admin_comment) (s/maybe s/Str)
-
-   })
+   (s/optional-key :admin_comment) (s/maybe s/Str)})
 
 (def schema_update-meta-key
   {;:id s/Str
@@ -169,7 +159,7 @@
 
    (s/optional-key :admin_comment) (s/maybe s/Str)})
 
-(def schema_export-meta-key-usr 
+(def schema_export-meta-key-usr
   {:id s/Str
    (s/optional-key :is_extensible_list) s/Bool
    (s/optional-key :meta_datum_object_type) s/Str
@@ -207,17 +197,14 @@
          (s/optional-key :admin_comment_2) (s/maybe s/Str)))
 
 (def schema_query-meta-key
-  {
-   (s/optional-key :id) s/Str
+  {(s/optional-key :id) s/Str
    (s/optional-key :vocabulary_id) s/Str
    (s/optional-key :meta_datum_object_type) s/Str ; TODO enum
    (s/optional-key :is_enabled_for_collections) s/Bool
    (s/optional-key :is_enabled_for_media_entries) s/Bool
    (s/optional-key :scope) (s/enum "view" "use")
    (s/optional-key :page) s/Int
-   (s/optional-key :count) s/Int
-  })
-
+   (s/optional-key :count) s/Int})
 
 (defn wwrap-find-meta_key [param colname send404]
   (fn [handler]
@@ -225,7 +212,6 @@
                                     param
                                     :meta_keys colname
                                     :meta_key send404))))
-
 
 (def admin-routes
   ["/meta-keys"
@@ -247,11 +233,8 @@
             :parameters {:body schema_create-meta-key}
             :content-type "application/json"
             :coercion reitit.coercion.schema/coercion
-            :responses {200 {:body s/Any } ; TODO response coersion
-                        406 {:body s/Any }}
-            }
-              
-     }]
+            :responses {200 {:body s/Any} ; TODO response coersion
+                        406 {:body s/Any}}}}]
 
    ["/:id"
     {:get {:summary (sd/sum_adm "Get meta-key by id")
@@ -268,7 +251,7 @@
            :responses {200 {:body schema_export-meta-key-adm}
                        404 {:body {:message s/Str}}
                        422 {:body {:message s/Str}}}}
-     
+
      :put {:summary (sd/sum_adm "Update meta-key.")
            :handler handle_update_meta-key
            :swagger {:produces "application/json" :consumes "application/json"}
@@ -280,9 +263,8 @@
                         :body schema_update-meta-key}
            :responses {200 {:body s/Any} ; TODO response coercion
                        404 {:body {:message s/Str}}
-                       422 {:body {:message s/Str}}}
-           }
-     
+                       422 {:body {:message s/Str}}}}
+
      :delete {:summary (sd/sum_adm "Delete meta-key.")
               :handler handle_delete_meta-key
               :swagger {:produces "application/json" :consumes "application/json"}
@@ -292,16 +274,12 @@
               :parameters {:path {:id s/Str}}
               :responses {200 {:body schema_export-meta-key-adm}
                           404 {:body {:message s/Str}}
-                          422 {:body {:message s/Str}}}
-              }
-     
-     }]])
-
+                          422 {:body {:message s/Str}}}}}]])
 
 ; TODO tests
 (def query-routes
   ["/meta-keys"
-   ["/" 
+   ["/"
     {:get {:summary (sd/sum_usr_pub "Get all meta-key ids")
            :description "Get list of meta-key ids. Paging is used as you get a limit of 100 entries."
            :handler handle_usr-query-meta-keys
@@ -311,12 +289,9 @@
            :coercion reitit.coercion.schema/coercion
 
                ; TODO or better own link
-           :responses {200 {:body {:meta-keys [schema_export-meta-key-usr]}}}}
-         
-         
-         }]
+           :responses {200 {:body {:meta-keys [schema_export-meta-key-usr]}}}}}]
 
-   ["/:id" 
+   ["/:id"
     {:get {:summary (sd/sum_usr_pub "Get meta-key by id")
            :description "Get meta-key by id. Returns 404, if no such meta-key exists."
            :swagger {:produces "application/json"}

@@ -8,9 +8,6 @@
             [reitit.coercion.schema]
             [schema.core :as s]))
 
-
-
-
 (defn handle_list-admin
   [req]
   (let [qd (if (true? (-> req :parameters :query :full_data))
@@ -18,9 +15,7 @@
              :admins.id)
         db-result (sd/query-find-all :admins qd)]
     ;(logging/info "handle_list-admin" "\nqd\n" qd "\nresult\n" db-result)
-    (sd/response_ok {:admins db-result})
-    )
-  )
+    (sd/response_ok {:admins db-result})))
 
 (defn handle_get-admin
   [req]
@@ -44,7 +39,6 @@
           (sd/response_ok result)
           (sd/response_failed "Could not create admin." 406))))))
 
-
 (defn handle_delete-admin
   [req]
   (catcher/with-logging {}
@@ -59,7 +53,7 @@
 ;### wrappers #################################################################
 
 (defn wwrap-find-admin [param colname send404]
-  (fn [handler] 
+  (fn [handler]
     (fn [request] (sd/req-find-data
                    request handler param
                    :admins colname :admin send404))))
@@ -73,13 +67,10 @@
 ;### swagger io schema ########################################################
 
 (def schema_export-admin
-  {
-   :id s/Uuid
+  {:id s/Uuid
    :user_id s/Uuid
    :updated_at s/Any
-   :created_at s/Any
-  })
-
+   :created_at s/Any})
 
 ;### wrappers #################################################################
 

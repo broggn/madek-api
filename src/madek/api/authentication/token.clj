@@ -1,20 +1,19 @@
 (ns madek.api.authentication.token
   (:require
-    [clojure.java.jdbc :as jdbc]
-    [clojure.tools.logging :as logging]
-    [clojure.walk :refer [keywordize-keys]]
-    [logbug.debug :as debug]
-    [logbug.thrown :as thrown]
-    [madek.api.utils.rdbms :as rdbms]
-    [madek.api.utils.sql :as sql]
-    [pandect.algo.sha256 :as algo.sha256]
-    [madek.api.resources.shared :as sd])
+   [clojure.java.jdbc :as jdbc]
+   [clojure.tools.logging :as logging]
+   [clojure.walk :refer [keywordize-keys]]
+   [logbug.debug :as debug]
+   [logbug.thrown :as thrown]
+   [madek.api.resources.shared :as sd]
+   [madek.api.utils.rdbms :as rdbms]
+   [madek.api.utils.sql :as sql]
+   [pandect.algo.sha256 :as algo.sha256])
   (:import
-    [java.util Base64]))
+   [java.util Base64]))
 
 (defn ^String base64-encode [^bytes bts]
   (String. (.encode (Base64/getEncoder) bts)))
-
 
 (defn hash-string [s]
   (->> s
@@ -40,36 +39,33 @@
        (map #(clojure.set/rename-keys % {:email :email_address}))
        first))
 
-
 (defn violates-not-read? [user-token request]
   (and (not (:token_scope_read user-token))
        (#{:get :head :options}
-         (:request-method request))))
+        (:request-method request))))
 
 (defn violates-not-write? [user-token request]
   (and (not (:token_scope_write user-token))
        (#{:delete :put :post :patch}
-                  (:request-method request))))
-
+        (:request-method request))))
 
 (defn authenticate [user-token handler request]
   (cond
     (:token_revoked user-token) {:status 401
                                  :body "The token has been revoked."}
     (violates-not-read?
-      user-token request) {:status 403
-                           :body (str "The token is not allowed to read"
-                                      " i.e. to use safe http verbs.")}
+     user-token request) {:status 403
+                          :body (str "The token is not allowed to read"
+                                     " i.e. to use safe http verbs.")}
     (violates-not-write?
-      user-token request) {:status 403
-                           :body (str "The token is not allowed to write"
-                                      " i.e. to use unsafe http verbs.")}
+     user-token request) {:status 403
+                          :body (str "The token is not allowed to write"
+                                     " i.e. to use unsafe http verbs.")}
     :else (handler
-            (assoc request
-                   :authenticated-entity (assoc user-token :type "User")
+           (assoc request
+                  :authenticated-entity (assoc user-token :type "User")
                    ; TODO move into ae
-                   :is_admin (sd/is-admin (:user_id user-token))))))
-
+                  :is_admin (sd/is-admin (:user_id user-token))))))
 
 (defn find-token-secret-in-header [request]
   (when-let [header-value (-> request :headers keywordize-keys :authorization)]

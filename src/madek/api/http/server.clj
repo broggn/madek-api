@@ -1,17 +1,15 @@
 (ns madek.api.http.server
   (:refer-clojure :exclude [str keyword])
   (:require
-    [cuerdas.core :as string]
-    [environ.core :refer [env]]
-    [madek.api.utils.cli :refer [long-opt-for-key]]
-    [org.httpkit.server :as http-kit]
-    [taoensso.timbre :refer [debug info warn error]]))
-
+   [cuerdas.core :as string]
+   [environ.core :refer [env]]
+   [madek.api.utils.cli :refer [long-opt-for-key]]
+   [org.httpkit.server :as http-kit]
+   [taoensso.timbre :refer [debug info warn error]]))
 
 ;;; cli-options ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defonce options* (atom nil))
-
 
 (def ncpus (.availableProcessors (Runtime/getRuntime)))
 (def http-server-port-key :http-server-port)
@@ -32,7 +30,6 @@
     :parse-fn #(Integer/parseInt %)
     :validate [#(<= 1 % ncpus) "Must be an integer <= num cpus"]]])
 
-
 ;;; weave in bogus status wrapper ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn wrap-status
@@ -46,9 +43,6 @@
       :headers {"Content-Type" "application/json; charset=utf-8"}
       :body "{}"}
      (handler request))))
-
-
-
 
 ;;; server ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -66,10 +60,10 @@
   (info "starting HTTP server " @options* " ...")
   (reset! server*
           (http-kit/run-server
-            (-> handler
-                wrap-status)
-            {:ip (http-server-bind-key @options*)
-             :port (http-server-port-key @options*)
-             :thread (http-server-threads-key @options*)
-             :worker-name-prefix "http-server-worker-"}))
+           (-> handler
+               wrap-status)
+           {:ip (http-server-bind-key @options*)
+            :port (http-server-port-key @options*)
+            :thread (http-server-threads-key @options*)
+            :worker-name-prefix "http-server-worker-"}))
   (info "started HTTP server"))

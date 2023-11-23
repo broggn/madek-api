@@ -1,10 +1,9 @@
 (ns madek.api.pagination
   (:require
-    [clojure.tools.logging :as logging]
-    [clojure.walk :refer [keywordize-keys]]
-    [logbug.debug :as debug]
-    [madek.api.utils.sql :as sql]
-    ))
+   [clojure.tools.logging :as logging]
+   [clojure.walk :refer [keywordize-keys]]
+   [logbug.debug :as debug]
+   [madek.api.utils.sql :as sql]))
 
 (def DEFAULT_LIMIT 1000)
 
@@ -37,7 +36,6 @@
         i-page (page-number query-params)]
     (assoc query-params
            :page (+ i-page 1))))
-
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

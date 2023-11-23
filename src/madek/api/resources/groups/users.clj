@@ -9,9 +9,7 @@
    [madek.api.resources.shared :as sd]
    [madek.api.utils.rdbms :as rdbms]
    [madek.api.utils.sql :as sql]
-   [schema.core :as s]
-   ))
-
+   [schema.core :as s]))
 
 ;;; temporary users stuff ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -28,8 +26,8 @@
   ([id] (sql-merge-user-where-id {} id))
   ([sql-map id]
    (if (re-matches
-         #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-         id)
+        #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+        id)
      (sql/merge-where sql-map [:or
                                [:= :users.id id]
                                [:= :users.institutional_id id]
@@ -45,23 +43,21 @@
       (sql/from :users)
       sql/format))
 
-
 (defn find-user [some-id]
   (->> some-id find-user-sql
        (jdbc/query (rdbms/get-ds)) first))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 (defn group-user-query [group-id user-id]
   (-> ;(users/sql-select)
-      (sql/select {} :users.id :users.institutional_id :users.email :users.person_id)
-      (sql/from :users)
-      (sql/merge-join :groups_users [:= :users.id :groups_users.user_id])
-      (sql/merge-join :groups [:= :groups.id :groups_users.group_id])
-      (sql-merge-user-where-id user-id)
-      (groups/sql-merge-where-id group-id)
-      sql/format))
+   (sql/select {} :users.id :users.institutional_id :users.email :users.person_id)
+   (sql/from :users)
+   (sql/merge-join :groups_users [:= :users.id :groups_users.user_id])
+   (sql/merge-join :groups [:= :groups.id :groups_users.group_id])
+   (sql-merge-user-where-id user-id)
+   (groups/sql-merge-where-id group-id)
+   sql/format))
 
 (defn find-group-user [group-id user-id]
   ;(logging/info "find-group-user" group-id ":" user-id)
@@ -73,7 +69,6 @@
   (if-let [user (find-group-user group-id user-id)]
     (sd/response_ok user)
     (sd/response_failed "No such group user," 404)))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;TODO test paging
@@ -109,7 +104,6 @@
                                          :user_id (:id user)})
             (sd/response_ok {:users (group-users group-id nil)}))))))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn remove-user [group-id user-id]
@@ -138,7 +132,7 @@
   (-> (sql/select :id)
       (sql/from :users)
       (sql/where ;[:or
-                  [:in :users.id (->> users (map #(-> % :id str)) (filter identity))]
+       [:in :users.id (->> users (map #(-> % :id str)) (filter identity))]
                   ;[:in :users.institutional_id (->> users (map #(-> % :institutional_id str)) (filter identity))]
                   ;[:in :users.email (->> users (map :email) (filter identity))]
                   ;]
@@ -172,8 +166,7 @@
           del-users (clojure.set/difference current-group-users-ids target-group-users-ids)
           ins-users (clojure.set/difference target-group-users-ids current-group-users-ids)
           del-query (update-delete-query group-id del-users)
-          ins-query (update-insert-query group-id ins-users)
-          ]
+          ins-query (update-insert-query group-id ins-users)]
       ;(logging/info "update-group-users" "\ncurr\n" current-group-users-ids "\ntarget\n" target-group-users-ids )
       ;(logging/info "update-group-users" "\ndel-u\n" del-users)
       ;(logging/info "update-group-users" "\nins-u\n" ins-users)
@@ -190,14 +183,9 @@
 
       ;{:status 200}
       (sd/response_ok {:users (jdbc/query tx
-                                          (group-users-query group-id nil))})
-      )))
-
+                                          (group-users-query group-id nil))}))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
 
 (def schema_export-group-user
   {:id s/Uuid
@@ -215,8 +203,7 @@
    ;:login (s/maybe s/Str)
    ;:created_at s/Any
    ;:updated_at s/Any
-   :person_id (s/maybe s/Uuid)
-   })
+   :person_id (s/maybe s/Uuid)})
 
 (def schema_update-group-user-list
   {:users

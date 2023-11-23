@@ -8,7 +8,6 @@
    [reitit.coercion.schema]
    [schema.core :as s]))
 
-
 (defn handle_list-delegations
   [req]
   (let [full-data (true? (-> req :parameters :query :full-data))
@@ -30,10 +29,10 @@
         ; or TODO data with id
         ]
         ; create delegation entry
-      (if-let [ins_res (jdbc/insert! (get-ds) :delegations data)]
+    (if-let [ins_res (jdbc/insert! (get-ds) :delegations data)]
         ; TODO clean result
-        (sd/response_ok (first ins_res))
-        (sd/response_failed "Could not create delegation." 406))))
+      (sd/response_ok (first ins_res))
+      (sd/response_failed "Could not create delegation." 406))))
 
 (defn handle_update-delegations
   [req]
@@ -51,11 +50,9 @@
     (if-let [ins-res (jdbc/update! (get-ds) :delegations dwid upd-query)]
         ; TODO clean result
       ;(if (= 1 ins-res)
-        (
-         let [new-data (sd/query-eq-find-one :delegations :id id)]
-         (logging/info "handle_update-delegations:" "\nnew-data\n" new-data)
-         (sd/response_ok new-data)
-         )
+      (let [new-data (sd/query-eq-find-one :delegations :id id)]
+        (logging/info "handle_update-delegations:" "\nnew-data\n" new-data)
+        (sd/response_ok new-data))
        ; (sd/response_failed "Could not update delegation." 406)
        ; )
       (sd/response_failed "Could not update delegation." 406))))
@@ -73,7 +70,6 @@
   (fn [handler]
     (fn [request] (sd/req-find-data request handler param
                                     :delegations colname :delegation send404))))
-
 
 (def schema_import_delegations
   {;:id s/Str
@@ -100,7 +96,7 @@
 ; TODO tests
 (def ring-routes
 
-  ["/delegations" 
+  ["/delegations"
    ["/"
     {:post {:summary (sd/sum_adm_todo "Create delegations.")
             ; TODO labels and descriptions
@@ -108,8 +104,7 @@
             :coercion reitit.coercion.schema/coercion
             :parameters {:body schema_import_delegations}
             :responses {200 {:body schema_export_delegations}
-                        406 {:body s/Any}}
-            }
+                        406 {:body s/Any}}}
     ; delegation list / query
      :get {:summary  (sd/sum_adm "List delegations.")
            :handler handle_list-delegations
@@ -122,7 +117,7 @@
            :middleware [(wwrap-find-delegation :id :id true)]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Str}}}
-     
+
      :put {:summary (sd/sum_adm "Update delegations with id.")
            ; TODO labels and descriptions
            :handler handle_update-delegations
@@ -137,5 +132,4 @@
               :coercion reitit.coercion.schema/coercion
               :handler handle_delete-delegation
               :middleware [(wwrap-find-delegation :id :id true)]
-              :parameters {:path {:id s/Str}}}}]]
-   )
+              :parameters {:path {:id s/Str}}}}]])

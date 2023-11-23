@@ -1,7 +1,6 @@
 (ns api-test-data
   (:require [cider-ci.open-session.bcrypt :refer [hashpw]]))
 
-
 (def person1id "9404fdf4-13d6-4d9d-a7e4-2912bb9d7b39")
 (def user1id "b657884f-cb08-4443-8351-78b726ac7b13")
 (def auth1id "abe6711b-dcda-4f83-812c-8b6fe980e7e7")
@@ -16,7 +15,7 @@
    :subtype "Person"
    :first_name "fnp1"
    :last_name "lnp1"
-   
+
    :description "desc"})
 
 (def user1
@@ -55,7 +54,6 @@
    :auth_system_id "password"
    :data  (hashpw "user2pw")
    :user_id user2id})
-
 
 (def admin1 {:id admin1id :user_id user1id})
 

@@ -1,12 +1,11 @@
 (ns madek.api.resources.locales
   (:require
-    [clojure.java.jdbc :as jdbc]
-    [clojure.tools.logging :as logging]
-    [logbug.debug :as debug]
-    [madek.api.utils.config :refer [get-config]]
-    [madek.api.utils.rdbms :as rdbms]
-    [madek.api.utils.sql :as sql]
-    ))
+   [clojure.java.jdbc :as jdbc]
+   [clojure.tools.logging :as logging]
+   [logbug.debug :as debug]
+   [madek.api.utils.config :refer [get-config]]
+   [madek.api.utils.rdbms :as rdbms]
+   [madek.api.utils.sql :as sql]))
 
 (defn- find-app-setting
   []

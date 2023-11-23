@@ -1,22 +1,21 @@
 (ns madek.api.resources.people
   (:require [clj-uuid]
             [clojure.java.jdbc :as jdbc]
-            [next.jdbc :as njdbc]
             [clojure.tools.logging :as log]
+            [logbug.catcher :as catcher]
             [madek.api.pagination :as pagination]
+            [madek.api.resources.shared :as sd]
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
             [madek.api.utils.rdbms :as rdbms]
             [madek.api.utils.sql :as sql]
+            [next.jdbc :as njdbc]
             reitit.coercion.schema
-            [schema.core :as s]
-            [madek.api.resources.shared :as sd]
-            [logbug.catcher :as catcher]))
-
+            [schema.core :as s]))
 
 ; TODO clean code
 (defn transform_export [person]
   (-> person
-      (assoc 
+      (assoc
        ; support old (singular) version of field
        :external_uri (first (person :external_uris)))
       (dissoc :previous_id :searchable)))
@@ -24,24 +23,22 @@
 (defn id-where-clause
   [id]
   (if
-    (re-matches
-      #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-      id)
+   (re-matches
+    #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+    id)
     (sql/where [:or [:= :id id] [:= :institutional_id id]])
     (sql/where [:= :institutional_id id])))
 
 (defn jdbc-id-where-clause
   [id]
   (->
-    id
-    id-where-clause
-    sql/format
-    (update-in [0] #(clojure.string/replace % "WHERE" ""))))
-
+   id
+   id-where-clause
+   sql/format
+   (update-in [0] #(clojure.string/replace % "WHERE" ""))))
 
 ;### create person
 ;#############################################################
-
 
 ;### get person
 ;################################################################
@@ -49,22 +46,19 @@
 (defn find-person-sql
   [id]
   (->
-    (id-where-clause id)
-    (sql/select :*)
-    (sql/from :people)
-    sql/format))
+   (id-where-clause id)
+   (sql/select :*)
+   (sql/from :people)
+   sql/format))
 
 (defn db-person-get [id]
   (first (jdbc/query (rdbms/get-ds) (find-person-sql id))))
 
-
 ;### delete person
 ;##############################################################
 
-
 ;### patch person
 ;##############################################################
-
 
 ;### index ####################################################################
 (defn- sql-base-query [full-data]
@@ -98,10 +92,7 @@
     ;(logging/info "handle_query-people: \n" sql-query)
     (sd/response_ok {:people result})))
 
-
 ;### routes ###################################################################
-
-
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)
@@ -114,18 +105,16 @@
    :subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
    :institutional_id (s/maybe s/Str) ;(s/maybe s/Uuid)
    :pseudonym (s/maybe s/Str)
-   
+
    ; TODO when to use old vs new style?
    :external_uris [s/Str]
    :external_uri (s/maybe s/Str)
-   
+
    :created_at s/Any
-   :updated_at s/Any
-   })
+   :updated_at s/Any})
 
 (def schema_import_person
-  {
-   :subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
+  {:subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
    (s/optional-key :id) s/Uuid
 
    (s/optional-key :first_name) (s/maybe s/Str)
@@ -136,9 +125,8 @@
    (s/optional-key :description) s/Str
 
    (s/optional-key :institutional_id) s/Str
-   
-   (s/optional-key :external_uris) [s/Str]
-   })
+
+   (s/optional-key :external_uris) [s/Str]})
 
 (def schema_import_person_result
   {:subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
@@ -152,10 +140,7 @@
    (s/optional-key :external_uris) [s/Str]
 
    (s/optional-key :updated_at) s/Any
-   (s/optional-key :created_at) s/Any
-
-   })
-
+   (s/optional-key :created_at) s/Any})
 
 (def schema_export_people
   {:id s/Uuid
@@ -174,8 +159,7 @@
    (s/optional-key :updated_at) s/Any})
 
 (def schema_update_person
-  {
-   ;:subtype s/Str
+  {;:subtype s/Str
    (s/optional-key :id) s/Uuid
    ;:id s/Uuid
 
@@ -192,11 +176,8 @@
    ;(s/optional-key :external_uri) s/Str
    (s/optional-key :external_uris) [s/Str]})
 
-
-
 (def schema_query_people
-  {
-   (s/optional-key :id) s/Uuid
+  {(s/optional-key :id) s/Uuid
    (s/optional-key :subtype) (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
 
    (s/optional-key :full_data) s/Bool
@@ -210,10 +191,7 @@
    (s/optional-key :institutional_id) s/Str
 
    (s/optional-key :page) s/Int
-   (s/optional-key :count) s/Int
-   
-   })
-
+   (s/optional-key :count) s/Int})
 
 "TODO check subtype, catch errors"
 (defn handle_create-person
@@ -223,14 +201,12 @@
       (let [data (-> request :parameters :body)
             data_wid (assoc data
                             :id (or (:id data) (clj-uuid/v4))
-                            :subtype (-> data :subtype str)
-                            )
+                            :subtype (-> data :subtype str))
             db-result (jdbc/insert! (rdbms/get-ds) :people data_wid)]
         (if-let [result (first db-result)]
           (sd/response_ok (transform_export result) 201)
           (sd/response_failed "Could not create person." 406))))
     (catch Exception ex (sd/response_exception ex))))
-
 
 (defn handle_get-person
   [req]
@@ -262,8 +238,6 @@
           (sd/response_ok (transform_export (db-person-get id)))
           (sd/response_failed "Could not update person" 406))))
     (catch Exception ex (sd/response_exception ex))))
-
-
 
 (def admin-routes
   ["/people"
@@ -332,7 +306,6 @@
       :responses {200 {:body schema_export_person}
                   404 {:body s/Any}}}}]])
 
-
 ; TODO user can create a person
 ; are public routes
 (def user-routes
@@ -340,13 +313,12 @@
    ["/" {:get {:summary (sd/sum_pub "Get all people ids")
                :description "Query list of people only for ids or full-data. Optional Paging."
                :handler handle_query-people
-               
+
                :swagger {:produces "application/json"}
                :parameters {:query schema_query_people}
                :content-type "application/json"
                :coercion reitit.coercion.schema/coercion
-               :responses {200 {:body {:people [schema_export_people]}}}}
-         }]
+               :responses {200 {:body {:people [schema_export_people]}}}}}]
 
    ["/:id" {:get {:summary (sd/sum_pub "Get person by id")
                   :description "Get person by id. Returns 404, if no such person exists. TODO query params."
@@ -357,6 +329,4 @@
                   :coercion reitit.coercion.schema/coercion
                   :parameters {:path {:id s/Str}}
                   :responses {200 {:body schema_export_person}
-                              404 {:body s/Str}}}
-
-            }]])
+                              404 {:body s/Str}}}}]])

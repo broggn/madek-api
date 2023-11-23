@@ -9,11 +9,9 @@
             [reitit.coercion.schema]
             [schema.core :as s]))
 
-
 (defn handle_list-workflows
   [req]
-  (let [
-        qd (if (true? (-> req :parameters :query :full_data))
+  (let [qd (if (true? (-> req :parameters :query :full_data))
              :workflows.*
              :workflows.id)
         db-result (sd/query-find-all :workflows qd)]
@@ -28,25 +26,25 @@
     (sd/response_ok workflow)))
 
 (defn handle_create-workflow [req]
-  
-    (try
-      (catcher/with-logging {}
-        (let [data (-> req :parameters :body)
-              conf-data-or-str (:configuration data)
+
+  (try
+    (catcher/with-logging {}
+      (let [data (-> req :parameters :body)
+            conf-data-or-str (:configuration data)
               ;conf-parsed (cheshire/parse-string conf-data)
-              conf-data (sd/try-as-json conf-data-or-str)
-              uid (-> req :authenticated-entity :id)
-              ins-data (assoc data :creator_id uid :configuration (with-meta conf-data {:pgtype "jsonb"}))
-              ins-res (jdbc/insert! (rdbms/get-ds) :workflows ins-data)]
+            conf-data (sd/try-as-json conf-data-or-str)
+            uid (-> req :authenticated-entity :id)
+            ins-data (assoc data :creator_id uid :configuration (with-meta conf-data {:pgtype "jsonb"}))
+            ins-res (jdbc/insert! (rdbms/get-ds) :workflows ins-data)]
 
-          (logging/info "handle_create-workflow: "
-                        "\ndata:\n" ins-data
-                        "\nresult:\n" ins-res)
+        (logging/info "handle_create-workflow: "
+                      "\ndata:\n" ins-data
+                      "\nresult:\n" ins-res)
 
-          (if-let [result (first ins-res)]
-            (sd/response_ok result)
-            (sd/response_failed "Could not create workflow." 406))))
-      (catch Exception e (sd/response_exception e))))
+        (if-let [result (first ins-res)]
+          (sd/response_ok result)
+          (sd/response_failed "Could not create workflow." 406))))
+    (catch Exception e (sd/response_exception e))))
 
 (defn handle_update-workflow [req]
   (try
@@ -66,7 +64,7 @@
           (sd/response_failed "Could not update workflow." 406))))
     (catch Exception e (sd/response_exception e))))
 
-(defn handle_delete-workflow [req] 
+(defn handle_delete-workflow [req]
   (try
     (catcher/with-logging {}
       (let [olddata (-> req :workflow)
@@ -77,7 +75,7 @@
         (if (= 1 (first delresult))
           (sd/response_ok olddata)
           (sd/response_failed "Could not delete workflow." 422))))
-      (catch Exception e (sd/response_exception e))))
+    (catch Exception e (sd/response_exception e))))
 
 (defn wwrap-find-workflow [param]
   (fn [handler]
@@ -85,47 +83,38 @@
                                     :workflows :id
                                     :workflow true))))
 
-
 (def schema_create_workflow
-  {
-   ;:id is db assigned or optional
+  {;:id is db assigned or optional
    :name s/Str
    ;:creator_id s/Uuid
    (s/optional-key :is_active) s/Bool
    ; TODO docu is json
-   (s/optional-key :configuration) s/Any
-   
-  })
+   (s/optional-key :configuration) s/Any})
 
 (def schema_update_workflow
-  {
-   ;:id s/Uuid
+  {;:id s/Uuid
    (s/optional-key :name) s/Str
    (s/optional-key :is_active) s/Bool
    ; TODO docu is json
-   (s/optional-key :configuration) s/Any
-   })
+   (s/optional-key :configuration) s/Any})
 
 ; TODO Inst coercion
 (def schema_export_workflow
-  {
-   :id s/Uuid
+  {:id s/Uuid
    (s/optional-key :name) s/Str
    (s/optional-key :is_active) s/Bool
    ; TODO docu is json
    (s/optional-key :configuration) s/Any
    (s/optional-key :creator_id) s/Uuid
    (s/optional-key :created_at) s/Any ; TODO as Inst
-   (s/optional-key :updated_at) s/Any
-   })
-
+   (s/optional-key :updated_at) s/Any})
 
 ; TODO response coercion
 ; TODO docu
 ; TODO tests
 (def user-routes
 
-  ["/workflows" 
+  ["/workflows"
    ["/"
     {:post {:summary (sd/sum_adm "Create workflow.")
             :handler handle_create-workflow
@@ -133,9 +122,8 @@
             :coercion reitit.coercion.schema/coercion
             :parameters {:body schema_create_workflow}
             :responses {200 {:body schema_export_workflow}
-                        406 {:body s/Any}}
-            }
-    
+                        406 {:body s/Any}}}
+
      :get {:summary  (sd/sum_adm "List workflows.")
            :handler handle_list-workflows
            :middleware [authorization/wrap-authorized-user]
@@ -144,7 +132,7 @@
                                 (s/optional-key :full_data) s/Bool}}
            :responses {200 {:body [schema_export_workflow]}
                        406 {:body s/Any}}}}]
-    
+
    ["/:id"
     {:get {:summary (sd/sum_adm "Get workflow by id.")
            :handler handle_get-workflow
@@ -153,8 +141,7 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Uuid}}
            :responses {200 {:body schema_export_workflow}
-                       404 {:body s/Any}}
-           }
+                       404 {:body s/Any}}}
 
      :put {:summary (sd/sum_adm "Update workflow with id.")
            :handler handle_update-workflow
@@ -165,8 +152,7 @@
                         :body schema_update_workflow}
            :responses {200 {:body schema_export_workflow}
                        404 {:body s/Any}
-                       406 {:body s/Any}}
-           }
+                       406 {:body s/Any}}}
 
      :delete {:summary (sd/sum_adm "Delete workflow by id.")
               :coercion reitit.coercion.schema/coercion
@@ -175,7 +161,5 @@
                            (wwrap-find-workflow :id)]
               :parameters {:path {:id s/Uuid}}
               :responses {200 {:body schema_export_workflow}
-                          404 {:body s/Any}}
-              }}]]
-   )
+                          404 {:body s/Any}}}}]])
 

@@ -8,29 +8,24 @@
             [reitit.coercion.schema]
             [schema.core :as s]))
 
-
 ;### swagger io schema ####################################################################
 
 (def schema_create_keyword
-  {
-   :meta_key_id s/Str
+  {:meta_key_id s/Str
    :term s/Str
    (s/optional-key :description) (s/maybe s/Str)
    (s/optional-key :position) (s/maybe s/Int)
    (s/optional-key :external_uris) [s/Str]
-   (s/optional-key :rdf_class) s/Str
-  })
+   (s/optional-key :rdf_class) s/Str})
 
 (def schema_update_keyword
-  {
-   ;id
+  {;id
    ;(s/optional-key :meta_key_id) s/Str
    (s/optional-key :term) s/Str
    (s/optional-key :description) (s/maybe s/Str)
    (s/optional-key :position) s/Int
    (s/optional-key :external_uris) [s/Str]
-   (s/optional-key :rdf_class) s/Str
-  })
+   (s/optional-key :rdf_class) s/Str})
 
 (def schema_export_keyword_usr
   {:id s/Uuid
@@ -40,8 +35,7 @@
    :position (s/maybe s/Int)
    :external_uris [s/Any]
    :external_uri (s/maybe s/Str)
-   :rdf_class s/Str
-   })
+   :rdf_class s/Str})
 
 (def schema_export_keyword_adm
   {:id s/Uuid
@@ -64,7 +58,6 @@
    (s/optional-key :rdf_class) s/Str
    (s/optional-key :page) s/Int
    (s/optional-key :count) s/Int})
-
 
 (defn user-export-keyword [keyword]
   (->
@@ -121,7 +114,6 @@
           (sd/response_failed "Could not create keyword" 406))))
     (catch Exception ex (sd/response_exception ex))))
 
-
 (defn handle_update-keyword [req]
   (try
     (catcher/with-logging {}
@@ -138,7 +130,6 @@
               sd/response_ok)
           (sd/response_failed "Could not update keyword." 406))))
     (catch Exception ex (sd/response_exception ex))))
-
 
 (defn handle_delete-keyword [req]
   (try
@@ -164,7 +155,7 @@
 
 (def query-routes
   ["/keywords"
-   ["/" 
+   ["/"
     {:get
      {:summary (sd/sum_pub "Query / list keywords.")
       :handler handle_usr-query-keywords
@@ -183,27 +174,25 @@
                   404 {:body s/Any}}
       :description "Get keyword for id. Returns 404, if no such keyword exists."}}]])
 
-
 (def admin-routes
-  [
-   ["/keywords/"
-   {:get
-    {:summary (sd/sum_adm "Query keywords")
-     :handler handle_adm-query-keywords
-     :middleware [wrap-authorize-admin!]
-     :coercion reitit.coercion.schema/coercion
-     :parameters {:query schema_query_keyword}
-     :responses {200 {:body {:keywords [schema_export_keyword_adm]}}}
-     :description "Get keywords id list. TODO query parameters and paging. TODO get full data."}
+  [["/keywords/"
+    {:get
+     {:summary (sd/sum_adm "Query keywords")
+      :handler handle_adm-query-keywords
+      :middleware [wrap-authorize-admin!]
+      :coercion reitit.coercion.schema/coercion
+      :parameters {:query schema_query_keyword}
+      :responses {200 {:body {:keywords [schema_export_keyword_adm]}}}
+      :description "Get keywords id list. TODO query parameters and paging. TODO get full data."}
 
-    :post
-    {:summary (sd/sum_adm "Create keyword.")
-     :coercion reitit.coercion.schema/coercion
-     :handler handle_create-keyword
-     :middleware [wrap-authorize-admin!]
-     :parameters {:body schema_create_keyword}
-     :responses {200 {:body schema_export_keyword_adm}
-                 406 {:body s/Any}}}}]
+     :post
+     {:summary (sd/sum_adm "Create keyword.")
+      :coercion reitit.coercion.schema/coercion
+      :handler handle_create-keyword
+      :middleware [wrap-authorize-admin!]
+      :parameters {:body schema_create_keyword}
+      :responses {200 {:body schema_export_keyword_adm}
+                  406 {:body s/Any}}}}]
    ["/keywords/:id"
     {:get
      {:summary (sd/sum_adm "Get keyword for id")
@@ -227,18 +216,17 @@
       :responses {200 {:body schema_export_keyword_adm}
                   404 {:body s/Any}
                   406 {:body s/Any}}}
-     
+
      :delete
      {:summary (sd/sum_adm "Delete keyword.")
-              :handler handle_delete-keyword
-              :middleware [wrap-authorize-admin!
-                           wrap-find-keyword]
-              :coercion reitit.coercion.schema/coercion
-              :parameters {:path {:id s/Uuid}}
-              :responses {200 {:body schema_export_keyword_adm}
-                          404 {:body s/Any}
-                          406 {:body s/Any}}}}]
-   ])
+      :handler handle_delete-keyword
+      :middleware [wrap-authorize-admin!
+                   wrap-find-keyword]
+      :coercion reitit.coercion.schema/coercion
+      :parameters {:path {:id s/Uuid}}
+      :responses {200 {:body schema_export_keyword_adm}
+                  404 {:body s/Any}
+                  406 {:body s/Any}}}}]])
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

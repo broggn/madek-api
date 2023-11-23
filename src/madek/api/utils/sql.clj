@@ -3,15 +3,14 @@
            [org.postgresql.util HStoreConverter])
   (:refer-clojure :exclude [format])
   (:require
-    [clojure.tools.logging :as logging]
-    [honeysql.format :as format]
-    [honeysql.helpers :as helpers :refer [defhelper]]
-    [honeysql.types :as types]
-    [honeysql.util :as util :refer [defalias]]
-    [cheshire.core :as json]
-    [clojure.java.jdbc :as jdbc]
-    [clojure.walk :refer [keywordize-keys]]
-    ))
+   [cheshire.core :as json]
+   [clojure.java.jdbc :as jdbc]
+   [clojure.tools.logging :as logging]
+   [clojure.walk :refer [keywordize-keys]]
+   [honeysql.format :as format]
+   [honeysql.helpers :as helpers :refer [defhelper]]
+   [honeysql.types :as types]
+   [honeysql.util :as util :refer [defalias]]))
 
 (defmethod format/fn-handler "~*" [_ field value]
   (str (format/to-sql field) " ~* " (format/to-sql value)))
@@ -25,7 +24,6 @@
   "Calls honeysql.format/format with removed join duplications in sql-map."
   [sql-map & params-or-opts]
   (apply format/format [(dedup-join sql-map) params-or-opts]))
-
 
 (defalias call types/call)
 (defalias param types/param)
@@ -59,7 +57,6 @@
 (defalias where helpers/where)
 
 ;#############################################################################
-
 
 (def ->json json/generate-string)
 (def <-json #(json/parse-string % true))
@@ -102,15 +99,14 @@
 
   clojure.lang.IPersistentVector
   (set-parameter [v ^java.sql.PreparedStatement stmt ^long i]
-                  (let [conn (.getConnection stmt)
-                        meta (.getParameterMetaData stmt)
-                        type-name (.getParameterTypeName meta i)]
-                    (if-let [elem-type (when (= (first type-name) \_) (apply str (rest type-name)))]
-                      (.setObject stmt i (.createArrayOf conn elem-type (to-array v)))
-                      (.setObject stmt i (->pgobject v))))))
+    (let [conn (.getConnection stmt)
+          meta (.getParameterMetaData stmt)
+          type-name (.getParameterTypeName meta i)]
+      (if-let [elem-type (when (= (first type-name) \_) (apply str (rest type-name)))]
+        (.setObject stmt i (.createArrayOf conn elem-type (to-array v)))
+        (.setObject stmt i (->pgobject v))))))
   ;(set-parameter [v ^PreparedStatement s i]
   ;  (.setObject s i (->pgobject v))))
-
 
 (extend-protocol jdbc/IResultSetReadColumn
   org.postgresql.util.PGobject
@@ -121,7 +117,5 @@
   ;(read-column-by-index [^org.postgresql.util.PGobject v _2 _3]
   ;  (<-pgobject v))
   )
-
-
 ;#### debug ###################################################################
 ;(debug/debug-ns *ns*)

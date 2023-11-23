@@ -1,4 +1,4 @@
-(ns madek.api.resources.custom-urls 
+(ns madek.api.resources.custom-urls
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as logging]
             [logbug.catcher :as catcher]
@@ -7,7 +7,6 @@
             [madek.api.utils.sql :as sql]
             [reitit.coercion.schema]
             [schema.core :as s]))
-
 
 (defn build-query [query-params]
   (let [col-sel (if (true? (-> query-params :full_data))
@@ -20,14 +19,12 @@
         (sd/build-query-param query-params :media_entry_id)
         sql/format)))
 
-
 (defn handle_list-custom-urls
   [req]
   (let [db-query (build-query (-> req :parameters :query))
         db-result (jdbc/query (get-ds) db-query)]
     (logging/info "handle_list-custom-urls" "\ndb-query\n" db-query "\nresult\n" db-result)
     (sd/response_ok db-result)))
-
 
 (defn handle_get-custom-url
   [req]
@@ -42,15 +39,14 @@
         mr-type (-> mr :type)
         mr-id (-> mr :id str)
         col-name (if (= mr-type "MediaEntry") :media_entry_id :collection_id)]
-    
+
     (logging/info "handle_get-custom-urls"
                   "\ntype\n" mr-type
                   "\nmr-id\n" mr-id
                   "\ncol-name\n" col-name)
     (if-let [result (sd/query-eq-find-one :custom_urls col-name mr-id)]
       (sd/response_ok result)
-      (sd/response_not_found (str "No such custom_url for " mr-type " with id: " mr-id)))
-    ))
+      (sd/response_not_found (str "No such custom_url for " mr-type " with id: " mr-id)))))
 
 (defn handle_create-custom-urls
   [req]
@@ -76,7 +72,6 @@
           (sd/response_ok result)
           (sd/response_failed "Could not create custom_url." 406))))
     (catch Exception ex (sd/response_exception ex))))
-
 
 ; TODO check if own entity or auth is admin
 (defn handle_update-custom-urls
@@ -138,13 +133,11 @@
 
 (def schema_create_custom_url
   {:id s/Str
-   :is_primary s/Bool
-   })
+   :is_primary s/Bool})
 
 (def schema_update_custom_url
   {(s/optional-key :id) s/Str
-   (s/optional-key :is_primary) s/Bool
-   })
+   (s/optional-key :is_primary) s/Bool})
 
 (def schema_export_custom_url
   {:id s/Str
@@ -154,8 +147,7 @@
    :updated_at s/Any
    :created_at s/Any
    :media_entry_id (s/maybe s/Uuid)
-   :collection_id (s/maybe s/Uuid)
-   })
+   :collection_id (s/maybe s/Uuid)})
 
 ; TODO custom urls response coercion
 (def query-routes
@@ -167,16 +159,13 @@
            :parameters {:query {(s/optional-key :full_data) s/Bool
                                 (s/optional-key :id) s/Str
                                 (s/optional-key :media_entry_id) s/Uuid
-                                (s/optional-key :collection_id) s/Uuid}}}
-    }]
+                                (s/optional-key :collection_id) s/Uuid}}}}]
    ["/:id"
     {:get {:summary (sd/sum_usr "Get custom_url.")
            :handler handle_get-custom-url
            :coercion reitit.coercion.schema/coercion
-           :parameters {:path {:id s/Str}}
-           }}]
-   ])
-     
+           :parameters {:path {:id s/Str}}}}]])
+
 ; TODO Q? custom_url without media-entry or collection ?? filter_set ?? ignore ??
 
 (def media-entry-routes
@@ -188,8 +177,7 @@
           :coercion reitit.coercion.schema/coercion
           :parameters {:path {:media_entry_id s/Str}}
           :responses {200 {:body schema_export_custom_url}
-                      404 {:body s/Any}}
-          }
+                      404 {:body s/Any}}}
     ; TODO db schema allows multiple entries for multiple users
     :post {:summary (sd/sum_usr "Create custom_url for media entry.")
            :handler handle_create-custom-urls
@@ -200,17 +188,17 @@
                         :body schema_create_custom_url}
            :responses {200 {:body schema_export_custom_url}
                        406 {:body s/Any}}}
-    
+
     :put {:summary (sd/sum_usr "Update custom_url for media entry.")
-           :handler handle_update-custom-urls
-           :middleware [sd/ring-wrap-add-media-resource
-                        sd/ring-wrap-authorization-edit-metadata]
-           :coercion reitit.coercion.schema/coercion
-           :parameters {:path {:media_entry_id s/Str}
-                        :body schema_update_custom_url}
-           :responses {200 {:body schema_export_custom_url}
-                       406 {:body s/Any}}}
-    
+          :handler handle_update-custom-urls
+          :middleware [sd/ring-wrap-add-media-resource
+                       sd/ring-wrap-authorization-edit-metadata]
+          :coercion reitit.coercion.schema/coercion
+          :parameters {:path {:media_entry_id s/Str}
+                       :body schema_update_custom_url}
+          :responses {200 {:body schema_export_custom_url}
+                      406 {:body s/Any}}}
+
     :delete {:summary (sd/sum_todo "Delete custom_url for media entry.")
              :handler handle_delete-custom-urls
              :middleware [sd/ring-wrap-add-media-resource
@@ -218,9 +206,7 @@
              :coercion reitit.coercion.schema/coercion
              :parameters {:path {:media_entry_id s/Str}}
              :responses {200 {:body schema_export_custom_url}
-                         404 {:body s/Any}}}
-    }])
-
+                         404 {:body s/Any}}}}])
 
 (def collection-routes
   ["/collection/:collection_id/custom_url"
@@ -242,14 +228,14 @@
                        406 {:body s/Any}}}
 
     :put {:summary (sd/sum_usr "Update custom_url for collection.")
-            :handler handle_update-custom-urls
-            :middleware [sd/ring-wrap-add-media-resource
-                         sd/ring-wrap-authorization-edit-metadata]
-            :coercion reitit.coercion.schema/coercion
-            :parameters {:path {:collection_id s/Str}
-                         :body schema_update_custom_url}
-            :responses {200 {:body schema_export_custom_url}
-                        406 {:body s/Any}}}
+          :handler handle_update-custom-urls
+          :middleware [sd/ring-wrap-add-media-resource
+                       sd/ring-wrap-authorization-edit-metadata]
+          :coercion reitit.coercion.schema/coercion
+          :parameters {:path {:collection_id s/Str}
+                       :body schema_update_custom_url}
+          :responses {200 {:body schema_export_custom_url}
+                      406 {:body s/Any}}}
 
     :delete {:summary (sd/sum_todo "Delete custom_url for collection.")
              :handler handle_delete-custom-urls

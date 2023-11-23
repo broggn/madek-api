@@ -2,16 +2,15 @@
   (:require
    [clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
-   
-   [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+
+   [logbug.catcher :as catcher]
+   [madek.api.pagination :as pagination]
    [madek.api.resources.shared :as sd]
+   [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
    [madek.api.utils.sql :as sql]
    [reitit.coercion.schema]
-   [schema.core :as s]
-   [madek.api.pagination :as pagination]
-   [logbug.catcher :as catcher]))
-
+   [schema.core :as s]))
 
 (defn context_key_transform_ml [context_key]
   (assoc context_key
@@ -30,17 +29,16 @@
                      (sd/build-query-param req-query :context_id)
                      (sd/build-query-param req-query :meta_key_id)
                      (sd/build-query-param req-query :is_required)
-                     
+
                      (sd/build-query-created-or-updated-after req-query :changed_after)
                      (sd/build-query-ts-after req-query :created_after "created_at")
                      (sd/build-query-ts-after req-query :updated_after "updated_at")
-                     
+
                      (pagination/add-offset-for-honeysql req-query)
-                     sql/format
-                     )
+                     sql/format)
         db-result (jdbc/query (get-ds) db-query)
         tf (map context_key_transform_ml db-result)]
-    
+
     ;(logging/info "handle_adm-list-context_keys" "\ndb-query\n" db-query)
     (sd/response_ok tf)))
 
@@ -58,17 +56,15 @@
                      sql/format)
         db-result (jdbc/query (get-ds) db-query)
         tf (map context_key_transform_ml db-result)]
-    
+
     ;(logging/info "handle_usr-list-context_keys" "\ndb-query\n" db-query)
     (sd/response_ok tf)))
-
 
 (defn handle_adm-get-context_key
   [req]
   (let [result (-> req :context_key context_key_transform_ml)]
     ;(logging/info "handle_get-context_key: result: " result)
     (sd/response_ok result)))
-
 
 (defn handle_usr-get-context_key
   [req]
@@ -77,10 +73,9 @@
     ;(logging/info "handle_usr-get-context_key" "\nbefore\n" context_key "\nresult\n" result)
     (sd/response_ok result)))
 
-
 (defn handle_create-context_keys
   [req]
-  (try 
+  (try
     (catcher/with-logging {}
       (let [data (-> req :parameters :body)
             ins-res (jdbc/insert! (rdbms/get-ds) :context_keys data)]
@@ -91,7 +86,6 @@
           (sd/response_ok (context_key_transform_ml result))
           (sd/response_failed "Could not create context_key." 406))))
     (catch Exception ex (sd/response_exception ex))))
-    
 
 (defn handle_update-context_keys
   [req]
@@ -110,7 +104,6 @@
           (sd/response_failed "Could not update context_key." 406))))
     (catch Exception ex (sd/response_exception ex))))
 
-
 (defn handle_delete-context_key
   [req]
   (try
@@ -126,14 +119,12 @@
           (logging/error "Could not delete context_key: " id))))
     (catch Exception ex (sd/response_exception ex))))
 
-
 (defn wwrap-find-context_key [param colname send404]
   (fn [handler]
-    (fn [request] (sd/req-find-data request handler 
+    (fn [request] (sd/req-find-data request handler
                                     param
                                     :context_keys colname
                                     :context_key send404))))
-
 
 (def schema_import_context_keys
   {;:id s/Str
@@ -148,12 +139,10 @@
    (s/optional-key :labels) (s/maybe sd/schema_ml_list)
    (s/optional-key :descriptions) (s/maybe sd/schema_ml_list)
    (s/optional-key :hints) (s/maybe sd/schema_ml_list)
-   (s/optional-key :documentation_urls) (s/maybe sd/schema_ml_list)
-   })
+   (s/optional-key :documentation_urls) (s/maybe sd/schema_ml_list)})
 
 (def schema_update_context_keys
-  {
-   ;(s/optional-key :id) s/Str
+  {;(s/optional-key :id) s/Str
    ;:context_id s/Str
    ;(s/optional-key :meta_key_id) s/Str
    (s/optional-key :is_required) s/Bool
@@ -162,12 +151,9 @@
    (s/optional-key :position) s/Int
    (s/optional-key :admin_comment) (s/maybe s/Str)
    (s/optional-key :labels) (s/maybe sd/schema_ml_list)
-   (s/optional-key :descriptions) (s/maybe sd/schema_ml_list) 
+   (s/optional-key :descriptions) (s/maybe sd/schema_ml_list)
    (s/optional-key :hints) (s/maybe sd/schema_ml_list)
-   (s/optional-key :documentation_urls) (s/maybe sd/schema_ml_list)
-   })
-
-
+   (s/optional-key :documentation_urls) (s/maybe sd/schema_ml_list)})
 
 (def schema_export_context_key
   {:id s/Uuid
@@ -182,8 +168,7 @@
    :descriptions (s/maybe sd/schema_ml_list)
    :hints (s/maybe sd/schema_ml_list)
 
-   :documentation_urls (s/maybe sd/schema_ml_list)
-   })
+   :documentation_urls (s/maybe sd/schema_ml_list)})
 
 (def schema_export_context_key_admin
   {:id s/Uuid
@@ -203,12 +188,11 @@
    :admin_comment (s/maybe s/Str)
    :updated_at s/Any
    :created_at s/Any})
-   
 
 ; TODO docu
 ; TODO tests
 (def admin-routes
-  ["/context-keys" 
+  ["/context-keys"
    ["/"
     {:post
      {:summary (sd/sum_adm "Create context_key")
@@ -272,9 +256,7 @@
       :parameters {:path {:id s/Str}}
       :responses {200 {:body schema_export_context_key_admin}
                   404 {:body s/Any}
-                  406 {:body s/Any}}}}]]
-   )
-
+                  406 {:body s/Any}}}}]])
 
 ; TODO docu
 (def user-routes
@@ -290,7 +272,7 @@
                            (s/optional-key :is_required) s/Bool}}
       :responses {200 {:body [schema_export_context_key]}
                   406 {:body s/Any}}}}]
-    
+
    ["/:id"
     {:get
      {:summary (sd/sum_pub "Get context_key by id.")
@@ -299,5 +281,4 @@
       :coercion reitit.coercion.schema/coercion
       :parameters {:path {:id s/Str}}
       :responses {200 {:body schema_export_context_key}
-                  404 {:body s/Any}}}}]
-  ])
+                  404 {:body s/Any}}}}]])

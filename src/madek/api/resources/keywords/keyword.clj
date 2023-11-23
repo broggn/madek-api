@@ -1,12 +1,10 @@
 (ns madek.api.resources.keywords.keyword
   (:require
-    [clojure.java.jdbc :as jdbc]
-    [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-    [madek.api.utils.sql :as sql]
-    [madek.api.resources.shared :as sd] 
-    [madek.api.pagination :as pagination]
-    ))
-
+   [clojure.java.jdbc :as jdbc]
+   [madek.api.pagination :as pagination]
+   [madek.api.resources.shared :as sd]
+   [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+   [madek.api.utils.sql :as sql]))
 
 (defn db-keywords-get-one [id]
   (sd/query-eq-find-one :keywords :id id))

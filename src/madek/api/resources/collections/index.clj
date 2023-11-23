@@ -1,14 +1,14 @@
 (ns madek.api.resources.collections.index
   (:require
-    [clojure.java.jdbc :as jdbc]
-    [clojure.tools.logging :as logging]
-    [logbug.catcher :as catcher]
-    [logbug.debug :as debug]
-    [madek.api.pagination :as pagination]
-    [madek.api.resources.collections.advanced-filter.permissions :as permissions :refer [filter-by-query-params]]
-    [madek.api.utils.rdbms :as rdbms]
-    [madek.api.utils.sql :as sql]
-    [madek.api.resources.shared :as sd]))
+   [clojure.java.jdbc :as jdbc]
+   [clojure.tools.logging :as logging]
+   [logbug.catcher :as catcher]
+   [logbug.debug :as debug]
+   [madek.api.pagination :as pagination]
+   [madek.api.resources.collections.advanced-filter.permissions :as permissions :refer [filter-by-query-params]]
+   [madek.api.resources.shared :as sd]
+   [madek.api.utils.rdbms :as rdbms]
+   [madek.api.utils.sql :as sql]))
 
 ;### collection_id ############################################################
 
@@ -19,7 +19,6 @@
                         [:= :cca.child_id :collections.id])
         (sql/merge-where [:= :cca.parent_id collection_id]))))
 
-
 ;### query ####################################################################
 
 (defn ^:private base-query [full-data]
@@ -27,8 +26,7 @@
                    (sql/select :*)
                    (sql/select :collections.id, :collections.created_at))]
     (-> toselect
-        (sql/from :collections)))
-  )
+        (sql/from :collections))))
 
 (defn- set-order [query query-params]
   (if (some #{"desc"} [(-> query-params :order)])
@@ -51,8 +49,7 @@
     ;(logging/info "build-query"
     ;              "\nquery\n" query-params
     ;              "\nsql query:\n" sql-query)
-    sql-query
-    ))
+    sql-query))
 
 (defn- query-index-resources [request]
   (jdbc/query (rdbms/get-ds) (build-query request)))

@@ -1,35 +1,34 @@
 (ns madek.api.main
   (:gen-class)
   (:require
-    [clojure.java.jdbc :as jdbc]
-    [clojure.pprint :refer [pprint]]
-    [clojure.tools.cli :as cli]
-    [madek.api.utils.logging :as logging]
-    [logbug.catcher :as catcher]
-    [logbug.debug :as debug]
-    [logbug.thrown]
-    [madek.api.constants :as constants]
-    [madek.api.db.core :as db]
-    [madek.api.utils.config :as config :refer [get-config]]
-    [madek.api.utils.exit :as exit]
-    [madek.api.utils.nrepl :as nrepl]
-    [madek.api.utils.rdbms :as rdbms]
-    [madek.api.web :as web]
-    [madek.api.web]
-    [pg-types.all]
-    [taoensso.timbre :refer [debug error info spy warn]]))
+   [clojure.java.jdbc :as jdbc]
+   [clojure.pprint :refer [pprint]]
+   [clojure.tools.cli :as cli]
+   [logbug.catcher :as catcher]
+   [logbug.debug :as debug]
+   [logbug.thrown]
+   [madek.api.constants :as constants]
+   [madek.api.db.core :as db]
+   [madek.api.utils.config :as config :refer [get-config]]
+   [madek.api.utils.exit :as exit]
+   [madek.api.utils.logging :as logging]
+   [madek.api.utils.nrepl :as nrepl]
+   [madek.api.utils.rdbms :as rdbms]
+   [madek.api.web]
+   [madek.api.web :as web]
+   [pg-types.all]
+   [taoensso.timbre :refer [debug error info spy warn]]))
 
 ;; cli ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def cli-options
   (concat
-    [["-h" "--help"]
-     ["-d" "--dev-mode"]]
-    exit/cli-options
-    nrepl/cli-options
-    web/cli-options
-    db/cli-options
-    ))
+   [["-h" "--help"]
+    ["-d" "--dev-mode"]]
+   exit/cli-options
+   nrepl/cli-options
+   web/cli-options
+   db/cli-options))
 
 (defn main-usage [options-summary & more]
   (->> ["Madek API"
@@ -46,37 +45,34 @@
            "-------------------------------------------------------------------"])]
        flatten (clojure.string/join \newline)))
 
-
 (defn helpnexit [summary args options]
   (println (main-usage summary {:args args :options options})))
-
 
 ;; run ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn run [options]
   (catcher/snatch
-    {:level :fatal
-     :throwable Throwable
-     :return-fn (fn [e] (System/exit -1))}
-    (info 'madek.api.main "initializing ...")
-    (madek.api.utils.config/initialize
-      {:filenames ["./config/settings.yml"
-                   "../config/settings.yml",
-                   "./datalayer/config/settings.yml",
-                   "../webapp/datalayer/config/settings.yml",
-                   "./config/settings.local.yml"
-                   "../config/settings.local.yml"]})
-    (info "Effective startup options " options)
-    (info "Effective startup config " (get-config))
+   {:level :fatal
+    :throwable Throwable
+    :return-fn (fn [e] (System/exit -1))}
+   (info 'madek.api.main "initializing ...")
+   (madek.api.utils.config/initialize
+    {:filenames ["./config/settings.yml"
+                 "../config/settings.yml",
+                 "./datalayer/config/settings.yml",
+                 "../webapp/datalayer/config/settings.yml",
+                 "./config/settings.local.yml"
+                 "../config/settings.local.yml"]})
+   (info "Effective startup options " options)
+   (info "Effective startup config " (get-config))
     ; WIP switching to new db container; remove old rdbms later
-    (rdbms/initialize (config/get-db-spec :api))
-    (db/init options)
+   (rdbms/initialize (config/get-db-spec :api))
+   (db/init options)
     ;
-    (nrepl/init options)
-    (madek.api.constants/initialize (get-config))
-    (madek.api.web/initialize options)
-    (info 'madek.api.main "... initialized")))
-
+   (nrepl/init options)
+   (madek.api.constants/initialize (get-config))
+   (madek.api.web/initialize options)
+   (info 'madek.api.main "... initialized")))
 
 ;; main ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -105,8 +101,6 @@
 
 ; hot reload on require
 (when @args* (main))
-
-
 
 ;### Debug ####################################################################
 ;(debug/debug-ns 'madek.api.utils.rdbms)

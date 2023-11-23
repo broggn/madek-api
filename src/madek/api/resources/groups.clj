@@ -6,14 +6,12 @@
             [madek.api.resources.groups.shared :as groups]
             ;[madek.api.resources.groups.users :as users]
             [madek.api.resources.groups.users :as group-users]
+            [madek.api.resources.shared :as sd]
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
             [madek.api.utils.rdbms :as rdbms]
             [madek.api.utils.sql :as sql]
             reitit.coercion.schema
-            [schema.core :as s]
-            [madek.api.resources.shared :as sd]))
-
-
+            [schema.core :as s]))
 
 ;### create group #############################################################
 
@@ -22,12 +20,11 @@
                  (or params {})
                  (assoc params :id (or (:id params) (clj-uuid/v4))))]
     {:body (dissoc
-             (->> (jdbc/insert!
-                    (rdbms/get-ds) :groups params)
-                  first)
-             :previous_id :searchable)
+            (->> (jdbc/insert!
+                  (rdbms/get-ds) :groups params)
+                 first)
+            :previous_id :searchable)
      :status 201}))
-
 
 ;### get group ################################################################
 
@@ -35,7 +32,6 @@
   (if-let [group (groups/find-group id-or-institutinal-group-id)]
     {:body (dissoc group :previous_id :searchable)}
     {:status 404 :body "No such group found"}))
-
 
 ;### delete group ##############################################################
 
@@ -45,17 +41,15 @@
     {:status 204}
     {:status 404}))
 
-
 ;### patch group ##############################################################
 (defn db_update-group [group-id body]
   (let [query (groups/jdbc-update-group-id-where-clause group-id)
-         db-do (jdbc/update! (rdbms/get-ds) :groups body query)]
+        db-do (jdbc/update! (rdbms/get-ds) :groups body query)]
      ;(logging/info "db_update-group" "\ngroup-id\n" group-id "\nbody\n" body "\nquery\n" query)
-     (first db-do)
-   ))
+    (first db-do)))
 
 (defn patch-group [{body :body {group-id :group-id} :params}]
-   (if (= 1 (db_update-group group-id body))
+  (if (= 1 (db_update-group group-id body))
     {:body (groups/find-group group-id)}
     {:status 404}))
 
@@ -65,7 +59,7 @@
   (let [query-params (-> req :parameters :query)]
     (-> (if (true? (:full_data query-params))
           (sql/select :*)
-          (sql/select :id)) 
+          (sql/select :id))
         (sql/from :groups)
         (sql/order-by [:id :asc])
         (sd/build-query-param query-params :id)
@@ -84,7 +78,6 @@
   (let [result (jdbc/query (rdbms/get-ds) (build-index-query request))]
     (sd/response_ok {:groups result})))
 
-
 ;### routes ###################################################################
 
 (def schema_import-group
@@ -98,8 +91,7 @@
    (s/optional-key :person_id) (s/maybe s/Uuid)})
 
 (def schema_update-group
-  {
-   (s/optional-key :name) s/Str
+  {(s/optional-key :name) s/Str
    (s/optional-key :type) (s/enum "Group" "AuthenticationGroup" "InstitutionalGroup")
    (s/optional-key :institutional_id) (s/maybe s/Str)
    (s/optional-key :institutional_name) (s/maybe s/Str)
@@ -114,9 +106,7 @@
    (s/optional-key :institutional_name) (s/maybe s/Str)
    (s/optional-key :institution) (s/maybe s/Str)
    (s/optional-key :person_id) (s/maybe s/Uuid)
-   (s/optional-key :searchable) s/Str
-   })
-
+   (s/optional-key :searchable) s/Str})
 
 (defn handle_create-group
   "TODO  catch errors"
@@ -154,13 +144,12 @@
    (s/optional-key :institution) s/Str
    (s/optional-key :person_id) s/Uuid
    (s/optional-key :searchable) s/Str
-   (s/optional-key :full_data) s/Bool   
+   (s/optional-key :full_data) s/Bool
    (s/optional-key :page) s/Int
    (s/optional-key :count) s/Int})
 
-(def user-routes 
-  [
-   ["/groups"
+(def user-routes
+  [["/groups"
     ["/" {:get {:summary "Get all group ids"
                 :description "Get list of group ids. Paging is used as you get a limit of 100 entries."
                 :handler index
@@ -170,8 +159,7 @@
                 :parameters {:query schema_query-groups}
                    ;:accept "application/json"
                 :coercion reitit.coercion.schema/coercion
-                :responses {200 {:body {:groups [schema_export-group]}}}}}
-     ]
+                :responses {200 {:body {:groups [schema_export-group]}}}}}]
     ["/:id" {:get {:summary "Get group by id"
                    :description "Get group by id. Returns 404, if no such group exists."
                    :swagger {:produces "application/json"}
@@ -181,8 +169,7 @@
                    :coercion reitit.coercion.schema/coercion
                    :parameters {:path {:id s/Str}}
                    :responses {200 {:body schema_export-group}
-                               404 {:body s/Any}}}}]
-  ]])
+                               404 {:body s/Any}}}}]]])
 
 (def ring-routes
   ["/groups"
@@ -208,104 +195,102 @@
                 :responses {201 {:body schema_export-group}
                             500 {:body s/Any}}}}]
 
-
-["/:id" {:get {:summary "Get group by id"
-               :description "Get group by id. Returns 404, if no such group exists."
-               :swagger {:produces "application/json"}
-               :content-type "application/json"
-               :accept "application/json"
-               :handler handle_get-group
-               :middleware [wrap-authorize-admin!]
-               :coercion reitit.coercion.schema/coercion
-               :parameters {:path {:id s/Str}}
-               :responses {200 {:body schema_export-group}
-                           404 {:body s/Any}}}
-
-         :delete {:summary "Deletes a group by id"
-                  :description "Delete a group by id"
-                  :handler handle_delete-group
+   ["/:id" {:get {:summary "Get group by id"
+                  :description "Get group by id. Returns 404, if no such group exists."
+                  :swagger {:produces "application/json"}
+                  :content-type "application/json"
+                  :accept "application/json"
+                  :handler handle_get-group
                   :middleware [wrap-authorize-admin!]
                   :coercion reitit.coercion.schema/coercion
                   :parameters {:path {:id s/Str}}
-                  :responses {403 {:body s/Any}
-                              204 {:body s/Any}}}
+                  :responses {200 {:body schema_export-group}
+                              404 {:body s/Any}}}
 
-         :put {:summary "Get group by id"
-                 :description "Get group by id. Returns 404, if no such group exists."
-                 :swagger {:produces "application/json"}
-                 :content-type "application/json"
-                 :accept "application/json"
-                 :handler handle_update-group
-                 :middleware [wrap-authorize-admin!]
-                 :coercion reitit.coercion.schema/coercion
-                 :parameters {:path {:id s/Str}
-                              :body schema_update-group}
-                 :responses {200 {:body s/Any};groups/schema_export-group}
-                             404 {:body s/Any}}}}] ; TODO error handling
+            :delete {:summary "Deletes a group by id"
+                     :description "Delete a group by id"
+                     :handler handle_delete-group
+                     :middleware [wrap-authorize-admin!]
+                     :coercion reitit.coercion.schema/coercion
+                     :parameters {:path {:id s/Str}}
+                     :responses {403 {:body s/Any}
+                                 204 {:body s/Any}}}
+
+            :put {:summary "Get group by id"
+                  :description "Get group by id. Returns 404, if no such group exists."
+                  :swagger {:produces "application/json"}
+                  :content-type "application/json"
+                  :accept "application/json"
+                  :handler handle_update-group
+                  :middleware [wrap-authorize-admin!]
+                  :coercion reitit.coercion.schema/coercion
+                  :parameters {:path {:id s/Str}
+                               :body schema_update-group}
+                  :responses {200 {:body s/Any};groups/schema_export-group}
+                              404 {:body s/Any}}}}] ; TODO error handling
 
      ; groups-users/ring-routes 
-["/:group-id/users/" {:get {:summary "Get group users by id"
-                            :description "Get group users by id."
-                            :swagger {:produces "application/json"}
-                            :content-type "application/json"
+   ["/:group-id/users/" {:get {:summary "Get group users by id"
+                               :description "Get group users by id."
+                               :swagger {:produces "application/json"}
+                               :content-type "application/json"
 
-                            :handler group-users/handle_get-group-users
-                            :middleware [wrap-authorize-admin!]
-                            :coercion reitit.coercion.schema/coercion
-                            :parameters {:path {:group-id s/Str}
-                                         :query {(s/optional-key :page) s/Int
-                                                 (s/optional-key :count) s/Int}}
-                            :responses {200 {:body {:users [group-users/schema_export-group-user-simple]}} ; TODO schema
-                                        404 {:body s/Str}}}
+                               :handler group-users/handle_get-group-users
+                               :middleware [wrap-authorize-admin!]
+                               :coercion reitit.coercion.schema/coercion
+                               :parameters {:path {:group-id s/Str}
+                                            :query {(s/optional-key :page) s/Int
+                                                    (s/optional-key :count) s/Int}}
+                               :responses {200 {:body {:users [group-users/schema_export-group-user-simple]}} ; TODO schema
+                                           404 {:body s/Str}}}
 
           ; TODO works with tests, but not with the swagger ui
-                      :put {:summary "Update group users by group-id and list of users."
-                            :description "Update group users by group-id and list of users."
-                            :swagger {:consumes "application/json" :produces "application/json"}
-                            :content-type "application/json"
-                            :accept "application/json"
-                            :handler group-users/handle_update-group-users
-                            :coercion reitit.coercion.schema/coercion
-                            :parameters {:path {:group-id s/Str}
-                                         :body group-users/schema_update-group-user-list}
+                         :put {:summary "Update group users by group-id and list of users."
+                               :description "Update group users by group-id and list of users."
+                               :swagger {:consumes "application/json" :produces "application/json"}
+                               :content-type "application/json"
+                               :accept "application/json"
+                               :handler group-users/handle_update-group-users
+                               :coercion reitit.coercion.schema/coercion
+                               :parameters {:path {:group-id s/Str}
+                                            :body group-users/schema_update-group-user-list}
 
                              ;:body {:users [s/Any]}}
-                            :responses {200 {:body s/Any} ;groups/schema_export-group}
-                                        404 {:body s/Str}}}}]
+                               :responses {200 {:body s/Any} ;groups/schema_export-group}
+                                           404 {:body s/Str}}}}]
 
-["/:group-id/users/:user-id" {:get {:summary "Get group user by group-id and user-id"
-                                    :description "Get group user by group-id and user-id."
-                                    :swagger {:produces "application/json"}
-                                    :content-type "application/json"
-                                    :handler group-users/handle_get-group-user
-                                    :middleware [wrap-authorize-admin!]
-                                    :coercion reitit.coercion.schema/coercion
-                                    :parameters {:path {:group-id s/Str :user-id s/Str}}
-                                    :responses {200 {:body group-users/schema_export-group-user-simple}
-                                                404 {:body s/Any}}} ; TODO error handling
+   ["/:group-id/users/:user-id" {:get {:summary "Get group user by group-id and user-id"
+                                       :description "Get group user by group-id and user-id."
+                                       :swagger {:produces "application/json"}
+                                       :content-type "application/json"
+                                       :handler group-users/handle_get-group-user
+                                       :middleware [wrap-authorize-admin!]
+                                       :coercion reitit.coercion.schema/coercion
+                                       :parameters {:path {:group-id s/Str :user-id s/Str}}
+                                       :responses {200 {:body group-users/schema_export-group-user-simple}
+                                                   404 {:body s/Any}}} ; TODO error handling
 
-                              :put {:summary "Get group user by group-id and user-id"
-                                    :description "Get group user by group-id and user-id."
-                                    :swagger {:produces "application/json"}
-                                    :content-type "application/json"
-                                    :handler group-users/handle_add-group-user
-                                    :middleware [wrap-authorize-admin!]
-                                    :coercion reitit.coercion.schema/coercion
-                                    :parameters {:path {:group-id s/Str :user-id s/Str}}
-                                    :responses {200 {:body {:users [group-users/schema_export-group-user-simple]}}
-                                                404 {:body s/Any}}} ; TODO error handling
-
-                              :delete {:summary "Deletes a group-user by group-id and user-id"
-                                       :description "Delete a group-user by group-id and user-id."
-                           ;:swagger {:produces "application/json"}
-                           ;:content-type "application/json"
-                                       :handler group-users/handle_delete-group-user
+                                 :put {:summary "Get group user by group-id and user-id"
+                                       :description "Get group user by group-id and user-id."
+                                       :swagger {:produces "application/json"}
+                                       :content-type "application/json"
+                                       :handler group-users/handle_add-group-user
                                        :middleware [wrap-authorize-admin!]
                                        :coercion reitit.coercion.schema/coercion
                                        :parameters {:path {:group-id s/Str :user-id s/Str}}
                                        :responses {200 {:body {:users [group-users/schema_export-group-user-simple]}}
-                                                   406 {:body s/Str}}}}] ; TODO error handling
+                                                   404 {:body s/Any}}} ; TODO error handling
 
+                                 :delete {:summary "Deletes a group-user by group-id and user-id"
+                                          :description "Delete a group-user by group-id and user-id."
+                           ;:swagger {:produces "application/json"}
+                           ;:content-type "application/json"
+                                          :handler group-users/handle_delete-group-user
+                                          :middleware [wrap-authorize-admin!]
+                                          :coercion reitit.coercion.schema/coercion
+                                          :parameters {:path {:group-id s/Str :user-id s/Str}}
+                                          :responses {200 {:body {:users [group-users/schema_export-group-user-simple]}}
+                                                      406 {:body s/Str}}}}] ; TODO error handling
    ])
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

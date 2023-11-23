@@ -1,20 +1,19 @@
 (ns madek.api.authorization
   (:require
-    [clojure.tools.logging :as logging]
-    [logbug.catcher :as catcher]
-    [logbug.debug :as debug]
-    [logbug.thrown :as thrown]
-    [madek.api.resources.collections.permissions :as collection-perms :only [viewable-by-auth-entity?]]
-    [madek.api.resources.media-entries.permissions :as media-entry-perms :only [viewable-by-auth-entity?]]
-    [madek.api.resources.media-resources.permissions :as mr-permissions]
-  ))
+   [clojure.tools.logging :as logging]
+   [logbug.catcher :as catcher]
+   [logbug.debug :as debug]
+   [logbug.thrown :as thrown]
+   [madek.api.resources.collections.permissions :as collection-perms :only [viewable-by-auth-entity?]]
+   [madek.api.resources.media-entries.permissions :as media-entry-perms :only [viewable-by-auth-entity?]]
+   [madek.api.resources.media-resources.permissions :as mr-permissions]))
 
 (defn authorized-view? [auth-entity resource]
   (case (:type resource)
     "MediaEntry" (media-entry-perms/viewable-by-auth-entity?
-                   resource auth-entity)
+                  resource auth-entity)
     "Collection" (collection-perms/viewable-by-auth-entity?
-                   resource auth-entity)
+                  resource auth-entity)
     false))
 
 (defn authorized-download? [auth-entity resource]
@@ -55,9 +54,8 @@
                    :edit-perm (authorized-edit-permissions? auth-entity resource)
                    false)]
     (logging/info 'authorized? scope auth-res)
-    auth-res)
-  )
-  
+    auth-res))
+
 (defn wrap-authorized-user [handler]
   (fn [request]
     (if-let [id (-> request :authenticated-entity :id)]

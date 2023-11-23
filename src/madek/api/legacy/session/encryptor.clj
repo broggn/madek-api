@@ -4,22 +4,20 @@
 
 (ns madek.api.legacy.session.encryptor
   (:import
-    [javax.crypto KeyGenerator SecretKey Cipher]
-    [javax.crypto.spec IvParameterSpec SecretKeySpec]
-    [java.security SecureRandom]
-    )
+   [java.security SecureRandom]
+   [javax.crypto KeyGenerator SecretKey Cipher]
+   [javax.crypto.spec IvParameterSpec SecretKeySpec])
   (:require
-    [madek.api.utils.digest :refer [sha256]]
-    [clojure.string :refer [split]]
-    [clojure.data.json :as json]
-    [madek.api.legacy.session.encoder :refer [decode encode]]
-    ))
+   [clojure.data.json :as json]
+   [clojure.string :refer [split]]
+   [madek.api.legacy.session.encoder :refer [decode encode]]
+   [madek.api.utils.digest :refer [sha256]]))
 
 (defn decrypt [secret encrypted-message]
   (let [cipher (Cipher/getInstance "AES/CBC/PKCS5Padding")
         skey-spec (SecretKeySpec. (sha256 secret) "AES")
         [iv, msg]  (->> (split encrypted-message #"~")
-                        (map decode ))
+                        (map decode))
         iv_spec (IvParameterSpec. iv)]
     (.init cipher (Cipher/DECRYPT_MODE) skey-spec iv_spec)
     (->> (.doFinal cipher msg)

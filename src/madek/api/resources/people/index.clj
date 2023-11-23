@@ -1,37 +1,36 @@
 (ns madek.api.resources.people.index
   (:require
-    [clojure.java.jdbc :as jdbc]
-    [clojure.tools.logging :as logging]
-    [logbug.catcher :as catcher]
-    [logbug.debug :as debug]
-    [madek.api.pagination :as pagination]
+   [clojure.java.jdbc :as jdbc]
+   [clojure.tools.logging :as logging]
+   [logbug.catcher :as catcher]
+   [logbug.debug :as debug]
+   [madek.api.pagination :as pagination]
 
-    [madek.api.utils.rdbms :as rdbms]
-    [madek.api.utils.sql :as sql]
-    ))
+   [madek.api.utils.rdbms :as rdbms]
+   [madek.api.utils.sql :as sql]))
 
 (defn- build-index-base-query
   []
   (->
-    (sql/select :people.id)
-    (sql/from :people)))
+   (sql/select :people.id)
+   (sql/from :people)))
 
 (defn- build-index-query
   [{:keys [user-id]}]
   (cond-> (build-index-base-query)
     user-id
-      (->
-        (sql/merge-join :people_users [:= :people.id :people_users.person_id])
-        (sql/merge-where [:= :people_users.user_id user-id]))))
+    (->
+     (sql/merge-join :people_users [:= :people.id :people_users.person_id])
+     (sql/merge-where [:= :people_users.user_id user-id]))))
 
 ; TODO test paging
 (defn get-index
   [query-params]
   (let [query
-          (->
-            (build-index-query query-params)
-            (pagination/add-offset-for-honeysql query-params)
-            sql/format)]
+        (->
+         (build-index-query query-params)
+         (pagination/add-offset-for-honeysql query-params)
+         sql/format)]
     (jdbc/query (rdbms/get-ds) query)))
 
 ;### Debug ####################################################################

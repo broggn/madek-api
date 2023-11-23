@@ -4,13 +4,11 @@
 
 (ns madek.api.legacy.session.signature
   (:require
-    [clojure.string :refer [split]]
-    [clojure.data.json :as json]
-    )
-   (:import
-     [javax.crypto Mac]
-     [javax.crypto.spec SecretKeySpec]
-     ))
+   [clojure.data.json :as json]
+   [clojure.string :refer [split]])
+  (:import
+   [javax.crypto Mac]
+   [javax.crypto.spec SecretKeySpec]))
 
 (def ^:const ^:private signing-algorithm "HmacSHA1")
 
@@ -26,9 +24,9 @@
 (defn sha1-hmac [^String message secret]
   (let [mac (get-mac (get-signing-key secret))]
     (->>
-      (.doFinal mac (.getBytes message))
-      (map (partial format "%02x"))
-      (apply str))))
+     (.doFinal mac (.getBytes message))
+     (map (partial format "%02x"))
+     (apply str))))
 
 (defn valid? [signature secret message]
   (= signature (sha1-hmac message secret)))

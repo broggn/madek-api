@@ -1,14 +1,13 @@
-(ns madek.api.resources.permissions 
-  (:require 
-   [schema.core :as s]
-   [reitit.coercion.schema]
-   [madek.api.resources.shared :as sd]
-   
-   [madek.api.resources.vocabularies.permissions :as voc-perms]
-   [madek.api.resources.media-resources.permissions :as mr-permissions]
+(ns madek.api.resources.permissions
+  (:require
    [clojure.tools.logging :as logging]
-   [logbug.catcher :as catcher]))
+   [logbug.catcher :as catcher]
+   [madek.api.resources.media-resources.permissions :as mr-permissions]
 
+   [madek.api.resources.shared :as sd]
+   [madek.api.resources.vocabularies.permissions :as voc-perms]
+   [reitit.coercion.schema]
+   [schema.core :as s]))
 
 ; TODO delegations ?
 ; TODO clipboard_user
@@ -20,7 +19,7 @@
     "Collection" "collection"
     :default (throw ((ex-info "Invalid media-resource type" {:status 500})))))
 
-(defn get-entity-perms 
+(defn get-entity-perms
   ([mr] (get-entity-perms mr (:type mr)))
   ([mr type]
    (case type
@@ -40,8 +39,7 @@
                                    :get_metadata_and_previews
                                      ; TODO delegations
                                    ])
-     :default (throw ((ex-info "Invalid media-resource type" {:status 500})))))
-  )
+     :default (throw ((ex-info "Invalid media-resource type" {:status 500}))))))
 
 (defn handle_get_entity_perms
   [req]
@@ -77,7 +75,6 @@
           (sd/response_failed (str "Could not update permissions" upd-result) 406))))
     (catch Exception ex (sd/response_exception ex))))
 
-
 (defn- handle_list-user-perms
   [req]
   (let [mr (-> req :media-resource)
@@ -107,7 +104,6 @@
           (sd/response_failed "Could not create user permissions." 422)
           (sd/response_ok result))))
     (catch Exception ex (sd/response_exception ex))))
-
 
 (defn handle_delete-user-perms [req]
   (try
@@ -148,8 +144,6 @@
           (sd/response_not_found "No such resource user permission."))))
     (catch Exception ex (sd/response_exception ex))))
 
-
-
 (defn handle_create-group-perms [req]
   (try
     (catcher/with-logging {}
@@ -163,7 +157,6 @@
           (sd/response_failed "Could not create resource group permissions." 422))))
     (catch Exception ex (sd/response_exception ex))))
 
-
 (defn handle_delete-group-perms [req]
   (try
     (catcher/with-logging {}
@@ -175,12 +168,9 @@
             (if (true? delok)
               (sd/response_ok group-perm)
               (sd/response_failed "Could not delete resource group permission." 422)))
-          (sd/response_not_found "No such resource group permission."))
-            
-            
-        ))
-    (catch Exception ex (sd/response_exception ex))))
+          (sd/response_not_found "No such resource group permission."))))
 
+    (catch Exception ex (sd/response_exception ex))))
 
 (defn- handle_list-group-perms
   [req]
@@ -200,7 +190,6 @@
       (sd/response_ok data)
       (sd/response_not_found "No such resource group permission."))))
 
-
 (defn- handle_update-group-perms
   [req]
   (try
@@ -218,7 +207,6 @@
           (sd/response_not_found "No such resource group permissions."))))
     (catch Exception ex (sd/response_exception ex))))
 
-
 (defn- handle_list-perms-type
   [req]
   (let [p-type (-> req :parameters :path :type)
@@ -233,7 +221,6 @@
                "group" (mr-permissions/query-list-group-permissions mr mr-type))]
     (sd/response_ok data)))
 
-
 (defn- handle_list-perms
   [req]
   (let [mr (-> req :media-resource)
@@ -246,9 +233,8 @@
         g-data (mr-permissions/query-list-group-permissions mr mr-type)]
     (sd/response_ok {;:api-clients a-data
                      :media-resource e-data
-                     :users u-data 
+                     :users u-data
                      :groups g-data})))
-
 
 ; TODO only for docu
 (def valid_permission_names
@@ -265,8 +251,7 @@
    (s/optional-key :responsible_user_id) (s/maybe s/Uuid)
    (s/optional-key :clipboard_user_id) (s/maybe s/Uuid)
    (s/optional-key :workflow_id) (s/maybe s/Uuid)
-   (s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)
-   })
+   (s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)})
 
 (def schema_create-collection-user-permission
   {:get_metadata_and_previews s/Bool
@@ -287,8 +272,7 @@
 
 (def schema_create-collection-group-permission
   {:get_metadata_and_previews s/Bool
-   :edit_metadata_and_relations s/Bool
-   })
+   :edit_metadata_and_relations s/Bool})
 
 (def schema_export-collection-group-permission
   {:id s/Uuid
@@ -316,13 +300,11 @@
    :users [schema_export-collection-user-permission]
    :groups [schema_export-collection-group-permission]})
 
-
 (def schema_update-media-entry-perms
   {(s/optional-key :get_metadata_and_previews) s/Bool
    (s/optional-key :get_full_size) s/Bool
    (s/optional-key :responsible_user_id) (s/maybe s/Uuid)
-   (s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)
-   })
+   (s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)})
 
 (def schema_export-media-entry-perms
   {:id s/Uuid
@@ -350,14 +332,12 @@
    :edit_permissions s/Bool
    :delegation_id (s/maybe s/Uuid)
    :created_at s/Any
-   :updated_at s/Any
-   })
+   :updated_at s/Any})
 
 (def schema_create-media-entry-group-permission
   {:get_metadata_and_previews s/Bool
    :get_full_size s/Bool
-   :edit_metadata s/Bool
-   })
+   :edit_metadata s/Bool})
 
 (def schema_export-media-entry-group-permission
   {:id s/Uuid
@@ -375,8 +355,6 @@
    :users [schema_export-media-entry-user-permission]
    :groups [schema_export-media-entry-group-permission]})
 
-
-
 (def media-entry-routes
   ["/media-entry/:media_entry_id/perms"
    ["/"
@@ -391,14 +369,13 @@
       :parameters {:path {:media_entry_id s/Uuid}}
       :responses {200 {:body schema_export_media-entry-permissions-all}}}}]
 
-
-   ; TODO patch for entity perms
+; TODO patch for entity perms
     ; get_metadata_and_previews
     ; get_full_size
     ; responsible_user_id
     ; responsible_delegation_id
     ; TODO beware to let not update perm fields in media-entry or collection patch/update
-   
+
    ["/resources"
     {:get
      {:summary "Query media-entry permissions."
@@ -421,7 +398,7 @@
       :parameters {:path {:media_entry_id s/Uuid}
                    :body schema_update-media-entry-perms}
       :responses {200 {:body schema_export-media-entry-perms}}}}]
-   
+
    ["/resource/:perm_name/:perm_val"
     {:put {:summary "Update media-entry entity permissions"
            :description (str "Valid perm_name values are" valid_permission_names)
@@ -435,7 +412,6 @@
                                :perm_val s/Bool}}
            :responses {200 {:body schema_export-media-entry-perms}}}}]
 
-
    ["/users"
     {:get
      {:summary "Query media-entry user permissions."
@@ -446,9 +422,7 @@
                    sd/ring-wrap-authorization-view]
       :coercion reitit.coercion.schema/coercion
       :parameters {:path {:media_entry_id s/Uuid}}
-      :responses {200 {:body [schema_export-media-entry-user-permission]}}}
-     
-     }]
+      :responses {200 {:body [schema_export-media-entry-user-permission]}}}}]
 
    ["/user/:user_id"
     {:get {:summary "Get media-entry user permissions."
@@ -461,7 +435,7 @@
            :parameters {:path {:media_entry_id s/Uuid
                                :user_id s/Uuid}}
            :responses {200 {:body schema_export-media-entry-user-permission}}}
-     
+
      :post {:summary "Create media-entry user permissions."
             :swagger {:produces "application/json"}
             :content-type "application/json"
@@ -473,7 +447,7 @@
                                 :user_id s/Uuid}
                          :body schema_create-media-entry-user-permission}
             :responses {200 {:body schema_export-media-entry-user-permission}}}
-     
+
      :delete {:summary "Delete media-entry user permissions."
               :swagger {:produces "application/json"}
               :content-type "application/json"
@@ -483,9 +457,7 @@
               :coercion reitit.coercion.schema/coercion
               :parameters {:path {:media_entry_id s/Uuid
                                   :user_id s/Uuid}}
-              :responses {200 {:body schema_export-media-entry-user-permission}}}
-     
-     }]
+              :responses {200 {:body schema_export-media-entry-user-permission}}}}]
 
    ["/user/:user_id/:perm_name/:perm_val"
     {:put {:summary "Update media-entry user permissions"
@@ -563,10 +535,7 @@
                                                   "get_full_size"
                                                   "edit_metadata")
                                :perm_val s/Bool}}
-           :responses {200 {:body schema_export-media-entry-group-permission}}}}]
-   
-   ])
-
+           :responses {200 {:body schema_export-media-entry-group-permission}}}}]])
 
 (def collection-routes
   ["/collection/:collection_id/perms"
@@ -593,8 +562,8 @@
       :coercion reitit.coercion.schema/coercion
       :parameters {:path {:collection_id s/Uuid}}
       :responses {200 {:body schema_export-collection-perms}}}
-     
-     :put 
+
+     :put
      {:summary "Update collection entity permissions"
       :description (str "Valid perm_name values are" valid_permission_names)
       :handler handle_update-ressource-perms
@@ -604,7 +573,6 @@
       :parameters {:path {:collection_id s/Uuid}
                    :body schema_update-collection-perms}
       :responses {200 {:body schema_export-collection-perms}}}}]
-   
 
    ["/resource/:perm_name/:perm_val"
     {:put
@@ -618,7 +586,6 @@
                           :perm_name (s/enum "get_metadata_and_previews")
                           :perm_val s/Bool}}
       :responses {200 {:body schema_export-collection-perms}}}}]
-   
 
    ["/users"
     {:get {:summary "Query collection permissions."
@@ -654,7 +621,7 @@
                                 :user_id s/Uuid}
                          :body schema_create-collection-user-permission}
             :responses {200 {:body schema_export-collection-user-permission}}}
-     
+
      :delete {:summary "Delete collection user permissions."
               :swagger {:produces "application/json"}
               :content-type "application/json"
@@ -664,8 +631,7 @@
               :coercion reitit.coercion.schema/coercion
               :parameters {:path {:collection_id s/Uuid
                                   :user_id s/Uuid}}
-              :responses {200 {:body schema_export-collection-user-permission}}}
-     }]
+              :responses {200 {:body schema_export-collection-user-permission}}}}]
 
    ["/user/:user_id/:perm_name/:perm_val"
     {:put {:summary "Update collection user permissions"
@@ -680,7 +646,6 @@
                                                   "edit_permissions")
                                :perm_val s/Bool}}
            :responses {200 {:body schema_export-collection-user-permission}}}}]
-
 
    ["/groups"
     {:get
@@ -705,7 +670,7 @@
            :parameters {:path {:collection_id s/Uuid
                                :group_id s/Uuid}}
            :responses {200 {:body schema_export-collection-group-permission}}}
-     
+
      :post {:summary "Create collection group permissions."
             :swagger {:produces "application/json"}
             :content-type "application/json"

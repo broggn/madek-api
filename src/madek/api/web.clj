@@ -1,39 +1,38 @@
 (ns madek.api.web
   (:require
-    [clj-yaml.core :as yaml]
-    [clojure.walk :refer [keywordize-keys]]
-    [environ.core :refer [env]]
-    [logbug.catcher :as catcher]
-    [logbug.debug :as debug :refer [I> I>>]]
-    [logbug.thrown :as thrown]
-    [madek.api.authentication :as authentication]
-    [madek.api.db.core :as db]
-    [madek.api.http.server :as http-server]
-    [madek.api.json-protocol]
-    [madek.api.management :as management]
-    [madek.api.resources.auth-info :as auth-info]
-    [madek.api.resources]
-    [madek.api.utils.cli :refer [long-opt-for-key]]
-    [madek.api.utils.config :refer [get-config]]
-    [madek.api.utils.logging :as logging]
-    [muuntaja.core :as m]
-    [reitit.coercion.schema]
-    [reitit.coercion.spec]
-    [reitit.ring :as rr]
-    [reitit.ring.coercion :as rrc]
-    [reitit.ring.middleware.exception :as re]
-    [reitit.ring.middleware.multipart :as multipart]
-    [reitit.ring.middleware.muuntaja :as muuntaja]
-    [reitit.ring.middleware.parameters :as rmp]
-    [reitit.ring.spec :as rs]
-    [reitit.swagger :as swagger]
-    [reitit.swagger-ui :as swagger-ui]
-    [ring.middleware.cors :as cors-middleware]
-    [ring.middleware.defaults :as ring-defaults]
-    [ring.middleware.json]
-    [ring.middleware.reload :refer [wrap-reload]]
-    [taoensso.timbre :refer [debug error info spy warn]]))
-
+   [clj-yaml.core :as yaml]
+   [clojure.walk :refer [keywordize-keys]]
+   [environ.core :refer [env]]
+   [logbug.catcher :as catcher]
+   [logbug.debug :as debug :refer [I> I>>]]
+   [logbug.thrown :as thrown]
+   [madek.api.authentication :as authentication]
+   [madek.api.db.core :as db]
+   [madek.api.http.server :as http-server]
+   [madek.api.json-protocol]
+   [madek.api.management :as management]
+   [madek.api.resources]
+   [madek.api.resources.auth-info :as auth-info]
+   [madek.api.utils.cli :refer [long-opt-for-key]]
+   [madek.api.utils.config :refer [get-config]]
+   [madek.api.utils.logging :as logging]
+   [muuntaja.core :as m]
+   [reitit.coercion.schema]
+   [reitit.coercion.spec]
+   [reitit.ring :as rr]
+   [reitit.ring.coercion :as rrc]
+   [reitit.ring.middleware.exception :as re]
+   [reitit.ring.middleware.multipart :as multipart]
+   [reitit.ring.middleware.muuntaja :as muuntaja]
+   [reitit.ring.middleware.parameters :as rmp]
+   [reitit.ring.spec :as rs]
+   [reitit.swagger :as swagger]
+   [reitit.swagger-ui :as swagger-ui]
+   [ring.middleware.cors :as cors-middleware]
+   [ring.middleware.defaults :as ring-defaults]
+   [ring.middleware.json]
+   [ring.middleware.reload :refer [wrap-reload]]
+   [taoensso.timbre :refer [debug error info spy warn]]))
 
 ; changing DEBUG to true will wrap each middleware defined in this file with
 ; extended debug logging; this will increase LOGGING OUTPUT IMMENSELY and might
@@ -80,7 +79,6 @@
         (error "COUGHT UNEXPECTED EXCEPTION" (ex-message ex))
         (server-error-response ex)))))
 
-
 ;### wrap CORS ###############################################################
 
 (defn add-access-control-allow-credentials [response]
@@ -98,7 +96,6 @@
        :access-control-allow-headers ["Origin" "X-Requested-With" "Content-Type" "Accept" "Authorization", "Credentials" "Cookie"])
       wrap-with-access-control-allow-credentials))
 
-
 ;### routes ###################################################################
 
 (def auth-info-route
@@ -106,8 +103,7 @@
    {:get
     {:summary "Authentication help and info."
      :handler auth-info/auth-info
-     :middleware [authentication/wrap]
-     }}])
+     :middleware [authentication/wrap]}}])
 
 (def test-routes
   ["/test"
@@ -132,8 +128,7 @@
     madek.api.resources/admin-routes
     ;management/api-routes
     ;test-routes
-    swagger-routes
-    ]
+    swagger-routes]
    (filterv some?)))
 
 (def get-router-data-user
@@ -151,10 +146,8 @@
     madek.api.resources/admin-routes
     ;management/api-routes
     ;test-routes
-    swagger-routes
-    ]
+    swagger-routes]
    (filterv some?)))
-
 
 (def ^:dynamic middlewares
   [swagger/swagger-feature
@@ -182,7 +175,7 @@
                  {:wrap-debug-level wrap-debug-level
                   :request (logging/clean-request request)})
           (let [response (handler
-                           (assoc request :wrap-debug-level (inc wrap-debug-level)))]
+                          (assoc request :wrap-debug-level (inc wrap-debug-level)))]
             (debug "RING-LOGGING-WRAPPER"
                    {:wrap-debug-level wrap-debug-level
                     :response response})
@@ -197,7 +190,6 @@
     (def ^:dynamic middlewares
       (into [] (interpose wrap-debug mws)))))
 
-
 ; TODO, QUESTION: the following will add the whole middleware stack to the data
 ; object in the request; is this in anyway usefull? e.g. debugging ??? if not
 ; so: can it be removed, it blows up the data for each request insanely
@@ -207,7 +199,6 @@
    #_#_:compile coercion/compile-request-coercers
    :data {:middleware middlewares
           :muuntaja m/instance}})
-
 
 (def app-all
   (rr/ring-handler
@@ -230,7 +221,6 @@
     (rr/redirect-trailing-slash-handler)
     (rr/create-default-handler))))
 
-
 (def api-defaults
   (-> ring-defaults/api-defaults
       (assoc :cookies true)
@@ -241,13 +231,10 @@
   #_handler
   (ring-defaults/wrap-defaults handler api-defaults))
 
-
 (defn middleware [handler]
   (-> handler wrap-defaults))
 
-
 ;### server ###################################################################
-
 
 ; cli
 
@@ -259,9 +246,7 @@
             "Either ALL, ADMIN or USER"
             :default (or (some-> http-resources-scope-key env)
                          "ALL")
-            :validate [#(some #{%} ["ALL" "ADMIN" "USER"]) "scope must be ALL, ADMIN or USER"]
-            ]]))
-
+            :validate [#(some #{%} ["ALL" "ADMIN" "USER"]) "scope must be ALL, ADMIN or USER"]]]))
 
 (defn initialize-all [http-conf is_reloadable]
   (if (true? is_reloadable)
@@ -284,7 +269,6 @@
                   "ADMIN" (middleware app-admin)
                   "USER" (middleware app-user))]
     (http-server/start handler options)))
-
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

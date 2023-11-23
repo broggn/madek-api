@@ -9,7 +9,6 @@
    [schema.core :as s]
    [taoensso.timbre :refer [debug error info spy warn]]))
 
-
 ;;; schema ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def user-get-schema
@@ -28,7 +27,6 @@
    :person_id s/Uuid
    :settings s/Any
    :updated_at s/Any})
-
 
 ;;; sql ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

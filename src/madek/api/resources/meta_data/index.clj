@@ -1,17 +1,16 @@
 (ns madek.api.resources.meta-data.index
   (:require
-    [clojure.java.jdbc :as jdbc]
+   [clojure.java.jdbc :as jdbc]
     ;[clojure.tools.logging :as logging]
-    [logbug.catcher :as catcher]
-    [logbug.debug :as debug]
+   [logbug.catcher :as catcher]
+   [logbug.debug :as debug]
     ;[madek.api.authorization :as authorization]
-    [madek.api.constants :as constants]
+   [madek.api.constants :as constants]
+   [madek.api.resources.shared :as sd]
     ;[madek.api.pagination :as pagination]
-    [madek.api.resources.vocabularies.permissions :as permissions]
-    [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-    [madek.api.utils.sql :as sql]
-    [madek.api.resources.shared :as sd]
-    ))
+   [madek.api.resources.vocabularies.permissions :as permissions]
+   [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+   [madek.api.utils.sql :as sql]))
 
 ; TODO error if user-id is undefined (public)
 (defn md-vocab-where-clause
@@ -20,22 +19,21 @@
     (if (empty? vocabulary-ids)
       [:= :vocabularies.enabled_for_public_view true]
       [:or
-        [:= :vocabularies.enabled_for_public_view true]
-        [:in :vocabularies.id vocabulary-ids]])))
+       [:= :vocabularies.enabled_for_public_view true]
+       [:in :vocabularies.id vocabulary-ids]])))
 
 (defn- base-query
   [user-id]
   ;(-> (sql/select :*)
   (-> (sql/select :meta_data.id
                   :meta_data.type
-                  :meta_data.meta_key_id 
+                  :meta_data.meta_key_id
                   :meta_data.media_entry_id
                   :meta_data.collection_id
                   :meta_data.string
                   :meta_data.json
                   :meta_data.other_media_entry_id
-                  :meta_data.meta_data_updated_at
-                  )
+                  :meta_data.meta_data_updated_at)
       (sql/from :meta_data)
       (sql/merge-where [:in :meta_data.type
                         constants/SUPPORTED_META_DATA_TYPES])
@@ -55,7 +53,6 @@
 (defn- meta-data-query-for-collection [collection-id user-id]
   (-> (base-query user-id)
       (sql/merge-where [:= :meta_data.collection_id collection-id])))
-
 
 ; TODO test with json
 ; TODO add query param meta-keys as json list of strings
@@ -84,7 +81,7 @@
 
 (defn get-collection-meta-data [id user-id]
   (let [mdq (sql/format (meta-data-query-for-collection id user-id))
-        result (jdbc/query (get-ds) mdq)] 
+        result (jdbc/query (get-ds) mdq)]
     ;(logging/info "get-collection-meta-data:"
     ;              "\n col id: " id
     ;              "\n user id: " user-id

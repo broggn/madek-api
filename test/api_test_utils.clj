@@ -1,9 +1,8 @@
 (ns api-test-utils
   (:require
-   [madek.api.utils.rdbms :as rdbms] 
-   [clojure.java.jdbc :as jdbc]
    [api-test-data :as td]
-   ))
+   [clojure.java.jdbc :as jdbc]
+   [madek.api.utils.rdbms :as rdbms]))
 
 (defn init-db [dburl]
   (rdbms/initialize dburl)
@@ -14,7 +13,6 @@
 
 (defn db-del-by-id [table id]
   (->> (jdbc/delete! (rdbms/get-ds) table ["(id = ?)" id]) first))
-
 
 (defn init-test-person []
   (let [result (dbinsert :people td/person1)] result))
@@ -53,7 +51,7 @@
   (when-let [result (db-del-by-id :people td/person2id)] result))
 
 (defn del-test-auth2 []
-   (when-let [result (db-del-by-id :auth_systems_users td/auth2id)] result))
+  (when-let [result (db-del-by-id :auth_systems_users td/auth2id)] result))
 
 (defn del-test-user2 []
   (when-let [result (db-del-by-id :users td/user2id)] result))

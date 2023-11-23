@@ -14,8 +14,8 @@
             [madek.api.resources.contexts :as contexts]
             [madek.api.resources.custom-urls :as custom-urls]
             [madek.api.resources.delegations :as delegations]
-            [madek.api.resources.delegations-users :as delegations_users]
             [madek.api.resources.delegations-groups :as delegations_groups]
+            [madek.api.resources.delegations-users :as delegations_users]
             [madek.api.resources.edit-sessions :as edit-sessions]
             [madek.api.resources.favorite-collections :as favorite-collections]
             [madek.api.resources.favorite-media-entries :as favorite-media-entries]
@@ -41,15 +41,9 @@
             [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
             [reitit.coercion.schema]))
 
-
-
 ;### wrap media resource ######################################################
 
-
 ;### wrap meta-datum with media-resource#######################################
-
-
-
 
 ;### a few redirects ##########################################################
 
@@ -75,9 +69,7 @@
                              first :id)]
     (ring.util.response/redirect (str context "/media-files/" media-file-id "/data-stream"))))
 
-
 ;### ##### ####################################################################
-
 
 (def api2-routes
   ["/" {:get (constantly sd/root)}
@@ -89,15 +81,10 @@
    ;                :put (constantly sd/no_impl)
    ;                :delete (constantly sd/no_impl)}]
 
-
-   ; TODO confidential-links post, get, patch, delete
+; TODO confidential-links post, get, patch, delete
 
    ; TODO Frage: delegations workflows post, get, patch, delete
-
-
-
    ])
-
 (def admin-routes
   ; TODO use wrap admin
   ["/api/admin" ;{:middleware [
@@ -115,7 +102,6 @@
    delegations/ring-routes
    delegations_users/admin-routes
    delegations_groups/admin-routes
-
 
    edit-sessions/admin-routes
    favorite-collections/admin-routes
@@ -169,7 +155,6 @@
    confidential-links/user-col-routes
    custom-urls/query-routes
 
-
    edit-sessions/query-routes
 
    ; favorites
@@ -205,9 +190,7 @@
    usage-terms/user-routes
 
    vocabularies/user-routes
-   workflows/user-routes
-   ])
-
+   workflows/user-routes])
 
 ;### Debug ####################################################################
 (debug/debug-ns *ns*)

@@ -3,13 +3,11 @@
    [clojure.java.jdbc :as jdbc]
    [logbug.catcher :as catcher]
    [madek.api.pagination :as pagination]
+   [madek.api.resources.shared :as sd]
    [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
    [madek.api.utils.sql :as sql]
    [reitit.coercion.schema]
-   [schema.core :as s]
-   [madek.api.resources.shared :as sd]
-   ))
-
+   [schema.core :as s]))
 
 (defn arc-query [request]
   (-> (sql/select :*)
@@ -28,7 +26,7 @@
   (-> (sql/select :*)
       (sql/from :collection_collection_arcs)
       (sql/merge-where [:= :parent_id (-> request :parameters :path :parent_id)])
-      (sql/merge-where [:= :child_id (-> request :parameters :path :child_id)]) 
+      (sql/merge-where [:= :child_id (-> request :parameters :path :child_id)])
       sql/format))
 
 (defn handle_arc-by-parent-and-child [request]
@@ -50,7 +48,6 @@
   (let [query (arcs-query (-> request :parameters :query))
         db-result (jdbc/query (get-ds) query)]
     (sd/response_ok {:collection-collection-arcs db-result})))
-
 
 (defn handle_create-col-col-arc [req]
   (try
@@ -90,37 +87,33 @@
     (catch Exception e (sd/response_exception e))))
 
 (defn handle_delete-arc [req]
-   (try
-     (catcher/with-logging {}
-       (let [parent-id (-> req :parameters :path :parent_id)
-             child-id (-> req :parameters :path :child_id)
-             olddata (sd/query-eq-find-one
-                      :collection_collection_arcs
-                      :parent_id parent-id
-                      :child_id child-id)
-             delquery (sql-cls-update parent-id child-id)
-             delresult (jdbc/delete! (get-ds) :collection_collection_arcs delquery)]
-         (if (= 1 (first delresult))
-           (sd/response_ok olddata)
-           (sd/response_failed "Could not delete collection collection arc." 422))))
-     (catch Exception e (sd/response_exception e))))
+  (try
+    (catcher/with-logging {}
+      (let [parent-id (-> req :parameters :path :parent_id)
+            child-id (-> req :parameters :path :child_id)
+            olddata (sd/query-eq-find-one
+                     :collection_collection_arcs
+                     :parent_id parent-id
+                     :child_id child-id)
+            delquery (sql-cls-update parent-id child-id)
+            delresult (jdbc/delete! (get-ds) :collection_collection_arcs delquery)]
+        (if (= 1 (first delresult))
+          (sd/response_ok olddata)
+          (sd/response_failed "Could not delete collection collection arc." 422))))
+    (catch Exception e (sd/response_exception e))))
 
 (def schema_collection-collection-arc-export
-  {
-   :id s/Uuid
+  {:id s/Uuid
    :parent_id s/Uuid
    :child_id s/Uuid
    :highlight s/Bool
    :order s/Num
    :position s/Int
    :created_at s/Any
-   :updated_at s/Any
-   
-  })
+   :updated_at s/Any})
 
 (def schema_collection-collection-arc-update
-  {
-   ;(s/optional-key :id) s/Uuid
+  {;(s/optional-key :id) s/Uuid
    ;(s/optional-key :parent_id) s/Uuid
    ;(s/optional-key :child_id) s/Uuid
    (s/optional-key :highlight) s/Bool
@@ -128,15 +121,12 @@
    (s/optional-key :position) s/Int
    ;(s/optional-key :created_at) s/Any
    ;(s/optional-key :updated_at) s/Any
-   
    })
-
 (def schema_collection-collection-arc-create
-  {
-   ;(s/optional-key :id) s/Uuid
+  {;(s/optional-key :id) s/Uuid
    ;(s/optional-key :parent_id) s/Uuid
    ;(s/optional-key :child_id) s/Uuid
-   
+
    (s/optional-key :highlight) s/Bool
    (s/optional-key :order) s/Num
    (s/optional-key :position) s/Int})
@@ -144,7 +134,7 @@
 ; TODO add permission checks
 (def ring-routes
   ["/collection-collection-arcs"
-   ["/" 
+   ["/"
     {:get
      {:summary "Query collection collection arcs."
       :handler handle_query-arcs
@@ -155,12 +145,8 @@
                            (s/optional-key :page) s/Int
                            (s/optional-key :count) s/Int}}
       :responses {200 {:body s/Any}} ; TODO response coercion
-      }
-     
-    }
-   ]
-   
-   ; TODO rename param to collection_id
+      }}]
+; TODO rename param to collection_id
    ; TODO add permission checks
    ["/:id"
     {:get
@@ -171,12 +157,7 @@
       :parameters {:path {:id s/Str}}
       :responses {200 {:body s/Any}
                   404 {:body s/Any}} ; TODO response coercion
-      }
-    
-    }] 
-   
-   ])
-
+      }}]])
 ; TODO rename param use middleware for permissions
 (def collection-routes
   ["/collection/:parent_id"
@@ -203,7 +184,7 @@
                    :body schema_collection-collection-arc-create}
       :responses {200 {:body s/Any}
                   406 {:body s/Any}}}
-     
+
      :get
      {:summary "Get collection collection arcs."
       :handler handle_arc-by-parent-and-child
@@ -213,8 +194,8 @@
                           :child_id s/Uuid}}
       :responses {200 {:body s/Any}
                   404 {:body s/Any}} ; TODO response coercion
-     }
-     
+      }
+
      ; TODO col col arc update tests
      :put
      {:summary (sd/sum_usr "Update collection collection arc")
@@ -228,7 +209,7 @@
       :responses {200 {:body s/Any}
                   404 {:body s/Any}
                   406 {:body s/Any}}}
-     
+
      ; TODO col col arc delete tests
      :delete
      {:summary (sd/sum_usr "Delete collection collection arc")
@@ -239,8 +220,7 @@
                           :child_id s/Uuid}}
       :responses {200 {:body s/Any}
                   404 {:body s/Any}
-                  406 {:body s/Any}}}}
-   ]
-  ])
+                  406 {:body s/Any}}}}]])
+
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

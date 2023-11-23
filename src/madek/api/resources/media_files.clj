@@ -5,11 +5,10 @@
    [logbug.debug :as debug :refer [I>]]
    [logbug.ring :as logbug-ring :refer [wrap-handler-with-logging]]
    [madek.api.resources.media-files.authorization :as media-files.authorization]
-   [madek.api.resources.media-files.media-file :as media-file] 
-   [reitit.coercion.schema]
-   [schema.core :as s]
+   [madek.api.resources.media-files.media-file :as media-file]
    [madek.api.resources.shared :as sd]
-   ))
+   [reitit.coercion.schema]
+   [schema.core :as s]))
 
 ;##############################################################################
 
@@ -22,7 +21,6 @@
 (defn query-media-files-by-media-entry-id [media-entry-id]
   (sd/query-eq-find-all :media_files :media_entry_id media-entry-id))
 
-
 (defn wrap-find-and-add-media-file
   "Extracts path parameter media_entry_id,
    adds queried media-file and its media_file_id to the request data."
@@ -33,17 +31,15 @@
         (handler (assoc request :media-file media-file))
         (sd/response_not_found "No media-file for media_file_id")))))
 
-
 (defn wrap-find-and-add-media-file-by-media-entry-id
   "Extracts path parameter media_entry_id,
    adds queried media-file and its media_file_id to the request data."
   [handler]
   (fn [request]
     (when-let [media-entry-id (-> request :parameters :path :media_entry_id)]
-       (if-let [media-files (query-media-files-by-media-entry-id media-entry-id)]
-         (handler (assoc request :media-file (first media-files)))
-         (sd/response_not_found "No media-file for media_entry_id")))))
-
+      (if-let [media-files (query-media-files-by-media-entry-id media-entry-id)]
+        (handler (assoc request :media-file (first media-files)))
+        (sd/response_not_found "No media-file for media_entry_id")))))
 
 (def schema_export-media-file
   {:id s/Uuid
@@ -61,9 +57,7 @@
    ;:uploader_id s/Uuid
    ;:conversion_profiles [s/Str]
    :created_at s/Any
-   :updated_at s/Any
-
-   })
+   :updated_at s/Any})
 
 ;##############################################################################
 
@@ -90,9 +84,7 @@
            :parameters {:path {:media_file_id s/Str}}
            ;:responses {:200 {:body s/Any}
            ;            :404 {:body s/Any}}
-           }}]
-   ])
-
+           }}]])
 (def media-entry-routes
   ["/media-entry"
    ["/:media_entry_id/media-file"
@@ -106,7 +98,7 @@
       :parameters {:path {:media_entry_id s/Str}}
       :responses {200 {:body schema_export-media-file}
                   404 {:body s/Any}}}}]
-   
+
    ["/:media_entry_id/media-file/data-stream"
     {:get
      {:summary (sd/sum_usr_pub "Get media-file data-stream for media-entry id.")
@@ -118,7 +110,6 @@
       :parameters {:path {:media_entry_id s/Str}}
       ;:responses {:200 {:body s/Any}
       ;            :404 {:body s/Any}}
-      }}]
-  ])
+      }}]])
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

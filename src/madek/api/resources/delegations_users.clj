@@ -38,7 +38,6 @@
     ; TODO hide some fields
     (sd/response_ok favorite_collection)))
 
-
 (defn handle_create-delegations_user
   [req]
   (let [user (or (-> req :user) (-> req :authenticated-entity))
@@ -53,7 +52,6 @@
         (sd/response_ok ins_res)
         (sd/response_failed "Could not create delegations_user." 406)))))
 
-
 (defn handle_delete-delegations_user
   [req]
   (let [delegations_user (-> req res-req-name)
@@ -63,7 +61,6 @@
       (sd/response_ok delegations_user)
       (logging/error "Failed delete delegations_user "
                      "user-id: " user-id "delegation-id: " delegation-id))))
-
 
 (defn wwrap-find-delegations_user [send404]
   (fn [handler]
@@ -99,7 +96,7 @@
 (defn wwrap-find-delegation [param]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler param
-                                    :delegations 
+                                    :delegations
                                     :id :delegation true))))
 
 (def schema_delegations_users_export

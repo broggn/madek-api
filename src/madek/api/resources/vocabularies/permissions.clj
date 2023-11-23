@@ -1,16 +1,16 @@
 (ns madek.api.resources.vocabularies.permissions
   (:require
-    [clojure.java.jdbc :as jdbc]
-    [clojure.tools.logging :as logging]
-    [logbug.catcher :as catcher]
-    [logbug.debug :as debug]
-    [logbug.thrown :as thrown]
+   [clojure.java.jdbc :as jdbc]
+   [clojure.string :as str]
+   [clojure.tools.logging :as logging]
+   [logbug.catcher :as catcher]
+   [logbug.debug :as debug]
+   [logbug.thrown :as thrown]
+   [madek.api.resources.shared :as sd]
     ;[madek.api.authentication.basic :refer [extract]]
-    [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-    [madek.api.utils.sql :as sql]
-    [clojure.string :as str]
-    
-    [madek.api.resources.shared :as sd]))
+   [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+
+   [madek.api.utils.sql :as sql]))
 
 (defn- execute-query
   [query]
@@ -32,7 +32,7 @@
   ([user-id]
    ;(logging/info "user-permissions-query:" user-id)
    (user-permissions-query user-id "view"))
-  
+
   ([user-id acc-type]
    ;(logging/info "user-permissions-query:" user-id ":" acc-type)
    ; acc-type: "view" or "use"
@@ -43,10 +43,7 @@
          (sql/merge-where
           [:= :vocabulary_user_permissions.user_id user-id]
           [:= (keyword (apply str "vocabulary_user_permissions." acc-type)) true])
-         (sql/format))
-     )
-   )
-  )
+         (sql/format)))))
 
 (defn- pluck-vocabulary-ids
   [query]
@@ -66,8 +63,7 @@
            (sql/where
             [:in :vocabulary_group_permissions.group_id groups-ids-result]
             [:= (keyword (apply str "vocabulary_group_permissions." acc-type)) true])
-           (sql/format)))))
-  )
+           (sql/format))))))
 
 (defn accessible-vocabulary-ids
   ([user-id] (accessible-vocabulary-ids user-id "view"))
@@ -77,11 +73,8 @@
      (concat
       (pluck-vocabulary-ids (user-permissions-query user-id acc-type))
       (pluck-vocabulary-ids (group-permissions-query user-id acc-type)))
-     
-     '()
-     )
-   )
-  )
+
+     '())))
 
 (defn handle_list-vocab-user-perms [req]
   (let [id (-> req :parameters :path :id)
@@ -91,7 +84,7 @@
     (sd/response_ok result
      ;{:vocabulary_id id
      ; :vocabulary_user_permissions result}
-     )))
+                    )))
 
 (defn handle_get-vocab-user-perms [req]
   (let [id (-> req :parameters :path :id)
@@ -131,7 +124,7 @@
                                      :vocabulary_user_permissions
                                      upd-data upd-clause)]
         (if (= 1 (first upd-result))
-          (sd/response_ok (sd/query-eq-find-one 
+          (sd/response_ok (sd/query-eq-find-one
                            :vocabulary_user_permissions
                            :vocabulary_id vid
                            :user_id uid))
@@ -159,8 +152,8 @@
 
 (defn handle_list-vocab-group-perms [req]
   (let [id (-> req :parameters :path :id)
-        result (sd/query-eq-find-all 
-                :vocabulary_group_permissions 
+        result (sd/query-eq-find-all
+                :vocabulary_group_permissions
                 :vocabulary_id id)]
     (sd/response_ok result)))
 
@@ -250,12 +243,10 @@
                      :vocabulary_id id)
         result {:vocabulary (select-keys resource-perms
                                          [:id
-                                         :enabled_for_public_view 
-                                         :enabled_for_public_use])
+                                          :enabled_for_public_view
+                                          :enabled_for_public_use])
                 :users user-perms
-                :groups group-perms}
-        ]
-    (sd/response_ok result))
-  )
+                :groups group-perms}]
+    (sd/response_ok result)))
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

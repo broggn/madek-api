@@ -39,7 +39,6 @@
     ; TODO hide some fields
     (sd/response_ok favorite_collection)))
 
-
 (defn handle_create-delegations_group
   [req]
   (let [group (or (-> req :group) (-> req :authenticated-entity))
@@ -54,7 +53,6 @@
         (sd/response_ok ins_res)
         (sd/response_failed "Could not create delegations_group." 406)))))
 
-
 (defn handle_delete-delegations_group
   [req]
   (let [delegations_group (-> req res-req-name)
@@ -64,7 +62,6 @@
       (sd/response_ok delegations_group)
       (logging/error "Failed delete delegations_group "
                      "group-id: " group-id "delegation-id: " delegation-id))))
-
 
 (defn wwrap-find-delegations_group [send404]
   (fn [handler]
@@ -124,7 +121,6 @@
      :parameters {:query {(s/optional-key :delegation_id) s/Uuid
                           (s/optional-key :group_id) s/Uuid}}
      :responses {200 {:body {:delegation_ids [s/Uuid]}}}}}])
-
 
 (def admin-routes
   [["/delegation/groups"

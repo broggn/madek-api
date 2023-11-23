@@ -9,12 +9,10 @@
             [reitit.coercion.schema]
             [schema.core :as s]))
 
-
 (defn- context_transform_ml [context]
   (assoc context
          :labels (sd/transform_ml (:labels context))
          :descriptions (sd/transform_ml (:descriptions context))))
-
 
 (defn handle_adm-list-contexts
   [req]
@@ -25,7 +23,6 @@
         result (map context_transform_ml db-result)]
     ;(logging/info "handle_adm-list-context" "\nquery\n" db-query "\nresult\n" result)
     (sd/response_ok result)))
-
 
 (defn handle_usr-list-contexts
   [req]
@@ -43,13 +40,11 @@
     ;(logging/info "handle_adm-get-context" context)
     (sd/response_ok context)))
 
-
 (defn handle_usr-get-context
   [req]
   (let [context (-> req :context context_transform_ml sd/remove-internal-keys)]
     ;(logging/info "handle_usr-get-context" context)
     (sd/response_ok context)))
-
 
 (defn handle_create-contexts
   [req]
@@ -65,7 +60,6 @@
           (sd/response_ok (context_transform_ml result))
           (sd/response_failed "Could not create context." 406))))
     (catch Exception ex (sd/response_exception ex))))
-
 
 (defn handle_update-contexts
   [req]
@@ -84,7 +78,6 @@
           (sd/response_ok (context_transform_ml (sd/query-eq-find-one :contexts :id id)))
           (sd/response_failed "Could not update context." 406))))
     (catch Exception ex (sd/response_exception ex))))
-
 
 (defn handle_delete-context
   [req]
@@ -108,23 +101,17 @@
                                     :contexts colname
                                     :context send404))))
 
-
 (def schema_import_contexts
-  {
-   :id s/Str
+  {:id s/Str
    :admin_comment (s/maybe s/Str)
    :labels (s/maybe sd/schema_ml_list)
-   :descriptions (s/maybe sd/schema_ml_list)
-   })
+   :descriptions (s/maybe sd/schema_ml_list)})
 
 (def schema_update_contexts
-  {
-   ;(s/optional-key :id) s/Str
+  {;(s/optional-key :id) s/Str
    (s/optional-key :admin_comment) (s/maybe s/Str)
    (s/optional-key :labels) (s/maybe sd/schema_ml_list)
-   (s/optional-key :descriptions) (s/maybe sd/schema_ml_list)
-   })
-
+   (s/optional-key :descriptions) (s/maybe sd/schema_ml_list)})
 
 (def schema_export_contexts_usr
   {:id s/Str
@@ -143,7 +130,7 @@
 ; TODO tests
 (def admin-routes
 
-  ["/contexts" 
+  ["/contexts"
    ["/"
     {:post {:summary (sd/sum_adm_todo "Create contexts.")
             :handler handle_create-contexts
@@ -151,13 +138,12 @@
             :coercion reitit.coercion.schema/coercion
             :parameters {:body schema_import_contexts}
             :responses {200 {:body schema_export_contexts_adm}
-                        406 {:body s/Any}}
-            }
+                        406 {:body s/Any}}}
     ; context list / query
      :get {:summary  (sd/sum_adm "List contexts.")
            :handler handle_adm-list-contexts
            :middleware [wrap-authorize-admin!]
-           :coercion reitit.coercion.schema/coercion 
+           :coercion reitit.coercion.schema/coercion
            ;:parameters {:query {(s/optional-key :full-data) s/Bool}}
            :responses {200 {:body [schema_export_contexts_adm]}
                        406 {:body s/Any}}}}]
@@ -170,9 +156,8 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Str}}
            :responses {200 {:body schema_export_contexts_adm}
-                       404 {:body s/Any}}
-          }
-     
+                       404 {:body s/Any}}}
+
      :put {:summary (sd/sum_adm "Update contexts with id.")
            :handler handle_update-contexts
            :middleware [wrap-authorize-admin!
@@ -194,9 +179,7 @@
               :responses {200 {:body schema_export_contexts_adm}
                           404 {:body s/Any}
                           406 {:body s/Any}
-                          500 {:body s/Any}}
-              }}]]
-   )
+                          500 {:body s/Any}}}}]])
 
 ; TODO docu and tests
 (def user-routes
@@ -208,8 +191,7 @@
            :coercion reitit.coercion.schema/coercion
            ;:parameters {:query {(s/optional-key :full-data) s/Bool}}
            :responses {200 {:body [schema_export_contexts_usr]}
-                       406 {:body s/Any}}
-           }}]
+                       406 {:body s/Any}}}}]
     ; edit context
    ["/:id"
     {:get {:summary (sd/sum_usr "Get contexts by id.")
@@ -218,6 +200,4 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Str}}
            :responses {200 {:body schema_export_contexts_usr}
-                       404 {:body s/Any}}}
-
-     }]])
+                       404 {:body s/Any}}}}]])

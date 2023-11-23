@@ -1,19 +1,17 @@
 (ns madek.api.resources.media-entries.media-entry
   (:require
-    [clojure.java.jdbc :as jdbc]
-    [clojure.tools.logging :as logging]
-    [logbug.debug :as debug]
-    [madek.api.utils.rdbms :as rdbms]
-    [madek.api.utils.sql :as sql]
-    ))
+   [clojure.java.jdbc :as jdbc]
+   [clojure.tools.logging :as logging]
+   [logbug.debug :as debug]
+   [madek.api.utils.rdbms :as rdbms]
+   [madek.api.utils.sql :as sql]))
 
 (def ^:private media-entry-keys
-  [:id :created_at 
+  [:id :created_at
    :creator_id
    :responsible_user_id
    :is_published
-   :updated_at :edit_session_updated_at :meta_data_updated_at
-   ])
+   :updated_at :edit_session_updated_at :meta_data_updated_at])
 
 (defn get-media-entry-for-preview [request]
   (let [preview-id (or (-> request :params :preview_id) (-> request :parameters :path :preview_id))
@@ -25,8 +23,7 @@
                   (sql/format))
         dbresult (first (jdbc/query (rdbms/get-ds) query))]
     ;(logging/info "get-media-entry-for-preview" "\npreview-id\n" preview-id "\ndbresult\n" dbresult)
-    dbresult
-    ))
+    dbresult))
 
 (defn get-media-entry [request]
   (when-let [media-entry (:media-resource request)]

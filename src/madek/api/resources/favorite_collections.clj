@@ -9,7 +9,6 @@
             [reitit.coercion.schema]
             [schema.core :as s]))
 
-
 (def res-req-name :favorite_collection)
 (def res-table-name "favorite_collections")
 (def res-col-name :collection_id)
@@ -26,16 +25,13 @@
         db-result (sd/query-eq-find-all :favorite_collections :user_id user-id)
         id-set (map :collection_id db-result)]
     ;(logging/info "handle_list-favorite_collection-by-user" "\nresult\n" db-result "\nid-set\n" id-set)
-    (sd/response_ok {:collection_ids id-set})
-    ))
-
+    (sd/response_ok {:collection_ids id-set})))
 
 (defn handle_get-favorite_collection
   [req]
   (let [favorite_collection (-> req res-req-name)]
     ;(logging/info "handle_get-favorite_collection" favorite_collection)
     (sd/response_ok favorite_collection)))
-
 
 ; TODO log write
 (defn handle_create-favorite_collection
@@ -54,7 +50,6 @@
             (sd/response_failed "Could not create favorite_collection." 406)))))
     (catch Exception ex (sd/response_exception ex))))
 
-
 ; TODO log write
 (defn handle_delete-favorite_collection
   [req]
@@ -69,10 +64,9 @@
           (sd/response_failed "Could not delete favorite collection: " 406))))
     (catch Exception ex (sd/response_exception ex))))
 
-
 (defn wwrap-find-favorite_collection [send404]
   (fn [handler]
-    (fn [request] 
+    (fn [request]
       (sd/req-find-data2
        request handler
        :user_id :collection_id
@@ -84,16 +78,16 @@
 (defn wwrap-find-favorite_collection-by-auth [send404]
   (fn [handler]
     (fn [request]
-       (let [user-id (-> request :authenticated-entity :id str)
-             col-id (-> request :parameters :path :collection_id str)]
-         (logging/info "uid\n" user-id "col-id\n" col-id)
-         (sd/req-find-data-search2
-          request handler
-          user-id col-id
-          :favorite_collections
-          :user_id :collection_id
-          res-req-name
-          send404)))))
+      (let [user-id (-> request :authenticated-entity :id str)
+            col-id (-> request :parameters :path :collection_id str)]
+        (logging/info "uid\n" user-id "col-id\n" col-id)
+        (sd/req-find-data-search2
+         request handler
+         user-id col-id
+         :favorite_collections
+         :user_id :collection_id
+         res-req-name
+         send404)))))
 
 (defn wwrap-find-user [param]
   (fn [handler]
@@ -112,7 +106,6 @@
    :collection_id s/Uuid
    :updated_at s/Any
    :created_at s/Any})
-
 
 ; TODO docu
 ; TODO tests
@@ -154,8 +147,7 @@
 
 ; TODO tests
 (def admin-routes
-  [
-   ["/favorite/collections"
+  [["/favorite/collections"
     {:get
      {:summary  (sd/sum_adm "List favorite_collection users.")
       :handler handle_list-favorite_collection
@@ -165,28 +157,16 @@
       :parameters {:query {;(s/optional-key :user_id) s/Uuid 
                            ;(s/optional-key :collection_id) s/Uuid
                            (s/optional-key :full_data) s/Bool}}
-      :responses {200 {:body [schema_favorite_collection_export]}}              
-      }}]
+      :responses {200 {:body [schema_favorite_collection_export]}}}}]
     ; edit favorite collections for other users
-    ["/favorite/collections/:collection_id/:user_id" 
-     {:post {:summary (sd/sum_adm "Create favorite_collection for user and collection.")
-             :handler handle_create-favorite_collection
-             
-             :middleware [wrap-authorize-admin!
-                          (wwrap-find-user :user_id)
-                          (wwrap-find-collection :collection_id)
-                          (wwrap-find-favorite_collection false)]
-             :coercion reitit.coercion.schema/coercion
-             :parameters {:path {:user_id s/Uuid
-                                 :collection_id s/Uuid}}
-             :responses {200 {:body schema_favorite_collection_export}
-                         404 {:body s/Any}
-                         406 {:body s/Any}}}
+   ["/favorite/collections/:collection_id/:user_id"
+    {:post {:summary (sd/sum_adm "Create favorite_collection for user and collection.")
+            :handler handle_create-favorite_collection
 
-      :get {:summary (sd/sum_adm "Get favorite_collection by user and collection id.")
-            :handler handle_get-favorite_collection
-             :middleware [wrap-authorize-admin!
-                          (wwrap-find-favorite_collection true)]
+            :middleware [wrap-authorize-admin!
+                         (wwrap-find-user :user_id)
+                         (wwrap-find-collection :collection_id)
+                         (wwrap-find-favorite_collection false)]
             :coercion reitit.coercion.schema/coercion
             :parameters {:path {:user_id s/Uuid
                                 :collection_id s/Uuid}}
@@ -194,14 +174,24 @@
                         404 {:body s/Any}
                         406 {:body s/Any}}}
 
-      :delete {:summary (sd/sum_adm "Delete favorite_collection by user and collection id.")
-               :coercion reitit.coercion.schema/coercion
-               :handler handle_delete-favorite_collection
-               :middleware [wrap-authorize-admin!
-                            (wwrap-find-favorite_collection true)]
-               :parameters {:path {:user_id s/Uuid
-                                   :collection_id s/Uuid}}
-               :responses {200 {:body schema_favorite_collection_export}
-                           404 {:body s/Any}
-                           406 {:body s/Any}}}}]
-  ])
+     :get {:summary (sd/sum_adm "Get favorite_collection by user and collection id.")
+           :handler handle_get-favorite_collection
+           :middleware [wrap-authorize-admin!
+                        (wwrap-find-favorite_collection true)]
+           :coercion reitit.coercion.schema/coercion
+           :parameters {:path {:user_id s/Uuid
+                               :collection_id s/Uuid}}
+           :responses {200 {:body schema_favorite_collection_export}
+                       404 {:body s/Any}
+                       406 {:body s/Any}}}
+
+     :delete {:summary (sd/sum_adm "Delete favorite_collection by user and collection id.")
+              :coercion reitit.coercion.schema/coercion
+              :handler handle_delete-favorite_collection
+              :middleware [wrap-authorize-admin!
+                           (wwrap-find-favorite_collection true)]
+              :parameters {:path {:user_id s/Uuid
+                                  :collection_id s/Uuid}}
+              :responses {200 {:body schema_favorite_collection_export}
+                          404 {:body s/Any}
+                          406 {:body s/Any}}}}]])

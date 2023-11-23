@@ -9,7 +9,6 @@
             [reitit.coercion.schema]
             [schema.core :as s]))
 
-
 (defn handle_get-collection [request]
   (let [collection (:media-resource request)
         cleanedcol (dissoc collection :table-name :type
@@ -17,17 +16,13 @@
                            ; TODO Frage cipboard_user
                            ;:clipboard_user_id
                            )]
-    (sd/response_ok cleanedcol))
-  )
+    (sd/response_ok cleanedcol)))
 
 (defn handle_get-index [req]
   (let [query-params (-> req :parameters :query)
         qreq (assoc-in req [:query-params] query-params)]
     (logging/info "handle_get-index" "\nquery-params\n" query-params)
-    (get-index qreq)
-    )
-  )
-
+    (get-index qreq)))
 
 (defn handle_create-collection [req]
   (try
@@ -90,9 +85,8 @@
 (def schema_default_resource_type
   (s/enum "collection" "entries" "all"))
 
-(def schema_collection-import 
-  {
-   ;(s/optional-key :id) s/Uuid
+(def schema_collection-import
+  {;(s/optional-key :id) s/Uuid
    (s/optional-key :get_metadata_and_previews) s/Bool
 
    (s/optional-key :layout) schema_layout_types
@@ -104,13 +98,10 @@
    (s/optional-key :workflow_id) (s/maybe s/Uuid)
    (s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)
 
-   (s/optional-key :default_resource_type) schema_default_resource_type
-   })
+   (s/optional-key :default_resource_type) schema_default_resource_type})
 
 (def schema_collection-update
-  {
-   
-   (s/optional-key :layout) schema_layout_types
+  {(s/optional-key :layout) schema_layout_types
    (s/optional-key :is_master) s/Bool
    (s/optional-key :sorting) schema_sorting_types
    (s/optional-key :default_context_id) (s/maybe s/Uuid)
@@ -122,10 +113,9 @@
    (s/optional-key :workflow_id) (s/maybe s/Uuid)
    ;(s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)
 
-   (s/optional-key :default_resource_type) schema_default_resource_type
-   })
+   (s/optional-key :default_resource_type) schema_default_resource_type})
 
-(def schema_collection-query 
+(def schema_collection-query
   {(s/optional-key :page) s/Int
    (s/optional-key :count) s/Int
    (s/optional-key :full_data) s/Bool
@@ -139,40 +129,34 @@
    (s/optional-key :workflow_id) s/Uuid
    (s/optional-key :responsible_delegation_id) s/Uuid
 
-   
    (s/optional-key :public_get_metadata_and_previews) s/Bool
    (s/optional-key :me_get_metadata_and_previews) s/Bool
    (s/optional-key :me_edit_permission) s/Bool
    (s/optional-key :me_edit_metadata_and_relations) s/Bool})
 
 (def schema_collection-export
-  {
-   :id s/Uuid
+  {:id s/Uuid
    (s/optional-key :get_metadata_and_previews) s/Bool
-   
+
    (s/optional-key :layout) schema_layout_types
    (s/optional-key :is_master) s/Bool
    (s/optional-key :sorting) schema_sorting_types
-   
+
    (s/optional-key :responsible_user_id) (s/maybe s/Uuid)
    (s/optional-key :creator_id) s/Uuid
-   
+
    (s/optional-key :default_context_id) (s/maybe s/Uuid)
 
-   
    (s/optional-key :created_at) s/Any
    (s/optional-key :updated_at) s/Any
    (s/optional-key :meta_data_updated_at) s/Any
    (s/optional-key :edit_session_updated_at) s/Any
-      
+
    (s/optional-key :clipboard_user_id) (s/maybe s/Uuid)
    (s/optional-key :workflow_id) (s/maybe s/Uuid)
    (s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)
-   
-   (s/optional-key :default_resource_type) schema_default_resource_type
-  })
 
-
+   (s/optional-key :default_resource_type) schema_default_resource_type})
 
 (def ring-routes
   ["/"
@@ -235,8 +219,7 @@
               :parameters {:path {:collection_id s/Uuid}}
               :responses {200 {:body schema_collection-export}
                           404 {:body s/Any}
-                          422 {:body s/Any}}}}
-   ]])
+                          422 {:body s/Any}}}}]])
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

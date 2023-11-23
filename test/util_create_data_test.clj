@@ -1,13 +1,12 @@
 (ns util-create-data-test
-  (:require 
-   [clj-http.client :as client]
-   [clojure.test :refer [deftest is run-tests run-all-tests]]
+  (:require
+   [api-test-data :as td]
    [api-test-utils :as tu]
-  
-   [api-test-data :as td]))
+   [clj-http.client :as client]
 
+   [clojure.test :refer [deftest is run-tests run-all-tests]]))
 
-(deftest dev-create-user 
+(deftest dev-create-user
   (tu/init-db td/dburldev)
   (tu/del-test-auth2)
   (tu/del-test-user2)
@@ -16,7 +15,7 @@
   (tu/init-test-user2)
   (tu/init-test-auth2))
 
-(deftest dev-create-admin-user 
+(deftest dev-create-admin-user
   (tu/init-db td/dburldev)
   (tu/del-test-admin)
   (tu/del-test-auth1)

@@ -1,14 +1,13 @@
 (ns madek.api.resources.previews
   (:require
-    [clojure.tools.logging :as logging]
+   [clojure.tools.logging :as logging]
+   [madek.api.resources.media-entries.media-entry :refer [get-media-entry-for-preview]]
+   [madek.api.resources.media-files :as media-files]
     ;[logbug.debug :as debug]
-    [madek.api.resources.previews.preview :as preview]
-    [madek.api.resources.shared :as sd]
-    [madek.api.resources.media-entries.media-entry :refer [get-media-entry-for-preview]]
-    [reitit.coercion.schema]
-    [schema.core :as s]
-    [madek.api.resources.media-files :as media-files]
-    ))
+   [madek.api.resources.previews.preview :as preview]
+   [madek.api.resources.shared :as sd]
+   [reitit.coercion.schema]
+   [schema.core :as s]))
 
 (defn ring-wrap-find-and-add-preview
   ([handler] #(ring-wrap-find-and-add-preview % handler))
@@ -28,20 +27,16 @@
       (sd/response_ok preview)
       (sd/response_not_found "No such preview file"))
     ;(logging/info "handle_get-preview" "\nid\n" id "\nmf\n" media-file "\npreviews\n" preview)
-    
     ))
-
 (defn add-preview-for-media-file [handler request]
   (let [media-file (-> request :media-file)
         id (:id media-file)
         previews (sd/query-eq-find-all  :previews :media_file_id id)
         pfirst (first previews)]
-      (handler (assoc request :preview pfirst))
-    ))
+    (handler (assoc request :preview pfirst))))
 
 (defn wrap-add-preview-for-media-file [handler]
   (fn [request] (add-preview-for-media-file handler request)))
-
 
 (defn- ring-add-media-resource-preview [request handler]
   (if-let [media-resource (get-media-entry-for-preview request)]
@@ -53,7 +48,6 @@
 (defn ring-wrap-add-media-resource-preview [handler]
   (fn [request]
     (ring-add-media-resource-preview request handler)))
-
 
 (def schema_export_preview
   {:id s/Uuid
@@ -72,7 +66,7 @@
 ; TODO tests
 (def preview-routes
   ["/previews"
-   ["/:preview_id" 
+   ["/:preview_id"
     {:get {:summary "Get preview for id."
            :swagger {:produces "application/json"}
            :content-type "application/json"
@@ -90,8 +84,7 @@
                         ring-wrap-add-media-resource-preview
                         sd/ring-wrap-authorization-view]
            :coercion reitit.coercion.schema/coercion
-           :parameters {:path {:preview_id s/Uuid}}}}]
-   ])
+           :parameters {:path {:preview_id s/Uuid}}}}]])
 
 ; TODO auth
 ; TODO tests

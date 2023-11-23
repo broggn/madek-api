@@ -1,20 +1,18 @@
 (ns madek.api.resources.groups.shared
   (:require
-    [clj-uuid]
-    [clojure.java.jdbc :as jdbc]
-    [clojure.tools.logging :as logging]
-    [logbug.debug :as debug]
-    [madek.api.utils.rdbms :as rdbms]
-    [madek.api.utils.sql :as sql]
-    ))
-
+   [clj-uuid]
+   [clojure.java.jdbc :as jdbc]
+   [clojure.tools.logging :as logging]
+   [logbug.debug :as debug]
+   [madek.api.utils.rdbms :as rdbms]
+   [madek.api.utils.sql :as sql]))
 
 (defn sql-merge-where-id
   ([group-id] (sql-merge-where-id {} group-id))
   ([sql-map group-id]
    (if (re-matches
-         #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-         group-id)
+        #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+        group-id)
      (sql/merge-where sql-map [:or
                                [:= :groups.id group-id]
                                [:= :groups.institutional_id group-id]])

@@ -7,7 +7,6 @@
             [reitit.coercion.schema]
             [schema.core :as s]))
 
-
 (defn handle_list-static_pages
   [req]
   (let [full-data (true? (-> req :parameters :query :full_data))
@@ -83,31 +82,24 @@
                                     :static_pages :id
                                     :static_page true))))
 
-
 (def schema_create_static_page
-  {
-   ;:id is db assigned or optional
+  {;:id is db assigned or optional
    :name s/Str
    :contents s/Str ; TODO is json as hstore
-  })
-
-(def schema_update_static_page
-  {
-   ;:id s/Uuid
-   (s/optional-key :name) s/Str
-   (s/optional-key :contents) s/Str ; TODO is json as hstore
-   
    })
 
+(def schema_update_static_page
+  {;:id s/Uuid
+   (s/optional-key :name) s/Str
+   (s/optional-key :contents) s/Str ; TODO is json as hstore
+   })
 ; TODO Inst coercion
 (def schema_export_static_page
-  {
-   :id s/Uuid
+  {:id s/Uuid
    :name s/Str
    :contents s/Str ; TODO is json as hstore
    :created_at s/Any ; TODO as Inst
-   :updated_at s/Any
-   })
+   :updated_at s/Any})
 
 ; TODO auth admin
 ; TODO response coercion
@@ -116,21 +108,19 @@
 ; TODO user and admin routes
 (def admin-routes
 
-  ["/static-pages" 
+  ["/static-pages"
    ["/"
     {:post {:summary (sd/sum_adm "Create static_page.")
             :handler handle_create-static_page
             :coercion reitit.coercion.schema/coercion
             :parameters {:body schema_create_static_page}
             :responses {200 {:body schema_export_static_page}
-                        406 {:body s/Any}}
-            }
+                        406 {:body s/Any}}}
     ; static_page list / query
      :get {:summary  (sd/sum_adm "List static_pages.")
            :handler handle_list-static_pages
            :coercion reitit.coercion.schema/coercion
-           :parameters {:query {(s/optional-key :full_data) s/Bool}}}
-     }]
+           :parameters {:query {(s/optional-key :full_data) s/Bool}}}}]
     ; edit static_page
    ["/:id"
     {:get {:summary (sd/sum_adm "Get static_pages by id.")
@@ -157,6 +147,4 @@
               :middleware [(wwrap-find-static_page :id)]
               :parameters {:path {:id s/Uuid}}
               :responses {200 {:body schema_export_static_page}
-                          404 {:body s/Any}}}
-     }]]
-   )
+                          404 {:body s/Any}}}}]])

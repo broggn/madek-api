@@ -1,7 +1,7 @@
 (ns madek.api.legacy.session.encoder
   (:require
-    [clojure.data.codec.base64 :as base64]
-    [clojure.string :as string]))
+   [clojure.data.codec.base64 :as base64]
+   [clojure.string :as string]))
 
 (defprotocol Encoder
   (encode [x])
@@ -30,5 +30,4 @@
             3 (str % "=")
             %))
         (.getBytes "UTF-8")
-        base64/decode))
-  )
+        base64/decode)))

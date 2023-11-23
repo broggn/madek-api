@@ -8,7 +8,6 @@
             [reitit.coercion.schema]
             [schema.core :as s]))
 
-
 (defn handle_list-usage_term
   [req]
   (let [full-data (true? (-> req :parameters :query :full_data))
@@ -57,7 +56,7 @@
           (sd/response_failed "Could not update usage_term." 406))))
     (catch Exception e (sd/response_exception e))))
 
-(defn handle_delete-usage_term [req] 
+(defn handle_delete-usage_term [req]
   (try
     (catcher/with-logging {}
       (let [olddata (-> req :usage_term)
@@ -76,37 +75,29 @@
                                     :usage_terms :id
                                     :usage_term true))))
 
-
 (def schema_import_usage_terms
-  {
-   ;:id is db assigned or optional
+  {;:id is db assigned or optional
    :title s/Str
    :version s/Str
    :intro s/Str
-   :body s/Str
-  })
+   :body s/Str})
 
 (def schema_update_usage_terms
-  {
-   ;:id s/Uuid
+  {;:id s/Uuid
    (s/optional-key :title) s/Str
    (s/optional-key :version) s/Str
    (s/optional-key :intro) s/Str
-   (s/optional-key :body) s/Str
-   
-   })
+   (s/optional-key :body) s/Str})
 
 ; TODO Inst coercion
 (def schema_export_usage_term
-  {
-   :id s/Uuid
+  {:id s/Uuid
    (s/optional-key :title) s/Str
    (s/optional-key :version) s/Str
    (s/optional-key :intro) s/Str
    (s/optional-key :body) s/Str
    (s/optional-key :created_at) s/Any ; TODO as Inst
-   (s/optional-key :updated_at) s/Any
-   })
+   (s/optional-key :updated_at) s/Any})
 
 ; TODO auth admin
 ; TODO response coercion
@@ -114,7 +105,7 @@
 ; TODO tests
 (def admin-routes
 
-  ["/usage-terms" 
+  ["/usage-terms"
    ["/"
     {:post {:summary (sd/sum_adm "Create usage_terms.")
             :handler handle_create-usage_terms
@@ -123,8 +114,7 @@
             :middleware [wrap-authorize-admin!]
             :parameters {:body schema_import_usage_terms}
             :responses {200 {:body schema_export_usage_term}
-                        406 {:body s/Any}}
-            }
+                        406 {:body s/Any}}}
     ; usage_term list / query
      :get {:summary  (sd/sum_adm "List usage_terms.")
            :handler handle_list-usage_term
@@ -142,8 +132,7 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Uuid}}
            :responses {200 {:body s/Any} ;schema_export_usage_terms}
-                       404 {:body s/Any}}
-           }
+                       404 {:body s/Any}}}
 
      :put {:summary (sd/sum_adm "Update usage_terms with id.")
            :handler handle_update-usage_terms
@@ -154,8 +143,7 @@
                         :body schema_update_usage_terms}
            :responses {200 {:body s/Any} ;schema_export_usage_terms}
                        404 {:body s/Any}
-                       406 {:body s/Any}}
-           }
+                       406 {:body s/Any}}}
 
      :delete {:summary (sd/sum_adm "Delete usage_term by id.")
               :coercion reitit.coercion.schema/coercion
@@ -164,10 +152,7 @@
                            (wwrap-find-usage_term :id)]
               :parameters {:path {:id s/Uuid}}
               :responses {200 {:body s/Any} ;schema_export_usage_terms}
-                          404 {:body s/Any}}
-              }}]]
-   )
-
+                          404 {:body s/Any}}}}]])
 
 ; TODO usage_terms get the most recent one ?!?
 (def user-routes
@@ -178,7 +163,7 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:query {(s/optional-key :full_data) s/Bool}}
            :responses {200 {:body [schema_export_usage_term]}}}}]
-   
+
    ["/:id"
     {:get {:summary (sd/sum_pub "Get usage_terms by id.")
            :handler handle_get-usage_term
@@ -186,5 +171,4 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Uuid}}
            :responses {200 {:body schema_export_usage_term}
-                       404 {:body s/Any}}}
-     }]])
+                       404 {:body s/Any}}}}]])

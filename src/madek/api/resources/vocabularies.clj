@@ -13,7 +13,6 @@
 
 ; TODO logwrite
 
-
 (defn transform_ml [data]
   (assoc data
          :labels (sd/transform_ml (:labels data))
@@ -68,43 +67,36 @@
    (s/optional-key :admin_comment) (s/maybe s/Str)})
 
 (def schema_import-vocabulary
-  {
-   :id s/Str
+  {:id s/Str
    :enabled_for_public_view s/Bool
    :enabled_for_public_use s/Bool
    :position s/Int
    (s/optional-key :labels) (s/maybe sd/schema_ml_list)
    (s/optional-key :descriptions) (s/maybe sd/schema_ml_list)
-   (s/optional-key :admin_comment) (s/maybe s/Str)
-   })
+   (s/optional-key :admin_comment) (s/maybe s/Str)})
 
 (def schema_update-vocabulary
-  {
-   ;(s/optional-key :enabled_for_public_view) s/Bool
+  {;(s/optional-key :enabled_for_public_view) s/Bool
    ;(s/optional-key :enabled_for_public_use) s/Bool
    (s/optional-key :position) s/Int
    (s/optional-key :labels) (s/maybe sd/schema_ml_list)
    (s/optional-key :descriptions) (s/maybe sd/schema_ml_list)
-   (s/optional-key :admin_comment) (s/maybe s/Str)
-   })
+   (s/optional-key :admin_comment) (s/maybe s/Str)})
 
 (def schema_perms-update
   {(s/optional-key :enabled_for_public_view) s/Bool
-   (s/optional-key :enabled_for_public_use) s/Bool
-   })
+   (s/optional-key :enabled_for_public_use) s/Bool})
 
 (def schema_perms-update-user-or-group
   {(s/optional-key :use) s/Bool
    (s/optional-key :view) s/Bool})
 
 (def schema_export-user-perms
-  {
-   :id s/Uuid
+  {:id s/Uuid
    :user_id s/Uuid
    :vocabulary_id s/Str
    :use s/Bool
-   :view s/Bool
-  })
+   :view s/Bool})
 
 (def schema_export-group-perms
   {:id s/Uuid
@@ -113,11 +105,11 @@
    :use s/Bool
    :view s/Bool})
 
-(def schema_export-perms_all 
+(def schema_export-perms_all
   {:vocabulary {:id s/Str
                 :enabled_for_public_view s/Bool
                 :enabled_for_public_use s/Bool}
-  
+
    :users [schema_export-user-perms]
    :groups [schema_export-group-perms]})
 
@@ -132,8 +124,7 @@
            :content-type "application/json"
            :coercion reitit.coercion.schema/coercion
            :parameters {:query {(s/optional-key :page) s/Int
-                                (s/optional-key :count) s/Int
-                                }}
+                                (s/optional-key :count) s/Int}}
            :responses {200 {:body {:vocabularies [schema_export-vocabulary]}}}
            :swagger {:produces "application/json"}}
 
@@ -155,7 +146,7 @@
            :middleware [wrap-authorize-admin!]
            :swagger {:produces "application/json"}
            :content-type "application/json"
-           
+
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Str}}
            :responses {200 {:body schema_export-vocabulary}
@@ -167,7 +158,7 @@
            :content-type "application/json"
            :accept "application/json"
            :coercion reitit.coercion.schema/coercion
-           :parameters {:path {:id s/Str} 
+           :parameters {:path {:id s/Str}
                         :body schema_update-vocabulary}
            :responses {200 {:body schema_export-vocabulary}
                        404 {:body s/Any}}
@@ -183,7 +174,7 @@
               :responses {200 {:body schema_export-vocabulary}
                           404 {:body s/Any}}
               :swagger {:produces "application/json"}}}]
-   
+
    ["/:id/perms"
     ["/"
      {:get
@@ -207,7 +198,7 @@
                     :body schema_perms-update}
        :responses {200 {:body schema_export-vocabulary}
                    404 {:body s/Any}}}}]
-  
+
     ["/users"
      {:get
       {:summary (sd/sum_adm_todo "List vocabulary user permissions")
@@ -333,7 +324,6 @@
        :responses {200 {:body schema_export-group-perms}
                    404 {:body s/Any}}}}]]])
 
-
 (def user-routes
   ["/vocabularies"
    ["/" {:get {:summary "Get list of vocabularies ids."
@@ -342,7 +332,7 @@
                :content-type "application/json"
                :coercion reitit.coercion.schema/coercion
                :parameters {:query {(s/optional-key :page) s/Int}}
-               :responses {200 {:body {:vocabularies [ schema_export-vocabulary ]}}}
+               :responses {200 {:body {:vocabularies [schema_export-vocabulary]}}}
                :swagger {:produces "application/json"}}}]
 
    ["/:id" {:get {:summary "Get vocabulary by id."
@@ -353,11 +343,7 @@
                   :coercion reitit.coercion.schema/coercion
                   :parameters {:path {:id s/Str}}
                   :responses {200 {:body schema_export-vocabulary}
-                              404 {:body s/Any}}}}]
-   
-   
-  ]
-  )
+                              404 {:body s/Any}}}}]])
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

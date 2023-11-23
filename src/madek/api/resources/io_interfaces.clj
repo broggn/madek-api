@@ -8,7 +8,6 @@
             [reitit.coercion.schema]
             [schema.core :as s]))
 
-
 ;### handlers #################################################################
 
 (defn handle_list-io_interface
@@ -25,7 +24,7 @@
     ;(logging/info "handle_get-io_interface" io_interface)
     (sd/response_ok io_interface)))
 
-(defn handle_create-io_interfaces 
+(defn handle_create-io_interfaces
   [req]
   (try
     (catcher/with-logging {}
@@ -72,37 +71,31 @@
           (logging/error "Could not delete io_interface: " id))))
     (catch Exception e (sd/response_exception e))))
 
-
 (defn wrap-find-io_interface [handler]
   (fn [request] (sd/req-find-data request handler :id
                                   :io_interfaces
                                   :id :io_interface true)))
 
-
 ;### swagger io schema ########################################################
 
 (def schema_import_io_interfaces
-  {
-   :id s/Str
-   :description s/Str
-  })
+  {:id s/Str
+   :description s/Str})
 
 (def schema_update_io_interfaces
   {;(s/optional-key :id) s/Str
-   (s/optional-key :description) s/Str
-   })
+   (s/optional-key :description) s/Str})
 
 (def schema_export_io_interfaces
   {:id s/Str
    :description (s/maybe s/Str)
    :created_at s/Any
-   :updated_at s/Any
-   })
+   :updated_at s/Any})
 
 ;### routes ###################################################################
 ; TODO docu
 (def admin-routes
-  ["/io_interfaces" 
+  ["/io_interfaces"
    ["/"
     {:post
      {:summary (sd/sum_adm "Create io_interfaces.")
@@ -121,7 +114,7 @@
       :coercion reitit.coercion.schema/coercion
       :parameters {:query {(s/optional-key :full_data) s/Bool}}
       :responses {200 {:body [schema_export_io_interfaces]}}}}]
-   
+
     ; edit io_interface
    ["/:id"
     {:get
@@ -155,5 +148,4 @@
       :parameters {:path {:id s/Str}}
       :responses {200 {:body schema_export_io_interfaces}
                   404 {:body s/Any}
-                  406 {:body s/Any}}}}]]
-   )
+                  406 {:body s/Any}}}}]])

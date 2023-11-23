@@ -1,11 +1,10 @@
 (ns madek.api.resources.collections.collection
   (:require
-    [clojure.tools.logging :as logging]
-    [logbug.debug :as debug]
-    ))
+   [clojure.tools.logging :as logging]
+   [logbug.debug :as debug]))
 
 (def ^:private collection-keys
-  [:id 
+  [:id
    :created_at
    :responsible_user_id
    :updated_at

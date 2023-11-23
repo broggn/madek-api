@@ -14,7 +14,6 @@
   (when-let [labels (:labels role)]
     (assoc role :labels (sd/transform_ml (:labels role)))))
 
-
 (defn- query-index
   [query-params]
   (-> (sql/select :roles.*)
@@ -36,14 +35,10 @@
        [:= :roles.id id])
       (sql/format)))
 
-
 (defn db_role-find-one [id]
   (let [query (query_role-find-one id)
         resultdb (first (jdbc/query (rdbms/get-ds) query))]
     resultdb))
-
-
-
 
 (defn handle_get-role-usr [request]
   (let [id (-> request :parameters :path :id)]
@@ -54,14 +49,12 @@
         (sd/response_ok result))
       (sd/response_failed "No such role." 404))))
 
-
 (defn handle_get-role-admin [request]
   (let [id (-> request :parameters :path :id)]
     (if-let [resultdb (db_role-find-one id)]
       (let [result (transform-ml-role resultdb)]
         (sd/response_ok result))
       (sd/response_failed "No such role." 404))))
-
 
 (defn handle_create-role
   [req]
@@ -79,7 +72,6 @@
           (sd/response_failed "Could not create role." 406))))
     (catch Exception ex (sd/response_exception ex))))
 
-
 (defn handle_update-role
   [req]
   (try
@@ -96,8 +88,7 @@
           (sd/response_ok (transform-ml-role
                            (sd/query-eq-find-one :roles :id id)))
           (sd/response_failed "Could not update role." 406))))
-    (catch Exception ex (sd/response_exception ex)))
-  )
+    (catch Exception ex (sd/response_exception ex))))
 
 (defn handle_delete-role
   [req]

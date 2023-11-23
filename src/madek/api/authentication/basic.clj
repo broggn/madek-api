@@ -1,20 +1,18 @@
 (ns madek.api.authentication.basic
   (:require
-    [camel-snake-kebab.core :refer :all]
-    [cider-ci.open-session.bcrypt :refer [checkpw]]
-    [clojure.java.jdbc :as jdbc]
-    [clojure.tools.logging :as logging]
-    [inflections.core :refer :all]
-    [logbug.debug :as debug]
-    [logbug.thrown :as thrown]
-    [madek.api.authentication.token :as token-authentication]
-    [madek.api.utils.rdbms :as rdbms]
-    [madek.api.resources.shared :as sd]
-    [clojure.walk :refer [keywordize-keys]]
-    )
+   [camel-snake-kebab.core :refer :all]
+   [cider-ci.open-session.bcrypt :refer [checkpw]]
+   [clojure.java.jdbc :as jdbc]
+   [clojure.tools.logging :as logging]
+   [clojure.walk :refer [keywordize-keys]]
+   [inflections.core :refer :all]
+   [logbug.debug :as debug]
+   [logbug.thrown :as thrown]
+   [madek.api.authentication.token :as token-authentication]
+   [madek.api.resources.shared :as sd]
+   [madek.api.utils.rdbms :as rdbms])
   (:import
-    [java.util Base64]
-    ))
+   [java.util Base64]))
 
 (defn- get-by-login [table-name login]
   (->> (jdbc/query (rdbms/get-ds)
@@ -43,7 +41,7 @@
 
 (defn- get-auth-systems-user [userId]
   (->> (jdbc/query (rdbms/get-ds)
-                   [(str "SELECT * FROM auth_systems_users WHERE auth_system_id = ? AND user_id = ? ") 
+                   [(str "SELECT * FROM auth_systems_users WHERE auth_system_id = ? AND user_id = ? ")
                     "password" userId])
        first))
 
@@ -58,7 +56,7 @@
                  [username password] (clojure.string/split (str decoded-val) #":" 2)]
              {:username username :password password})))
        (catch Exception _
-         (logging/warn "failed to extract basic-auth properties because" _ ))))
+         (logging/warn "failed to extract basic-auth properties because" _))))
 
 (defn user-password-authentication [login-or-email password handler request]
   (if-let [entity (get-entity-by-login-or-email login-or-email)]
@@ -67,15 +65,15 @@
       ;(if-not (checkpw password (:password_digest entity)); if there is an entity the password must match
         {:status 401 :body (str "Password mismatch for "
                                 {:login-or-email-address login-or-email})}
-        
+
         (handler (assoc request
                         :authenticated-entity entity
                         ; TODO move into ae
-                        :is_admin (sd/is-admin (or (:id entity) (:user_id entity) ))
+                        :is_admin (sd/is-admin (or (:id entity) (:user_id entity)))
                         :authentication-method "Basic Authentication")))
-            
+
       {:status 401 :body (str "Only password auth users supported for basic auth.")})
-    
+
     {:status 401 :body (str "Neither User nor ApiClient exists for "
                             {:login-or-email-address login-or-email})}))
 
@@ -92,7 +90,6 @@
       (if-let [user-token (token-authentication/find-user-token-by-some-secret [username password])]
         (token-authentication/authenticate user-token handler request)
         (user-password-authentication username password handler request)))))
-
 
 (defn wrap [handler]
   (fn [request]

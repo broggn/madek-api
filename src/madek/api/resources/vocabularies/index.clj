@@ -1,14 +1,13 @@
 (ns madek.api.resources.vocabularies.index
   (:require
-    [clojure.java.jdbc :as jdbc]
-    [clojure.tools.logging :as logging]
-    [logbug.catcher :as catcher]
-    [logbug.debug :as debug]
-    [madek.api.resources.vocabularies.permissions :as permissions]
-    [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-    [madek.api.utils.sql :as sql]
-    [madek.api.resources.shared :as sd]
-    ))
+   [clojure.java.jdbc :as jdbc]
+   [clojure.tools.logging :as logging]
+   [logbug.catcher :as catcher]
+   [logbug.debug :as debug]
+   [madek.api.resources.shared :as sd]
+   [madek.api.resources.vocabularies.permissions :as permissions]
+   [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+   [madek.api.utils.sql :as sql]))
 
 (defn- where-clause
   [user-id]
@@ -16,8 +15,8 @@
     (if (empty? vocabulary-ids)
       [:= :vocabularies.enabled_for_public_view true]
       [:or
-        [:= :vocabularies.enabled_for_public_view true]
-        [:in :vocabularies.id vocabulary-ids]])))
+       [:= :vocabularies.enabled_for_public_view true]
+       [:in :vocabularies.id vocabulary-ids]])))
 
 (defn- base-query
   [user-id]
@@ -40,10 +39,9 @@
 (defn get-index [request]
   (catcher/with-logging {}
     (let [db-result (query-index-resources request)
-          result (->> db-result 
+          result (->> db-result
                       (map transform_ml)
-                      (map sd/remove-internal-keys)
-                      )]
+                      (map sd/remove-internal-keys))]
       (sd/response_ok {:vocabularies result}))))
 
 ;### Debug ####################################################################

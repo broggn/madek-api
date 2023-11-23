@@ -1,17 +1,16 @@
 (ns madek.api.resources.edit-sessions
   (:require
    [clojure.java.jdbc :as jdbc]
+   [clojure.tools.logging :as logging]
+   [logbug.catcher :as catcher]
+   [madek.api.authorization :as authorization]
+   [madek.api.pagination :as pagination]
+   [madek.api.resources.shared :as sd]
+   [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
    [madek.api.utils.sql :as sql]
-   [clojure.tools.logging :as logging]
-   [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.resources.shared :as sd]
    [reitit.coercion.schema]
-   [schema.core :as s]
-   [madek.api.pagination :as pagination]
-   [madek.api.authorization :as authorization]
-   [logbug.catcher :as catcher]))
-
+   [schema.core :as s]))
 
 (defn build-query [query-params]
   (let [col-sel (if (true? (-> query-params :full_data))
@@ -25,7 +24,6 @@
         (sd/build-query-param query-params :media_entry_id)
         (pagination/add-offset-for-honeysql query-params)
         sql/format)))
-
 
 (defn handle_adm_list-edit-sessions
   [req]
@@ -80,10 +78,7 @@
     ;(logging/info "handle_get-edit-sessions" "\ntype\n" mr-type "\nmr-id\n" mr-id "\ncol-name\n" col-name)
     (if-let [result (sd/query-eq-find-all :edit_sessions col-key mr-id :user_id u-id)]
       (sd/response_ok result)
-      (sd/response_not_found (str "No such edit_session for " mr-type " with id: " mr-id)))
-    ))
-
-
+      (sd/response_not_found (str "No such edit_session for " mr-type " with id: " mr-id)))))
 
 (defn handle_create-edit-session
   [req]
@@ -106,7 +101,6 @@
           (sd/response_failed "Could not create edit session." 406))))
     (catch Exception ex (sd/response_exception ex))))
 
-
 (defn handle_adm_delete-edit-sessions
   [req]
   (try
@@ -123,7 +117,6 @@
               (sd/response_failed (str "Failed delete edit_session: " id) 406)))
           (sd/response_failed (str "No such edit_session : " id) 404))))
     (catch Exception ex (sd/response_exception ex))))
-
 
 (def schema_usr_query_edit_session
   {(s/optional-key :full_data) s/Bool
@@ -148,8 +141,7 @@
    :user_id s/Uuid
    :created_at s/Any
    :media_entry_id (s/maybe s/Uuid)
-   :collection_id (s/maybe s/Uuid)
-   })
+   :collection_id (s/maybe s/Uuid)})
 
 (def admin-routes
   ["/edit_sessions"
@@ -171,10 +163,7 @@
               :coercion reitit.coercion.schema/coercion
               :parameters {:path {:id s/Str}}
               :responses {200 {:body schema_export_edit_session}
-                          404 {:body s/Any}}}
-    
-     }]])
-
+                          404 {:body s/Any}}}}]])
 
 (def query-routes
   ["/edit_sessions"
@@ -184,18 +173,14 @@
            :middleware [authorization/wrap-authorized-user]
            :coercion reitit.coercion.schema/coercion
            :parameters {:query schema_usr_query_edit_session}}}]
-   
+
    ["/:id"
     {:get {:summary (sd/sum_usr "Get edit_session.")
            :handler handle_usr_get-edit-session
            :middleware [authorization/wrap-authorized-user]
            :coercion reitit.coercion.schema/coercion
-           :parameters {:path {:id s/Uuid}}}
-     
-     
-     }]
-   ])
-     
+           :parameters {:path {:id s/Uuid}}}}]])
+
 (def media-entry-routes
   ["/media-entry/:media_entry_id/edit_sessions"
    {:get {:summary (sd/sum_usr_pub "Get edit_session list for media entry.")
@@ -205,8 +190,7 @@
           :coercion reitit.coercion.schema/coercion
           :parameters {:path {:media_entry_id s/Uuid}}
           :responses {200 {:body [schema_export_edit_session]}
-                      404 {:body s/Any}}
-          }
+                      404 {:body s/Any}}}
     :post {:summary (sd/sum_usr "Create edit session for media entry and authed user.")
            :handler handle_create-edit-session
            :middleware [;authorization/wrap-authorized-user
@@ -215,9 +199,7 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Uuid}}
            :responses {200 {:body schema_export_edit_session}
-                       404 {:body s/Any}}}
-    }])
-
+                       404 {:body s/Any}}}}])
 
 (def collection-routes
   ["/collection/:collection_id/edit_sessions"
@@ -229,7 +211,7 @@
           :parameters {:path {:collection_id s/Uuid}}
           :responses {200 {:body [schema_export_edit_session]}
                       404 {:body s/Any}}}
-    
+
     :post {:summary (sd/sum_usr "Create edit session for collection and authed user.")
            :handler handle_create-edit-session
            :middleware [;authorization/wrap-authorized-user
@@ -238,5 +220,4 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:collection_id s/Uuid}}
            :responses {200 {:body schema_export_edit_session}
-                       404 {:body s/Any}}}
-    }])
+                       404 {:body s/Any}}}}])

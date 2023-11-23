@@ -1,24 +1,21 @@
 (ns madek.api.db.type-conversion
   (:require
-    [honey.sql :refer [format] :rename {format sql-format}]
-    [honey.sql.helpers :as sql]
-    [madek.api.utils.json :as json]
-    [next.jdbc :as jdbc]
-    [next.jdbc.connection :as connection]
-    [next.jdbc.date-time]
-    [next.jdbc.prepare :as prepare]
-    [next.jdbc.result-set :as jdbc-rs]
-    [taoensso.timbre :refer [debug info warn error spy]])
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [madek.api.utils.json :as json]
+   [next.jdbc :as jdbc]
+   [next.jdbc.connection :as connection]
+   [next.jdbc.date-time]
+   [next.jdbc.prepare :as prepare]
+   [next.jdbc.result-set :as jdbc-rs]
+   [taoensso.timbre :refer [debug info warn error spy]])
   (:import
-    [java.sql Array PreparedStatement]
-    [org.postgresql.util PGobject]
-    ))
-
+   [java.sql Array PreparedStatement]
+   [org.postgresql.util PGobject]))
 
 ;;; Time ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (next.jdbc.date-time/read-as-instant)
-
 
 ;;; PostgreSQL Arrays ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -26,7 +23,6 @@
   Array
   (read-column-by-label [^Array v _]    (vec (.getArray v)))
   (read-column-by-index [^Array v _ _]  (vec (.getArray v))))
-
 
 ;;; PostgreSQL JSON ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -50,7 +46,6 @@
       (when value
         (with-meta (json/decode value) {:pgtype type}))
       value)))
-
 
 ;; if a SQL parameter is a Clojure hash map or vector, it'll be transformed
 ;; to a PGobject for JSON/JSONB:
