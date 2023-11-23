@@ -34,6 +34,16 @@ Rspec should be invoked from `./bin/rspec`
         ./bin/rspec ./spec/resources/groups/index_spec.rb:11
 
 
+
+
+### Formatting Code
+
+Use `./bin/cljfmt check` and  `./bin/cljfmt fix`.
+
+From vim you can use `:! ./bin/cljfmt fix %` to format the current file.
+
+
+
 ### API Docs
 
 Swagger resource documentation http://localhost:3104/api-docs/index.html
