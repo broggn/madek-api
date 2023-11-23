@@ -12,7 +12,7 @@ context 'users' do
       describe 'patching/updating' do
         it 'works' do
           expect(
-            client.put("/api/admin/users/#{CGI.escape(@user.id)}") do |req|
+            client.patch("/api/admin/users/#{CGI.escape(@user.id)}") do |req|
               req.body = {login: "newLogin"}.to_json
               req.headers['Content-Type'] = 'application/json'
             end.status
@@ -21,7 +21,7 @@ context 'users' do
 
         it 'works when we do no changes' do
           expect(
-            client.put("/api/admin/users/#{CGI.escape(@user.id)}") do |req|
+            client.patch("/api/admin/users/#{CGI.escape(@user.id)}") do |req|
               req.body = {login: @user.login}.to_json
               req.headers['Content-Type'] = 'application/json'
             end.status
@@ -30,7 +30,7 @@ context 'users' do
 
         context 'patch result' do
           let :patch_result do
-            client.put("/api/admin/users/#{CGI.escape(@user.id)}") do |req|
+            client.patch("/api/admin/users/#{CGI.escape(@user.id)}") do |req|
               req.body = {
                 email: "new@mail.com",
                 login: "newLogin"}.to_json

@@ -1,17 +1,16 @@
 (ns madek.api.resources.app-settings
   (:require
-    [honey.sql :refer [format] :rename {format sql-format}]
-    [honey.sql.helpers :as sql]
-    [logbug.catcher :as catcher]
-    [logbug.debug :as debug]
-    [madek.api.db.core :refer [get-ds]]
-    [madek.api.resources.shared :as sd]
-    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-    [next.jdbc :as jdbc]
-    [next.jdbc.sql :refer [update!]]
-    [reitit.coercion.schema]
-    [schema.core :as s]
-    [taoensso.timbre :refer [debug error info spy warn]]))
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [logbug.catcher :as catcher]
+   [logbug.debug :as debug]
+   [madek.api.resources.shared :as sd]
+   [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+   [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
+   [next.jdbc :as jdbc]
+   [reitit.coercion.schema]
+   [schema.core :as s]
+   [taoensso.timbre :refer [debug error info spy warn]]))
 
 ;;; get ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -40,18 +39,7 @@
 (defn handle_get-app-settings [{ds :tx}]
   (sd/response_ok (transform_ml (db-get-app-settings ds))))
 
-
 ;;; update ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn convert-sequential-values-to-sql-arrays [m]
-  "For every sequential value insert [:array [..]] so HoneySQL will transform
-  this in a proper query to update PG-arrays"
-  (->> m
-       (map (fn[[k v]]
-              [k (if (sequential? v)
-                    [:array v]
-                    v)]))
-       (into {})))
 
 (defn update-app-settings
   "Updates app_settings and returns true if that happened and
@@ -73,9 +61,7 @@
         (sd/response_failed "Could not update app-settings." 406)))
     (catch Exception ex (sd/response_exception ex))))
 
-
 ;;; schema ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 (def schema_update-app-settings
   {(s/optional-key :about_pages) sd/schema_ml_list
@@ -160,7 +146,6 @@
    (s/optional-key :welcome_texts) (s/maybe sd/schema_ml_list)
    (s/optional-key :welcome_titles) (s/maybe sd/schema_ml_list)})
 
-
 ;;; routes ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def admin-routes
@@ -192,7 +177,6 @@
            :content-type "application/json"
            :coercion reitit.coercion.schema/coercion
            :responses {200 {:body schema_export-app-settings}}}}]])
-
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

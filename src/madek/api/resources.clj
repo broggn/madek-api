@@ -35,12 +35,12 @@
             [madek.api.resources.shared :as sd]
             [madek.api.resources.static-pages :as static-pages]
             [madek.api.resources.usage-terms :as usage-terms]
-            [madek.api.resources.users :as users]
+            [madek.api.resources.users.main :as users]
             [madek.api.resources.vocabularies :as vocabularies]
             [madek.api.resources.workflows :as workflows]
             [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
             [reitit.coercion.schema]))
-            
+
 
 
 ;### wrap media resource ######################################################
@@ -94,7 +94,7 @@
 
    ; TODO Frage: delegations workflows post, get, patch, delete
 
-   
+
 
    ])
 
@@ -137,7 +137,7 @@
    users/admin-routes
    ; TODO static pages
    static-pages/admin-routes
-   vocabularies/admin-routes]) 
+   vocabularies/admin-routes])
 
 (def user-routes
   ["/api" {:middleware [authentication/wrap]}
@@ -200,13 +200,13 @@
 
    roles/user-routes
 
-   users/user-routes
+   ;users/user-routes
    groups/user-routes
    usage-terms/user-routes
 
    vocabularies/user-routes
    workflows/user-routes
-   ]) 
+   ])
 
 
 ;### Debug ####################################################################

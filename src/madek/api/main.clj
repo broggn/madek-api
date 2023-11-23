@@ -68,12 +68,12 @@
                    "../config/settings.local.yml"]})
     (info "Effective startup options " options)
     (info "Effective startup config " (get-config))
-    ; WIP switching to new db container; remove old rdbms later 
+    ; WIP switching to new db container; remove old rdbms later
     (rdbms/initialize (config/get-db-spec :api))
     (db/init options)
     ;
     (nrepl/init options)
-    (madek.api.constants/initialize (get-config)) 
+    (madek.api.constants/initialize (get-config))
     (madek.api.web/initialize options)
     (info 'madek.api.main "... initialized")))
 

@@ -5,7 +5,6 @@
     [environ.core :refer [env]]
     [logbug.catcher :as catcher]
     [logbug.debug :as debug :refer [I> I>>]]
-    [logbug.ring :as logbug-ring :refer [wrap-handler-with-logging]]
     [logbug.thrown :as thrown]
     [madek.api.authentication :as authentication]
     [madek.api.db.core :as db]
@@ -16,6 +15,7 @@
     [madek.api.resources]
     [madek.api.utils.cli :refer [long-opt-for-key]]
     [madek.api.utils.config :refer [get-config]]
+    [madek.api.utils.logging :as logging]
     [muuntaja.core :as m]
     [reitit.coercion.schema]
     [reitit.coercion.spec]
@@ -34,6 +34,12 @@
     [ring.middleware.reload :refer [wrap-reload]]
     [taoensso.timbre :refer [debug error info spy warn]]))
 
+
+; changing DEBUG to true will wrap each middleware defined in this file with
+; extended debug logging; this will increase LOGGING OUTPUT IMMENSELY and might
+; have other undesired effects; make sure this is never enabled in production
+
+(defonce ^:private DEBUG false)
 
 ;### exception ################################################################
 
@@ -63,10 +69,15 @@
       (catch clojure.lang.ExceptionInfo ei
         (reset! last-ex* ei)
         (if-let [status (-> ei ex-data :status)]
-          (status-error-response status ei)
-          (server-error-response ei)))
+          (do
+            (warn "COUGHT STATUS EXCEPTION" (ex-message ei))
+            (status-error-response status ei))
+          (do
+            (error "COUGHT EXCEPTION WO STATUS" (ex-message ei))
+            (server-error-response ei))))
       (catch Exception ex
         (reset! last-ex* ex)
+        (error "COUGHT UNEXPECTED EXCEPTION" (ex-message ex))
         (server-error-response ex)))))
 
 
@@ -87,8 +98,8 @@
        :access-control-allow-headers ["Origin" "X-Requested-With" "Content-Type" "Accept" "Authorization", "Credentials" "Cookie"])
       wrap-with-access-control-allow-credentials))
 
-;##############################################################################
 
+;### routes ###################################################################
 
 (def auth-info-route
   ["/api/auth-info"
@@ -144,23 +155,57 @@
     ]
    (filterv some?)))
 
+
+(def ^:dynamic middlewares
+  [swagger/swagger-feature
+   ring-wrap-cors
+   rmp/parameters-middleware
+   muuntaja/format-negotiate-middleware
+   muuntaja/format-response-middleware
+   wrap-catch-exception
+   muuntaja/format-request-middleware
+   authentication/wrap
+   authentication/wrap-log
+   db/wrap-tx
+   rrc/coerce-exceptions-middleware
+   rrc/coerce-request-middleware
+   rrc/coerce-response-middleware
+   multipart/multipart-middleware])
+
+(when DEBUG
+  (def ^:dynamic debug-last-ex nil)
+  (defn wrap-debug [handler]
+    (fn [request]
+      (let [wrap-debug-level (or (:wrap-debug-level request) 0)]
+        (try
+          (debug "RING-LOGGING-WRAPPER"
+                 {:wrap-debug-level wrap-debug-level
+                  :request (logging/clean-request request)})
+          (let [response (handler
+                           (assoc request :wrap-debug-level (inc wrap-debug-level)))]
+            (debug "RING-LOGGING-WRAPPER"
+                   {:wrap-debug-level wrap-debug-level
+                    :response response})
+            response)
+          (catch Exception ex
+            (def ^:dynamic debug-last-ex ex)
+            (error "RING-LOGGING-WRAPPER COUGHT EXCEPTION "
+                   {:wrap-debug-level wrap-debug-level} (ex-message ex))
+            (debug "RING-LOGGING-WRAPPER COUGHT EXCEPTION " (thrown/stringify ex))
+            (throw ex))))))
+  (let [mws middlewares]
+    (def ^:dynamic middlewares
+      (into [] (interpose wrap-debug mws)))))
+
+
+; TODO, QUESTION: the following will add the whole middleware stack to the data
+; object in the request; is this in anyway usefull? e.g. debugging ??? if not
+; so: can it be removed, it blows up the data for each request insanely
+
 (def get-router-options
   {:validate rs/validate
    #_#_:compile coercion/compile-request-coercers
-   :data {:middleware [swagger/swagger-feature
-                       ring-wrap-cors
-                       rmp/parameters-middleware
-                       muuntaja/format-negotiate-middleware
-                       muuntaja/format-response-middleware
-                       wrap-catch-exception
-                       muuntaja/format-request-middleware
-                       authentication/wrap
-                       authentication/wrap-log
-                       db/wrap-tx
-                       rrc/coerce-exceptions-middleware
-                       rrc/coerce-request-middleware
-                       rrc/coerce-response-middleware
-                       multipart/multipart-middleware]
+   :data {:middleware middlewares
           :muuntaja m/instance}})
 
 

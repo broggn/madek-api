@@ -7,11 +7,51 @@
    [madek.api.pagination :as pagination]
    [madek.api.resources.groups.shared :as groups]
    [madek.api.resources.shared :as sd]
-   [madek.api.resources.users :as users]
    [madek.api.utils.rdbms :as rdbms]
    [madek.api.utils.sql :as sql]
    [schema.core :as s]
    ))
+
+
+;;; temporary users stuff ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn sql-select
+  ([] (sql-select {}))
+  ([sql-map]
+   (sql/select sql-map :*
+               ;:users.id :users.email :users.institutional_id :users.login
+               ;:users.created_at :users.updated_at
+               ;:users.person_id
+               )))
+
+(defn sql-merge-user-where-id
+  ([id] (sql-merge-user-where-id {} id))
+  ([sql-map id]
+   (if (re-matches
+         #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+         id)
+     (sql/merge-where sql-map [:or
+                               [:= :users.id id]
+                               [:= :users.institutional_id id]
+                               [:= :users.email id]])
+     (sql/merge-where sql-map [:or
+                               [:= :users.institutional_id id]
+                               [:= :users.email id]]))))
+
+(defn find-user-sql [some-id]
+  (-> (sql-select)
+      (sql-merge-user-where-id some-id)
+      (sql/merge-where [:= :is_deactivated false])
+      (sql/from :users)
+      sql/format))
+
+
+(defn find-user [some-id]
+  (->> some-id find-user-sql
+       (jdbc/query (rdbms/get-ds)) first))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 (defn group-user-query [group-id user-id]
   (-> ;(users/sql-select)
@@ -19,7 +59,7 @@
       (sql/from :users)
       (sql/merge-join :groups_users [:= :users.id :groups_users.user_id])
       (sql/merge-join :groups [:= :groups.id :groups_users.group_id])
-      (users/sql-merge-where-id user-id)
+      (sql-merge-user-where-id user-id)
       (groups/sql-merge-where-id group-id)
       sql/format))
 
@@ -61,7 +101,7 @@
   (if-let [user (find-group-user group-id user-id)]
     (sd/response_ok {:users (group-users group-id nil)})
     (let [group (groups/find-group group-id)
-          user (users/find-user user-id)]
+          user (find-user user-id)]
       (if-not (and group user)
         (sd/response_not_found "No such user or group.")
         (do (jdbc/insert! (rdbms/get-ds)
@@ -137,7 +177,7 @@
       ;(logging/info "update-group-users" "\ncurr\n" current-group-users-ids "\ntarget\n" target-group-users-ids )
       ;(logging/info "update-group-users" "\ndel-u\n" del-users)
       ;(logging/info "update-group-users" "\nins-u\n" ins-users)
-      ;(logging/info "update-group-users" "\ndel-q\n" del-query) 
+      ;(logging/info "update-group-users" "\ndel-q\n" del-query)
       ;(logging/info "update-group-users" "\nins-q\n" ins-query)
       (when (first del-users)
         (jdbc/execute!
@@ -147,7 +187,7 @@
         (jdbc/execute!
          tx
          ins-query))
-      
+
       ;{:status 200}
       (sd/response_ok {:users (jdbc/query tx
                                           (group-users-query group-id nil))})
