@@ -43,8 +43,8 @@ jobs:
         include:
           - path: cider-ci/context-components/lint/rspec-lint.yml
             submodule: [datalayer]
-          # - path: cider-ci/context-components/lint/git-lint.yml
-          #   submodule: [datalayer]
+          - path: cider-ci/context-components/lint/git-lint.yml
+            submodule: [datalayer]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # META JOBS (only depend on other jobs)                                           #

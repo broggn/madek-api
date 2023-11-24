@@ -11,23 +11,6 @@
 
 ;;; schema ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def user-get-schema
-  {:accepted_usage_terms_id (s/maybe s/Uuid)
-   :created_at s/Any
-   :email s/Str
-   :first_name (s/maybe s/Str)
-   :id s/Uuid
-   :institution (s/maybe s/Str)
-   :institutional_id (s/maybe s/Str)
-   :is_admin s/Bool
-   :last_name (s/maybe s/Str)
-   :last_signed_in_at (s/maybe s/Any)
-   :login s/Str
-   :notes (s/maybe s/Str)
-   :person_id s/Uuid
-   :settings s/Any
-   :updated_at s/Any})
-
 ;;; sql ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def user-select-keys

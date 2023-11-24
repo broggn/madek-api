@@ -11,7 +11,7 @@ windows:
   6:
     name: db
     command: |
-      cd database
+      cd datalayer
   7:
     name: test
     command: |

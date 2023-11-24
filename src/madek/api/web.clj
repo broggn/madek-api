@@ -38,7 +38,7 @@
 ; extended debug logging; this will increase LOGGING OUTPUT IMMENSELY and might
 ; have other undesired effects; make sure this is never enabled in production
 
-(defonce ^:private DEBUG false)
+(defonce ^:private DEBUG true)
 
 ;### exception ################################################################
 
@@ -184,7 +184,7 @@
             (def ^:dynamic debug-last-ex ex)
             (error "RING-LOGGING-WRAPPER COUGHT EXCEPTION "
                    {:wrap-debug-level wrap-debug-level} (ex-message ex))
-            (debug "RING-LOGGING-WRAPPER COUGHT EXCEPTION " (thrown/stringify ex))
+            (error "RING-LOGGING-WRAPPER COUGHT EXCEPTION " (thrown/stringify ex))
             (throw ex))))))
   (let [mws middlewares]
     (def ^:dynamic middlewares
@@ -271,4 +271,4 @@
     (http-server/start handler options)))
 
 ;### Debug ####################################################################
-;(debug/debug-ns *ns*)
+(debug/debug-ns *ns*)

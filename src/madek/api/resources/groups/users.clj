@@ -39,7 +39,6 @@
 (defn find-user-sql [some-id]
   (-> (sql-select)
       (sql-merge-user-where-id some-id)
-      (sql/merge-where [:= :is_deactivated false])
       (sql/from :users)
       sql/format))
 

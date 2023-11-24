@@ -143,6 +143,7 @@
    (s/optional-key :teaser_set_id) (s/maybe s/Uuid)
    (s/optional-key :time_zone) s/Str
    (s/optional-key :updated_at) s/Any
+   (s/optional-key :users_active_until_ui_default) (s/maybe s/Int)
    (s/optional-key :welcome_texts) (s/maybe sd/schema_ml_list)
    (s/optional-key :welcome_titles) (s/maybe sd/schema_ml_list)})
 
