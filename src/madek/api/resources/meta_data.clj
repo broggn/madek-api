@@ -289,7 +289,7 @@
           (sd/response_ok result)
           ;)
           (if-let [retryresult (create_md_and_keyword mr meta-key-id kw-id user-id)]
-            ((sd/logwrite req  (str "handle_create-meta-data-keyword:" "mr-id: " (:id mr) "kw-id: " kw-id "result: " retryresult))
+            ((sd/logwrite req (str "handle_create-meta-data-keyword:" "mr-id: " (:id mr) "kw-id: " kw-id "result: " retryresult))
              (sd/response_ok retryresult))
             (sd/response_failed "Could not create md keyword" 406)))))
     (catch Exception ex (sd/response_exception ex))))

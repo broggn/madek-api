@@ -71,7 +71,7 @@
   (fn [request]
     (jdbc/with-transaction [tx @ds*]
       (try
-        (let [tx-with-opts  (jdbc/with-options tx builder-fn-options-default)]
+        (let [tx-with-opts (jdbc/with-options tx builder-fn-options-default)]
           (let [resp (handler (assoc request :tx tx-with-opts))]
             (when-let [status (:status resp)]
               (when (>= status 400)
@@ -105,13 +105,13 @@
              :password (get db-options db-password-key)
              :host (get db-options db-host-key)
              :port (get db-options db-port-key)
-             :maximumPoolSize  (get db-options db-max-pool-size-key)
-             :minimumIdle       (get db-options db-min-pool-size-key)
+             :maximumPoolSize (get db-options db-max-pool-size-key)
+             :minimumIdle (get db-options db-min-pool-size-key)
              :autoCommit true
              :connectionTimeout 30000
              :validationTimeout 5000
-             :idleTimeout       (* 1 60 1000) ; 1 minute
-             :maxLifetime       (* 1 60 60 1000) ; 1 hour
+             :idleTimeout (* 1 60 1000) ; 1 minute
+             :maxLifetime (* 1 60 60 1000) ; 1 hour
              })]
     ;; this code initializes the pool and performs a validation check:
     (.close (jdbc/get-connection ds))

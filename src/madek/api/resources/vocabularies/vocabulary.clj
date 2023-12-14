@@ -44,7 +44,7 @@
 ; TODO for admin do not remove internal keys (admin_comment)
 ; TODO add flag for default locale
 (defn get-vocabulary [request]
-  (let [id  (-> request :parameters :path :id)
+  (let [id (-> request :parameters :path :id)
         user-id (-> request :authenticated-entity :id)
         query (build-vocabulary-query id user-id)]
     (if-let [vocabulary (first (jdbc/query (get-ds) query))]

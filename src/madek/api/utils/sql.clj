@@ -82,7 +82,7 @@
 
 (defn <-pgobject
   [^org.postgresql.util.PGobject v]
-  (let [type  (.getType v)
+  (let [type (.getType v)
         value (.getValue v)]
     #_(logging/info "<-pgobject: \nmeta type\n " type " value " value)
     (condp contains? type

@@ -115,7 +115,7 @@
 (def favorite-routes
   ["/favorite/media-entries"
    {:get
-    {:summary  (sd/sum_usr "List users favorites media_entries ids.")
+    {:summary (sd/sum_usr "List users favorites media_entries ids.")
      :handler handle_list-favorite_media_entries-by-user
      :middleware [authorization/wrap-authorized-user]
      :swagger {:produces "application/json"}
@@ -164,7 +164,7 @@
 (def admin-routes
   [["/favorite/media-entries"
     {:get
-     {:summary  (sd/sum_adm "Query favorite_media_entries.")
+     {:summary (sd/sum_adm "Query favorite_media_entries.")
       :handler handle_list-favorite_media_entries
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion

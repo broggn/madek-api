@@ -6,7 +6,7 @@
    [logbug.catcher :as catcher]
    [logbug.debug :as debug]
    [madek.api.utils.config :as config :refer [get-config]]
-   [me.raynes.fs  :as clj-fs]))
+   [me.raynes.fs :as clj-fs]))
 
 (def SUPPORTED_META_DATA_TYPES
   #{"MetaDatum::Groups" ; old: migrated to: people

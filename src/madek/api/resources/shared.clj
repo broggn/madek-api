@@ -393,7 +393,7 @@
         {:status 401 :body {:message "Not authorized"}}))
 
 ; else
-    (let [response  {:status 500 :body {:message "No media-resource in request."}}]
+    (let [response {:status 500 :body {:message "No media-resource in request."}}]
       (logging/warn 'authorize-request-for-media-resource response [request handler])
       response))
   ;)

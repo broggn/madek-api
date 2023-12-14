@@ -140,7 +140,7 @@
             :responses {200 {:body schema_export_contexts_adm}
                         406 {:body s/Any}}}
     ; context list / query
-     :get {:summary  (sd/sum_adm "List contexts.")
+     :get {:summary (sd/sum_adm "List contexts.")
            :handler handle_adm-list-contexts
            :middleware [wrap-authorize-admin!]
            :coercion reitit.coercion.schema/coercion
@@ -186,7 +186,7 @@
 
   ["/contexts"
    ["/"
-    {:get {:summary  (sd/sum_usr "List contexts.")
+    {:get {:summary (sd/sum_usr "List contexts.")
            :handler handle_usr-list-contexts
            :coercion reitit.coercion.schema/coercion
            ;:parameters {:query {(s/optional-key :full-data) s/Bool}}

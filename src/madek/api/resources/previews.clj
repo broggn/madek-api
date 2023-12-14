@@ -31,7 +31,7 @@
 (defn add-preview-for-media-file [handler request]
   (let [media-file (-> request :media-file)
         id (:id media-file)
-        previews (sd/query-eq-find-all  :previews :media_file_id id)
+        previews (sd/query-eq-find-all :previews :media_file_id id)
         pfirst (first previews)]
     (handler (assoc request :preview pfirst))))
 

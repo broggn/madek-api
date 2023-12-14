@@ -124,7 +124,7 @@
             :responses {200 {:body schema_export_workflow}
                         406 {:body s/Any}}}
 
-     :get {:summary  (sd/sum_adm "List workflows.")
+     :get {:summary (sd/sum_adm "List workflows.")
            :handler handle_list-workflows
            :middleware [authorization/wrap-authorized-user]
            :coercion reitit.coercion.schema/coercion

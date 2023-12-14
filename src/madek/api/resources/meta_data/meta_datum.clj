@@ -59,7 +59,7 @@
   (merge (select-keys meta-datum [:id :meta_key_id :type])
          {:value (let [meta-datum-type (:type meta-datum)]
                    (case meta-datum-type
-                     "MetaDatum::JSON"  (json/generate-string (:json meta-datum) {:escape-non-ascii false})
+                     "MetaDatum::JSON" (json/generate-string (:json meta-datum) {:escape-non-ascii false})
                      ; TODO meta-data json value transport Q as string
                      "MetaDatum::Text" (:string meta-datum)
                      "MetaDatum::TextDate" (:string meta-datum)
@@ -92,7 +92,7 @@
                        "text/plain; charset=utf-8")
         value (-> meta-datum prepare-meta-datum :value)]
     (cond
-      (nil? value)  {:status 422}
+      (nil? value) {:status 422}
       (str value) (-> {:body value}
                       (ring-response/header "Content-Type" content-type))
       :else {:body value})))

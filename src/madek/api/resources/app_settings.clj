@@ -163,7 +163,7 @@
            :handler handle_update-app-settings
            :middleware [wrap-authorize-admin!]
            :swagger {:produces "application/json"
-                     :consumes  "application/json"}
+                     :consumes "application/json"}
            :content-type "application/json"
            :coercion reitit.coercion.schema/coercion
            :parameters {:body schema_update-app-settings}

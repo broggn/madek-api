@@ -108,7 +108,7 @@
 
     ; io_interface list / query
      :get
-     {:summary  (sd/sum_adm "List io_interfaces.")
+     {:summary (sd/sum_adm "List io_interfaces.")
       :handler handle_list-io_interface
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion

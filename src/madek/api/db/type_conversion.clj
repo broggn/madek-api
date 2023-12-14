@@ -21,8 +21,8 @@
 
 (extend-protocol jdbc-rs/ReadableColumn
   Array
-  (read-column-by-label [^Array v _]    (vec (.getArray v)))
-  (read-column-by-index [^Array v _ _]  (vec (.getArray v))))
+  (read-column-by-label [^Array v _] (vec (.getArray v)))
+  (read-column-by-index [^Array v _ _] (vec (.getArray v))))
 
 ;;; PostgreSQL JSON ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -40,7 +40,7 @@
   "Transform PGobject containing `json` or `jsonb` value to Clojure
   data."
   [^org.postgresql.util.PGobject v]
-  (let [type  (.getType v)
+  (let [type (.getType v)
         value (.getValue v)]
     (if (#{"jsonb" "json"} type)
       (when value

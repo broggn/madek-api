@@ -114,7 +114,7 @@
 (def query-routes
   ["/delegation/groups"
    {:get
-    {:summary  (sd/sum_adm "Query delegation groups.")
+    {:summary (sd/sum_adm "Query delegation groups.")
      :handler handle_list-delegations_groups-by-group
      :swagger {:produces "application/json"}
      :coercion reitit.coercion.schema/coercion
@@ -125,7 +125,7 @@
 (def admin-routes
   [["/delegation/groups"
     {:get
-     {:summary  (sd/sum_adm "Query delegations_groups.")
+     {:summary (sd/sum_adm "Query delegations_groups.")
       :handler handle_list-delegations_groups
       :coercion reitit.coercion.schema/coercion
       :parameters {:query {(s/optional-key :group_id) s/Uuid

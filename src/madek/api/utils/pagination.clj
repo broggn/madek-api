@@ -1,7 +1,7 @@
 (ns madek.api.utils.pagination
   (:require
    [clojure.walk :refer [keywordize-keys]]
-   [honey.sql  :refer [format] :rename {format sql-format}]
+   [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.debug :as debug]
    [taoensso.timbre :refer [debug error info spy warn]]))

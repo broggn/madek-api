@@ -197,7 +197,7 @@
 (defn handle_create-person
   [request]
   (try
-    (catcher/with-logging  {}
+    (catcher/with-logging {}
       (let [data (-> request :parameters :body)
             data_wid (assoc data
                             :id (or (:id data) (clj-uuid/v4))
@@ -217,7 +217,7 @@
 
 (defn handle_delete-person [req]
   (try
-    (catcher/with-logging  {}
+    (catcher/with-logging {}
       (let [id (-> req :parameters :path :id)]
         (if-let [old-data (db-person-get id)]
           (let [del-result (jdbc/delete! (rdbms/get-ds) :people (jdbc-id-where-clause id))]

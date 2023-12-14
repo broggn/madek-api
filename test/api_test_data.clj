@@ -30,7 +30,7 @@
 (def auth1
   {:id auth1id
    :auth_system_id "password"
-   :data  (hashpw "user1pw")
+   :data (hashpw "user1pw")
    :user_id user1id})
 
 (def person2
@@ -52,7 +52,7 @@
 (def auth2
   {:id auth2id
    :auth_system_id "password"
-   :data  (hashpw "user2pw")
+   :data (hashpw "user2pw")
    :user_id user2id})
 
 (def admin1 {:id admin1id :user_id user1id})

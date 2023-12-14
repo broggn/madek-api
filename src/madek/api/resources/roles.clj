@@ -75,7 +75,7 @@
          :post {:summary (sd/sum_adm "Create role.")
                 :handler role/handle_create-role
                 :swagger {:produces "application/json"
-                          :consumes  "application/json"}
+                          :consumes "application/json"}
                 :content-type "application/json"
                 :accept "application/json"
                 :coercion reitit.coercion.schema/coercion
@@ -98,7 +98,7 @@
      :put {:summary (sd/sum_adm "Update role.")
            :handler role/handle_update-role
            :swagger {:produces "application/json"
-                     :consumes  "application/json"}
+                     :consumes "application/json"}
            :content-type "application/json"
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Uuid}

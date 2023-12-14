@@ -117,7 +117,7 @@
             :responses {200 {:body schema_export_static_page}
                         406 {:body s/Any}}}
     ; static_page list / query
-     :get {:summary  (sd/sum_adm "List static_pages.")
+     :get {:summary (sd/sum_adm "List static_pages.")
            :handler handle_list-static_pages
            :coercion reitit.coercion.schema/coercion
            :parameters {:query {(s/optional-key :full_data) s/Bool}}}}]

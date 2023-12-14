@@ -1,7 +1,7 @@
 (ns madek.api.resources.users.delete
   (:require
    [clj-uuid :as uuid]
-   [honey.sql  :refer [format] :rename {format sql-format}]
+   [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.debug :as debug]
    [madek.api.authorization :as authorization]

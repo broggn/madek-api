@@ -106,7 +106,7 @@
             :responses {200 {:body schema_export_delegations}
                         406 {:body s/Any}}}
     ; delegation list / query
-     :get {:summary  (sd/sum_adm "List delegations.")
+     :get {:summary (sd/sum_adm "List delegations.")
            :handler handle_list-delegations
            :coercion reitit.coercion.schema/coercion
            :parameters {:query {(s/optional-key :full-data) s/Bool}}}}]

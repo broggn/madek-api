@@ -207,7 +207,7 @@
 
     ; context_key list / query
      :get
-     {:summary  (sd/sum_adm "Query context_keys.")
+     {:summary (sd/sum_adm "Query context_keys.")
       :handler handle_adm-list-context_keys
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
@@ -263,7 +263,7 @@
   ["/context-keys"
    ["/"
     {:get
-     {:summary  (sd/sum_pub "Query / List context_keys.")
+     {:summary (sd/sum_pub "Query / List context_keys.")
       :handler handle_usr-list-context_keys
       :coercion reitit.coercion.schema/coercion
       :parameters {:query {(s/optional-key :id) s/Str

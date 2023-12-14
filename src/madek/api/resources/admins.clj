@@ -78,7 +78,7 @@
 (def ring-routes
   [["/admins/"
     {:get
-     {:summary  (sd/sum_adm "List admin users.")
+     {:summary (sd/sum_adm "List admin users.")
       :handler handle_list-admin
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion

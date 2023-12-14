@@ -24,7 +24,7 @@
                :Allocated (Humanize/binaryPrefix allocated-mem)
                :Used (Humanize/binaryPrefix used)
                :Usage (Double/parseDouble (String/format "%.2f" (into-array [usage])))}]
-    (when-not ok?  (logging/fatal stats))
+    (when-not ok? (logging/fatal stats))
     stats))
 
 ;### Debug #####################################################################

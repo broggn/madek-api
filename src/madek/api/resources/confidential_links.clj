@@ -157,7 +157,7 @@
             :responses {200 {:body schema_export_conf_link}
                         406 {:body s/Any}}}
 
-     :get {:summary  (sd/sum_adm "List workflows.")
+     :get {:summary (sd/sum_adm "List workflows.")
            :handler handle_list-conf-links
            :middleware [sd/ring-wrap-add-media-resource
                         sd/ring-wrap-authorization-edit-permissions]
@@ -214,7 +214,7 @@
             :responses {200 {:body schema_export_conf_link}
                         406 {:body s/Any}}}
 
-     :get {:summary  (sd/sum_adm "List workflows.")
+     :get {:summary (sd/sum_adm "List workflows.")
            :handler handle_list-conf-links
            :middleware [sd/ring-wrap-add-media-resource
                         sd/ring-wrap-authorization-edit-permissions]

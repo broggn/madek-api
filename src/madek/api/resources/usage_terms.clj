@@ -116,7 +116,7 @@
             :responses {200 {:body schema_export_usage_term}
                         406 {:body s/Any}}}
     ; usage_term list / query
-     :get {:summary  (sd/sum_adm "List usage_terms.")
+     :get {:summary (sd/sum_adm "List usage_terms.")
            :handler handle_list-usage_term
            :coercion reitit.coercion.schema/coercion
            :middleware [wrap-authorize-admin!]
@@ -158,7 +158,7 @@
 (def user-routes
   ["/usage-terms"
    ["/"
-    {:get {:summary  (sd/sum_pub "List usage_terms.")
+    {:get {:summary (sd/sum_pub "List usage_terms.")
            :handler handle_list-usage_term
            :coercion reitit.coercion.schema/coercion
            :parameters {:query {(s/optional-key :full_data) s/Bool}}

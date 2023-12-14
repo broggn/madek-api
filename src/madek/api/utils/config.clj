@@ -21,11 +21,11 @@
 
 (defn get-config [] @conf)
 
-(defonce default-opts  {:defaults {}
-                        :overrides {}
-                        :resource-names ["config_default.yml"]
-                        :filenames [(system-path "." "config" "config.yml")
-                                    (system-path ".." "config" "config.yml")]})
+(defonce default-opts {:defaults {}
+                       :overrides {}
+                       :resource-names ["config_default.yml"]
+                       :filenames [(system-path "." "config" "config.yml")
+                                   (system-path ".." "config" "config.yml")]})
 
 (defonce opts (atom {}))
 

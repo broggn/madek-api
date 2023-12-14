@@ -1,6 +1,6 @@
 (ns madek.api.resources.users.get
   (:require
-   [honey.sql  :refer [format] :rename {format sql-format}]
+   [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.debug :as debug]
    [madek.api.authorization :as authorization]

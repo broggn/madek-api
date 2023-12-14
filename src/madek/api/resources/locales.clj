@@ -25,5 +25,5 @@
 (defn add-field-for-default-locale
   [field-name result]
   (let [field-plural (keyword (str field-name "s"))
-        field-name   (keyword field-name)]
+        field-name (keyword field-name)]
     (assoc result field-name (get-in result [field-plural (default-locale)]))))

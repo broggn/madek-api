@@ -112,7 +112,7 @@
 (def favorite-routes
   ["/favorite/collections"
    {:get
-    {:summary  (sd/sum_usr "List users favorite_collections.")
+    {:summary (sd/sum_usr "List users favorite_collections.")
      :handler handle_list-favorite_collection-by-user
      :middleware [authorization/wrap-authorized-user]
      :coercion reitit.coercion.schema/coercion
@@ -149,7 +149,7 @@
 (def admin-routes
   [["/favorite/collections"
     {:get
-     {:summary  (sd/sum_adm "List favorite_collection users.")
+     {:summary (sd/sum_adm "List favorite_collection users.")
       :handler handle_list-favorite_collection
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
