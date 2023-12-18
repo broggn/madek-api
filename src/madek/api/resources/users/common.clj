@@ -17,9 +17,11 @@
   [:users.accepted_usage_terms_id
    :users.created_at
    :users.email
+   :users.first_name
    :users.id
    :users.institution
    :users.institutional_id
+   :users.last_name
    :users.last_signed_in_at
    :users.login
    :users.notes
@@ -49,9 +51,7 @@
 (def base-query
   (-> (apply sql/select user-select-keys)
       (sql/select [is-admin-sub :is_admin])
-      (sql/from :users)
-      (sql/select :people.last_name :people.first_name)
-      (sql/join :people [:= :people.id :users.person_id])))
+      (sql/from :users)))
 
 ;;; other ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

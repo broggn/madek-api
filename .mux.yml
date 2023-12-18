@@ -3,7 +3,7 @@ windows:
   2:
     name: app
     command: |
-      ./bin/clj-run
+      ./bin/clj-run 2>&1 | tee -a log/debug.log
   5:
     name: psql
     command: |

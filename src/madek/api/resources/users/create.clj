@@ -25,7 +25,6 @@
     (if-let [{id :id} (-> (sql/insert-into :users)
                           (sql/values [data])
                           (sql-format :inline true)
-                          spy
                           ((partial jdbc/execute-one! ds) {:return-keys true}))]
       (sd/response_ok (spy (find-user-by-uid id ds)) 201)
       (sd/response_failed "Could not create user." 406))
@@ -38,9 +37,11 @@
    (s/optional-key :accepted_usage_terms_id) (s/maybe s/Uuid)
    (s/optional-key :autocomplete) s/Str
    (s/optional-key :email) s/Str
+   (s/optional-key :first_name) s/Str
    (s/optional-key :id) s/Uuid
    (s/optional-key :institution) s/Str
    (s/optional-key :institutional_id) s/Str
+   (s/optional-key :last_name) s/Str
    (s/optional-key :login) s/Str
    (s/optional-key :notes) (s/maybe s/Str)
    (s/optional-key :searchable) s/Str

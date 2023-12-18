@@ -40,7 +40,9 @@
   {(s/optional-key :accepted_usage_terms_id) (s/maybe s/Uuid) ; TODO
    (s/optional-key :autocomplete) s/Str
    (s/optional-key :email) s/Str
+   (s/optional-key :first_name) s/Str
    (s/optional-key :institution) s/Str
+   (s/optional-key :last_name) s/Str
    (s/optional-key :login) s/Str
    (s/optional-key :notes) (s/maybe s/Str) ; TODO
    (s/optional-key :searchable) s/Str})

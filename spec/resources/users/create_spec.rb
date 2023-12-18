@@ -43,7 +43,6 @@ context 'users' do
             expect(created_user.body['login']).to be== "test"
           end
         end
-        # TODO json roa remove: test links
 
       end
     end

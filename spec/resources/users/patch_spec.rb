@@ -29,11 +29,16 @@ context 'users' do
         end
 
         context 'patch result' do
+          let :new_last_name do Faker::Name.last_name() end
+          let :new_first_name do Faker::Name.first_name() end
           let :patch_result do
             client.patch("/api/admin/users/#{CGI.escape(@user.id)}") do |req|
               req.body = {
                 email: "new@mail.com",
-                login: "newLogin"}.to_json
+                login: "newLogin",
+                last_name: new_last_name,
+                first_name: new_first_name
+              }.to_json
               req.headers['Content-Type'] = 'application/json'
             end
           end
@@ -41,6 +46,8 @@ context 'users' do
           it 'contains the update' do
             expect(patch_result.body['email']).to be== 'new@mail.com'
             expect(patch_result.body['login']).to be== 'newLogin'
+            expect(patch_result.body['last_name']).to be== new_last_name
+            expect(patch_result.body['first_name']).to be== new_first_name
           end
         end
       end
