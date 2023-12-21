@@ -272,7 +272,7 @@
           :description "Query list of people only for ids or full-data. Optional Paging."
           :handler handle_query-people
           :middleware [wrap-authorize-admin!]
-          :swagger {:produces "application/json"}
+          
           :parameters {:query schema_query_people}
           :content-type "application/json"
                 ;:accept "application/json"
@@ -284,7 +284,7 @@
           :description "Create a person.\n The \nThe [subtype] has to be one of [Person, ...]. \nAt least one of [first_name, last_name, description] must have a value."
           :handler handle_create-person
           :middleware [wrap-authorize-admin!]
-          :swagger {:produces "application/json" :consumes "application/json"}
+          
           :content-type "application/json"
           :accept "application/json"
           :coercion reitit.coercion.schema/coercion
@@ -296,7 +296,7 @@
     {:get
      {:summary "Get person by id"
       :description "Get person by id. Returns 404, if no such person exists. TODO query params."
-      :swagger {:produces "application/json"}
+      
       :content-type "application/json"
       :accept "application/json"
       :handler handle_get-person
@@ -309,7 +309,7 @@
      :put
      {:summary "Updates person entity fields"
       :description "Updates the person entity fields"
-      :swagger {:consumes "application/json" :produces "application/json"}
+      
       :content-type "application/json"
       :accept "application/json"
       :handler handle_patch-person
@@ -323,7 +323,7 @@
      :delete
      {:summary "Deletes a person by id"
       :description "Delete a person by id"
-      :swagger {:produces "application/json"}
+      
       :content-type "application/json"
       :handler handle_delete-person
       :middleware [wrap-authorize-admin!]
@@ -341,7 +341,7 @@
                :description "Query list of people only for ids or full-data. Optional Paging."
                :handler handle_query-people
                
-               :swagger {:produces "application/json"}
+               
                :parameters {:query schema_query_people}
                :content-type "application/json"
                :coercion reitit.coercion.schema/coercion
@@ -350,7 +350,7 @@
 
    ["/:id" {:get {:summary (sd/sum_pub "Get person by id")
                   :description "Get person by id. Returns 404, if no such person exists. TODO query params."
-                  :swagger {:produces "application/json"}
+                  
                   :content-type "application/json"
                   :accept "application/json"
                   :handler handle_get-person

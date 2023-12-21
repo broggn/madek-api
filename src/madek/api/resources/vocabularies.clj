@@ -135,7 +135,7 @@
                                 (s/optional-key :count) s/Int
                                 }}
            :responses {200 {:body {:vocabularies [schema_export-vocabulary]}}}
-           :swagger {:produces "application/json"}}
+           }
 
      :post {:summary (sd/sum_adm "Create vocabulary.")
             :handler handle_create-vocab
@@ -146,14 +146,14 @@
             :parameters {:body schema_import-vocabulary}
             :responses {200 {:body schema_export-vocabulary}
                         406 {:body s/Any}}
-            :swagger {:consumes "application/json" :produces "application/json"}}}]
+            }}]
 
    ["/:id"
     {:get {:summary (sd/sum_adm "Get vocabulary by id.")
            :description "Get a vocabulary by id. Returns 404, if no such vocabulary exists."
            :handler get-vocabulary
            :middleware [wrap-authorize-admin!]
-           :swagger {:produces "application/json"}
+           
            :content-type "application/json"
            
            :coercion reitit.coercion.schema/coercion
@@ -171,7 +171,7 @@
                         :body schema_update-vocabulary}
            :responses {200 {:body schema_export-vocabulary}
                        404 {:body s/Any}}
-           :swagger {:consumes "application/json" :produces "application/json"}}
+           }
 
      :delete {:summary (sd/sum_adm_todo "Delete vocabulary.")
               :handler handle_delete-vocab
@@ -182,7 +182,7 @@
               :parameters {:path {:id s/Str}}
               :responses {200 {:body schema_export-vocabulary}
                           404 {:body s/Any}}
-              :swagger {:produces "application/json"}}}]
+              }}]
    
    ["/:id/perms"
     ["/"
@@ -343,11 +343,11 @@
                :coercion reitit.coercion.schema/coercion
                :parameters {:query {(s/optional-key :page) s/Int}}
                :responses {200 {:body {:vocabularies [ schema_export-vocabulary ]}}}
-               :swagger {:produces "application/json"}}}]
+               }}]
 
    ["/:id" {:get {:summary "Get vocabulary by id."
                   :description "Get a vocabulary by id. Returns 404, if no such vocabulary exists."
-                  :swagger {:produces "application/json"}
+                  
                   :content-type "application/json"
                   :handler get-vocabulary
                   :coercion reitit.coercion.schema/coercion

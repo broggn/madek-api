@@ -234,7 +234,7 @@
            :description "Get list of meta-key ids. Paging is used as you get a limit of 100 entries."
            :handler handle_adm-query-meta-keys
            :middleware [wrap-authorize-admin!]
-           :swagger {:produces "application/json"}
+           
            :parameters {:query schema_query-meta-key}
            :content-type "application/json"
            :coercion reitit.coercion.schema/coercion
@@ -243,7 +243,7 @@
      :post {:summary (sd/sum_adm "Create meta-key.")
             :handler handle_create_meta-key
             :middleware [wrap-authorize-admin!]
-            :swagger {:produces "application/json" :consumes "application/json"}
+            
             :parameters {:body schema_create-meta-key}
             :content-type "application/json"
             :coercion reitit.coercion.schema/coercion
@@ -256,7 +256,7 @@
    ["/:id"
     {:get {:summary (sd/sum_adm "Get meta-key by id")
            :description "Get meta-key by id. Returns 404, if no such meta-key exists."
-           :swagger {:produces "application/json"}
+           
            :content-type "application/json"
            :accept "application/json"
            :middleware [wrap-authorize-admin!
@@ -271,7 +271,7 @@
      
      :put {:summary (sd/sum_adm "Update meta-key.")
            :handler handle_update_meta-key
-           :swagger {:produces "application/json" :consumes "application/json"}
+           
            :middleware [wrap-authorize-admin!
                         (sd/wrap-check-valid-meta-key :id)
                         (wwrap-find-meta_key :id :id true)]
@@ -285,7 +285,7 @@
      
      :delete {:summary (sd/sum_adm "Delete meta-key.")
               :handler handle_delete_meta-key
-              :swagger {:produces "application/json" :consumes "application/json"}
+              
               :middleware [(sd/wrap-check-valid-meta-key :id)
                            (wwrap-find-meta_key :id :id true)]
               :coercion reitit.coercion.schema/coercion
@@ -305,7 +305,7 @@
     {:get {:summary (sd/sum_usr_pub "Get all meta-key ids")
            :description "Get list of meta-key ids. Paging is used as you get a limit of 100 entries."
            :handler handle_usr-query-meta-keys
-           :swagger {:produces "application/json"}
+           
            :parameters {:query schema_query-meta-key}
            :content-type "application/json"
            :coercion reitit.coercion.schema/coercion
@@ -319,7 +319,7 @@
    ["/:id" 
     {:get {:summary (sd/sum_usr_pub "Get meta-key by id")
            :description "Get meta-key by id. Returns 404, if no such meta-key exists."
-           :swagger {:produces "application/json"}
+           
            :content-type "application/json"
            :accept "application/json"
            :handler handle_usr-get-meta-key

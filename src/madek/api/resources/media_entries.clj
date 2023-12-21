@@ -333,7 +333,7 @@
    :media_type s/Str
    :content_type s/Str
    ;(s/enum "small" "small_125" "medium" "large" "x-large" "maximum")
-   :thumbnail s/Str 
+   :thumbnail (s/maybe s/Str)
    :width (s/maybe s/Int)
    :height (s/maybe s/Int)
    :filename s/Str
@@ -374,7 +374,7 @@
    ["media-entries"
     {:get
      {:summary "Query media-entries."
-      :swagger {:produces "application/json"}
+      
       :content-type "application/json"
       :handler handle_query_media_entry
       :middleware [sd/ring-wrap-parse-json-query-parameters]
@@ -386,7 +386,7 @@
    ["media-entries-related-data"
     {:get
      {:summary "Query media-entries with all related data."
-      :swagger {:produces "application/json"}
+      
       :content-type "application/json"
       :handler handle_query_media_entry-related-data
       :middleware [sd/ring-wrap-parse-json-query-parameters]
@@ -416,7 +416,7 @@
    ["/media-entry/:media_entry_id"
     {:get {:summary "Get media-entry for id."
            :handler handle_get-media-entry
-           :swagger {:produces "application/json"}
+           
            :content-type "application/json"
 
            :middleware [sd/ring-wrap-add-media-resource
@@ -431,7 +431,7 @@
      ; TODO Frage: wer kann einen Eintrag löschen
      :delete {:summary "Delete media-entry for id."
               :handler handle_delete_media_entry
-              :swagger {:produces "application/json"}
+              
               :content-type "application/json"
               
               :middleware [sd/ring-wrap-add-media-resource
@@ -445,7 +445,7 @@
    ["/media-entry/:media_entry_id/publish"
     {:put {:summary "Try publish media-entry for id."
            :handler handle_try-publish-media-entry
-           :swagger {:produces "application/json"}
+           
            :content-type "application/json"
    
            :middleware [sd/ring-wrap-add-media-resource

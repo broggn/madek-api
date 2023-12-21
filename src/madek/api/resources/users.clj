@@ -265,7 +265,7 @@
    ["/" 
     {:get {:summary (sd/sum_adm "Get list of users ids.")
            :description "Get list of users ids."
-           :swagger {:produces "application/json"}
+           
            :parameters {:query schema_query_user}
            :content-type "application/json"
            :handler index
@@ -275,8 +275,6 @@
 
      :post {:summary (sd/sum_adm "Create user.")
             :description "Create user."
-            :swagger {:consumes "application/json"
-                      :produces "application/json"}
             :content-type "application/json"
             :accept "application/json"
             :handler handle_create-user
@@ -292,7 +290,7 @@
         :handler handle_get-user
         :middleware [wrap-authorize-admin!
                      (wwrap-find-user :id)]
-        :swagger {:produces "application/json"}
+        
         :coercion reitit.coercion.schema/coercion
         :content-type "application/json"
         :parameters {:path {:id s/Str}}
@@ -305,7 +303,7 @@
            :handler handle_delete-user
            :middleware [wrap-authorize-admin!
                         (wwrap-find-user :id)]
-           :swagger {:produces "application/json"}
+           
            :coercion reitit.coercion.schema/coercion
            :content-type "application/json"
            :parameters {:path {:id s/Str}}
@@ -315,8 +313,6 @@
 
   :put {:summary (sd/sum_adm "Update user with id")
         :description "Patch a user with id. Returns 404, if no such user exists."
-        :swagger {:consumes "application/json"
-                  :produces "application/json"}
         :coercion reitit.coercion.schema/coercion
         :content-type "application/json"
         :accept "application/json"
@@ -338,7 +334,7 @@
            :description "Get list of users ids."
            :handler index
            :middleware [authorization/wrap-authorized-user]
-           :swagger {:produces "application/json"}
+           
            :content-type "application/json"
            :coercion reitit.coercion.schema/coercion
            :parameters {:query schema_usr_query_user}
@@ -350,7 +346,7 @@
            :handler handle_get-user
            :middleware [authorization/wrap-authorized-user
                         (wwrap-find-user :id)]
-           :swagger {:produces "application/json"}
+           
            :content-type "application/json"
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Any}}

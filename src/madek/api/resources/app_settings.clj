@@ -172,7 +172,7 @@
     {:get {:summary (sd/sum_adm "Get App Settings.")
            :handler handle_get-app-settings
            :middleware [wrap-authorize-admin!]
-           :swagger {:produces "application/json"}
+           
            :content-type "application/json"
            :coercion reitit.coercion.schema/coercion
            :responses {200 {:body s/Any}}}
@@ -180,8 +180,6 @@
      :put {:summary (sd/sum_adm "Update App Settings.")
            :handler handle_update-app-settings
            :middleware [wrap-authorize-admin!]
-           :swagger {:produces "application/json"
-                     :consumes  "application/json"}
            :content-type "application/json"
            :coercion reitit.coercion.schema/coercion
            :parameters {:body schema_update-app-settings}
@@ -192,7 +190,7 @@
   [["/app-settings"
     {:get {:summary (sd/sum_pub "Get App Settings.")
            :handler handle_get-app-settings
-           :swagger {:produces "application/json"}
+           
            :content-type "application/json"
            :coercion reitit.coercion.schema/coercion
            :responses {200 {:body schema_export-app-settings}}}}]])

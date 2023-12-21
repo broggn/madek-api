@@ -160,7 +160,7 @@
                 :description "Get list of group ids. Paging is used as you get a limit of 100 entries."
                 :handler index
                 :middleware [wrap-authorize-admin!]
-                :swagger {:produces "application/json"}
+                
                 :content-type "application/json"
                 :parameters {:query schema_query-groups}
                    ;:accept "application/json"
@@ -169,7 +169,7 @@
      ]
     ["/:id" {:get {:summary "Get group by id"
                    :description "Get group by id. Returns 404, if no such group exists."
-                   :swagger {:produces "application/json"}
+                   
                    :content-type "application/json"
                    :handler handle_get-group
                    :middleware [wrap-authorize-admin!]
@@ -185,7 +185,7 @@
                :description "Get list of group ids. Paging is used as you get a limit of 100 entries."
                :handler index
                :middleware [wrap-authorize-admin!]
-               :swagger {:produces "application/json"}
+               
                :parameters {:query schema_query-groups}
                :content-type "application/json"
                :coercion reitit.coercion.schema/coercion
@@ -195,7 +195,7 @@
                 :description "Create a group."
                 :handler handle_create-group
                 :middleware [wrap-authorize-admin!]
-                :swagger {:produces "application/json" :consumes "application/json"}
+                
                 :content-type "application/json"
                 :accept "application/json"
                 :coercion reitit.coercion.schema/coercion
@@ -206,7 +206,7 @@
 
 ["/:id" {:get {:summary "Get group by id"
                :description "Get group by id. Returns 404, if no such group exists."
-               :swagger {:produces "application/json"}
+               
                :content-type "application/json"
                :accept "application/json"
                :handler handle_get-group
@@ -227,7 +227,7 @@
 
          :patch {:summary "Get group by id"
                  :description "Get group by id. Returns 404, if no such group exists."
-                 :swagger {:produces "application/json"}
+                 
                  :content-type "application/json"
                  :accept "application/json"
                  :handler handle_update-group
@@ -241,7 +241,7 @@
      ; groups-users/ring-routes 
 ["/:group-id/users/" {:get {:summary "Get group users by id"
                             :description "Get group users by id."
-                            :swagger {:produces "application/json"}
+                            
                             :content-type "application/json"
 
                             :handler group-users/handle_get-group-users
@@ -254,7 +254,7 @@
           ; TODO works with tests, but not with the swagger ui
                       :put {:summary "Update group users by group-id and list of users."
                             :description "Update group users by group-id and list of users."
-                            :swagger {:consumes "application/json" :produces "application/json"}
+                            
                             :content-type "application/json"
                             :accept "application/json"
                             :handler group-users/handle_update-group-users
@@ -272,7 +272,7 @@
 
 ["/:group-id/users/:user-id" {:get {:summary "Get group user by group-id and user-id"
                                     :description "Get group user by group-id and user-id."
-                                    :swagger {:produces "application/json"}
+                                    
                                     :content-type "application/json"
                                     :handler group-users/handle_get-group-user
                                     :middleware [wrap-authorize-admin!]
@@ -283,7 +283,7 @@
 
                               :put {:summary "Get group user by group-id and user-id"
                                     :description "Get group user by group-id and user-id."
-                                    :swagger {:produces "application/json"}
+                                    
                                     :content-type "application/json"
                                     :handler group-users/handle_add-group-user
                                     :middleware [wrap-authorize-admin!]
@@ -294,7 +294,7 @@
 
                               :delete {:summary "Deletes a group-user by group-id and user-id"
                                        :description "Delete a group-user by group-id and user-id."
-                           ;:swagger {:produces "application/json"}
+                           ;
                            ;:content-type "application/json"
                                        :handler group-users/handle_delete-group-user
                                        :middleware [wrap-authorize-admin!]

@@ -123,7 +123,7 @@
     {:summary  (sd/sum_usr "List users favorites media_entries ids.")
      :handler handle_list-favorite_media_entries-by-user
      :middleware [authorization/wrap-authorized-user]
-     :swagger {:produces "application/json"}
+     
      :coercion reitit.coercion.schema/coercion
      :responses {200 {:body {:media_entry_ids [s/Uuid]}}}
      }}])
@@ -136,7 +136,7 @@
             :middleware [authorization/wrap-authorized-user
                          (wwrap-find-media_entry :media_entry_id)
                          (wwrap-find-favorite_media_entry-by-auth false)]
-            :swagger {:produces "application/json"}
+            
             :coercion reitit.coercion.schema/coercion
             :parameters {:path {:media_entry_id s/Uuid}}
             :responses {200 {:body schema_favorite_media_entries_export}

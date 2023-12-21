@@ -136,7 +136,7 @@
   [
    ["/full_text"
     {:post {:summary (sd/sum_adm "Create full_texts entry")
-            :swagger {:consumes "application/json" :produces "application/json"}
+            
             :handler handle_create-full_texts
             :coercion reitit.coercion.schema/coercion
             :parameters {:body {:text s/Str
@@ -146,7 +146,7 @@
    
    ["/full_text/:media_resource_id"
     {:post {:summary (sd/sum_adm "Create full_texts entry")
-            :swagger {:consumes "application/json" :produces "application/json"}
+            
             :handler handle_create-full_texts
             :coercion reitit.coercion.schema/coercion
             :parameters {:path {:media_resource_id s/Str}
@@ -183,8 +183,6 @@
                         (wrap-find-full_text :collection_id true)]}
      
      :post {:summary (sd/sum_usr "Create full_text for collection")
-            :swagger {:consumes "application/json"
-                      :produces "application/json"}
             :handler handle_create-full_texts
             :coercion reitit.coercion.schema/coercion
             :parameters {:path {:collection_id s/Str}
@@ -222,8 +220,6 @@
                         (wrap-find-full_text :media_entry_id true)]}
 
      :post {:summary (sd/sum_usr "Create full_text for collection")
-            :swagger {:consumes "application/json"
-                      :produces "application/json"}
             :handler handle_create-full_texts
             :coercion reitit.coercion.schema/coercion
             :parameters {:path {:media_entry_id s/Str}
