@@ -276,23 +276,37 @@
                                :arc_updated_at :updated_at}))))
 
 (defn- get-files4me-list [melist auth-entity]
-  (let [auth-list (remove nil? (map #(when (true? (media-entry-perms/downloadable-by-auth-entity? % auth-entity))
-                          (media-files/query-media-file-by-media-entry-id (:id %))) melist))]
+  (if-let [user-id (:id auth-entity)]
+    (let [auth-list (remove nil? (map #(when (true? (media-entry-perms/downloadable-by-auth-entity? % auth-entity))
+                                         (media-files/query-media-file-by-media-entry-id (:id %))) melist))]
     ;(logging/info "get-files4me-list: \n" auth-list)
-    auth-list))
+      auth-list)
+    (let [pub-list (remove nil? (map #(when (true? (:get_full_size %))
+                                         (media-files/query-media-file-by-media-entry-id (:id %))) melist))]
+        (logging/info "get-files4me-list: publist:\n" pub-list)
+      pub-list)))
 
 (defn get-preview-list [melist auth-entity]
-  (let [auth-list (map #(when (true? (media-entry-perms/viewable-by-auth-entity? % auth-entity))
-                          (sd/query-eq-find-all :previews :media_file_id
-                                                (:id (media-files/query-media-file-by-media-entry-id (:id %))))) melist)]
+  (if-let [user-id (:id auth-entity)]
+    (let [auth-list (map #(when (true? (media-entry-perms/viewable-by-auth-entity? % auth-entity))
+                            (sd/query-eq-find-all :previews :media_file_id
+                                                  (:id (media-files/query-media-file-by-media-entry-id (:id %))))) melist)]
     ;(logging/info "get-preview-list" auth-list)
-    auth-list))
+      auth-list)
+    (let [pub-list (map #(when (true? (:get_metadata_and_previews %))
+                            (sd/query-eq-find-all :previews :media_file_id
+                                                  (:id (media-files/query-media-file-by-media-entry-id (:id %))))) melist)]
+        (logging/info "get-preview-list: publist:\n" pub-list)
+      pub-list)))
 
 (defn get-md4me-list [melist auth-entity]
-  (let [user-id (:id auth-entity)
-        auth-list (map #(when (true? (media-entry-perms/viewable-by-auth-entity? % auth-entity))
+  (if-let [user-id (:id auth-entity)]
+    (let [auth-list (map #(when (true? (media-entry-perms/viewable-by-auth-entity? % auth-entity))
                           (meta-data.index/get-media-entry-meta-data (:id %) user-id)) melist)]
-    auth-list))
+      auth-list)
+    (let [pub-list (map #(when (true? (:get_metadata_and_previews %))
+                            (meta-data.index/get-media-entry-meta-data (:id %) nil)) melist)]
+     pub-list)))
 
   (defn build-result [collection-id full-data data]
     (let [me-list (get-me-list full-data data)
