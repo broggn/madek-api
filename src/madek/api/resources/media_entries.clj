@@ -346,6 +346,8 @@
   {:id s/Uuid
    :media_entry_id (s/maybe s/Uuid)
    :collection_id (s/maybe s/Uuid)
+   (s/optional-key :md_kws) s/Any
+   (s/optional-key :md_ppl) s/Any
 
    :type s/Str
    :meta_key_id s/Str

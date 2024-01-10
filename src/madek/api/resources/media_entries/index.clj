@@ -283,7 +283,7 @@
       auth-list)
     (let [pub-list (remove nil? (map #(when (true? (:get_full_size %))
                                          (media-files/query-media-file-by-media-entry-id (:id %))) melist))]
-        (logging/info "get-files4me-list: publist:\n" pub-list)
+        ;(logging/info "get-files4me-list: publist:\n" pub-list)
       pub-list)))
 
 (defn get-preview-list [melist auth-entity]
@@ -296,8 +296,15 @@
     (let [pub-list (map #(when (true? (:get_metadata_and_previews %))
                             (sd/query-eq-find-all :previews :media_file_id
                                                   (:id (media-files/query-media-file-by-media-entry-id (:id %))))) melist)]
-        (logging/info "get-preview-list: publist:\n" pub-list)
+        #_(logging/info "get-preview-list: publist:\n" pub-list)
       pub-list)))
+
+(defn get-me-md-vals [entryId user-id]
+  (let [mdlist (meta-data.index/get-media-entry-meta-data entryId user-id)
+        mdvlist (map #(merge % {:md_kws (sd/query-eq-find-all :meta_data_keywords :meta_datum_id (:id %))
+                                :md_ppl (sd/query-eq-find-all :meta_data_people :meta_datum_id (:id %))}) mdlist)]
+    mdvlist
+    ))
 
 (defn get-md4me-list [melist auth-entity]
   (if-let [user-id (:id auth-entity)]
@@ -305,7 +312,8 @@
                           (meta-data.index/get-media-entry-meta-data (:id %) user-id)) melist)]
       auth-list)
     (let [pub-list (map #(when (true? (:get_metadata_and_previews %))
-                            (meta-data.index/get-media-entry-meta-data (:id %) nil)) melist)]
+                            (get-me-md-vals (:id %) nil)) melist)]
+      (logging/info "get-md4me-list: publist:\n" pub-list)
      pub-list)))
 
   (defn build-result [collection-id full-data data]
