@@ -22,7 +22,7 @@
   [id tx]
   (-> (sql/delete-from :users)
       (sql/where [:= :users.id (uuid/as-uuid id)])
-      (sql-format :inline true)
+      (sql-format :inline false)
       (->> (jdbc/execute-one! tx))
       :next.jdbc/update-count
       (= 1)))

@@ -1,18 +1,12 @@
 (ns madek.api.resources.users.index
   (:require
-   [clj-uuid :as uuid]
    [honey.sql :refer [format] :rename {format sql-format}]
-   [honey.sql.helpers :as sql]
    [logbug.debug :as debug]
-   [madek.api.authorization :as authorization]
-   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
    [madek.api.resources.users.common :as common]
    [madek.api.resources.users.get :as get-user]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.logging :as logging]
    [madek.api.utils.pagination :as pagination]
-   [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
@@ -23,7 +17,7 @@
   [{{query :query} :parameters tx :tx :as req}]
   (-> common/base-query
       (pagination/sql-offset-and-limit query)
-      (sql-format :inline true)
+      (sql-format :inline false)
       (->> (jdbc/execute! tx)
            (assoc {} :users))
       sd/response_ok))

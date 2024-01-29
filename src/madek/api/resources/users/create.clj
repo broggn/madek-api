@@ -22,12 +22,11 @@
 (defn handle-create-user
   [{{data :body} :parameters ds :tx :as req}]
   (try
-    (if-let [{id :id} (-> (sql/insert-into :users)
-                          (sql/values [data])
-                          (sql-format :inline true)
-                          ((partial jdbc/execute-one! ds) {:return-keys true}))]
-      (sd/response_ok (spy (find-user-by-uid id ds)) 201)
-      (sd/response_failed "Could not create user." 406))
+    (let [{id :id} (-> (sql/insert-into :users)
+                       (sql/values [data])
+                       (sql-format)
+                       ((partial jdbc/execute-one! ds) {:return-keys true}))]
+      (sd/response_ok (find-user-by-uid id ds) 201))
     (catch Exception e
       (error "handle-create-user failed" {:request req})
       (sd/response_exception e))))
@@ -35,31 +34,27 @@
 (def schema
   {:person_id s/Uuid
    (s/optional-key :accepted_usage_terms_id) (s/maybe s/Uuid)
-   (s/optional-key :autocomplete) s/Str
    (s/optional-key :email) s/Str
    (s/optional-key :first_name) s/Str
-   (s/optional-key :id) s/Uuid
    (s/optional-key :institution) s/Str
    (s/optional-key :institutional_id) s/Str
    (s/optional-key :last_name) s/Str
    (s/optional-key :login) s/Str
    (s/optional-key :notes) (s/maybe s/Str)
-   (s/optional-key :searchable) s/Str
    (s/optional-key :settings) s/Any})
 
 (def route
-  {:summary (sd/sum_adm "Create user.")
-   :description "Create user."
-   :swagger {:consumes "application/json"
-             :produces "application/json"}
+  {:accept "application/json"
+   :coercion reitit.coercion.schema/coercion
    :content-type "application/json"
-   :accept "application/json"
+   :description "Create user."
    :handler handle-create-user
    :middleware [wrap-authorize-admin!]
-   :coercion reitit.coercion.schema/coercion
    :parameters {:body schema}
-   :responses {201 {:body get-user/schema}
-               406 {:body s/Any}}})
+   :responses {201 {:body get-user/schema}}
+   :summary (sd/sum_adm "Create user.")
+   :swagger {:consumes "application/json"
+             :produces "application/json"}})
 
 ;### Debug ####################################################################
-(debug/debug-ns *ns*)
+;(debug/debug-ns *ns*)

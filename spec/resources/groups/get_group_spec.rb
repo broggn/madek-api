@@ -31,8 +31,10 @@ context 'groups' do
         end
 
         it 'has the proper data, sans :searchable and :previous_id' do
-          expect(get_group_result.body).to be== \
-            @group.attributes.with_indifferent_access.except(:searchable, :previous_id)
+          expect(get_group_result.body.with_indifferent_access.except(
+            :created_at, :updated_at)).to be== \
+            @group.attributes.with_indifferent_access.except(
+              :searchable, :previous_id, :created_at, :updated_at)
         end
       end
 

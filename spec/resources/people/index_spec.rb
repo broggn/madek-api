@@ -3,39 +3,80 @@ require 'spec_helper'
 context 'people' do
 
   before :each do
-    @people = 201.times.map{FactoryBot.create :person}
+    @people = 77.times.map{
+      FactoryBot.create :person,
+      institution: 'foo.com'}
   end
+
+  before :each do
+    @people = 77.times.map{
+      FactoryBot.create :people_group,
+      institution: 'foo.com'
+    }
+  end
+
+  before :each do
+    @people = 77.times.map{
+      FactoryBot.create :people_instgroup,
+      institution: 'foo.com'}
+  end
+
+
+
 
   context 'admin user' do
     include_context :json_client_for_authenticated_admin_user do
 
-      describe 'get people' do
+      describe 'get an unfiltered people list as an admin' do
 
-        let :people_result do
+        let :result do
           #client.get.relation('people').get()
-          client.get("/api/people/?count=100")
+          client.get("/api/admin/people/?count=100")
         end
 
         it 'responses with 200' do
-          expect(people_result.status).to be== 200
+          expect(result.status).to be== 200
         end
 
-        it 'returns some data but less than created because we paginate' do
-          expect(
-            people_result.body['people'].count
-          ).to be< @people.count
+        it 'returns the count of requested items' do
+          expect( result.body['people'].count).to be== 100
         end
-
-        # TODO json roa remove: test collection get
-        #it 'using the roa collection we can retrieve all people' do
-        #  set_of_created_ids = Set.new(@people.map(&:id))
-        #  #set_of_retrieved_ids = Set.new(people_result.collection().map(&:get).map{|x| x.data['id']})
-        #  set_of_retrieved_ids = Set.new(people_result.body["people"].map(&:get).map{|x| x.data['id']})
-        #  expect(set_of_retrieved_ids.count - User.count).to be== set_of_created_ids.count
-        #  expect(set_of_retrieved_ids - User.all.map(&:person).map(&:id) ).to be== set_of_created_ids
-        #end
 
       end
+
+      context 'filter people by their institution' do
+
+        let :result do
+          client.get("/api/admin/people/?count=1000&institution=foo.com")
+        end
+
+
+        it 'returns excaclty the people with the proper oraganization' do
+          expect(result.status).to be== 200
+          expect(result.body['people'].count).to be== 3*77
+        end
+
+      end
+
+      context 'filter people by their subtype' do
+
+        let :result do
+          client.get("/api/admin/people/?count=100&subtype=Person&institution=foo.com")
+        end
+
+
+        it 'returns excaclty the people with the proper sybtype' do
+          expect(result.status).to be== 200
+          # returns excaclty 77
+          expect(result.body['people'].count).to be== 77
+          # all of those are of type Person
+          expect(
+            result.body['people'].filter{|p| p['subtype']=='Person'}.count
+          ).to be== 77
+        end
+
+      end
+
     end
   end
 end

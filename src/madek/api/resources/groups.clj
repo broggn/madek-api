@@ -10,7 +10,7 @@
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
             [madek.api.utils.rdbms :as rdbms]
             [madek.api.utils.sql :as sql]
-            reitit.coercion.schema
+            [reitit.coercion.schema]
             [schema.core :as s]))
 
 ;### create group #############################################################
@@ -102,6 +102,9 @@
   {:id s/Uuid
    (s/optional-key :name) s/Str
    (s/optional-key :type) s/Str ; TODO enum
+   (s/optional-key :created_by_user_id) (s/maybe s/Uuid)
+   (s/optional-key :created_at) s/Any
+   (s/optional-key :updated_at) s/Any
    (s/optional-key :institutional_id) (s/maybe s/Str)
    (s/optional-key :institutional_name) (s/maybe s/Str)
    (s/optional-key :institution) (s/maybe s/Str)
@@ -139,6 +142,8 @@
   {(s/optional-key :id) s/Uuid
    (s/optional-key :name) s/Str
    (s/optional-key :type) s/Str
+   (s/optional-key :created_at) s/Any
+   (s/optional-key :updated_at) s/Any
    (s/optional-key :institutional_id) s/Str
    (s/optional-key :institutional_name) s/Str
    (s/optional-key :institution) s/Str
@@ -229,7 +234,7 @@
                   :responses {200 {:body s/Any};groups/schema_export-group}
                               404 {:body s/Any}}}}] ; TODO error handling
 
-     ; groups-users/ring-routes 
+     ; groups-users/ring-routes
    ["/:group-id/users/" {:get {:summary "Get group users by id"
                                :description "Get group users by id."
                                :swagger {:produces "application/json"}

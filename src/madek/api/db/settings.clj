@@ -21,7 +21,7 @@
   (or (-> (apply sql/select selected-columns)
           (sql/from :app_settings)
           (sql/where [:= :id 0])
-          (sql-format :inline true)
+          (sql-format :inline false)
           (#(jdbc/execute-one! tx %)))
       (warn "There seem to be no (app-) settings; this instance might not be set up properly.")))
 

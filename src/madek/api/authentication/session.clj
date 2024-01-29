@@ -99,8 +99,7 @@
 (defn user-session [token-hash]
   (-> token-hash
       user-session-query
-      (sql-format :inline true)
-      spy
+      (sql-format :inline false)
       (#(njdbc/execute! (rdbms/get-ds) %))))
 
 (defn- session-enbabled? []
