@@ -2,20 +2,16 @@
   (:require
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [logbug.debug :as debug]
-   [madek.api.authorization :as authorization]
-   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
-   [madek.api.resources.users.common :as users-common
-    :refer [wrap-find-user find-user-by-uid]]
+   [madek.api.resources.users.common :refer [find-user-by-uid wrap-find-user]]
    [madek.api.resources.users.get :as get-user]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.logging :as logging]
+   [madek.api.utils.helper :refer [f t]]
+   [madek.api.utils.helper :refer [mslurp]]
    [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-   [schema.core :as s]
-   [taoensso.timbre :refer [debug error info spy warn]]))
+   [schema.core :as s]))
 
 (defn update-user
   "Updates and returns true if that happened and false otherwise"
@@ -49,10 +45,13 @@
 
 (def route
   {:summary (sd/sum_adm "Update user with id")
-   :description "Patch a user with id. Returns 404, if no such user exists."
    :swagger {:consumes "application/json"
              :produces "application/json"}
    :coercion reitit.coercion.schema/coercion
+
+   ;:description "Patch a user with id. Returns 404, if no such user exists."
+   :description (mslurp "./md/users-patch.md")
+
    :content-type "application/json"
    :accept "application/json"
    :parameters {:path {:id s/Str}
@@ -61,5 +60,6 @@
    :middleware [wrap-authorize-admin!
                 (wrap-find-user :id)]
    :responses {200 {:body get-user/schema}
-               404 {:body s/Any}}})
-
+               404 {:description "Not Found."
+                    :schema s/Str
+                    :examples {"application/json" {:message "No such user."}}}}})

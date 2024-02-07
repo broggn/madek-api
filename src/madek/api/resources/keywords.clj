@@ -1,12 +1,17 @@
 (ns madek.api.resources.keywords
-  (:require [clojure.java.jdbc :as jdbc]
-            [logbug.catcher :as catcher]
-            [madek.api.resources.keywords.keyword :as kw]
-            [madek.api.resources.shared :as sd]
-            [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-            [madek.api.utils.rdbms :refer [get-ds]]
-            [reitit.coercion.schema]
-            [schema.core :as s]))
+  (:require
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [logbug.catcher :as catcher]
+   [madek.api.db.core :refer [get-ds]]
+   [madek.api.resources.keywords.keyword :as kw]
+   [madek.api.resources.shared :as sd]
+   [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+   [madek.api.utils.helper :refer [convert-map]]
+   [madek.api.utils.helper :refer [d t]]
+   [next.jdbc :as jdbc]
+   [reitit.coercion.schema]
+   [schema.core :as s]))
 
 ;### swagger io schema ####################################################################
 
@@ -107,9 +112,13 @@
       (let [uid (-> req :authenticated-entity :id)
             data (-> req :parameters :body)
             dwid (assoc data :creator_id uid)
-            ins-result (jdbc/insert! (get-ds) :keywords dwid)]
+            sql-query (-> (sql/insert-into :keywords)
+                          (sql/values [(convert-map dwid)])
+                          (sql/returning :*)
+                          sql-format)
 
-        (if-let [result (first ins-result)]
+            ins-result (jdbc/execute-one! (get-ds) sql-query)]
+        (if-let [result ins-result]
           (sd/response_ok (adm-export-keyword result))
           (sd/response_failed "Could not create keyword" 406))))
     (catch Exception ex (sd/response_exception ex))))
@@ -119,11 +128,13 @@
     (catcher/with-logging {}
       (let [id (-> req :parameters :path :id)
             data (-> req :parameters :body)
-            upd-res (jdbc/update!
-                     (get-ds) :keywords data
-                     (sd/sql-update-clause "id" id))]
+            sql-query (-> (sql/update :keywords)
+                          (sql/set (convert-map data))
+                          (sql/where [:= :id id])
+                          sql-format)
+            upd-res (jdbc/execute-one! (get-ds) sql-query)]
 
-        (if (= 1 (first upd-res))
+        (if (= 1 (:next.jdbc/update-count upd-res))
           ;(sd/response_ok (adm-export-keyword (kw/db-keywords-get-one id)))
           (-> id kw/db-keywords-get-one
               adm-export-keyword
@@ -136,11 +147,13 @@
     (catcher/with-logging {}
       (let [id (-> req :parameters :path :id)
             old-data (-> req :keyword)
-            del-res (jdbc/delete!
-                     (get-ds) :keywords
-                     (sd/sql-update-clause "id" id))]
+            sql-query (-> (sql/delete-from :keywords)
+                          (sql/where [:= :id id])
+                          sql-format)
+            del-res (jdbc/execute-one! (get-ds) sql-query)]
+
         ; logwrite
-        (if [(= 1 (first del-res))]
+        (if (= 1 (::jdbc/update-count del-res))
           (sd/response_ok (adm-export-keyword old-data))
           (sd/response_failed "Could not delete keyword." 406))))
     (catch Exception ex (sd/response_exception ex))))
@@ -153,15 +166,51 @@
                                   :keywords :id
                                   :keyword true)))
 
+(s/defschema ItemQueryParams
+  {:page (s/constrained s/Int #(>= % 1) "Must be a positive integer")
+   :size2 (s/constrained s/Int #(>= % 1) "Must be a positive integer")})
+
+;; FIXME: broken endpoint to test doc
 (def query-routes
   ["/keywords"
+   {:swagger {:tags ["keywords"]}}
    ["/"
     {:get
-     {:summary (sd/sum_pub "Query / list keywords.")
+     {:summary (sd/sum_pub (d "Query / list keywords."))
       :handler handle_usr-query-keywords
       :coercion reitit.coercion.schema/coercion
-      :parameters {:query schema_query_keyword}
-      :responses {200 {:body {:keywords [schema_export_keyword_usr]}}}}}]
+      :parameters {:query ItemQueryParams}
+
+      :swagger {:parameters [{:name "page1"
+                              :in "query"
+                              :description "Page number, defaults to 1"
+                              :required false
+                              :value 1
+                              :default 3
+                              :defaults 2
+                              ;:schema {:type "integer"
+                              ;         :format "int32"
+                              ;         :value 11
+                              ;         :defaults 22
+                              ;         :default 44}
+                              }
+                             {:name "size2"
+                              :in "query"
+                              :description "Number of items per page, defaults to 10"
+                              :required false
+                              :value 999
+                              :schema {:type "integer"
+                                       :format "int32"
+                                       :default 10}}]}
+
+      :responses {200 {:body {:keywords [schema_export_keyword_usr]}}
+                  202 {:description "Successful response, list of items."
+                       :schema {} ;; Define your response schema as needed
+                       :examples {"application/json" {:message "Here are your items."
+                                                      :page 1
+                                                      :size 2
+                                                      :items [{:id 1, :name "Item 1"}
+                                                              {:id 2, :name "Item 2"}]}}}}}}]
 
    ["/:id"
     {:get
@@ -175,7 +224,9 @@
       :description "Get keyword for id. Returns 404, if no such keyword exists."}}]])
 
 (def admin-routes
-  [["/keywords/"
+  ["/keywords"
+   {:swagger {:tags ["admin/keywords"] :security [{"auth" []}]}}
+   ["/"
     {:get
      {:summary (sd/sum_adm "Query keywords")
       :handler handle_adm-query-keywords
@@ -193,7 +244,7 @@
       :parameters {:body schema_create_keyword}
       :responses {200 {:body schema_export_keyword_adm}
                   406 {:body s/Any}}}}]
-   ["/keywords/:id"
+   ["/:id"
     {:get
      {:summary (sd/sum_adm "Get keyword for id")
       :handler handle_adm-get-keyword

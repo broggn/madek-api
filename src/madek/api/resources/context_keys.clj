@@ -1,16 +1,17 @@
 (ns madek.api.resources.context-keys
   (:require
-   [clojure.java.jdbc :as jdbc]
-   [clojure.tools.logging :as logging]
-
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
+   [madek.api.db.core :refer [get-ds]]
    [madek.api.pagination :as pagination]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   [madek.api.utils.sql :as sql]
+   [madek.api.utils.helper :refer [cast-to-hstore t to-uuid]]
+   [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-   [schema.core :as s]))
+   [schema.core :as s]
+   [taoensso.timbre :refer [error]]))
 
 (defn context_key_transform_ml [context_key]
   (assoc context_key
@@ -35,11 +36,9 @@
                      (sd/build-query-ts-after req-query :updated_after "updated_at")
 
                      (pagination/add-offset-for-honeysql req-query)
-                     sql/format)
-        db-result (jdbc/query (get-ds) db-query)
+                     sql-format)
+        db-result (jdbc/execute! (get-ds) db-query)
         tf (map context_key_transform_ml db-result)]
-
-    ;(logging/info "handle_adm-list-context_keys" "\ndb-query\n" db-query)
     (sd/response_ok tf)))
 
 (defn handle_usr-list-context_keys
@@ -53,24 +52,24 @@
                      (sd/build-query-param req-query :context_id)
                      (sd/build-query-param req-query :meta_key_id)
                      (sd/build-query-param req-query :is_required)
-                     sql/format)
-        db-result (jdbc/query (get-ds) db-query)
+                     sql-format)
+        db-result (jdbc/execute! (get-ds) db-query)
         tf (map context_key_transform_ml db-result)]
 
-    ;(logging/info "handle_usr-list-context_keys" "\ndb-query\n" db-query)
+    ;(info "handle_usr-list-context_keys" "\ndb-query\n" db-query)
     (sd/response_ok tf)))
 
 (defn handle_adm-get-context_key
   [req]
   (let [result (-> req :context_key context_key_transform_ml)]
-    ;(logging/info "handle_get-context_key: result: " result)
+    ;(info "handle_get-context_key: result: " result)
     (sd/response_ok result)))
 
 (defn handle_usr-get-context_key
   [req]
   (let [context_key (-> req :context_key context_key_transform_ml)
         result (dissoc context_key :admin_comment :updated_at :created_at)]
-    ;(logging/info "handle_usr-get-context_key" "\nbefore\n" context_key "\nresult\n" result)
+    ;(info "handle_usr-get-context_key" "\nbefore\n" context_key "\nresult\n" result)
     (sd/response_ok result)))
 
 (defn handle_create-context_keys
@@ -78,11 +77,13 @@
   (try
     (catcher/with-logging {}
       (let [data (-> req :parameters :body)
-            ins-res (jdbc/insert! (rdbms/get-ds) :context_keys data)]
+            sql (-> (sql/insert-into :context_keys)
+                    (sql/values [(cast-to-hstore data)])
+                    (sql/returning :*)
+                    sql-format)
+            ins-res (jdbc/execute-one! (get-ds) sql)]
 
-        (sd/logwrite req (str "handle_create-context_keys: " "\new-data:\n" data "\nresult:\n" ins-res))
-
-        (if-let [result (first ins-res)]
+        (if-let [result ins-res]
           (sd/response_ok (context_key_transform_ml result))
           (sd/response_failed "Could not create context_key." 406))))
     (catch Exception ex (sd/response_exception ex))))
@@ -92,14 +93,17 @@
   (try
     (catcher/with-logging {}
       (let [data (-> req :parameters :body)
-            id (-> req :parameters :path :id)
+            id (to-uuid (-> req :parameters :path :id))
             dwid (assoc data :id id)
-            upd-query (sd/sql-update-clause "id" (str id))
-            upd-result (jdbc/update! (rdbms/get-ds) :context_keys dwid upd-query)]
+            query (-> (sql/update :context_keys)
+                      (sql/set (cast-to-hstore dwid))
+                      (sql/where [:= :id id])
+                      sql-format)
+            upd-result (jdbc/execute-one! (get-ds) query)]
 
         (sd/logwrite req (str "handle_update-context_keys: " id "\nnew-data\n" dwid "\nupd-result: " upd-result))
 
-        (if (= 1 (first upd-result))
+        (if (= 1 (::jdbc/update-count upd-result))
           (sd/response_ok (context_key_transform_ml (sd/query-eq-find-one :context_keys :id id)))
           (sd/response_failed "Could not update context_key." 406))))
     (catch Exception ex (sd/response_exception ex))))
@@ -110,13 +114,15 @@
     (catcher/with-logging {}
       (let [context_key (-> req :context_key)
             id (-> req :context_key :id)
-            del-query (sd/sql-update-clause "id" id)
-            del-result (jdbc/delete! (rdbms/get-ds) :context_keys del-query)]
+            sql (-> (sql/delete-from :context_keys)
+                    (sql/where [:= :id id])
+                    sql-format)
+            del-result (jdbc/execute-one! (get-ds) sql)]
 
         (sd/logwrite req (str "handle_delete-context_key: " id " result: " del-result))
-        (if (= 1 (first del-result))
+        (if (= 1 (::jdbc/update-count del-result))
           (sd/response_ok (context_key_transform_ml context_key))
-          (logging/error "Could not delete context_key: " id))))
+          (error "Could not delete context_key: " id))))
     (catch Exception ex (sd/response_exception ex))))
 
 (defn wwrap-find-context_key [param colname send404]
@@ -193,9 +199,11 @@
 ; TODO tests
 (def admin-routes
   ["/context-keys"
+   {:swagger {:tags ["admin/context-keys"] :security [{"auth" []}]}}
    ["/"
     {:post
-     {:summary (sd/sum_adm "Create context_key")
+     {:summary (sd/sum_adm "Post context_key by id.")
+      :swagger {:security [{"auth" []}]}
       :handler handle_create-context_keys
       :middleware [wrap-authorize-admin!]
       :content-type "application/json"
@@ -222,7 +230,7 @@
                            (s/optional-key :is_required) s/Bool}}
       :responses {200 {:body [schema_export_context_key_admin]}
                   406 {:body s/Any}}}}]
-    ; edit context_key
+   ; edit context_key
    ["/:id"
     {:get
      {:summary (sd/sum_adm "Get context_key by id.")
@@ -230,7 +238,7 @@
       :middleware [wrap-authorize-admin!
                    (wwrap-find-context_key :id :id true)]
       :coercion reitit.coercion.schema/coercion
-      :parameters {:path {:id s/Str}}
+      :parameters {:path {:id s/Uuid}}
       :responses {200 {:body schema_export_context_key_admin}
                   404 {:body s/Any}
                   406 {:body s/Any}}}
@@ -241,7 +249,7 @@
       :middleware [wrap-authorize-admin!
                    (wwrap-find-context_key :id :id true)]
       :coercion reitit.coercion.schema/coercion
-      :parameters {:path {:id s/Str}
+      :parameters {:path {:id s/Uuid}
                    :body schema_update_context_keys}
       :responses {200 {:body schema_export_context_key_admin}
                   404 {:body s/Any}
@@ -253,7 +261,7 @@
       :handler handle_delete-context_key
       :middleware [wrap-authorize-admin!
                    (wwrap-find-context_key :id :id true)]
-      :parameters {:path {:id s/Str}}
+      :parameters {:path {:id s/Uuid}}
       :responses {200 {:body schema_export_context_key_admin}
                   404 {:body s/Any}
                   406 {:body s/Any}}}}]])
@@ -261,12 +269,13 @@
 ; TODO docu
 (def user-routes
   ["/context-keys"
+   {:swagger {:tags ["context-keys"]}}
    ["/"
     {:get
      {:summary (sd/sum_pub "Query / List context_keys.")
       :handler handle_usr-list-context_keys
       :coercion reitit.coercion.schema/coercion
-      :parameters {:query {(s/optional-key :id) s/Str
+      :parameters {:query {(s/optional-key :id) s/Uuid
                            (s/optional-key :context_id) s/Str
                            (s/optional-key :meta_key_id) s/Str
                            (s/optional-key :is_required) s/Bool}}
@@ -279,6 +288,16 @@
       :handler handle_usr-get-context_key
       :middleware [(wwrap-find-context_key :id :id true)]
       :coercion reitit.coercion.schema/coercion
-      :parameters {:path {:id s/Str}}
+      :parameters {:path {:id s/Uuid}}
       :responses {200 {:body schema_export_context_key}
-                  404 {:body s/Any}}}}]])
+
+                  400 {:message "Bad request"
+                       :body {:schema {:id s/Str :Keyword s/Str}
+                              :errors {:id s/Str}
+                              :type s/Str
+                              :coercion s/Str
+                              :value {:id s/Str}
+                              :in [s/Str]}}
+
+                  404 {:message "Not found"
+                       :body s/Any}}}}]])

@@ -1,13 +1,16 @@
 (ns madek.api.resources.contexts
-  (:require [clojure.java.jdbc :as jdbc]
-            [clojure.tools.logging :as logging]
-            [logbug.catcher :as catcher]
-            [madek.api.resources.shared :as sd]
-            [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-            [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-            [madek.api.utils.sql :as sql]
-            [reitit.coercion.schema]
-            [schema.core :as s]))
+  (:require
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [logbug.catcher :as catcher]
+   [madek.api.db.core :refer [get-ds]]
+   [madek.api.resources.shared :as sd]
+   [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+   [madek.api.utils.helper :refer [cast-to-hstore t]]
+   [next.jdbc :as jdbc]
+   [reitit.coercion.schema]
+   [schema.core :as s]
+   [taoensso.timbre :refer [error]]))
 
 (defn- context_transform_ml [context]
   (assoc context
@@ -18,32 +21,32 @@
   [req]
   (let [db-query (-> (sql/select :*)
                      (sql/from :contexts)
-                     sql/format)
-        db-result (jdbc/query (get-ds) db-query)
+                     sql-format)
+        db-result (jdbc/execute! (get-ds) db-query)
         result (map context_transform_ml db-result)]
-    ;(logging/info "handle_adm-list-context" "\nquery\n" db-query "\nresult\n" result)
+    ;(info "handle_adm-list-context" "\nquery\n" db-query "\nresult\n" result)
     (sd/response_ok result)))
 
 (defn handle_usr-list-contexts
   [req]
   (let [db-query (-> (sql/select :id :labels :descriptions)
                      (sql/from :contexts)
-                     sql/format)
-        db-result (jdbc/query (get-ds) db-query)
+                     sql-format)
+        db-result (jdbc/execute! (get-ds) db-query)
         result (map context_transform_ml db-result)]
-    ;(logging/info "handle_usr-list-context" "\nquery\n" db-query "\nresult\n" result)
+    ;(info "handle_usr-list-context" "\nquery\n" db-query "\nresult\n" result)
     (sd/response_ok result)))
 
 (defn handle_adm-get-context
   [req]
   (let [context (-> req :context context_transform_ml)]
-    ;(logging/info "handle_adm-get-context" context)
+    ;(info "handle_adm-get-context" context)
     (sd/response_ok context)))
 
 (defn handle_usr-get-context
   [req]
   (let [context (-> req :context context_transform_ml sd/remove-internal-keys)]
-    ;(logging/info "handle_usr-get-context" context)
+    ;(info "handle_usr-get-context" context)
     (sd/response_ok context)))
 
 (defn handle_create-contexts
@@ -51,13 +54,15 @@
   (try
     (catcher/with-logging {}
       (let [data (-> req :parameters :body)
-            ins-res (jdbc/insert! (get-ds) :contexts data)]
+            sql (-> (sql/insert-into :contexts)
+                    (sql/values [(cast-to-hstore data)])
+                    (sql/returning :*)
+                    sql-format)
+            res (jdbc/execute-one! (get-ds) sql)]
 
-        (sd/logwrite req (str "handle_create-contexts: " "\nnew-data:\n" data "\nresult:\n" ins-res))
-
-        (if-let [result (first ins-res)]
-        ; TODO clean result
-          (sd/response_ok (context_transform_ml result))
+        (if res
+          ; TODO clean result
+          (sd/response_ok (context_transform_ml res))
           (sd/response_failed "Could not create context." 406))))
     (catch Exception ex (sd/response_exception ex))))
 
@@ -68,14 +73,15 @@
       (let [data (-> req :parameters :body)
             id (-> req :parameters :path :id)
             dwid (assoc data :id id)
-        ;old-data (-> req :context)
-            upd-query (sd/sql-update-clause "id" (str id))
-            upd-result (jdbc/update! (get-ds) :contexts dwid upd-query)]
+            fir (-> (sql/update :contexts)
+                    (sql/set (cast-to-hstore dwid))
+                    (sql/where [:= :id id])
+                    (sql/returning :*)
+                    sql-format)
+            upd-result (jdbc/execute-one! (get-ds) fir)]
 
-        (sd/logwrite req (str "handle_update-contexts: " id "\nnew-data:\n" dwid "\nupd-result\n" upd-result))
-
-        (if (= 1 (first upd-result))
-          (sd/response_ok (context_transform_ml (sd/query-eq-find-one :contexts :id id)))
+        (if upd-result
+          (sd/response_ok (context_transform_ml upd-result))
           (sd/response_failed "Could not update context." 406))))
     (catch Exception ex (sd/response_exception ex))))
 
@@ -83,15 +89,17 @@
   [req]
   (try
     (catcher/with-logging {}
-      (let [context (-> req :context)
-            id (-> req :context :id)
-            del-result (jdbc/delete! (get-ds) :contexts ["id = ?" id])]
 
-        (sd/logwrite req (str "handle_delete-context: " id " result: " del-result))
+      (let [id (-> req :context :id)
+            sql-query (-> (sql/delete-from :contexts)
+                          (sql/where [:= :id id])
+                          (sql/returning :*)
+                          sql-format)
+            del-result (jdbc/execute-one! (get-ds) sql-query)]
 
-        (if (= 1 (first del-result))
-          (sd/response_ok (context_transform_ml context))
-          (logging/error "Could not delete context " id))))
+        (if del-result
+          (sd/response_ok (context_transform_ml del-result))
+          (error "Could not delete context " id))))
     (catch Exception ex (sd/response_exception ex))))
 
 (defn wwrap-find-context [param colname send404]
@@ -131,6 +139,7 @@
 (def admin-routes
 
   ["/contexts"
+   {:swagger {:tags ["admin/contexts"] :security [{"auth" []}]}}
    ["/"
     {:post {:summary (sd/sum_adm_todo "Create contexts.")
             :handler handle_create-contexts
@@ -139,7 +148,7 @@
             :parameters {:body schema_import_contexts}
             :responses {200 {:body schema_export_contexts_adm}
                         406 {:body s/Any}}}
-    ; context list / query
+     ; context list / query
      :get {:summary (sd/sum_adm "List contexts.")
            :handler handle_adm-list-contexts
            :middleware [wrap-authorize-admin!]
@@ -147,7 +156,7 @@
            ;:parameters {:query {(s/optional-key :full-data) s/Bool}}
            :responses {200 {:body [schema_export_contexts_adm]}
                        406 {:body s/Any}}}}]
-    ; edit context
+   ; edit context
    ["/:id"
     {:get {:summary (sd/sum_adm "Get contexts by id.")
            :handler handle_adm-get-context
@@ -185,6 +194,7 @@
 (def user-routes
 
   ["/contexts"
+   {:swagger {:tags ["contexts"]}}
    ["/"
     {:get {:summary (sd/sum_usr "List contexts.")
            :handler handle_usr-list-contexts
@@ -192,7 +202,7 @@
            ;:parameters {:query {(s/optional-key :full-data) s/Bool}}
            :responses {200 {:body [schema_export_contexts_usr]}
                        406 {:body s/Any}}}}]
-    ; edit context
+   ; edit context
    ["/:id"
     {:get {:summary (sd/sum_usr "Get contexts by id.")
            :handler handle_usr-get-context

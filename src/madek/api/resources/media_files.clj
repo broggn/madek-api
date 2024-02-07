@@ -63,6 +63,7 @@
 
 (def media-file-routes
   ["/media-file"
+   {:swagger {:tags ["api/media-file"]}}
    ["/:media_file_id"
     {:get {:summary (sd/sum_usr_pub "Get media-file for id.")
            :swagger {:produces "application/json"}
@@ -87,6 +88,7 @@
            }}]])
 (def media-entry-routes
   ["/media-entry"
+   {:swagger {:tags ["api/media-entry"]}}
    ["/:media_entry_id/media-file"
     {:get
      {:summary (sd/sum_usr_pub "Get media-file for media-entry id.")

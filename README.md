@@ -21,6 +21,7 @@ Requirements:
 * system build tools and libaries; e.g. `sudo apt-get install build-essential` on ubuntu;
     on MacOS you will need Xcode with command line tools and further packages either from
     MacPorts or Homebrew
+*  ⚠️ WARNING: local tests can fail because of wrong order of results (see terms_for_sorting_shared_context.rb)
 
 
 ### Starting up the Server

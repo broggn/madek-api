@@ -2,35 +2,34 @@
   (:require
    [camel-snake-kebab.core :refer :all]
    [cider-ci.open-session.bcrypt :refer [checkpw]]
-   [clojure.java.jdbc :as jdbc]
-   [clojure.tools.logging :as logging]
    [clojure.walk :refer [keywordize-keys]]
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
    [inflections.core :refer :all]
-   [logbug.debug :as debug]
-   [logbug.thrown :as thrown]
    [madek.api.authentication.token :as token-authentication]
+   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
-   [madek.api.utils.rdbms :as rdbms])
+   [next.jdbc :as jdbc]
+   [taoensso.timbre :refer [debug warn]])
   (:import
    [java.util Base64]))
 
 (defn- get-by-login [table-name login]
-  (->> (jdbc/query (rdbms/get-ds)
-                   [(str "SELECT * FROM " table-name " WHERE login = ?") login])
+  (->> (jdbc/execute! (get-ds) (-> (sql/select :*) (sql/from table-name) (sql/where [:= :login login]) sql-format))
        (map #(assoc % :type (-> table-name ->PascalCase singular)))
        (map #(clojure.set/rename-keys % {:email :email_address}))
        first))
 
 (defn- get-api-client-by-login [login]
-  (->> (jdbc/query (rdbms/get-ds)
-                   [(str "SELECT * FROM api_clients WHERE login = ?") login])
+  (->> (jdbc/execute! (get-ds) (-> (sql/select :*) (sql/from :api_clients) (sql/where [:= :login login]) sql-format))
        (map #(assoc % :type "ApiClient"))
        first))
 
 (defn- get-user-by-login-or-email-address [login-or-email]
-  (->> (jdbc/query (rdbms/get-ds)
-                   [(str "SELECT * FROM users WHERE login = ? OR email = ?")
-                    login-or-email login-or-email])
+  (->> (jdbc/execute! (get-ds) (-> (sql/select :*)
+                                   (sql/from :users)
+                                   (sql/where [:or [:= :login login-or-email] [:= :email login-or-email]])
+                                   sql-format))
        (map #(assoc % :type "User"))
        (map #(clojure.set/rename-keys % {:email :email_address}))
        first))
@@ -40,23 +39,23 @@
       (get-user-by-login-or-email-address login-or-email)))
 
 (defn- get-auth-systems-user [userId]
-  (->> (jdbc/query (rdbms/get-ds)
-                   [(str "SELECT * FROM auth_systems_users WHERE auth_system_id = ? AND user_id = ? ")
-                    "password" userId])
-       first))
+  (jdbc/execute-one! (get-ds) (-> (sql/select :*)
+                                  (sql/from :auth_systems_users)
+                                  (sql/where [:= :user_id userId])
+                                  sql-format)))
 
 (defn base64-decode [^String encoded]
   (String. (.decode (Base64/getDecoder) encoded)))
 
 (defn extract [request]
-  (logging/debug 'extract request)
+  (debug 'extract request)
   (try (when-let [auth-header (-> request :headers keywordize-keys :authorization)]
          (when (re-matches #"(?i)^basic\s+.+$" auth-header)
            (let [decoded-val (base64-decode (last (re-find #"(?i)^basic (.*)$" auth-header)))
                  [username password] (clojure.string/split (str decoded-val) #":" 2)]
              {:username username :password password})))
        (catch Exception _
-         (logging/warn "failed to extract basic-auth properties because" _))))
+         (warn "failed to extract basic-auth properties because" _))))
 
 (defn user-password-authentication [login-or-email password handler request]
   (if-let [entity (get-entity-by-login-or-email login-or-email)]

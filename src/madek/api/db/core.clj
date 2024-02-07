@@ -1,16 +1,14 @@
 (ns madek.api.db.core
   (:require
    [environ.core :refer [env]]
-   [honey.sql :refer [format] :rename {format sql-format}]
-   [honey.sql.helpers :as sql]
    [madek.api.db.type-conversion]
    [madek.api.utils.cli :refer [long-opt-for-key]]
    [next.jdbc :as jdbc]
    [next.jdbc.connection :as connection]
    [next.jdbc.result-set :as jdbc-rs]
-   [taoensso.timbre :refer [debug info warn error spy]])
+   [taoensso.timbre :refer [debug info warn]])
   (:import
-   [com.zaxxer.hikari HikariDataSource]))
+   (com.zaxxer.hikari HikariDataSource)))
 
 (defonce ^:private ds* (atom nil))
 
@@ -80,7 +78,7 @@
             resp))
         (catch Throwable th
           (warn "Rolling back transaction because of " (.getMessage th))
-          (debug (.get-cause th))
+          (debug (.getMessage th))
           (.rollback tx)
           (throw th))))))
 

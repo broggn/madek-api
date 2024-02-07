@@ -1,13 +1,11 @@
 (ns madek.api.authentication.token
   (:require
-   [clojure.java.jdbc :as jdbc]
-   [clojure.tools.logging :as logging]
    [clojure.walk :refer [keywordize-keys]]
-   [logbug.debug :as debug]
-   [logbug.thrown :as thrown]
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
-   [madek.api.utils.rdbms :as rdbms]
-   [madek.api.utils.sql :as sql]
+   [next.jdbc :as jdbc]
    [pandect.algo.sha256 :as algo.sha256])
   (:import
    [java.util Base64]))
@@ -27,15 +25,15 @@
                        [:revoked :token_revoked]
                        [:description :token_description])
            (sql/from :api_tokens)
-           (sql/merge-where [:in :api_tokens.token_hash
-                             (->> secrets
-                                  (filter identity)
-                                  (map hash-string))])
-           (sql/merge-where [:<> :api_tokens.revoked true])
-           (sql/merge-where (sql/raw "now() < api_tokens.expires_at"))
-           (sql/merge-join :users [:= :users.id :api_tokens.user_id])
-           (sql/format))
-       (jdbc/query (rdbms/get-ds))
+           (sql/where [:in :api_tokens.token_hash
+                       (->> secrets
+                            (filter identity)
+                            (map hash-string))])
+           (sql/where [:<> :api_tokens.revoked true])
+           (sql/where [:raw "now() < api_tokens.expires_at"])
+           (sql/join :users [:= :users.id :api_tokens.user_id])
+           (sql-format))
+       (jdbc/execute! (get-ds))
        (map #(clojure.set/rename-keys % {:email :email_address}))
        first))
 

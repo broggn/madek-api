@@ -1,13 +1,11 @@
 (ns madek.api.main
   (:gen-class)
   (:require
-   [clojure.java.jdbc :as jdbc]
    [clojure.pprint :refer [pprint]]
    [clojure.tools.cli :as cli]
    [logbug.catcher :as catcher]
-   [logbug.debug :as debug]
    [logbug.thrown]
-   [madek.api.constants :as constants]
+   [madek.api.constants]
    [madek.api.db.core :as db]
    [madek.api.utils.config :as config :refer [get-config]]
    [madek.api.utils.exit :as exit]
@@ -17,7 +15,7 @@
    [madek.api.web]
    [madek.api.web :as web]
    [pg-types.all]
-   [taoensso.timbre :refer [debug error info spy warn]]))
+   [taoensso.timbre :refer [info]]))
 
 ;; cli ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

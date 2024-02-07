@@ -4,11 +4,13 @@
 
 (ns madek.api.utils.rdbms
   (:require
-   [clojure.java.jdbc :as jdbc]
-   [clojure.tools.logging :as logging]
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
+   [next.jdbc :as jdbc]
    [pg-types.all]
-   [ring.util.codec])
+   [ring.util.codec]
+   [taoensso.timbre :refer [info]])
   (:import
    [com.mchange.v2.c3p0 ComboPooledDataSource DataSources]
    [java.net URI]))
@@ -21,8 +23,10 @@
     {:OK? true :message "RDBMS is not initialized!"}
     (catcher/snatch
      {:return-fn (fn [e] {:OK? false :error (.getMessage e)})}
-     (assert (->> (jdbc/query @ds
-                              ["SELECT true AS state FROM schema_migrations LIMIT 1"])
+     (assert (->> (jdbc/execute! @ds (-> (sql/select [true :state])
+                                         (sql/from :schema_migrations)
+                                         (sql/limit 1)
+                                         sql-format))
                   first :state))
      (let [c3p0ds (-> @ds :datasource)
            max (.getMaxPoolSize c3p0ds)
@@ -36,7 +40,7 @@
         :usage (Double/parseDouble (String/format "%.2f" (into-array [usage])))}))))
 
 (defn reset []
-  (logging/info "resetting c3p0 datasource")
+  (info "resetting c3p0 datasource")
   (when @ds (.hardReset (:datasource @ds)))
   (reset! ds nil))
 
@@ -75,7 +79,7 @@
     (Integer. ps)))
 
 (defn- create-c3p0-datasources [db-conf]
-  (logging/info create-c3p0-datasources [db-conf])
+  (info create-c3p0-datasources [db-conf])
   (reset! ds
           {:datasource
            (doto (ComboPooledDataSource.)
@@ -92,7 +96,7 @@
               (or (:max-idle-time-exess-connections db-conf) (* 10 60))))}))
 
 (defn initialize [db-conf]
-  (logging/info initialize [db-conf])
+  (info initialize [db-conf])
   (create-c3p0-datasources db-conf)
   (.addShutdownHook (Runtime/getRuntime)
                     (Thread. (fn []

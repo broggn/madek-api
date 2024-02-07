@@ -2,12 +2,9 @@
   (:require
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [madek.api.db.core :refer [get-ds]]
    [madek.api.db.type-conversion]
    [next.jdbc :as jdbc]
-   [next.jdbc.connection :as connection]
-   [next.jdbc.result-set :as jdbc-rs]
-   [taoensso.timbre :refer [debug info warn error spy]]))
+   [taoensso.timbre :refer [warn]]))
 
 (def selected-columns
   [:brand_logo_url

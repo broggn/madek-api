@@ -1,11 +1,10 @@
 (ns madek.api.resources.permissions
   (:require
-   [clojure.tools.logging :as logging]
    [logbug.catcher :as catcher]
    [madek.api.resources.media-resources.permissions :as mr-permissions]
-
    [madek.api.resources.shared :as sd]
-   [madek.api.resources.vocabularies.permissions :as voc-perms]
+   [madek.api.utils.helper :refer [t]]
+   [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]))
 
@@ -57,7 +56,7 @@
             mr (-> req :media-resource)
             mr-type (:type mr)
             upd-result (mr-permissions/update-resource-permissions mr perm-data)]
-        (if (= 1 (first upd-result))
+        (if (= 1 (::jdbc/update-count upd-result))
           (sd/response_ok (get-entity-perms (mr-permissions/resource-permission-get-query mr) mr-type))
           (sd/response_failed (str "Could not update permissions" upd-result) 406))))
     (catch Exception ex (sd/response_exception ex))))
@@ -70,7 +69,7 @@
             mr (-> req :media-resource)
             mr-type (:type mr)
             upd-result (mr-permissions/update-resource-permissions mr perm-data)]
-        (if (= 1 (first upd-result))
+        (if (= 1 (::jdbc/update-count upd-result))
           (sd/response_ok (get-entity-perms (mr-permissions/resource-permission-get-query mr) mr-type))
           (sd/response_failed (str "Could not update permissions" upd-result) 406))))
     (catch Exception ex (sd/response_exception ex))))
@@ -138,7 +137,7 @@
             mr-type (mr-table-type mr)]
         (if-let [old-perm (mr-permissions/query-get-user-permission mr mr-type user-id)]
           (let [upd-result (mr-permissions/update-user-permissions mr mr-type user-id perm-name perm-val)]
-            (if (= 1 (first upd-result))
+            (if (= 1 (::jdbc/update-count upd-result))
               (sd/response_ok (mr-permissions/query-get-user-permission mr mr-type user-id))
               (sd/response_failed (str "Could not update permissions" upd-result) 400)))
           (sd/response_not_found "No such resource user permission."))))
@@ -201,7 +200,7 @@
             mr-type (mr-table-type mr)]
         (if-let [old-data (mr-permissions/query-get-group-permission mr mr-type group-id)]
           (let [upd-result (mr-permissions/update-group-permissions mr mr-type group-id perm-name perm-val)]
-            (if (= 1 (first upd-result))
+            (if (= 1 (::jdbc/update-count upd-result))
               (sd/response_ok (mr-permissions/query-get-group-permission mr mr-type group-id))
               (sd/response_failed (str "Could not update permissions" upd-result) 400)))
           (sd/response_not_found "No such resource group permissions."))))
@@ -357,6 +356,7 @@
 
 (def media-entry-routes
   ["/media-entry/:media_entry_id/perms"
+   {:swagger {:tags ["media-entry/perms"]}}
    ["/"
     {:get
      {:summary (sd/sum_usr_pub "List media-entry permissions.")
@@ -539,6 +539,7 @@
 
 (def collection-routes
   ["/collection/:collection_id/perms"
+   {:swagger {:tags ["collection/perms"]}}
    ["/"
     {:get
      {:summary "Query collection permissions."

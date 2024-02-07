@@ -1,13 +1,13 @@
 (ns madek.api.resources.people.get
   (:require
    [honey.sql :refer [format] :rename {format sql-format}]
-   [logbug.debug :as debug]
    [madek.api.resources.people.common :refer [person-query]]
    [madek.api.resources.shared :as sd]
+   [madek.api.utils.helper :refer [t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
-   [taoensso.timbre :refer [debug error info spy warn]]))
+   [taoensso.timbre :refer [debug]]))
 
 (def schema
   {:created_at s/Any
@@ -29,9 +29,7 @@
   (debug req)
   (debug id)
   (if-let [person (-> (person-query id)
-                      spy
-                      (sql-format)
-                      spy
+                      sql-format
                       (->> (jdbc/execute-one! ds)))]
     (sd/response_ok person)
     (sd/response_failed "No such person found" 404)))
@@ -46,4 +44,6 @@
    :content-type "application/json"
    :parameters {:path {:id s/Str}}
    :responses {200 {:body schema}
-               404 {:body s/Any}}})
+               404 {:description "Not found."
+                    :schema s/Str
+                    :examples {"application/json" {:message "No such person found."}}}}})

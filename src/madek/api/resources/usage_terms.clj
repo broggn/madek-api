@@ -1,12 +1,16 @@
 (ns madek.api.resources.usage-terms
-  (:require [clojure.java.jdbc :as jdbc]
-            [clojure.tools.logging :as logging]
-            [logbug.catcher :as catcher]
-            [madek.api.resources.shared :as sd]
-            [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-            [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-            [reitit.coercion.schema]
-            [schema.core :as s]))
+  (:require
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [logbug.catcher :as catcher]
+   [madek.api.db.core :refer [get-ds]]
+   [madek.api.resources.shared :as sd]
+   [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+   [madek.api.utils.helper :refer [t]]
+   [next.jdbc :as jdbc]
+   [reitit.coercion.schema]
+   [schema.core :as s]
+   [taoensso.timbre :refer [info]]))
 
 (defn handle_list-usage_term
   [req]
@@ -14,13 +18,13 @@
         qd (if (true? full-data) :usage_terms.* :usage_terms.id)
         db-result (sd/query-find-all :usage_terms qd)]
     ;(->> db-result (map :id) set)
-    ;(logging/info "handle_list-usage_term" "\nqd\n" qd "\nresult\n" db-result)
+    ;(info "handle_list-usage_term" "\nqd\n" qd "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
 (defn handle_get-usage_term
   [req]
   (let [usage_term (-> req :usage_term)]
-    ;(logging/info "handle_get-usage_term" usage_term)
+    ;(info "handle_get-usage_term" usage_term)
     ; TODO hide some fields
     (sd/response_ok usage_term)))
 
@@ -28,13 +32,16 @@
   (try
     (catcher/with-logging {}
       (let [data (-> req :parameters :body)
-            ins-res (jdbc/insert! (rdbms/get-ds) :usage_terms data)]
+            sql-query (-> (sql/insert-into :usage_terms)
+                          (sql/values [data])
+                          (sql/returning :*)
+                          sql-format)
+            ins-res (jdbc/execute-one! (get-ds) sql-query)]
 
-        (logging/info "handle_create-usage_term: " "\ndata:\n" data "\nresult:\n" ins-res)
+        (info "handle_create-usage_term: " "\ndata:\n" data "\nresult:\n" ins-res)
 
-        (if-let [result (first ins-res)]
-        ; TODO clean result
-          (sd/response_ok result)
+        (if ins-res
+          (sd/response_ok ins-res)
           (sd/response_failed "Could not create usage_term." 406))))
     (catch Exception e (sd/response_exception e))))
 
@@ -44,15 +51,17 @@
       (let [data (-> req :parameters :body)
             id (-> req :parameters :path :id)
             dwid (assoc data :id id)
-            upd-query (sd/sql-update-clause "id" (str id))
-            upd-result (jdbc/update! (rdbms/get-ds)
-                                     :usage_terms
-                                     dwid upd-query)]
+            sql-query (-> (sql/update :usage_terms)
+                          (sql/set dwid)
+                          (sql/where [:= :id id])
+                          (sql/returning :*)
+                          sql-format)
+            upd-result (jdbc/execute-one! (get-ds) sql-query)]
 
-        (logging/info "handle_update-usage_terms: " "\nid\n" id "\ndwid\n" dwid "\nupd-result:" upd-result)
+        (info "handle_update-usage_terms: " "\nid\n" id "\ndwid\n" dwid "\nupd-result:" upd-result)
 
-        (if (= 1 (first upd-result))
-          (sd/response_ok (sd/query-eq-find-one :usage_terms :id id))
+        (if upd-result
+          (sd/response_ok upd-result)
           (sd/response_failed "Could not update usage_term." 406))))
     (catch Exception e (sd/response_exception e))))
 
@@ -61,10 +70,12 @@
     (catcher/with-logging {}
       (let [olddata (-> req :usage_term)
             id (-> req :parameters :path :id)
-            delresult (jdbc/delete! (rdbms/get-ds)
-                                    :usage_terms
-                                    ["id = ?" id])]
-        (if (= 1 (first delresult))
+            sql-query (-> (sql/delete-from :usage_terms)
+                          (sql/where [:= :id id])
+                          sql-format)
+            delresult (jdbc/execute-one! (get-ds) sql-query)]
+
+        (if (= 1 (::jdbc/update-count delresult))
           (sd/response_ok olddata)
           (sd/response_failed "Could not delete usage term." 422))))
     (catch Exception e (sd/response_exception e))))
@@ -106,16 +117,18 @@
 (def admin-routes
 
   ["/usage-terms"
+   {:swagger {:tags ["admin/usage-terms"] :security [{"auth" []}]}}
    ["/"
     {:post {:summary (sd/sum_adm "Create usage_terms.")
             :handler handle_create-usage_terms
-                   ;:middleware [(wwrap-find-usage_term :id "id" false)]
+            ;:middleware [(wwrap-find-usage_term :id "id" false)]
             :coercion reitit.coercion.schema/coercion
             :middleware [wrap-authorize-admin!]
             :parameters {:body schema_import_usage_terms}
             :responses {200 {:body schema_export_usage_term}
                         406 {:body s/Any}}}
-    ; usage_term list / query
+
+     ; usage_term list / query
      :get {:summary (sd/sum_adm "List usage_terms.")
            :handler handle_list-usage_term
            :coercion reitit.coercion.schema/coercion
@@ -123,7 +136,8 @@
            :parameters {:query {(s/optional-key :full_data) s/Bool}}
            :responses {200 {:body [schema_export_usage_term]}
                        406 {:body s/Any}}}}]
-    ; edit usage_term
+
+   ; edit usage_term
    ["/:id"
     {:get {:summary (sd/sum_adm "Get usage_terms by id.")
            :handler handle_get-usage_term
@@ -131,8 +145,10 @@
                         (wwrap-find-usage_term :id)]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Uuid}}
-           :responses {200 {:body s/Any} ;schema_export_usage_terms}
-                       404 {:body s/Any}}}
+           :responses {200 {:body schema_export_usage_term}
+                       404 {:description "Not found."
+                            :schema s/Str
+                            :examples {"application/json" {:message "No such entity in :usage_terms as :id with <id>"}}}}}
 
      :put {:summary (sd/sum_adm "Update usage_terms with id.")
            :handler handle_update-usage_terms
@@ -141,8 +157,10 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Uuid}
                         :body schema_update_usage_terms}
-           :responses {200 {:body s/Any} ;schema_export_usage_terms}
-                       404 {:body s/Any}
+           :responses {200 {:body schema_export_usage_term}
+                       404 {:description "Not found."
+                            :schema s/Str
+                            :examples {"application/json" {:message "No such entity in :usage_terms as :id with <id>"}}}
                        406 {:body s/Any}}}
 
      :delete {:summary (sd/sum_adm "Delete usage_term by id.")
@@ -151,12 +169,16 @@
               :middleware [wrap-authorize-admin!
                            (wwrap-find-usage_term :id)]
               :parameters {:path {:id s/Uuid}}
-              :responses {200 {:body s/Any} ;schema_export_usage_terms}
-                          404 {:body s/Any}}}}]])
+              :responses {200 {:body schema_export_usage_term}
+
+                          404 {:description "Not found."
+                               :schema s/Str
+                               :examples {"application/json" {:message "No such entity in :usage_terms as :id with <id>"}}}}}}]])
 
 ; TODO usage_terms get the most recent one ?!?
 (def user-routes
   ["/usage-terms"
+   {:swagger {:tags ["usage-terms"]}}
    ["/"
     {:get {:summary (sd/sum_pub "List usage_terms.")
            :handler handle_list-usage_term

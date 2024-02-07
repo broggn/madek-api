@@ -4,8 +4,8 @@
    [clojure.java.io :as io]
    [environ.core :refer [env]]
    [madek.api.utils.cli :refer [long-opt-for-key]]
-   [nrepl.server :as nrepl-server :refer [start-server stop-server]]
-   [taoensso.timbre :refer [debug error info spy warn]]))
+   [nrepl.server :refer [start-server stop-server]]
+   [taoensso.timbre :refer [info]]))
 
 ;;; cli-options ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

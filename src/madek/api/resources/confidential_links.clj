@@ -1,14 +1,15 @@
 (ns madek.api.resources.confidential-links
   (:require [buddy.core.codecs :refer [bytes->b64u bytes->str]]
             [buddy.core.hash :as hash]
-            [clojure.java.jdbc :as jdbc]
-            [clojure.tools.logging :as logging]
+            [honey.sql :refer [format] :rename {format sql-format}]
+            [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
+            [madek.api.db.core :refer [get-ds]]
             [madek.api.resources.shared :as sd]
-            [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-            [madek.api.utils.sql :as sql]
+            [next.jdbc :as jdbc]
             [reitit.coercion.schema]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [taoensso.timbre :refer [info]]))
 
 (defn create-conf-link-token
   []
@@ -20,10 +21,10 @@
                   #(rand-nth "0123456789abcdef"))))
         token (-> random hash/sha512 bytes->b64u bytes->str)
         cut (apply str (take 45 token))]
-    (logging/info "create-conf-link-token: "
-                  "\nrandom: " random
-                  "\n token: " token
-                  "\n cut: " cut)
+    (info "create-conf-link-token: "
+          "\nrandom: " random
+          "\n token: " token
+          "\n cut: " cut)
     cut))
 
 (defn handle_create-conf-link
@@ -43,7 +44,10 @@
                           :resource_type mr-type
                           :resource_id mr-id
                           :token token))
-            ins-result (jdbc/insert! (get-ds) :confidential_links ins-data)]
+            sql-map {:insert-into :confidential_links
+                     :values [ins-data]}
+            sql (-> sql-map sql-format)
+            ins-result (jdbc/execute! (get-ds) [sql ins-data])]
         (if-let [result (first ins-result)]
           (sd/response_ok result)
           (sd/response_failed "Could not create confidential link." 406))))
@@ -74,8 +78,12 @@
       (let [id (-> req :parameters :path :id)
             data (-> req :parameters :body)
             upd-data (sd/try-instant-on-presence data :expires_at)
-            upd-clause (sd/sql-update-clause "id" id)
-            upd-result (jdbc/update! (get-ds) :confidential_links upd-data upd-clause)]
+            query (-> (sql/update :confidential_links)
+                      (sql/set upd-data)
+                      (sql/where [:= :id id])
+                      sql-format)
+
+            upd-result (jdbc/execute! (get-ds) query)]
 
         (sd/logwrite req (str "handle_update-conf-link:" "\nupdate data: " upd-data "\nresult: " upd-result))
         (if (= 1 (first upd-result))
@@ -90,8 +98,11 @@
     (catcher/with-logging {}
       (let [id (-> req :parameters :path :id)]
         (if-let [del-data (sd/query-eq-find-one :confidential_links :id id)]
-          (let [del-clause (sd/sql-update-clause "id" id)
-                del-result (jdbc/delete! (get-ds) :confidential_links del-clause)]
+          (let [query (-> (sql/delete-from :confidential_links)
+                          (sql/where [:= :id id])
+                          sql-format)
+
+                del-result (jdbc/execute! (get-ds) query)]
             (sd/logwrite req (str "handle_delete-conf-link:" "\ndelete data: " del-data "\nresult: " del-result))
             (if (= 1 (first del-result))
               (sd/response_ok del-data)
@@ -144,8 +155,8 @@
 
 ; TODO check can edit permissions
 (def user-me-routes
-
   ["/media-entry/:media_entry_id"
+   {:swagger {:tags ["api/media-entry"] :security [{"auth" []}]}}
    ["/conf-links"
     {:post {:summary (sd/sum_adm "Create confidential link.")
             :handler handle_create-conf-link
@@ -203,6 +214,7 @@
 ; TODO check can edit permissions
 (def user-col-routes
   ["/collection/:collection_id"
+   {:swagger {:tags ["api/collection/conf-links"] :security [{"auth" []}]}}
    ["/conf-links"
     {:post {:summary (sd/sum_adm "Create confidential link.")
             :handler handle_create-conf-link

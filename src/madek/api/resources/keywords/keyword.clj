@@ -1,10 +1,11 @@
 (ns madek.api.resources.keywords.keyword
   (:require
-   [clojure.java.jdbc :as jdbc]
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [madek.api.db.core :refer [get-ds]]
    [madek.api.pagination :as pagination]
    [madek.api.resources.shared :as sd]
-   [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   [madek.api.utils.sql :as sql]))
+   [next.jdbc :as jdbc]))
 
 (defn db-keywords-get-one [id]
   (sd/query-eq-find-one :keywords :id id))
@@ -19,9 +20,9 @@
              (sd/build-query-param-like query :term)
              (sd/build-query-param-like query :description)
              (pagination/add-offset-for-honeysql query)
-             sql/format)]
-    ; (logging/info "db-keywords-query" dbq)
-    (jdbc/query (get-ds) dbq)))
+             sql-format)]
+    ; (info "db-keywords-query" dbq)
+    (jdbc/execute! (get-ds) dbq)))
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

@@ -1,23 +1,24 @@
 (ns madek.api.resources.collection-collection-arcs
   (:require
-   [clojure.java.jdbc :as jdbc]
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
+   [madek.api.db.core :refer [get-ds]]
    [madek.api.pagination :as pagination]
    [madek.api.resources.shared :as sd]
-   [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   [madek.api.utils.sql :as sql]
+   [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]))
 
 (defn arc-query [request]
   (-> (sql/select :*)
       (sql/from :collection_collection_arcs)
-      (sql/merge-where [:= :id (-> request :parameters :path :id)])
-      sql/format))
+      (sql/where [:= :id (-> request :parameters :path :id)])
+      sql-format))
 
 (defn handle_get-arc [request]
   (let [query (arc-query request)
-        db-result (jdbc/query (rdbms/get-ds) query)]
+        db-result (jdbc/execute! (get-ds) query)]
     (if-let [arc (first db-result)]
       (sd/response_ok arc)
       (sd/response_failed "No such collection-collection-arc" 404))))
@@ -25,13 +26,13 @@
 (defn arc-query-by-parent-and-child [request]
   (-> (sql/select :*)
       (sql/from :collection_collection_arcs)
-      (sql/merge-where [:= :parent_id (-> request :parameters :path :parent_id)])
-      (sql/merge-where [:= :child_id (-> request :parameters :path :child_id)])
-      sql/format))
+      (sql/where [:= :parent_id (-> request :parameters :path :parent_id)])
+      (sql/where [:= :child_id (-> request :parameters :path :child_id)])
+      sql-format))
 
 (defn handle_arc-by-parent-and-child [request]
   (let [query (arc-query-by-parent-and-child request)
-        db-result (jdbc/query (rdbms/get-ds) query)]
+        db-result (jdbc/execute! (get-ds) query)]
     (if-let [arc (first db-result)]
       (sd/response_ok arc)
       (sd/response_failed "No such collection-collection-arc" 404))))
@@ -42,11 +43,11 @@
       (sd/build-query-param query-params :child_id)
       (sd/build-query-param query-params :parent_id)
       (pagination/add-offset-for-honeysql query-params)
-      sql/format))
+      sql-format))
 
 (defn handle_query-arcs [request]
   (let [query (arcs-query (-> request :parameters :query))
-        db-result (jdbc/query (get-ds) query)]
+        db-result (jdbc/execute! (get-ds) query)]
     (sd/response_ok {:collection-collection-arcs db-result})))
 
 (defn handle_create-col-col-arc [req]
@@ -54,19 +55,15 @@
     (catcher/with-logging {}
       (let [parent-id (-> req :parameters :path :parent_id)
             child-id (-> req :parameters :path :child_id)
-
             data (-> req :parameters :body)
-            ins-data (assoc data :parent_id parent-id :child_id child-id)]
-        (if-let [ins-res (jdbc/insert! (rdbms/get-ds) :collection_collection_arcs ins-data)]
+            ins-data (assoc data :parent_id parent-id :child_id child-id)
+            sql-map {:insert-into :collection_collection_arcs
+                     :values [ins-data]}
+            sql (-> sql-map sql-format)]
+        (if-let [ins-res (next.jdbc/execute! (get-ds) [sql ins-data])]
           (sd/response_ok ins-res)
           (sd/response_failed "Could not create collection-collection-arc" 406))))
     (catch Exception e (sd/response_exception e))))
-
-(defn- sql-cls-update [parent-id child-id]
-  (-> (sql/where [:= :parent_id parent-id]
-                 [:= :child_id child-id])
-      (sql/format)
-      (update-in [0] #(clojure.string/replace % "WHERE" ""))))
 
 (defn handle_update-arc [req]
   (try
@@ -74,10 +71,14 @@
       (let [parent-id (-> req :parameters :path :parent_id)
             child-id (-> req :parameters :path :child_id)
             data (-> req :parameters :body)
-            whcl (sql-cls-update parent-id child-id)
-            result (jdbc/update! (rdbms/get-ds)
-                                 :collection_collection_arcs
-                                 data whcl)]
+            query (-> (sql/update :collection_collection_arcs)
+                      (sql/set data)
+                      (sql/where [:= :parent_id parent-id
+                                  := :child_id child-id])
+                      sql-format)
+
+            result (next.jdbc/execute! (get-ds) query)]
+
         (if (= 1 (first result))
           (sd/response_ok (sd/query-eq-find-one
                            :collection_collection_arcs
@@ -91,12 +92,18 @@
     (catcher/with-logging {}
       (let [parent-id (-> req :parameters :path :parent_id)
             child-id (-> req :parameters :path :child_id)
+            ;; TODO: fetch old data by delete-query
             olddata (sd/query-eq-find-one
                      :collection_collection_arcs
                      :parent_id parent-id
                      :child_id child-id)
-            delquery (sql-cls-update parent-id child-id)
-            delresult (jdbc/delete! (get-ds) :collection_collection_arcs delquery)]
+            query (-> (sql/delete :collection_collection_arcs)
+                      (sql/where [:= :parent_id parent-id
+                                  := :child_id child-id])
+                      sql-format)
+
+            delresult (next.jdbc/execute! (get-ds) query)]
+
         (if (= 1 (first delresult))
           (sd/response_ok olddata)
           (sd/response_failed "Could not delete collection collection arc." 422))))
@@ -134,6 +141,7 @@
 ; TODO add permission checks
 (def ring-routes
   ["/collection-collection-arcs"
+   {:swagger {:tags ["api/collection"]}}
    ["/"
     {:get
      {:summary "Query collection collection arcs."
@@ -146,7 +154,7 @@
                            (s/optional-key :count) s/Int}}
       :responses {200 {:body s/Any}} ; TODO response coercion
       }}]
-; TODO rename param to collection_id
+   ; TODO rename param to collection_id
    ; TODO add permission checks
    ["/:id"
     {:get
@@ -161,6 +169,7 @@
 ; TODO rename param use middleware for permissions
 (def collection-routes
   ["/collection/:parent_id"
+   {:swagger {:tags ["api/collection"]}}
    ;["/collection-arcs"
    ; {:get
    ;  {:summary "List collection collection arcs."

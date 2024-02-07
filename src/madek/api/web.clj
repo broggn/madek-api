@@ -1,27 +1,20 @@
 (ns madek.api.web
   (:require
-   [clj-yaml.core :as yaml]
-   [clojure.walk :refer [keywordize-keys]]
    [environ.core :refer [env]]
-   [logbug.catcher :as catcher]
-   [logbug.debug :as debug :refer [I> I>>]]
    [logbug.thrown :as thrown]
    [madek.api.authentication :as authentication]
    [madek.api.db.core :as db]
    [madek.api.http.server :as http-server]
    [madek.api.json-protocol]
-   [madek.api.management :as management]
    [madek.api.resources]
    [madek.api.resources.auth-info :as auth-info]
    [madek.api.utils.cli :refer [long-opt-for-key]]
-   [madek.api.utils.config :refer [get-config]]
-   [madek.api.utils.logging :as logging]
+   [madek.api.utils.helper :refer [mslurp]]
    [muuntaja.core :as m]
    [reitit.coercion.schema]
    [reitit.coercion.spec]
    [reitit.ring :as rr]
    [reitit.ring.coercion :as rrc]
-   [reitit.ring.middleware.exception :as re]
    [reitit.ring.middleware.multipart :as multipart]
    [reitit.ring.middleware.muuntaja :as muuntaja]
    [reitit.ring.middleware.parameters :as rmp]
@@ -32,7 +25,7 @@
    [ring.middleware.defaults :as ring-defaults]
    [ring.middleware.json]
    [ring.middleware.reload :refer [wrap-reload]]
-   [taoensso.timbre :refer [debug error info spy warn]]))
+   [taoensso.timbre :refer [debug error warn]]))
 
 ; changing DEBUG to true will wrap each middleware defined in this file with
 ; extended debug logging; this will increase LOGGING OUTPUT IMMENSELY and might
@@ -99,27 +92,28 @@
 ;### routes ###################################################################
 
 (def auth-info-route
-  ["/api/auth-info"
-   {:get
-    {:summary "Authentication help and info."
-     :handler auth-info/auth-info
-     :middleware [authentication/wrap]}}])
-
-(def test-routes
-  ["/test"
-   ["/exception"
-    {:get (fn [_] (throw (ex-info "test exception" {})))
-     :skip-auth true}]
-   ["/ok"
-    {:get (constantly {:status 200 :body {:ok "ok"}})
-     :skip-auth true}]])
+  ["/api"
+   {:swagger {:tags ["api/auth-info"] :security [{"auth" []}]}}
+   ["/auth-info"
+    {:get
+     {:summary "Authentication help and info."
+      :handler auth-info/auth-info
+      :middleware [authentication/wrap]}}]])
 
 (def swagger-routes
   [""
-   {:no-doc true
-    :skip-auth true}
-   ["/swagger.json" {:get (swagger/create-swagger-handler)}]
-   ["/api-docs/*" {:get (swagger-ui/create-swagger-ui-handler)}]])
+   {:no-doc false
+    :swagger {:info {:title "Madek API v2"
+                     :description (mslurp "md/api-description.md")
+                     :version "2.0.0"
+                     :contact {:name "fjdkls"}}
+              :securityDefinitions {:apiAuth {:type "apiKey"
+                                              :name "Authorization"
+                                              :in "header"}
+                                    :basicAuth {:type "basic"}}}}
+
+   ["/swagger.json" {:no-doc true :get (swagger/create-swagger-handler)}]
+   ["/api-docs/*" {:no-doc true :get (swagger-ui/create-swagger-ui-handler)}]])
 
 (def get-router-data-all
   (->>
@@ -173,7 +167,7 @@
         (try
           (debug "RING-LOGGING-WRAPPER"
                  {:wrap-debug-level wrap-debug-level
-                  :request (logging/clean-request request)})
+                  :request request})
           (let [response (handler
                           (assoc request :wrap-debug-level (inc wrap-debug-level)))]
             (debug "RING-LOGGING-WRAPPER"

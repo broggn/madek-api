@@ -3,10 +3,8 @@
    [clj-uuid :as uuid :refer [as-uuid]]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [logbug.debug :as debug]
    [madek.api.utils.json :as json]
-   [next.jdbc :as jdbc]
-   [taoensso.timbre :refer [debug error info spy warn]]))
+   [next.jdbc :as jdbc]))
 
 ;;; schema ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -49,5 +47,5 @@
 
 (defn find-person-by-uid [uid ds]
   (-> (person-query uid)
-      (sql-format)
+      sql-format
       (->> (jdbc/execute-one! ds))))

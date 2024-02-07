@@ -1,23 +1,22 @@
 (ns madek.api.resources.collections.index
   (:require
-   [clojure.java.jdbc :as jdbc]
-   [clojure.tools.logging :as logging]
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-   [logbug.debug :as debug]
+   [madek.api.db.core :refer [get-ds]]
    [madek.api.pagination :as pagination]
-   [madek.api.resources.collections.advanced-filter.permissions :as permissions :refer [filter-by-query-params]]
+   [madek.api.resources.collections.advanced-filter.permissions :as permissions]
    [madek.api.resources.shared :as sd]
-   [madek.api.utils.rdbms :as rdbms]
-   [madek.api.utils.sql :as sql]))
+   [next.jdbc :as jdbc]))
 
 ;### collection_id ############################################################
 
 (defn- filter-by-collection-id [sqlmap {:keys [collection_id] :as query-params}]
   (cond-> sqlmap
-    (seq collection_id)
-    (-> (sql/merge-join [:collection_collection_arcs :cca]
-                        [:= :cca.child_id :collections.id])
-        (sql/merge-where [:= :cca.parent_id collection_id]))))
+    (seq (str collection_id))
+    (-> (sql/join [:collection_collection_arcs :cca]
+                  [:= :cca.child_id :collections.id])
+        (sql/where [:= :cca.parent_id collection_id]))))
 
 ;### query ####################################################################
 
@@ -37,7 +36,8 @@
 (defn- build-query [request]
   (let [query-params (:query-params request)
         authenticated-entity (:authenticated-entity request)
-        sql-query (-> (base-query (:full_data query-params))
+        full_data (= true (:full_data query-params))
+        sql-query (-> (base-query full_data)
                       (set-order query-params)
                       (sd/build-query-param query-params :creator_id)
                       (sd/build-query-param query-params :responsible_user_id)
@@ -45,14 +45,14 @@
                       (permissions/filter-by-query-params query-params
                                                           authenticated-entity)
                       (pagination/add-offset-for-honeysql query-params)
-                      sql/format)]
+                      sql-format)]
     ;(logging/info "build-query"
     ;              "\nquery\n" query-params
     ;              "\nsql query:\n" sql-query)
     sql-query))
 
 (defn- query-index-resources [request]
-  (jdbc/query (rdbms/get-ds) (build-query request)))
+  (jdbc/execute! (get-ds) (build-query request)))
 
 ;### index ####################################################################
 

@@ -1,11 +1,10 @@
 (ns madek.api.utils.auth
   (:require
    [clj-uuid]
-   [clojure.java.jdbc :as jdbc]
-   [clojure.tools.logging :as logging]
-   [logbug.debug :as debug]
-   [madek.api.utils.rdbms :as rdbms]
-   [madek.api.utils.sql :as sql]))
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [madek.api.db.core :refer [get-ds]]
+   [next.jdbc :as jdbc]))
 
 ;### admin check ##############################################################
 
@@ -22,9 +21,9 @@
       (when (-> request :is_admin) request)
       (when (->> (-> (sql/select [true :is_admin])
                      (sql/from :admins)
-                     (sql/merge-where [:= :admins.user_id (-> request :authenticated-entity :id)])
-                     sql/format)
-                 (jdbc/query (rdbms/get-ds))
+                     (sql/where [:= :admins.user_id (-> request :authenticated-entity :id)])
+                     sql-format)
+                 (jdbc/execute! (get-ds))
                  first :is_admin)
           ;(assoc-in request [:authenticated-entity :is_admin] true)))
         (assoc-in request [:is_admin] true)))

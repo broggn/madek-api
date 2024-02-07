@@ -1,10 +1,9 @@
 (ns madek.api.resources.previews.index
   (:require
-   [clojure.java.jdbc :as jdbc]
-   [clojure.tools.logging :as logging]
-   [logbug.debug :as debug]
-   [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   [madek.api.utils.sql :as sql]))
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [madek.api.db.core :refer [get-ds]]
+   [next.jdbc :as jdbc]))
 
 (defn- get-first-or-30-percent [list]
   (if (> (count list) 1)
@@ -13,10 +12,12 @@
 
 (defn- detect-ui-preview-id [sqlmap media-type]
   (if (= media-type "video")
-    (let [query (-> sqlmap (sql/merge-where [:= :media_type "image"])
-                    (sql/merge-where [:= :thumbnail "large"])
-                    (sql/order-by [:previews.filename :asc] [:previews.created_at :desc]))]
-      (let [previews (jdbc/query (rdbms/get-ds) (sql/format query))]
+    (let [query (-> sqlmap
+                    (sql/where [:= :media_type "image"]
+                               [:= :thumbnail "large"])
+                    (sql/order-by [:previews.filename :asc] [:previews.created_at :desc])
+                    sql-format)]
+      (let [previews (jdbc/execute! (get-ds) query)]
         (:id (get-first-or-30-percent previews))))
     nil))
 
@@ -26,12 +27,12 @@
 (defn get-index [media-file]
   (let [sqlmap (-> (sql/select :previews.*)
                    (sql/from :previews)
-                   (sql/merge-where
-                    [:= :previews.media_file_id (:id media-file)])
-                   (sql/order-by [:previews.created_at :desc]))]
+                   (sql/where [:= :previews.media_file_id (:id media-file)])
+                   (sql/order-by [:previews.created_at :desc])
+                   sql-format)]
     (let [detected-id (detect-ui-preview-id sqlmap (:media_type media-file))]
       (add-preview-pointer-to
-       (jdbc/query (rdbms/get-ds) (sql/format sqlmap))
+       (jdbc/execute! (get-ds) sqlmap)
        detected-id))))
 
 ;### Debug ####################################################################

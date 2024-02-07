@@ -1,12 +1,14 @@
 (ns madek.api.resources.delegations-users
   (:require
-   [clojure.java.jdbc :as jdbc]
-   [clojure.tools.logging :as logging]
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
-   [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   [madek.api.utils.sql :as sql]
+   [madek.api.utils.helper :refer [t]]
+   [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-   [schema.core :as s]))
+   [schema.core :as s]
+   [taoensso.timbre :refer [error info]]))
 
 (def res-req-name :delegation_user)
 (def res-table-name "delegations_users")
@@ -14,10 +16,19 @@
 
 (defn handle_list-delegations_users
   [req]
-  (let [;full-data (true? (-> req :parameters :query :full-data))
-        db-result (sd/query-find-all :delegations_users :*)]
-    ;(->> db-result (map :id) set)
-    (logging/info "handle_list-delegations_user" "\nresult\n" db-result)
+  (let [delegation_id (-> req :parameters :query :delegation_id)
+        user_id (-> req :parameters :query :user_id)
+        col-sel (if (true? (-> req :parameters :query :full-data))
+                  (sql/select :*)
+                  (sql/select :user_id))
+        base-query (-> col-sel (sql/from :delegations_users))
+        query (cond-> base-query
+                delegation_id (sql/where [:= :delegation_id delegation_id])
+                user_id (sql/where [:= :user_id user_id]))
+        db-result (jdbc/execute! (get-ds) (sql-format query))]
+
+;(->> db-result (map :id) set)
+    (info "handle_list-delegations_user" "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
 (defn handle_list-delegations_users-by-user
@@ -26,7 +37,7 @@
         user-id (-> req :authenticated-entity :id)
         db-result (sd/query-eq-find-all :delegations_users :user_id user-id)
         id-set (map :delegation_id db-result)]
-    (logging/info "handle_list-delegations_user" "\nresult\n" db-result "\nid-set\n" id-set)
+    (info "handle_list-delegations_user" "\nresult\n" db-result "\nid-set\n" id-set)
     (sd/response_ok {:delegation_ids id-set})
     ;(if full-data (sd/response_ok db-result) (sd/response_ok {:delegation_ids id-set})) 
     ))
@@ -34,7 +45,7 @@
 (defn handle_get-delegations_user
   [req]
   (let [favorite_collection (-> req res-req-name)]
-    ;(logging/info "handle_get-favorite_collection" favorite_collection)
+    ;(info "handle_get-favorite_collection" favorite_collection)
     ; TODO hide some fields
     (sd/response_ok favorite_collection)))
 
@@ -42,25 +53,30 @@
   [req]
   (let [user (or (-> req :user) (-> req :authenticated-entity))
         delegation (-> req :delegation)
-        data {:user_id (:id user) :delegation_id (:id delegation)}]
-    (if-let [delegations_user (-> req res-req-name)]
-      ; already has delegations_user
-      (sd/response_ok delegations_user)
-      ; create delegations_user entry
-      (if-let [ins_res (first (jdbc/insert! (rdbms/get-ds) res-table-name data))]
-        ; TODO clean result
-        (sd/response_ok ins_res)
-        (sd/response_failed "Could not create delegations_user." 406)))))
+        data {:user_id (:id user) :delegation_id (:id delegation)}
+        sql-query (-> (sql/insert-into :delegations_users)
+                      (sql/values [data])
+                      (sql/returning :*)
+                      sql-format)
+        ins-res (jdbc/execute-one! (get-ds) sql-query)]
+    (if ins-res
+      (sd/response_ok ins-res)
+      (sd/response_failed "Could not create delegations_user." 406))))
 
 (defn handle_delete-delegations_user
   [req]
   (let [delegations_user (-> req res-req-name)
         user-id (:user_id delegations_user)
-        delegation-id (res-col-name delegations_user)]
-    (if (= 1 (first (jdbc/delete! (rdbms/get-ds) res-table-name ["user_id = ? AND delegation_id = ?" user-id delegation-id])))
+        delegation-id (res-col-name delegations_user)
+        sql-query (-> (sql/delete-from :delegations_users)
+                      (sql/where [:= :user_id user-id] [:= :delegation_id delegation-id])
+                      (sql/returning :*)
+                      sql-format)
+        res (jdbc/execute-one! (get-ds) sql-query)]
+    (if res
       (sd/response_ok delegations_user)
-      (logging/error "Failed delete delegations_user "
-                     "user-id: " user-id "delegation-id: " delegation-id))))
+      (error "Failed delete delegations_user "
+             "user-id: " user-id "delegation-id: " delegation-id))))
 
 (defn wwrap-find-delegations_user [send404]
   (fn [handler]
@@ -78,7 +94,7 @@
     (fn [request]
       (let [user-id (-> request :authenticated-entity :id str)
             del-id (-> request :parameters :path :delegation_id str)]
-        (logging/info "uid\n" user-id "del-id\n" del-id)
+        (info "uid\n" user-id "del-id\n" del-id)
         (sd/req-find-data-search2
          request handler
          user-id del-id
@@ -111,6 +127,7 @@
 ; user self edit favorites 
 (def query-routes
   ["/delegation/users"
+   {:swagger {:tags ["delegation/users"]}}
    {:get
     {:summary (sd/sum_adm "Query delegation users.")
      :handler handle_list-delegations_users-by-user
@@ -120,72 +137,76 @@
                           (s/optional-key :user_id) s/Uuid}}
      :responses {200 {:body {:delegation_ids [s/Uuid]}}}}}])
 
+;; TODO: no usage??
 (def user-routes
   ["/delegation/:delegation_id/user"
-   {:post {:summary (sd/sum_cnv "Create delegations_user for authed user and media-entry.")
-           :handler handle_create-delegations_user
+   {:swagger {:tags ["delegation/users"]}}
+   ["/"
+    {:post {:summary (sd/sum_cnv "Create delegations_user for authed user and media-entry.")
+            :handler handle_create-delegations_user
+            :middleware [(wwrap-find-delegation :delegation_id)
+                         (wwrap-find-delegations_user-by-auth false)]
+            :swagger {:produces "application/json"}
+            :coercion reitit.coercion.schema/coercion
+            :parameters {:path {:delegation_id s/Uuid}}
+            :responses {200 {:body schema_delegations_users_export}
+                        404 {:body s/Any}
+                        406 {:body s/Any}}}
+
+     :get {:summary (sd/sum_cnv "Get delegations_user for authed user and media-entry.")
+           :handler handle_get-delegations_user
            :middleware [(wwrap-find-delegation :delegation_id)
-                        (wwrap-find-delegations_user-by-auth false)]
-           :swagger {:produces "application/json"}
+                        (wwrap-find-delegations_user-by-auth true)]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:delegation_id s/Uuid}}
            :responses {200 {:body schema_delegations_users_export}
                        404 {:body s/Any}
                        406 {:body s/Any}}}
 
-    :get {:summary (sd/sum_cnv "Get delegations_user for authed user and media-entry.")
-          :handler handle_get-delegations_user
-          :middleware [(wwrap-find-delegation :delegation_id)
-                       (wwrap-find-delegations_user-by-auth true)]
-          :coercion reitit.coercion.schema/coercion
-          :parameters {:path {:delegation_id s/Uuid}}
-          :responses {200 {:body schema_delegations_users_export}
-                      404 {:body s/Any}
-                      406 {:body s/Any}}}
-
-    :delete {:summary (sd/sum_cnv "Delete delegations_user for authed user and media-entry.")
-             :coercion reitit.coercion.schema/coercion
-             :handler handle_delete-delegations_user
-             :middleware [(wwrap-find-delegation :delegation_id)
-                          (wwrap-find-delegations_user-by-auth true)]
-             :parameters {:path {:delegation_id s/Uuid}}
-             :responses {200 {:body schema_delegations_users_export}
-                         404 {:body s/Any}
-                         406 {:body s/Any}}}}])
+     :delete {:summary (sd/sum_cnv "Delete delegations_user for authed user and media-entry.")
+              :coercion reitit.coercion.schema/coercion
+              :handler handle_delete-delegations_user
+              :middleware [(wwrap-find-delegation :delegation_id)
+                           (wwrap-find-delegations_user-by-auth true)]
+              :parameters {:path {:delegation_id s/Uuid}}
+              :responses {200 {:body schema_delegations_users_export}
+                          404 {:body s/Any}
+                          406 {:body s/Any}}}}]])
 
 (def admin-routes
   [["/delegation/users"
-    {:get
-     {:summary (sd/sum_adm "Query delegations_users.")
-      :handler handle_list-delegations_users
-      :coercion reitit.coercion.schema/coercion
-      :parameters {:query {(s/optional-key :user_id) s/Uuid
-                           (s/optional-key :delegation_id) s/Uuid
-                           (s/optional-key :full-data) s/Bool}}}}]
+    {:swagger {:tags ["admin/delegation/users"] :security [{"auth" []}]}}
+    ["/"
+     {:get
+      {:summary (sd/sum_adm "Query delegations_users.")
+       :handler handle_list-delegations_users
+       :coercion reitit.coercion.schema/coercion
+       :parameters {:query {(s/optional-key :user_id) s/Uuid
+                            (s/optional-key :delegation_id) s/Uuid
+                            (s/optional-key :full-data) s/Bool}}}}]
+    ["/:delegation_id/:user_id"
+     {:post
+      {:summary (sd/sum_adm "Create delegations_user for user and delegation.")
+       :handler handle_create-delegations_user
+       :middleware [(wwrap-find-user :user_id)
+                    (wwrap-find-delegation :delegation_id)
+                    (wwrap-find-delegations_user false)]
+       :coercion reitit.coercion.schema/coercion
+       :parameters {:path {:user_id s/Uuid
+                           :delegation_id s/Uuid}}}
 
-   ["/delegation/users/:delegation_id/:user_id"
-    {:post
-     {:summary (sd/sum_adm "Create delegations_user for user and delegation.")
-      :handler handle_create-delegations_user
-      :middleware [(wwrap-find-user :user_id)
-                   (wwrap-find-delegation :delegation_id)
-                   (wwrap-find-delegations_user false)]
-      :coercion reitit.coercion.schema/coercion
-      :parameters {:path {:user_id s/Uuid
-                          :delegation_id s/Uuid}}}
+      :get
+      {:summary (sd/sum_adm "Get delegations_user for user and delegation.")
+       :handler handle_get-delegations_user
+       :middleware [(wwrap-find-delegations_user true)]
+       :coercion reitit.coercion.schema/coercion
+       :parameters {:path {:user_id s/Uuid
+                           :delegation_id s/Uuid}}}
 
-     :get
-     {:summary (sd/sum_adm "Get delegations_user for user and delegation.")
-      :handler handle_get-delegations_user
-      :middleware [(wwrap-find-delegations_user true)]
-      :coercion reitit.coercion.schema/coercion
-      :parameters {:path {:user_id s/Uuid
-                          :delegation_id s/Uuid}}}
-
-     :delete
-     {:summary (sd/sum_adm "Delete delegations_user for user and delegation.")
-      :coercion reitit.coercion.schema/coercion
-      :handler handle_delete-delegations_user
-      :middleware [(wwrap-find-delegations_user true)]
-      :parameters {:path {:user_id s/Uuid
-                          :delegation_id s/Uuid}}}}]])
+      :delete
+      {:summary (sd/sum_adm "Delete delegations_user for user and delegation.")
+       :coercion reitit.coercion.schema/coercion
+       :handler handle_delete-delegations_user
+       :middleware [(wwrap-find-delegations_user true)]
+       :parameters {:path {:user_id s/Uuid
+                           :delegation_id s/Uuid}}}}]]])

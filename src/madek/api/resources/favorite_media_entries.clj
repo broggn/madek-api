@@ -1,13 +1,17 @@
 (ns madek.api.resources.favorite-media-entries
-  (:require [clojure.java.jdbc :as jdbc]
-            [clojure.tools.logging :as logging]
-            [logbug.catcher :as catcher]
-            [madek.api.authorization :as authorization]
-            [madek.api.resources.shared :as sd]
-            [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-            [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-            [reitit.coercion.schema]
-            [schema.core :as s]))
+  (:require
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [logbug.catcher :as catcher]
+   [madek.api.authorization :as authorization]
+   [madek.api.db.core :refer [get-ds]]
+   [madek.api.resources.shared :as sd]
+   [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+   [madek.api.utils.helper :refer [t]]
+   [next.jdbc :as jdbc]
+   [reitit.coercion.schema]
+   [schema.core :as s]
+   [taoensso.timbre :refer [error info]]))
 
 (def res-req-name :favorite_media_entry)
 (def res-table-name "favorite_media_entries")
@@ -16,7 +20,7 @@
 (defn handle_list-favorite_media_entries
   [req]
   (let [db-result (sd/query-find-all :favorite_media_entries :*)]
-    ;(logging/info "handle_list-favorite_media_entry" "\nresult\n" db-result)
+    ;(info "handle_list-favorite_media_entry" "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
 (defn handle_list-favorite_media_entries-by-user
@@ -25,13 +29,13 @@
         user-id (-> req :authenticated-entity :id)
         db-result (sd/query-eq-find-all :favorite_media_entries :user_id user-id)
         id-set (map :media_entry_id db-result)]
-    ;(logging/info "handle_list-favorite_media_entry" "\nresult\n" db-result "\nid-set\n" id-set)
+    ;(info "handle_list-favorite_media_entry" "\nresult\n" db-result "\nid-set\n" id-set)
     (sd/response_ok {:media_entry_ids id-set})))
 
 (defn handle_get-favorite_media_entry
   [req]
   (let [favorite_me (-> req res-req-name)]
-    ;(logging/info "handle_get-favorite_media_entry" favorite_collection)
+    ;(info "handle_get-favorite_media_entry" favorite_collection)
     (sd/response_ok favorite_me)))
 
 ; TODO logwrite
@@ -43,13 +47,16 @@
             media_entry (-> req :media_entry)
             data {:user_id user-id :media_entry_id (:id media_entry)}]
         (if-let [favorite_media_entry (-> req res-req-name)]
-        ; already has favorite_media_entry
+          ; already has favorite_media_entry
           (sd/response_ok favorite_media_entry)
-        ; create favorite_media_entry entry
-          (if-let [ins_res (first (jdbc/insert! (rdbms/get-ds) res-table-name data))]
+          (let [sql-query (-> (sql/insert-into :favorite_media_entries)
+                              (sql/values [data])
+                              sql-format)
+                ins-res (jdbc/execute-one! (get-ds) sql-query)]
+            (if ins-res
+              (sd/response_ok ins-res)
+              (sd/response_failed "Could not create favorite_media_entry." 406))))))
 
-            (sd/response_ok ins_res)
-            (sd/response_failed "Could not create favorite_media_entry." 406)))))
     (catch Exception ex (sd/response_exception ex))))
 
 ; TODO logwrite
@@ -60,10 +67,14 @@
       (let [favorite_media_entry (-> req res-req-name)
             user-id (:user_id favorite_media_entry)
             media_entry-id (res-col-name favorite_media_entry)]
-        (if (= 1 (first (jdbc/delete! (rdbms/get-ds) res-table-name ["user_id = ? AND media_entry_id = ?" user-id media_entry-id])))
-          (sd/response_ok favorite_media_entry)
-          (logging/error "Failed delete favorite_media_entry "
-                         "user-id: " user-id "media_entry-id: " media_entry-id))))
+        (let [sql-query (-> (sql/delete-from :favorite_media_entries)
+                            (sql/where [:= :user_id user-id] [:= :media_entry_id media_entry-id])
+                            sql-format)
+              del-result (jdbc/execute-one! (get-ds) sql-query)]
+          (if (= 1 del-result)
+            (sd/response_ok favorite_media_entry)
+            (error "Failed delete favorite_media_entry "
+                   "user-id: " user-id "media_entry-id: " media_entry-id)))))
     (catch Exception ex (sd/response_exception ex))))
 
 (defn wwrap-find-favorite_media_entry [send404]
@@ -82,7 +93,7 @@
     (fn [request]
       (let [user-id (-> request :authenticated-entity :id str)
             me-id (-> request :parameters :path :media_entry_id str)]
-        (logging/info "uid\n" user-id "meid\n" me-id)
+        (info "uid\n" user-id "meid\n" me-id)
         (sd/req-find-data-search2
          request handler
          user-id me-id
@@ -111,9 +122,10 @@
 
 ; TODO docu
 ; TODO tests
-; user self edit favorites 
+; user self edit favorites
 (def favorite-routes
   ["/favorite/media-entries"
+   {:swagger {:tags ["api/favorite"]}}
    {:get
     {:summary (sd/sum_usr "List users favorites media_entries ids.")
      :handler handle_list-favorite_media_entries-by-user
@@ -124,6 +136,7 @@
 
 (def media-entry-routes
   ["/media-entry/:media_entry_id/favorite"
+   {:swagger {:tags ["api/media-entry"]}}
    {:post {:summary (sd/sum_usr "Create favorite_media_entry for authed user and media-entry.")
            :handler handle_create-favorite_media_entry
 
@@ -163,42 +176,40 @@
 
 (def admin-routes
   [["/favorite/media-entries"
-    {:get
-     {:summary (sd/sum_adm "Query favorite_media_entries.")
-      :handler handle_list-favorite_media_entries
-      :middleware [wrap-authorize-admin!]
-      :coercion reitit.coercion.schema/coercion
-      ;:parameters {:query {(s/optional-key :user_id) s/Uuid
-      ;                     (s/optional-key :media_entry_id) s/Uuid
-      ;                     (s/optional-key :full_data) s/Bool}}
-      }}]
+    {:swagger {:tags ["admin/favorite/media-entries"] :security [{"auth" []}]}}
+    ["/"
+     {:get
+      {:summary (sd/sum_adm "Query favorite_media_entries.")
+       :handler handle_list-favorite_media_entries
+       :middleware [wrap-authorize-admin!]
+       :coercion reitit.coercion.schema/coercion}}]
 
-   ["/favorite/media_entries/:media_entry_id/:user_id"
-    {:post
-     {:summary (sd/sum_adm "Create favorite_media-entry for user and media-entry.")
-      :handler handle_create-favorite_media_entry
-      :middleware [wrap-authorize-admin!
-                   (wwrap-find-user :user_id)
-                   (wwrap-find-media_entry :media_entry_id)
-                   (wwrap-find-favorite_media_entry false)]
-      :coercion reitit.coercion.schema/coercion
-      :parameters {:path {:user_id s/Uuid
-                          :media_entry_id s/Uuid}}}
+    ["/favorite/media_entries/:media_entry_id/:user_id"
+     {:post
+      {:summary (sd/sum_adm "Create favorite_media-entry for user and media-entry.")
+       :handler handle_create-favorite_media_entry
+       :middleware [wrap-authorize-admin!
+                    (wwrap-find-user :user_id)
+                    (wwrap-find-media_entry :media_entry_id)
+                    (wwrap-find-favorite_media_entry false)]
+       :coercion reitit.coercion.schema/coercion
+       :parameters {:path {:user_id s/Uuid
+                           :media_entry_id s/Uuid}}}
 
-     :get
-     {:summary (sd/sum_adm "Get favorite_media-entry for user and media-entry.")
-      :handler handle_get-favorite_media_entry
-      :middleware [wrap-authorize-admin!
-                   (wwrap-find-favorite_media_entry true)]
-      :coercion reitit.coercion.schema/coercion
-      :parameters {:path {:user_id s/Uuid
-                          :media_entry_id s/Uuid}}}
+      :get
+      {:summary (sd/sum_adm "Get favorite_media-entry for user and media-entry.")
+       :handler handle_get-favorite_media_entry
+       :middleware [wrap-authorize-admin!
+                    (wwrap-find-favorite_media_entry true)]
+       :coercion reitit.coercion.schema/coercion
+       :parameters {:path {:user_id s/Uuid
+                           :media_entry_id s/Uuid}}}
 
-     :delete
-     {:summary (sd/sum_adm "Delete favorite_media-entry for user and media-entry.")
-      :coercion reitit.coercion.schema/coercion
-      :handler handle_delete-favorite_media_entry
-      :middleware [wrap-authorize-admin!
-                   (wwrap-find-favorite_media_entry true)]
-      :parameters {:path {:user_id s/Uuid
-                          :media_entry_id s/Uuid}}}}]])
+      :delete
+      {:summary (sd/sum_adm "Delete favorite_media-entry for user and media-entry.")
+       :coercion reitit.coercion.schema/coercion
+       :handler handle_delete-favorite_media_entry
+       :middleware [wrap-authorize-admin!
+                    (wwrap-find-favorite_media_entry true)]
+       :parameters {:path {:user_id s/Uuid
+                           :media_entry_id s/Uuid}}}}]]])

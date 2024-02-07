@@ -4,8 +4,8 @@
 
 (ns madek.api.utils.daemon
   (:require
-   [clojure.tools.logging :as logging]
-   [logbug.catcher :as catcher]))
+   [logbug.catcher :as catcher]
+   [taoensso.timbre :refer [info]]))
 
 (defmacro defdaemon [daemon-name secs-pause & body]
   (let [stop (gensym "_stop_")
@@ -21,7 +21,7 @@
        (defn ~start-fn []
          (~stop-fn)
          (let [done# (atom false)
-               runner# (future (logging/info "daemon " ~daemon-name " started")
+               runner# (future (info "daemon " ~daemon-name " started")
                                (loop []
                                  (when-not @done#
                                    (catcher/snatch {:throwable Throwable} ~@body)
@@ -31,11 +31,11 @@
                            (reset! done# true)
                            (future-cancel runner#)
                            ;@runner#
-                           (logging/info "daemon " ~daemon-name "stopped")))
+                           (info "daemon " ~daemon-name "stopped")))
 
            (.addShutdownHook (Runtime/getRuntime)
                              (Thread. (fn [] (~stop-fn)))))))))
 
-;(macroexpand-1 '(defdeamon "blah" 10 (logging/info "looping ...")))
-;(macroexpand-1 '(define "blah"  10 (logging/info "looping ...")))
+;(macroexpand-1 '(defdeamon "blah" 10 (info "looping ...")))
+;(macroexpand-1 '(define "blah"  10 (info "looping ...")))
 

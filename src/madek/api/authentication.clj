@@ -1,11 +1,10 @@
 (ns madek.api.authentication
   (:require
-   [logbug.debug :as debug]
    [madek.api.authentication.basic :as basic-auth]
    [madek.api.authentication.session :as session-auth]
    [madek.api.authentication.token :as token-auth]
    [ring.util.request :as request]
-   [taoensso.timbre :refer [debug error info spy warn]]))
+   [taoensso.timbre :refer [info]]))
 
 (defn- add-www-auth-header-if-401 [response]
   (case (:status response)

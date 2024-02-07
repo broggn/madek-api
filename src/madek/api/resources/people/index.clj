@@ -1,19 +1,20 @@
 (ns madek.api.resources.people.index
   (:require
-   [cuerdas.core :as string :refer [empty-or-nil?]]
+   [cuerdas.core :refer [empty-or-nil?]]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [logbug.debug :as debug]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.people.common :as common]
    [madek.api.resources.people.get :as get-person]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+   [madek.api.utils.helper :refer [parse-specific-keys t]]
    [madek.api.utils.pagination :as pagination]
+   [madek.api.utils.validation :refer [greater-equal-zero-validation greater-zero-validation]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
-   [taoensso.timbre :refer [debug error info spy warn]]))
+   [taoensso.timbre :refer [debug]]))
 
 (defn subtype-filter [query {subtype :subtype}]
   (if (empty-or-nil? subtype)
@@ -57,19 +58,22 @@
 
 (defn handler
   "Get an index of the people. Query parameters are pending to be implemented."
-  [{{query :query} :parameters tx :tx :as req}]
+  [{{query :query} :parameters params :params tx :tx :as req}]
   (debug 'query query)
-  (let [people (-> (build-query query)
-                   (sql-format :inline false)
-                   (->> (jdbc/execute! tx)))]
+  (let [defaults {:page 0 :count 1000}
+        params (parse-specific-keys params defaults)
+        query (-> (build-query query)
+                  (pagination/sql-offset-and-limit params)
+                  sql-format)
+        people (jdbc/execute! tx query)]
     (debug 'people people)
     {:status 200, :body {:people people}}))
 
 (def query-schema
-  {(s/optional-key :count) s/Int
-   (s/optional-key :institution) s/Str
-   (s/optional-key :page) s/Int
-   (s/optional-key :subtype) s/Str})
+  {(s/optional-key :institution) s/Str
+   (s/optional-key :subtype) s/Str
+   (s/optional-key :page) greater-equal-zero-validation
+   (s/optional-key :count) greater-zero-validation})
 
 (def route
   {:summary (sd/sum_adm "Get list of people ids.")

@@ -1,18 +1,17 @@
 (ns madek.api.resources.locales
   (:require
-   [clojure.java.jdbc :as jdbc]
-   [clojure.tools.logging :as logging]
-   [logbug.debug :as debug]
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [madek.api.db.core :refer [get-ds]]
    [madek.api.utils.config :refer [get-config]]
-   [madek.api.utils.rdbms :as rdbms]
-   [madek.api.utils.sql :as sql]))
+   [next.jdbc :as jdbc]))
 
 (defn- find-app-setting
   []
   (let [query (-> (sql/select :*)
                   (sql/from :app_settings)
-                  (sql/format))]
-    (first (jdbc/query (rdbms/get-ds) query))))
+                  (sql-format))]
+    (jdbc/execute-one! (get-ds) query)))
 
 (defn- default-locale
   []

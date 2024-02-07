@@ -1,12 +1,10 @@
 (ns madek.api.resources.media-entries.advanced-filter.meta-data
   (:require
-   [clojure.java.jdbc :as jdbc]
-   [clojure.tools.logging :as logging]
-   [logbug.catcher :as catcher]
-   [logbug.debug :as debug]
+   [honey.sql.helpers :as sql]
+   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.meta-keys.meta-key :as meta-key]
-   [madek.api.utils.rdbms :as rdbms]
-   [madek.api.utils.sql :as sql]))
+   [madek.api.utils.helper :refer [to-uuid]]
+   [next.jdbc :as jdbc]))
 
 (def ^:private match-columns {"meta_data_people" {:table "people",
                                                   :resource "person",
@@ -14,13 +12,12 @@
                               "meta_data_keywords" {:table "keywords",
                                                     :resource "keyword",
                                                     :match_column "term"}})
-
 (defn- get-meta-datum-object-type [meta-datum-spec]
   (or (:type meta-datum-spec)
       (:meta_datum_object_type
        (first
-        (jdbc/query
-         (rdbms/get-ds)
+        (jdbc/execute!
+         (get-ds)
          (meta-key/build-meta-key-query (:key meta-datum-spec)))))))
 
 (defn- sql-merge-join-related-meta-data
@@ -34,15 +31,15 @@
          related-meta-data-alias (str "rmd" counter)]
      (cond-> initial-sqlmap
        related-meta-data-table
-       (sql/merge-join [(keyword related-meta-data-table)
-                        (keyword related-meta-data-alias)]
-                       [:=
-                        (keyword (str related-meta-data-alias ".meta_datum_id"))
-                        (keyword (str meta-data-alias ".id"))])
+       (sql/join [(keyword related-meta-data-table)
+                  (keyword related-meta-data-alias)]
+                 [:=
+                  (keyword (str related-meta-data-alias ".meta_datum_id"))
+                  (keyword (str meta-data-alias ".id"))])
 
        (and related-meta-data-table match-value)
        (->
-        (sql/merge-join
+        (sql/join
          (keyword (get-in match-columns [related-meta-data-table :table]))
          [:=
           (keyword
@@ -53,36 +50,32 @@
 
 (defn- sql-merge-where-with-value
   [sqlmap counter related-meta-data-table value]
-  (let [related-meta-data-alias (str "rmd" counter)]
+  (let [related-meta-data-alias (str "rmd" counter)
+        column (str (get-in match-columns
+                            [related-meta-data-table :resource]) "_id")
+        full-column (keyword (str related-meta-data-alias "." column))]
     (-> sqlmap
-        (sql/merge-where
-         [:=
-          (keyword (str related-meta-data-alias
-                        "."
-                        (get-in match-columns
-                                [related-meta-data-table :resource])
-                        "_id"))
-          value]))))
+        (sql/where
+         [:= full-column (to-uuid value column)]))))
 
 (defn- sql-raw-text-search [column search-string]
-  (sql/raw
-    ; we need to pass 'english' because it was also used
-    ; when creating indexes
-   (str "to_tsvector('english', " column ")"
-        " @@ plainto_tsquery('english', '" search-string "')")))
+  ; we need to pass 'english' because it was also used
+  ; when creating indexes
+  [[:raw (str "to_tsvector('english', "
+              column
+              ") @@ plainto_tsquery('english', '" search-string "')")]])
 
 (defn- sql-merge-where-with-match
   [sqlmap related-meta-data-table match]
   (cond-> sqlmap
     related-meta-data-table
-    (sql/merge-where
-     (sql-raw-text-search
-      (str (get-in match-columns
-                   [related-meta-data-table :table])
-           "."
-           (get-in match-columns
-                   [related-meta-data-table :match_column]))
-      match))))
+    (sql/where [:raw (str "to_tsvector('english', "
+                          (get-in match-columns
+                                  [related-meta-data-table :table])
+                          "."
+                          (get-in match-columns
+                                  [related-meta-data-table :match_column])
+                          ") @@ plainto_tsquery('english', '" match "')")])))
 
 (defn- primitive-type? [md-object-type]
   (or (= md-object-type "MetaDatum::Text")
@@ -92,14 +85,14 @@
   (let [meta-keys-alias (str "mk" counter)
         vocabularies-alias (str "v" counter)]
     (-> sqlmap
-        (sql/merge-join [:meta_keys (keyword meta-keys-alias)]
-                        [:= (keyword (str meta-data-alias ".meta_key_id"))
-                         (keyword (str meta-keys-alias ".id"))])
-        (sql/merge-join [:vocabularies (keyword vocabularies-alias)]
-                        [:and
-                         [:= (keyword (str meta-keys-alias ".vocabulary_id"))
-                          (keyword (str vocabularies-alias ".id"))]
-                         [:= (keyword (str vocabularies-alias ".enabled_for_public_view")) true]]))))
+        (sql/join [:meta_keys (keyword meta-keys-alias)]
+                  [:= (keyword (str meta-data-alias ".meta_key_id"))
+                   (keyword (str meta-keys-alias ".id"))])
+        (sql/join [:vocabularies (keyword vocabularies-alias)]
+                  [:and
+                   [:= (keyword (str meta-keys-alias ".vocabulary_id"))
+                    (keyword (str vocabularies-alias ".id"))]
+                   [:= (keyword (str vocabularies-alias ".enabled_for_public_view")) true]]))))
 
 (defn- sql-merge-join-meta-data
   [sqlmap counter md-object-type {meta-key :key
@@ -120,40 +113,40 @@
                                  (keyword (str meta-data-alias ".meta_key_id"))
                                  (or meta-key not-meta-key)]))]
 
-    (-> (sql/merge-join sqlmap
-                        [:meta_data (keyword meta-data-alias)]
-                        join-conditions)
+    (-> (sql/join sqlmap
+                  [:meta_data (keyword meta-data-alias)]
+                  join-conditions)
         (sql-meta-data-from-public-vocabularies meta-data-alias counter))))
 
 (defn sql-search-through-all [sqlmap search-string]
   (cond-> sqlmap
     search-string
-    (sql/merge-where
+    (sql/where
      (cons :or
            (into [[:exists
                    (-> (sql/select true)
                        (sql/from :meta_data)
-                       (sql/merge-where [:= :meta_data.media_entry_id :media_entries.id]
-                                        (sql-raw-text-search "meta_data.string"
-                                                             search-string)))]]
+                       (sql/where [:= :meta_data.media_entry_id :media_entries.id]
+                                  (sql-raw-text-search "meta_data.string"
+                                                       search-string)))]]
                  (map #(let [resource_table (get-in match-columns [% :table])]
                          [:exists
                           (-> (sql/select true)
                               (sql/from (keyword resource_table))
-                              (sql/merge-join (keyword %)
-                                              [:=
-                                               (keyword (str % "." (get-in match-columns [% :resource]) "_id"))
-                                               (keyword (str resource_table ".id"))])
-                              (sql/merge-join :meta_data
-                                              [:=
-                                               (keyword (str % ".meta_datum_id"))
-                                               :meta_data.id])
-                              (sql/merge-where
-                               (sql-raw-text-search
-                                (str resource_table "."
-                                     (get-in match-columns [% :match_column]))
-                                search-string))
-                              (sql/merge-where [:= :meta_data.media_entry_id :media_entries.id]))])
+                              (sql/join (keyword %)
+                                        [:=
+                                         (keyword (str % "." (get-in match-columns [% :resource]) "_id"))
+                                         (keyword (str resource_table ".id"))])
+                              (sql/join :meta_data
+                                        [:=
+                                         (keyword (str % ".meta_datum_id"))
+                                         :meta_data.id])
+                              (sql/where [:raw
+                                          (sql-raw-text-search
+                                           (str resource_table "."
+                                                (get-in match-columns [% :match_column]))
+                                           search-string)])
+                              (sql/where [:= :meta_data.media_entry_id :media_entries.id]))])
                       (keys match-columns)))))))
 
 (defn- extend-sqlmap-according-to-meta-datum-spec [sqlmap [meta-datum-spec counter]]
@@ -249,6 +242,10 @@
               (str "Invalid meta data filter: " meta-datum-spec)
               {:status 422})))))
 
+(defn modified-query [query] (-> query
+                                 (assoc :select-distinct (get query :select))
+                                 (dissoc :select)))
+
 (defn sql-filter-by [sqlmap meta-data-specs]
   (if-not (empty? meta-data-specs)
     (-> (reduce extend-sqlmap-according-to-meta-datum-spec
@@ -256,7 +253,7 @@
                 (partition 2
                            (interleave meta-data-specs
                                        (iterate inc 1))))
-        (sql/modifiers :distinct))
+        modified-query)
     sqlmap))
 
 ;### Debug ####################################################################

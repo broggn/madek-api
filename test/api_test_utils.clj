@@ -1,18 +1,38 @@
 (ns api-test-utils
   (:require
    [api-test-data :as td]
-   [clojure.java.jdbc :as jdbc]
-   [madek.api.utils.rdbms :as rdbms]))
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [madek.api.db.core :refer [get-ds]]
+   [madek.api.utils.helper :refer [convert-map-if-exist to-uuid]]
+   [madek.api.utils.rdbms :as rdbms]
+   [next.jdbc :as jdbc]))
+
+;; TODO: FIXME: use get-ds
+(def db-spec {:dbtype "postgresql"
+              :dbname "madek_test"
+              :user "madek_sql"
+              :port 5415
+              :password "madek_sql"})
 
 (defn init-db [dburl]
   (rdbms/initialize dburl)
-  (when-let [ds rdbms/get-ds] ds))
+  (when-let [ds get-ds] ds))
 
 (defn dbinsert [table data]
-  (->> (jdbc/insert! (rdbms/get-ds) table data) first))
+  (let [data (convert-map-if-exist data)
+        insert-stmt (-> (sql/insert-into table)
+                        (sql/values [data])
+                        sql-format)
+        result (jdbc/execute! db-spec insert-stmt)]
+    (first result)))
 
 (defn db-del-by-id [table id]
-  (->> (jdbc/delete! (rdbms/get-ds) table ["(id = ?)" id]) first))
+  (let [delete-stmt (-> (sql/delete-from table)
+                        (sql/where [:= :id (to-uuid id :id)])
+                        (sql-format))
+        result (jdbc/execute! db-spec delete-stmt)]
+    (first result)))
 
 (defn init-test-person []
   (let [result (dbinsert :people td/person1)] result))

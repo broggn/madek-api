@@ -1,12 +1,10 @@
 (ns madek.api.constants
   (:require
-   [clojure.string :refer [trim blank?]]
-   [clojure.tools.logging :as logging]
+   [clojure.string]
    [environ.core :refer [env]]
-   [logbug.catcher :as catcher]
-   [logbug.debug :as debug]
-   [madek.api.utils.config :as config :refer [get-config]]
-   [me.raynes.fs :as clj-fs]))
+   [madek.api.utils.config :refer [get-config]]
+   [me.raynes.fs :as clj-fs]
+   [taoensso.timbre :refer [info warn]]))
 
 (def SUPPORTED_META_DATA_TYPES
   #{"MetaDatum::Groups" ; old: migrated to: people
@@ -40,7 +38,7 @@
 (defn- madek-env []
   (or (presence (env :madek-env))
       (presence (env :rails-env))
-      (do (logging/warn "neither MADEK_ENV nor RAILS_ENV is not set; using test")
+      (do (warn "neither MADEK_ENV nor RAILS_ENV is not set; using test")
           "test")))
 
 (defn initialize [config]
@@ -62,7 +60,7 @@
               (clojure.string/join (java.io.File/separator)
                                    [DEFAULT_STORAGE_DIR "thumbnails"])))))
 
-  (logging/info
+  (info
    {:DEFAULT_STORAGE_DIR DEFAULT_STORAGE_DIR
     :FILE_STORAGE_DIR FILE_STORAGE_DIR
     :THUMBNAILS_STORAGE_DIR THUMBNAILS_STORAGE_DIR}))

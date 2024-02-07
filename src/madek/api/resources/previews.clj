@@ -1,21 +1,20 @@
 (ns madek.api.resources.previews
   (:require
-   [clojure.tools.logging :as logging]
    [madek.api.resources.media-entries.media-entry :refer [get-media-entry-for-preview]]
    [madek.api.resources.media-files :as media-files]
-    ;[logbug.debug :as debug]
    [madek.api.resources.previews.preview :as preview]
    [madek.api.resources.shared :as sd]
    [reitit.coercion.schema]
-   [schema.core :as s]))
+   [schema.core :as s]
+   [taoensso.timbre :refer [info]]))
 
 (defn ring-wrap-find-and-add-preview
   ([handler] #(ring-wrap-find-and-add-preview % handler))
   ([request handler]
    (when-let [preview-id (-> request :parameters :path :preview_id)]
-     ;(logging/info "ring-wrap-find-and-add-preview" "\npreview-id\n" preview-id)
+     (info "ring-wrap-find-and-add-preview" "\npreview-id\n" preview-id)
      (when-let [preview (first (sd/query-eq-find-all :previews :id preview-id))]
-       ;(logging/info "ring-wrap-find-and-add-preview" "\npreview-id\n" preview-id "\npreview\n" preview)
+       (info "ring-wrap-find-and-add-preview" "\npreview-id\n" preview-id "\npreview\n" preview)
        (handler (assoc request :preview preview))))))
 
 (defn handle_get-preview
@@ -26,7 +25,7 @@
     (if-let [preview (sd/query-eq-find-one :previews :media_file_id id :thumbnail size)]
       (sd/response_ok preview)
       (sd/response_not_found "No such preview file"))
-    ;(logging/info "handle_get-preview" "\nid\n" id "\nmf\n" media-file "\npreviews\n" preview)
+    ;(info "handle_get-preview" "\nid\n" id "\nmf\n" media-file "\npreviews\n" preview)
     ))
 (defn add-preview-for-media-file [handler request]
   (let [media-file (-> request :media-file)
@@ -66,6 +65,7 @@
 ; TODO tests
 (def preview-routes
   ["/previews"
+   {:swagger {:tags ["api/previews"]}}
    ["/:preview_id"
     {:get {:summary "Get preview for id."
            :swagger {:produces "application/json"}
@@ -90,12 +90,13 @@
 ; TODO tests
 (def media-entry-routes
   ["/media-entry"
+   {:swagger {:tags ["api/media-entry"]}}
    ; TODO media-entry preview auth
    ["/:media_entry_id/preview"
     {:get {:summary "Get preview for media-entry id."
            :handler handle_get-preview
            :middleware [media-files/wrap-find-and-add-media-file-by-media-entry-id
-           ;            media-files.authorization/ring-wrap-authorize-metadata-and-previews
+                        ;            media-files.authorization/ring-wrap-authorize-metadata-and-previews
                         ]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Str}
@@ -108,7 +109,7 @@
            :handler preview/get-preview-file-data-stream
            :middleware [media-files/wrap-find-and-add-media-file-by-media-entry-id
                         wrap-add-preview-for-media-file
-          ;             media-files.authorization/ring-wrap-authorize-metadata-and-previews
+                        ;             media-files.authorization/ring-wrap-authorize-metadata-and-previews
                         ]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Str}

@@ -2,30 +2,34 @@
   (:require
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [logbug.debug :as debug]
+   [madek.api.resources.people.common]
    [madek.api.resources.people.common :refer [find-person-by-uid]]
    [madek.api.resources.people.get :as get-person]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+   [madek.api.utils.helper :refer [convert-map-if-exist t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
-   [taoensso.timbre :refer [debug error info spy warn]]))
+   [taoensso.timbre :refer [error]]))
 
 (defn handle-create-person
   [{{data :body} :parameters ds :tx :as req}]
   (try
     (let [{id :id} (-> (sql/insert-into :people)
-                       (sql/values [data])
-                       (sql-format)
+                       (sql/values [(convert-map-if-exist data)])
+                       sql-format
                        ((partial jdbc/execute-one! ds) {:return-keys true}))]
-      (sd/response_ok (spy (find-person-by-uid id ds)) 201))
+      (sd/response_ok (find-person-by-uid id ds) 201))
     (catch Exception e
       (error "handle-create-person failed" {:request req})
-      (sd/response_exception e))))
+      (sd/parsed_response_exception e))))
 
 (def schema
-  {:subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
+  {;; TODO: fixme, create customized schema to validate enums
+   ;:subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
+   :subtype (s/maybe s/Str)
+
    (s/optional-key :description) (s/maybe s/Str)
    (s/optional-key :external_uris) [s/Str]
    (s/optional-key :first_name) (s/maybe s/Str)
@@ -39,11 +43,14 @@
   {:accept "application/json"
    :coercion reitit.coercion.schema/coercion
    :content-type "application/json"
-   :description "Create a person.\n The \nThe [subtype] has to be one of [Person, ...]. \nAt least one of [first_name, last_name, description] must have a value."
+   :description "Create a person.\nThe [subtype] has to be one of [\"Person\" \"PeopleGroup\" \"PeopleInstitutionalGroup\"]. \nAt least one of [first_name, last_name, description] must have a value."
    :handler handle-create-person
    :middleware [wrap-authorize-admin!]
    :parameters {:body schema}
-   :responses {201 {:body get-person/schema}}
+   :responses {201 {:body get-person/schema}
+               409 {:description "Conflict."
+                    :schema s/Str
+                    :examples {"application/json" {:message "Violation of constraint"}}}}
    :summary "Create a person"
    :swagger {:produces "application/json"
              :consumes "application/json"}})

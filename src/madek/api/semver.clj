@@ -1,9 +1,7 @@
 (ns madek.api.semver
   (:require
    [clj-commons-exec :as commons-exec]
-   [clojure.tools.logging :as logging]
-   [logbug.catcher :as catcher]
-   [logbug.debug :as debug]))
+   [logbug.catcher :as catcher]))
 
 (defn get-git-commit-id []
   (try

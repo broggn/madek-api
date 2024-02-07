@@ -7,15 +7,12 @@
    [clj-yaml.core :as yaml]
    [clojure.java.io :as io]
    [clojure.set :refer [difference]]
-   [clojure.tools.logging :as logging]
-   [logbug.catcher :refer [snatch with-logging]]
-   [logbug.debug :as debug]
+   [logbug.catcher :refer [snatch]]
    [madek.api.utils.core :refer [deep-merge]]
-   [madek.api.utils.daemon :as daemon :refer [defdaemon]]
+   [madek.api.utils.daemon :refer [defdaemon]]
    [madek.api.utils.duration :refer [parse-string-to-seconds]]
    [madek.api.utils.fs :refer :all]
-   [madek.api.utils.rdbms :as rdbms]
-   [me.raynes.fs :as clj-fs]))
+   [taoensso.timbre :refer [info warn]]))
 
 (defonce ^:private conf (atom {}))
 
@@ -45,7 +42,7 @@
                             (fn [current-config params]
                               (deep-merge current-config params))
                             params)]
-      (logging/info "config changed to " new-config))))
+      (info "config changed to " new-config))))
 
 (defn slurp-and-merge [config slurpable]
   (->> (slurp slurpable)
@@ -109,7 +106,7 @@
 (defn parse-config-duration-to-seconds [& ks]
   (try (if-let [duration-config-value (-> (get-config) (get-in ks))]
          (parse-string-to-seconds duration-config-value)
-         (logging/warn (str "No value to parse duration for " ks " was found.")))
+         (warn (str "No value to parse duration for " ks " was found.")))
        (catch Exception ex
          (cond (instance? clojure.lang.IExceptionInfo ex) (throw ex)
                :else (throw (ex-info "Duration parsing error."

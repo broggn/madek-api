@@ -1,18 +1,19 @@
 (ns madek.api.resources.media-files.authorization
   (:require
-   [clojure.java.jdbc :as jdbc]
-   [clojure.tools.logging :as logging]
-   [logbug.catcher :as catcher]
-   [logbug.debug :as debug]
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.media-entries.permissions :as me-permissions]
-   [madek.api.utils.rdbms :as rdbms :refer [get-ds]]))
+   [next.jdbc :as jdbc]
+   [taoensso.timbre :refer [info]]))
 
 (defn- media-file-authorize [request handler scope]
   (let [media-entry-id (get-in request [:media-file :media_entry_id])
-        media-entry (-> (jdbc/query (get-ds)
-                                    [(str "SELECT * FROM media_entries WHERE id = ?")
-                                     media-entry-id]) first)]
-    (logging/info "authorize" "\nmedia-entry-id\n" media-entry-id "\nmedia-entry\n" media-entry)
+        media-entry (-> (jdbc/execute-one! (get-ds) (-> (sql/select :*)
+                                                        (sql/from :media_entries)
+                                                        (sql/where [:= :id media-entry-id])
+                                                        sql-format)))]
+    (info "authorize" "\nmedia-entry-id\n" media-entry-id "\nmedia-entry\n" media-entry)
     (if (get media-entry scope)
       (handler request)
       (if-let [auth-entity (:authenticated-entity request)]

@@ -1,12 +1,8 @@
 (ns madek.api.authorization
   (:require
-   [clojure.tools.logging :as logging]
-   [logbug.catcher :as catcher]
-   [logbug.debug :as debug]
-   [logbug.thrown :as thrown]
    [madek.api.resources.collections.permissions :as collection-perms :only [viewable-by-auth-entity?]]
    [madek.api.resources.media-entries.permissions :as media-entry-perms :only [viewable-by-auth-entity?]]
-   [madek.api.resources.media-resources.permissions :as mr-permissions]))
+   [taoensso.timbre :refer [info]]))
 
 (defn authorized-view? [auth-entity resource]
   (case (:type resource)
@@ -31,7 +27,7 @@
                    ;"Collection" (mr-permissions/permission-by-auth-entity?
                    ;              resource auth-entity :edit_metadata_and_relations "collection")
                    false)]
-    (logging/info "auth-edit-metadata" auth-res)
+    (info "auth-edit-metadata" auth-res)
     auth-res))
 
 (defn authorized-edit-permissions? [auth-entity resource]
@@ -53,7 +49,7 @@
                    :edit-md (authorized-edit-metadata? auth-entity resource)
                    :edit-perm (authorized-edit-permissions? auth-entity resource)
                    false)]
-    (logging/info 'authorized? scope auth-res)
+    (info 'authorized? scope auth-res)
     auth-res))
 
 (defn wrap-authorized-user [handler]

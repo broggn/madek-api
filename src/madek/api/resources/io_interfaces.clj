@@ -1,12 +1,16 @@
 (ns madek.api.resources.io-interfaces
-  (:require [clojure.java.jdbc :as jdbc]
-            [clojure.tools.logging :as logging]
-            [logbug.catcher :as catcher]
-            [madek.api.resources.shared :as sd]
-            [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-            [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-            [reitit.coercion.schema]
-            [schema.core :as s]))
+  (:require
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [logbug.catcher :as catcher]
+   [madek.api.db.core :refer [get-ds]]
+   [madek.api.resources.shared :as sd]
+   [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+   [madek.api.utils.helper :refer [t]]
+   [next.jdbc :as jdbc]
+   [reitit.coercion.schema]
+   [schema.core :as s]
+   [taoensso.timbre :refer [error info]]))
 
 ;### handlers #################################################################
 
@@ -15,13 +19,14 @@
   (let [full_data (true? (-> req :parameters :query :full_data))
         qd (if (true? full_data) :* :io_interfaces.id)
         db-result (sd/query-find-all :io_interfaces qd)]
-    ;(logging/info "handle_list-io_interface" "\nqd\n" qd "\nresult\n" db-result)
+
+    ;(info "handle_list-io_interface" "\nqd\n" qd "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
 (defn handle_get-io_interface
   [req]
   (let [io_interface (-> req :io_interface)]
-    ;(logging/info "handle_get-io_interface" io_interface)
+    ;(info "handle_get-io_interface" io_interface)
     (sd/response_ok io_interface)))
 
 (defn handle_create-io_interfaces
@@ -29,10 +34,14 @@
   (try
     (catcher/with-logging {}
       (let [data (-> req :parameters :body)
-            ins-res (jdbc/insert! (get-ds) :io_interfaces data)]
-        (logging/info "handle_create-io_interfaces: " "\ndata:\n" data "\nresult:\n" ins-res)
+            sql-query (-> (sql/insert-into :io_interfaces)
+                          (sql/values [data])
+                          (sql/returning :*)
+                          sql-format)
+            ins-res (jdbc/execute-one! (get-ds) sql-query)]
+        (info "handle_create-io_interfaces: " "\ndata:\n" data "\nresult:\n" ins-res)
 
-        (if-let [result (first ins-res)]
+        (if-let [result ins-res]
           (sd/response_ok result)
           (sd/response_failed "Could not create io_interface." 406))))
     (catch Exception ex (sd/response_exception ex))))
@@ -44,15 +53,15 @@
       (let [data (-> req :parameters :body)
             id (-> req :parameters :path :id)
             dwid (assoc data :id id)
-        ;old-data (-> req :io_interface)
-            upd-query (sd/sql-update-clause "id" (str id))
-            upd-result (jdbc/update! (get-ds)
-                                     :io_interfaces
-                                     dwid upd-query)]
+            sql-query (-> (sql/update :io_interfaces)
+                          (sql/set dwid)
+                          (sql/where [:= :id id])
+                          sql-format)
+            upd-result (jdbc/execute-one! (get-ds) sql-query)]
 
-        (logging/info "handle_update-io_interfaces: " "id: " id "\nnew-data:\n" dwid "\nresult: " upd-result)
+        (info "handle_update-io_interfaces: " "id: " id "\nnew-data:\n" dwid "\nresult: " upd-result)
 
-        (if (= 1 (first upd-result))
+        (if (= 1 (::jdbc/update-count upd-result))
           (sd/response_ok (sd/query-eq-find-one :io_interfaces :id id))
           (sd/response_failed "Could not update io_interface." 406))))
     (catch Exception ex (sd/response_exception ex))))
@@ -63,12 +72,14 @@
     (catcher/with-logging {}
       (let [io_interface (-> req :io_interface)
             id (-> req :parameters :path :id)
-            del-result (jdbc/delete! (get-ds)
-                                     :io_interfaces
-                                     ["id = ?" id])]
-        (if (= 1 (first del-result))
+            sql-query (-> (sql/delete-from :io_interfaces)
+                          (sql/where [:= :id id])
+                          sql-format)
+            del-result (jdbc/execute-one! (get-ds) sql-query)]
+
+        (if (= 1 (::jdbc/update-count del-result))
           (sd/response_ok io_interface)
-          (logging/error "Could not delete io_interface: " id))))
+          (error "Could not delete io_interface: " id))))
     (catch Exception e (sd/response_exception e))))
 
 (defn wrap-find-io_interface [handler]
@@ -86,6 +97,12 @@
   {;(s/optional-key :id) s/Str
    (s/optional-key :description) s/Str})
 
+(def schema_export_io_interfaces_opt
+  {:id s/Str
+   (s/optional-key :description) (s/maybe s/Str)
+   (s/optional-key :created_at) s/Any
+   (s/optional-key :updated_at) s/Any})
+
 (def schema_export_io_interfaces
   {:id s/Str
    :description (s/maybe s/Str)
@@ -96,6 +113,7 @@
 ; TODO docu
 (def admin-routes
   ["/io_interfaces"
+   {:swagger {:tags ["admin/io_interfaces"] :security [{"auth" []}]}}
    ["/"
     {:post
      {:summary (sd/sum_adm "Create io_interfaces.")
@@ -106,16 +124,16 @@
       :responses {200 {:body schema_export_io_interfaces}
                   406 {:body s/Any}}}
 
-    ; io_interface list / query
+     ; io_interface list / query
      :get
      {:summary (sd/sum_adm "List io_interfaces.")
       :handler handle_list-io_interface
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
       :parameters {:query {(s/optional-key :full_data) s/Bool}}
-      :responses {200 {:body [schema_export_io_interfaces]}}}}]
+      :responses {200 {:body [schema_export_io_interfaces_opt]}}}}]
 
-    ; edit io_interface
+   ; edit io_interface
    ["/:id"
     {:get
      {:summary (sd/sum_adm "Get io_interfaces by id.")

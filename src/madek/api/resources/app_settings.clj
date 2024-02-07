@@ -3,14 +3,13 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-   [logbug.debug :as debug]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t]]
+   [madek.api.utils.helper :refer [mslurp]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-   [schema.core :as s]
-   [taoensso.timbre :refer [debug error info spy warn]]))
+   [schema.core :as s]))
 
 ;;; get ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -33,7 +32,7 @@
 (defn db-get-app-settings [ds]
   (-> (sql/select :*)
       (sql/from :app_settings)
-      (sql-format)
+      sql-format
       ((partial jdbc/execute-one! ds))))
 
 (defn handle_get-app-settings [{ds :tx}]
@@ -45,12 +44,13 @@
   "Updates app_settings and returns true if that happened and
   false otherwise"
   [data ds]
-  (-> (sql/update :app_settings)
-      (sql/set (-> data convert-sequential-values-to-sql-arrays))
-      (sql-format :inline false)
-      (->> (jdbc/execute-one! ds))
-      :next.jdbc/update-count
-      (= 1)))
+  (let [data (convert-map-if-exist (cast-to-hstore data))
+        res (-> (sql/update :app_settings)
+                (sql/set data)
+                (sql-format :inline false)
+                (->> (jdbc/execute-one! ds))
+                :next.jdbc/update-count
+                (= 1))] res))
 
 (defn handle_update-app-settings
   [{{body :body} :parameters ds :tx :as req}]
@@ -59,7 +59,7 @@
       (if (update-app-settings body ds)
         (sd/response_ok (transform_ml (db-get-app-settings ds)))
         (sd/response_failed "Could not update app-settings." 406)))
-    (catch Exception ex (sd/response_exception ex))))
+    (catch Exception ex (sd/parsed_response_exception ex))))
 
 ;;; schema ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -83,7 +83,7 @@
    (s/optional-key :copyright_notice_default_text) (s/maybe s/Str)
    (s/optional-key :copyright_notice_templates) [s/Str]
    (s/optional-key :default_locale) (s/maybe s/Str)
-   (s/optional-key :edit_meta_data_power_users_group_id) (s/maybe s/Str)
+   (s/optional-key :edit_meta_data_power_users_group_id) (s/maybe s/Uuid)
    (s/optional-key :featured_set_subtitles) sd/schema_ml_list
    (s/optional-key :featured_set_titles) sd/schema_ml_list
    (s/optional-key :ignored_keyword_keys_for_browsing) (s/maybe s/Str)
@@ -124,7 +124,7 @@
    (s/optional-key :copyright_notice_templates) [s/Str]
    (s/optional-key :created_at) s/Any
    (s/optional-key :default_locale) (s/maybe s/Str)
-   (s/optional-key :edit_meta_data_power_users_group_id) (s/maybe s/Str)
+   (s/optional-key :edit_meta_data_power_users_group_id) (s/maybe s/Uuid)
    (s/optional-key :featured_set_id) (s/maybe s/Uuid)
    (s/optional-key :featured_set_subtitles) (s/maybe sd/schema_ml_list)
    (s/optional-key :featured_set_titles) (s/maybe sd/schema_ml_list)
@@ -151,33 +151,39 @@
 
 (def admin-routes
   [["/app-settings"
-    {:get {:summary (sd/sum_adm "Get App Settings.")
-           :handler handle_get-app-settings
-           :middleware [wrap-authorize-admin!]
-           :swagger {:produces "application/json"}
-           :content-type "application/json"
-           :coercion reitit.coercion.schema/coercion
-           :responses {200 {:body s/Any}}}
+    {:swagger {:tags ["admin/app-settings"] :security [{"auth" []}]}}
+    ["/"
+     {:get {:summary (sd/sum_adm "Get App Settings.")
+            :handler handle_get-app-settings
+            :middleware [wrap-authorize-admin!]
+            :swagger {:produces "application/json"}
+            :content-type "application/json"
+            :coercion reitit.coercion.schema/coercion
+            :responses {200 {:body s/Any}}}
 
-     :put {:summary (sd/sum_adm "Update App Settings.")
-           :handler handle_update-app-settings
-           :middleware [wrap-authorize-admin!]
-           :swagger {:produces "application/json"
-                     :consumes "application/json"}
-           :content-type "application/json"
-           :coercion reitit.coercion.schema/coercion
-           :parameters {:body schema_update-app-settings}
-           :responses {200 {:body schema_export-app-settings}
-                       406 {:body s/Any}}}}]])
+      :put {:summary (sd/sum_adm "Update App Settings.")
+            :handler handle_update-app-settings
+            :middleware [wrap-authorize-admin!]
+            :description (mslurp "./md/admin-app-settings.md")
+            :swagger {:produces "application/json"
+                      :consumes "application/json"}
+            :content-type "application/json"
+            :coercion reitit.coercion.schema/coercion
+            :parameters {:body schema_update-app-settings}
+            :responses {200 {:body schema_export-app-settings}
+                        403 {:message "Only administrators are allowed to access this resource."}
+                        404 {:message "<Groups|Meta-Keys> entry does not exist"}}}}]]])
 
 (def user-routes
   [["/app-settings"
-    {:get {:summary (sd/sum_pub "Get App Settings.")
-           :handler handle_get-app-settings
-           :swagger {:produces "application/json"}
-           :content-type "application/json"
-           :coercion reitit.coercion.schema/coercion
-           :responses {200 {:body schema_export-app-settings}}}}]])
+    {:swagger {:tags ["app-settings"]}}
+    ["/"
+     {:get {:summary (sd/sum_pub "Get App Settings.")
+            :handler handle_get-app-settings
+            :swagger {:produces "application/json"}
+            :content-type "application/json"
+            :coercion reitit.coercion.schema/coercion
+            :responses {200 {:body schema_export-app-settings}}}}]]])
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

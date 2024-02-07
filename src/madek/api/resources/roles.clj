@@ -1,10 +1,9 @@
 (ns madek.api.resources.roles
   (:require
-   [clojure.tools.logging :as logging]
-   [logbug.debug :as debug]
-
    [madek.api.resources.roles.role :as role]
    [madek.api.resources.shared :as sd]
+   [madek.api.utils.helper :refer [t]]
+   [madek.api.utils.validation :refer [positive-number-0-to-100-validation positive-number-1-to-1000-validation]]
    [reitit.coercion.schema]
    [schema.core :as s]))
 
@@ -37,10 +36,13 @@
 ; TODO tests
 (def user-routes
   ["/roles"
+   {:swagger {:tags ["roles"]}}
    ["/" {:get {:summary "Get list of roles."
                :description "Get list of roles."
                :handler role/get-index
                :swagger {:produces "application/json"}
+
+               ;; TODO: use swagger-definition with preset values & infos
                :parameters {:query {(s/optional-key :page) s/Int
                                     (s/optional-key :count) s/Int}}
                :content-type "application/json"
@@ -62,12 +64,17 @@
 ; TODO tests
 (def admin-routes
   ["/roles"
+   {:swagger {:tags ["admin/roles"] :security [{"auth" []}]}}
    ["/" {:get {:summary (sd/sum_adm "Get list of roles.")
                :description "Get list of roles."
                :handler role/get-index
                :swagger {:produces "application/json"}
-               :parameters {:query {(s/optional-key :page) s/Int
-                                    (s/optional-key :count) s/Int}}
+
+               ;; TODO: use swagger-definition with preset values & infos
+               ;; Main problem: no validation within swagger-ui, no additional infos
+               :parameters {:query {(s/required-key :page) positive-number-0-to-100-validation
+                                    (s/required-key :count) positive-number-1-to-1000-validation}}
+
                :content-type "application/json"
                :coercion reitit.coercion.schema/coercion
                :responses {200 {:body {:roles [schema_export-role]}}}}
@@ -82,7 +89,12 @@
                 :parameters {:body schema_create-role}
                 :responses {200 {:body schema_export-role}
                             404 {:body s/Any}
-                            406 {:body s/Any}}}}]
+                            403 {:description "Forbidden."
+                                 :schema s/Str
+                                 :examples {"application/json" {:message "Violation of constraint."}}}
+                            406 {:description "Not Acceptable."
+                                 :schema s/Str
+                                 :examples {"application/json" {:message "Could not create role."}}}}}}]
 
    ["/:id"
     {:get {:summary (sd/sum_adm "Get role by id")
@@ -105,7 +117,9 @@
                         :body schema_update-role}
            :responses {200 {:body schema_export-role}
                        404 {:body s/Any}
-                       406 {:body s/Any}}}
+                       406 {:description "Not Acceptable."
+                            :schema s/Str
+                            :examples {"application/json" {:message "Could not update role."}}}}}
 
      :delete {:summary (sd/sum_adm "Delete role.")
               :handler role/handle_delete-role
@@ -114,7 +128,12 @@
               :coercion reitit.coercion.schema/coercion
               :parameters {:path {:id s/Uuid}}
               :responses {200 {:body schema_export-role}
-                          404 {:body s/Any}}}}]])
+                          404 {:description "Not found."
+                               :schema s/Str
+                               :examples {"application/json" {:message "No such role."}}}
+                          406 {:description "Not Acceptable."
+                               :schema s/Str
+                               :examples {"application/json" {:message "Could not delete role."}}}}}}]])
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

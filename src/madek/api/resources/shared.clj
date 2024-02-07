@@ -1,17 +1,19 @@
 (ns madek.api.resources.shared
   (:require [cheshire.core :as cheshire]
-            [clojure.java.jdbc :as jdbc]
-            [clojure.tools.logging :as logging]
+            [clojure.string :as str]
             [clojure.walk :refer [keywordize-keys]]
-            ;[honeysql.helpers :as h2helpers]
+            [honey.sql :refer [format] :rename {format sql-format}]
+            [honey.sql.helpers :as sql]
             [java-time.api :as jt]
             [logbug.catcher :as catcher]
             [madek.api.authorization :refer [authorized?]]
             [madek.api.constants :as mc]
+            [madek.api.db.core :refer [get-ds]]
             [madek.api.semver :as semver]
-            [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-            [madek.api.utils.sql :as sql]
-            [schema.core :as s]))
+            [madek.api.utils.helper :refer [to-uuid]]
+            [next.jdbc :as jdbc]
+            [schema.core :as s]
+            [taoensso.timbre :refer [error info warn]]))
 
 (def schema_ml_list
   {(s/optional-key :de) (s/maybe s/Str)
@@ -22,6 +24,25 @@
   (if (nil? hashMap)
     nil
     (keywordize-keys (zipmap (.keySet hashMap) (.values hashMap)))))
+
+(defn generate-swagger-pagination-params []
+  {:produces "application/json"
+   :parameters [{:name "page"
+                 :in "query"
+                 :description "Page number, defaults to 1"
+                 :required true
+                 :value 1
+                 :default 1
+                 :type "number"
+                 :pattern "^[1-9][0-9]*$"}
+                {:name "count"
+                 :in "query"
+                 :description "Number of items per page, defaults to 100"
+                 :required true
+                 :value 100
+                 :default 100
+                 :type "number"
+                 :pattern "^[1-9][0-9]*$"}]})
 
 ; begin db-helpers
 ; TODO move to sql file
@@ -34,45 +55,45 @@
   (let [pval (-> query-params param mc/presence)]
     (if (nil? pval)
       query
-      (-> query (sql/merge-where [:= param pval])))))
+      (-> query (sql/where [:= param pval])))))
 
 (defn try-instant-on-presence [data keyword]
   (try
-    ;(logging/info "try-instant-on-presence " data keyword)
+    ;(info "try-instant-on-presence " data keyword)
     (if-not (nil? (-> data keyword))
       (assoc data keyword (-> data keyword .toInstant))
       data)
     (catch Exception ex
-      (logging/error "Invalid instant data" (ex-message ex))
+      (error "Invalid instant data" (ex-message ex))
       data)))
 
 (defn try-instant [dinst]
   (try
-    ;(logging/info "try-instant " dinst)
+    ;(info "try-instant " dinst)
     (if-not (nil? dinst)
       (.toInstant dinst)
       nil)
     (catch Exception ex
-      (logging/error "Invalid instant data" dinst (ex-message ex))
+      (error "Invalid instant data" dinst (ex-message ex))
       nil)))
 
 (defn try-parse-date-time [dt_string]
   (try
-    (logging/info "try-parse-date-time "
-                  dt_string)
+    (info "try-parse-date-time "
+          dt_string)
     (let [zoneid (java.time.ZoneId/systemDefault)
 
           parsed2 (jt/local-date-time (jt/offset-date-time dt_string) zoneid)
           pcas (.toString parsed2)]
-      (logging/info "try-parse-date-time "
-                    dt_string
-                    "\n zoneid " zoneid
-                    "\n parsed " parsed2
-                    "\n result:  " pcas)
+      (info "try-parse-date-time "
+            dt_string
+            "\n zoneid " zoneid
+            "\n parsed " parsed2
+            "\n result:  " pcas)
       pcas)
 
     (catch Exception ex
-      (logging/error "Invalid date time string" (ex-message ex))
+      (error "Invalid date time string" (ex-message ex))
       nil)))
 
 (defn build-query-ts-after [query query-params param col-name]
@@ -81,11 +102,10 @@
       query
       ;(let [parsed (try-parse-date-time pval)]
       (let [parsed (try-instant pval)]
-        (logging/info "build-query-created-or-updated-after: " pval ":" parsed)
+        (info "build-query-created-or-updated-after: " pval ":" parsed)
         (if (nil? parsed)
           query
-          (-> query (sql/merge-where
-                     (sql/raw (str "'" parsed "'::timestamp < " col-name)))))))))
+          (-> query (sql/where [:raw (str "'" parsed "'::timestamp < " col-name)])))))))
 
 (defn build-query-created-or-updated-after [query query-params param]
   (let [pval (-> query-params param mc/presence)]
@@ -93,12 +113,12 @@
       query
       ;(let [parsed (try-parse-date-time pval)]
       (let [parsed (try-instant pval)]
-        (logging/info "build-query-created-or-updated-after: " pval ":" parsed)
+        (info "build-query-created-or-updated-after: " pval ":" parsed)
         (if (nil? parsed)
           query
-          (-> query (sql/merge-where [:or
-                                      (sql/raw (str "'" parsed "'::timestamp < created_at"))
-                                      (sql/raw (str "'" parsed "'::timestamp < updated_at"))])))))))
+          (-> query (sql/where [:or
+                                [:raw (str "'" parsed "'::timestamp < created_at")]
+                                [:raw (str "'" parsed "'::timestamp < updated_at")]])))))))
 
 ; TODO use honeysql 2.x for ilike feature
 (defn build-query-param-like
@@ -109,19 +129,20 @@
          qval (str "%" pval "%")]
      (if (nil? pval)
        query
-       (-> query (sql/merge-where [:like db-param qval]))
-      ;(-> query (h2helpers/merge-where [:like param qval]))
-       ))))
+       (-> query (sql/where [:like db-param qval]))))))
+
 (defn- sql-query-find-eq
   ([table-name col-name row-data]
-   (-> (build-query-base table-name :*)
-       (sql/merge-where [:= col-name row-data])
-       sql/format))
+   (let [query (-> (build-query-base table-name :*)
+                   (sql/where [:= col-name (to-uuid row-data col-name table-name)])
+                   sql-format)]
+     query))
+
   ([table-name col-name row-data col-name2 row-data2]
-   (-> (build-query-base table-name :*)
-       (sql/merge-where [:= col-name row-data])
-       (sql/merge-where [:= col-name2 row-data2])
-       sql/format)))
+   (let [query (-> (build-query-base table-name :*)
+                   (sql/where [:= col-name (to-uuid row-data col-name)])
+                   (sql/where [:= col-name2 (to-uuid row-data2 col-name2)])
+                   sql-format)] query)))
 
 (defn sql-update-clause
   "Generates an sql update clause"
@@ -140,28 +161,41 @@
 (defn query-find-all
   [table-key col-keys]
   (let [db-query (-> (build-query-base table-key col-keys)
-                     sql/format)
-        db-result (jdbc/query (get-ds) db-query)]
+                     sql-format)
+        db-result (jdbc/execute! (get-ds) db-query)]
     db-result))
 
 (defn query-eq-find-all
   ([table-name col-name row-data]
    (catcher/snatch {}
-                   (jdbc/query
+                   (jdbc/execute!
                     (get-ds)
                     (sql-query-find-eq table-name col-name row-data))))
 
   ([table-name col-name row-data col-name2 row-data2]
    (catcher/snatch {}
-                   (jdbc/query
+                   (jdbc/execute!
+                    (get-ds)
+                    (sql-query-find-eq table-name col-name row-data col-name2 row-data2)))))
+
+(defn query-eq-find-all-one
+  ([table-name col-name row-data]
+   (catcher/snatch {}
+                   (jdbc/execute-one!
+                    (get-ds)
+                    (sql-query-find-eq table-name col-name row-data))))
+
+  ([table-name col-name row-data col-name2 row-data2]
+   (catcher/snatch {}
+                   (jdbc/execute-one!
                     (get-ds)
                     (sql-query-find-eq table-name col-name row-data col-name2 row-data2)))))
 
 (defn query-eq-find-one
   ([table-name col-name row-data]
-   (first (query-eq-find-all table-name col-name row-data)))
+   (query-eq-find-all-one table-name col-name row-data))
   ([table-name col-name row-data col-name2 row-data2]
-   (first (query-eq-find-all table-name col-name row-data col-name2 row-data2))))
+   (query-eq-find-all-one table-name col-name row-data col-name2 row-data2)))
 
 #_(defn query-eq2-find-all [table-name col-name row-data col-name2 row-data2]
     (catcher/snatch {}
@@ -178,7 +212,7 @@
 
 ;(def uuid-matcher #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}" )
 
-(def internal-keys [:admin_comment])
+(def internal-keys [:admin_comment :enabled_for_public_view :enabled_for_public_use])
 
 (defn remove-internal-keys
   ([resource]
@@ -191,7 +225,20 @@
   ([msg status] {:status status :body msg}))
 
 (defn response_failed
+  ([] {:status 409 :body {:message "Failure occurred"}})
   ([msg status] {:status status :body {:message msg}}))
+
+(defn response_bad_request
+  ([msg]
+   {:status 400
+    :body {:message (str "Bad Request: " msg)}
+    ;:headers {"content-type" "application/json; charset=utf-8"}
+    })
+  ([msg details]
+   {:status 400
+    :body {:message (str "Bad Request: " msg) :details details}
+    ;:headers {"content-type" "application/json; charset=utf-8"}
+    }))
 
 (defn response_not_found [msg]
   {:status 404 :body {:message msg}})
@@ -225,11 +272,11 @@
   "Logs requests authed user id "
   [request msg]
   (if-let [auth-id (-> request :authenticated-entity :id)]
-    (logging/info "WRITE: User: " auth-id "; Message: " msg)
-    (logging/info "WRITE: anonymous; Message: " msg)))
+    (info "WRITE: User: " auth-id "; Message: " msg)
+    (info "WRITE: anonymous; Message: " msg)))
 
   ;([auth-entity msg entity]
-  ; (logging/info
+  ; (info
   ;  "WRITE: "
   ;  (if (nil? auth-entity)
   ;    "anonymous; "
@@ -245,7 +292,20 @@
    If it exists it is associated with the request as reqkey"
   [request handler path-param db_table db_col_name reqkey send404]
   (let [search (-> request :parameters :path path-param)]
-    ;(logging/info "req-find-data: " search " " db_table " " db_col_name)
+    ;(info "req-find-data: " search " " db_table " " db_col_name)
+    (if-let [result-db (query-eq-find-one db_table db_col_name search)]
+      (handler (assoc request reqkey result-db))
+      (if (= true send404)
+        (response_not_found (str "No such entity in " db_table " as " db_col_name " with " search))
+        (handler request)))))
+
+(defn req-find-data-new
+  "Extracts requests path-param, searches on db_table in col_name for its value.
+   It does send404 if set true and no such entity is found.
+   If it exists it is associated with the request as reqkey"
+  [request handler path-param db_table db_col_name reqkey send404]
+  (let [search (-> request :path-params path-param)]
+    ;(info "req-find-data: " search " " db_table " " db_col_name)
     (if-let [result-db (query-eq-find-one db_table db_col_name search)]
       (handler (assoc request reqkey result-db))
       (if (= true send404)
@@ -257,7 +317,7 @@
    It does send404 if set true and no such entity is found.
    If it exists it is associated with the request as reqkey"
   [request handler search search2 db_table db_col_name db_col_name2 reqkey send404]
-  (logging/info "req-find-data-search2" "\nc1: " db_col_name "\ns1: " search "\nc2: " db_col_name2 "\ns2: " search2)
+  (info "req-find-data-search2" "\nc1: " db_col_name "\ns1: " search "\nc2: " db_col_name2 "\ns2: " search2)
   (if-let [result-db (query-eq-find-one db_table db_col_name search db_col_name2 search2)]
     (handler (assoc request reqkey result-db))
     (if (= true send404)
@@ -271,10 +331,11 @@
    If it exists it is associated with the request as reqkey"
   [request handler path-param path-param2 db_table db_col_name db_col_name2 reqkey send404]
   (let [search (-> request :parameters :path path-param str)
-        search2 (-> request :parameters :path path-param2 str)]
+        search2 (-> request :parameters :path path-param2 str)
+        res (query-eq-find-one db_table db_col_name search db_col_name2 search2)]
 
-    ;(logging/info "req-find-data2" "\nc1: " db_col_name "\ns1: " search "\nc2: " db_col_name2 "\ns2: " search2)
-    (if-let [result-db (query-eq-find-one db_table db_col_name search db_col_name2 search2)]
+;(info "req-find-data2" "\nc1: " db_col_name "\ns1: " search "\nc2: " db_col_name2 "\ns2: " search2)
+    (if-let [result-db res]
       (handler (assoc request reqkey result-db))
       (if (= true send404)
         (response_not_found (str "No such entity in " db_table " as " db_col_name " with " search " and " db_col_name2 " with " search2))
@@ -286,11 +347,15 @@
 
 (defn is-admin [user-id]
   (let [none (->
-              (jdbc/query
+              (jdbc/execute!
                (get-ds)
-               ["SELECT * FROM admins WHERE user_id = ? " user-id]) empty?)
+               (-> (sql/select :*)
+                   (sql/from :admins)
+                   (sql/where [:= :user_id (to-uuid user-id)])
+                   sql-format))
+              empty?)
         result (not none)]
-    ;(logging/info "is-admin: " user-id " : " result)
+    ;(info "is-admin: " user-id " : " result)
     result))
 
 ; end user and other util wrappers
@@ -306,21 +371,23 @@
   ([request id-key table-name type]
    (try
      (when-let [id (-> request :parameters :path id-key)]
-       ;(logging/info "get-media-resource" "\nid\n" id)
-       (when-let [resource (-> (jdbc/query (get-ds)
-                                           [(str "SELECT * FROM " table-name "
-                                               WHERE id = ?") id]) first)]
+       ;(info "get-media-resource" "\nid\n" id)
+       (when-let [resource (jdbc/execute-one! (get-ds)
+                                              (-> (sql/select :*)
+                                                  (sql/from (keyword table-name))
+                                                  (sql/where [:= :id (to-uuid id)])
+                                                  sql-format))]
          (assoc resource :type type :table-name table-name)))
 
      (catch Exception e
-       (logging/error "ERROR: get-media-resource: " (ex-data e))
+       (error "ERROR: get-media-resource: " (ex-data e))
        (merge (ex-data e)
-              {:statuc 406,:body {:message (.getMessage e)}})))))
+              {:statuc 406, :body {:message (.getMessage e)}})))))
 
-(defn- ring-add-media-resource [request handler]
+(defn- ring-add-media-resource [request handler] ;;here
   (if-let [media-resource (get-media-resource request)]
     (let [request-with-media-resource (assoc request :media-resource media-resource)]
-      ;(logging/info "ring-add-media-resource" "\nmedia-resource\n" media-resource)
+      ;(info "ring-add-media-resource" "\nmedia-resource\n" media-resource)
       (handler request-with-media-resource))
     {:status 404}))
 
@@ -330,13 +397,16 @@
 
 (defn query-meta-datum [request]
   (let [id (-> request :parameters :path :meta_datum_id)]
-    #_(logging/info "query-meta-datum" "\nid\n" id)
-    (or (-> (jdbc/query (get-ds)
-                        [(str "SELECT * FROM meta_data "
-                              "WHERE id = ? ") id])
-            first)
-        (throw (IllegalStateException. (str "We expected to find a MetaDatum for "
-                                            id " but did not."))))))
+    #_(info "query-meta-datum" "\nid\n" id)
+    (or
+     (jdbc/execute-one! (get-ds)
+                        (-> (sql/select :*)
+                            (sql/from :meta_data)
+                            (sql/where [:= :id (to-uuid id)])
+                            sql-format))
+
+     (throw (IllegalStateException. (str "We expected to find a MetaDatum for "
+                                         id " but did not."))))))
 
 (defn- query-media-resource-for-meta-datum [meta-datum]
   (or (when-let [id (:media_entry_id meta-datum)]
@@ -352,7 +422,7 @@
 (defn- ring-add-meta-datum-with-media-resource [request handler]
   (if-let [meta-datum (query-meta-datum request)]
     (let [media-resource (query-media-resource-for-meta-datum meta-datum)]
-      ;(logging/info "add-meta-datum-with-media-resource" "\nmeta-datum\n" meta-datum "\nmedia-resource\n" media-resource)
+      ;(info "add-meta-datum-with-media-resource" "\nmeta-datum\n" meta-datum "\nmedia-resource\n" media-resource)
       (handler (assoc request
                       :meta-datum meta-datum
                       :media-resource media-resource)))
@@ -367,34 +437,34 @@
 
 (defn- authorize-request-for-media-resource [request handler scope]
   ;(
-   ;(logging/info "auth-request-for-mr" 
-   ;              "\nscope: " scope
-   ;              "\nauth entity:\n" (-> request :authenticated-entity)
-   ;              "\nis-admin:\n" (-> request :is_admin)
-   ;              )
+  ;(info "auth-request-for-mr"
+  ;              "\nscope: " scope
+  ;              "\nauth entity:\n" (-> request :authenticated-entity)
+  ;              "\nis-admin:\n" (-> request :is_admin)
+  ;              )
   (if-let [media-resource (:media-resource request)]
 
     (if (and (= scope :view) (public? media-resource))
-       ; viewable if public
+      ; viewable if public
       (handler request)
 
       (if-let [auth-entity (-> request :authenticated-entity)]
         (if (-> request :is_admin true?)
-            ; do all as admin
+          ; do all as admin
           (handler request)
 
-            ; if not admin check user auth
+          ; if not admin check user auth
           (if (authorized? auth-entity media-resource scope)
             (handler request)
-              ;else
+            ;else
             {:status 403 :body {:message "Not authorized for media-resource"}}))
 
-;else
+        ;else
         {:status 401 :body {:message "Not authorized"}}))
 
-; else
+    ; else
     (let [response {:status 500 :body {:message "No media-resource in request."}}]
-      (logging/warn 'authorize-request-for-media-resource response [request handler])
+      (warn 'authorize-request-for-media-resource response [request handler])
       response))
   ;)
   )
@@ -456,6 +526,15 @@
           (response_failed (str "Wrong meta_key_id format! See documentation."
                                 " (" meta-key-id ")") 422))))))
 
+(defn wrap-check-valid-meta-key-new [param]
+  (fn [handler]
+    (fn [request]
+      (let [meta-key-id (-> request :path-params param)]
+        (if (:and (not (nil? meta-key-id)) (re-find #"^[a-z0-9\-\_\:]+:[a-z0-9\-\_\:]+$" meta-key-id))
+          (handler request)
+          (response_failed (str "Wrong meta_key_id format! See documentation."
+                                " (" meta-key-id ")") 422))))))
+
 ;end wrappers
 
 ; begin swagger docu summary helpers
@@ -470,7 +549,31 @@
 
 (defn sum_cnv [text] (apply str text " " s_cnv_acc))
 
+;; TODO: no usage
 (defn sum_cnv_adm [text] (sum_adm (sum_cnv text)))
 
 (defn sum_adm_todo [text] (sum_todo (sum_adm text)))
 ; end swagger docu summary helpers
+
+(defn parsed_response_exception [ex]
+  (cond
+    (str/includes? (ex-message ex) "duplicate key value violates unique constraint") (response_failed (str "Violation of constraint") 409)
+    (str/includes? (ex-message ex) "violates not-null constraint") (response_failed (str "Violation of constraint") 403)
+    (str/includes? (ex-message ex) "is still referenced from table") (response_failed (str "References still exist") 403)
+    (str/includes? (ex-message ex) "already exists") (response_failed (str "Entry already exists") 409)
+    (str/includes? (ex-message ex) "is not present in table \"users\"") (response_failed (str "User entry does not exist") 404)
+    (str/includes? (ex-message ex) "is not present in table \"vocabularies\"") (response_failed (str "Vocabulary entry does not exist") 404)
+    (str/includes? (ex-message ex) "is not present in table \"people\"") (response_failed (str "People entry does not exist") 404)
+    (str/includes? (ex-message ex) "is not present in table \"groups\"") (response_failed (str "Groups entry does not exist") 404)
+    (str/includes? (ex-message ex) "is not present in table \"meta_keys\"") (response_failed (str "Meta-Keys entry does not exist") 404)
+    (str/includes? (ex-message ex) "insert or update on table \"collections\" violates foreign key constraint \"fk_rails_9085ae39f1\"") (response_failed (str "Workflows entry does not exist") 404)
+    (str/includes? (ex-message ex) "violates foreign key constraint") (response_failed (str "Violation of constraint (specific error-handler not yet defined)") 403)
+    :else (response_exception ex)))
+
+(defn transform_ml_map [data]
+  (cond-> data
+    (:labels data) (assoc :labels (transform_ml (:labels data)))
+    (:descriptions data) (assoc :descriptions (transform_ml (:descriptions data)))
+    (:contents data) (assoc :contents (transform_ml (:contents data)))))
+
+;(debug/debug-ns *ns*)

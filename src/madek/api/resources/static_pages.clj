@@ -1,11 +1,16 @@
 (ns madek.api.resources.static-pages
-  (:require [clojure.java.jdbc :as jdbc]
-            [clojure.tools.logging :as logging]
-            [logbug.catcher :as catcher]
-            [madek.api.resources.shared :as sd]
-            [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-            [reitit.coercion.schema]
-            [schema.core :as s]))
+  (:require
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [logbug.catcher :as catcher]
+   [madek.api.db.core :refer [get-ds]]
+   [madek.api.resources.shared :as sd]
+   [madek.api.utils.helper :refer [cast-to-hstore]]
+   [madek.api.utils.helper :refer [cast-to-hstore t]]
+   [next.jdbc :as jdbc]
+   [reitit.coercion.schema]
+   [schema.core :as s]
+   [taoensso.timbre :refer [info]]))
 
 (defn handle_list-static_pages
   [req]
@@ -16,63 +21,71 @@
 
 (defn handle_get-static_page
   [req]
-  (let [static_page (-> req :static_page)]
+  (let [static_page (-> req :static_page)
+        static_page (sd/transform_ml_map static_page)]
     (sd/response_ok static_page)))
 
 (defn handle_create-static_page [req]
   (try
     (catcher/with-logging {}
       (let [data (-> req :parameters :body)
-            contents-json (sd/try-as-json (:contents data))
-            ins-data (assoc data :contents contents-json)
-            ins-res (jdbc/insert! (rdbms/get-ds)
-                                  :static_pages
-                                  ins-data)]
+            ins-data (cast-to-hstore data)
+            sql-query (-> (sql/insert-into :static_pages)
+                          (sql/values [ins-data])
+                          (sql/returning :*)
+                          sql-format)
+            ins-res (jdbc/execute-one! (get-ds) sql-query)
+            ins-res (sd/transform_ml_map ins-res)]
 
-        (logging/info "handle_create-static-page:"
-                      "\ninsert data:\n" ins-data
-                      "\nresult:\n " ins-res)
+        (info "handle_create-static-page:"
+              "\ninsert data:\n" ins-data
+              "\nresult:\n " ins-res)
 
-        (if-let [result (first ins-res)]
-          (sd/response_ok result)
+        (if ins-res
+          (sd/response_ok ins-res)
           (sd/response_failed "Could not create static_page." 406))))
-    (catch Exception e (sd/response_exception e))))
+    (catch Exception e (sd/parsed_response_exception e))))
 
 (defn handle_update-static_page [req]
   (try
     (catcher/with-logging {}
       (let [data (-> req :parameters :body)
             id (-> req :parameters :path :id)
-            contents-json (sd/try-as-json (:contents data))
-            dwid (assoc data :id id :contents contents-json)
-            upd-query (sd/sql-update-clause "id" (str id))
-            upd-result (jdbc/update! (rdbms/get-ds)
-                                     :static_pages
-                                     dwid upd-query)]
+            dwid (cast-to-hstore data)
+            sql-query (-> (sql/update :static_pages)
+                          (sql/set dwid)
+                          (sql/where [:= :id id])
+                          (sql/returning :*)
+                          sql-format)
+            upd-result (jdbc/execute-one! (get-ds) sql-query)
+            upd-result (sd/transform_ml_map upd-result)]
 
-        (logging/info "handle_update-static_pages: "
-                      "\nid:\n" id
-                      "\nnew-data:\n" dwid
-                      "\nupd-result:" upd-result)
+        (info "handle_update-static_pages: "
+              "\nid:\n" id
+              "\nnew-data:\n" dwid
+              "\nupd-result:" upd-result)
 
-        (if (= 1 (first upd-result))
-          (sd/response_ok (sd/query-eq-find-one :static_pages :id id))
+        (if upd-result
+          (sd/response_ok upd-result)
           (sd/response_failed "Could not update static_page." 406))))
-    (catch Exception e (sd/response_exception e))))
+    (catch Exception e (sd/parsed_response_exception e))))
 
 (defn handle_delete-static_page [req]
   (try
     (catcher/with-logging {}
-      (let [olddata (-> req :static_page)
-            id (-> req :parameters :path :id)
-            delresult (jdbc/delete! (rdbms/get-ds)
-                                    :static_pages
-                                    ["id = ?" id])]
-        (logging/info "handle_delete-static_page: "
-                      " id: " id
-                      " result: " delresult)
-        (if (= 1 (first delresult))
-          (sd/response_ok olddata)
+      (let [id (-> req :parameters :path :id)
+            sql-query (-> (sql/delete-from :static_pages)
+                          (sql/where [:= :id id])
+                          (sql/returning :*)
+                          sql-format)
+            delresult (jdbc/execute-one! (get-ds) sql-query)
+            delresult (sd/transform_ml_map delresult)]
+
+        (info "handle_delete-static_page: "
+              " id: " id
+              " result: " delresult)
+        (if delresult
+          (sd/response_ok delresult)
           (sd/response_failed "Could not delete static page." 422))))
     (catch Exception e (sd/response_exception e))))
 
@@ -83,21 +96,18 @@
                                     :static_page true))))
 
 (def schema_create_static_page
-  {;:id is db assigned or optional
-   :name s/Str
-   :contents s/Str ; TODO is json as hstore
-   })
+  {:name s/Str
+   :contents sd/schema_ml_list})
 
 (def schema_update_static_page
-  {;:id s/Uuid
-   (s/optional-key :name) s/Str
-   (s/optional-key :contents) s/Str ; TODO is json as hstore
-   })
+  {(s/optional-key :name) s/Str
+   (s/optional-key :contents) sd/schema_ml_list})
+
 ; TODO Inst coercion
 (def schema_export_static_page
   {:id s/Uuid
    :name s/Str
-   :contents s/Str ; TODO is json as hstore
+   :contents sd/schema_ml_list
    :created_at s/Any ; TODO as Inst
    :updated_at s/Any})
 
@@ -109,19 +119,25 @@
 (def admin-routes
 
   ["/static-pages"
+   {:swagger {:tags ["admin/static-pages"] :security [{"auth" []}]}}
    ["/"
     {:post {:summary (sd/sum_adm "Create static_page.")
             :handler handle_create-static_page
             :coercion reitit.coercion.schema/coercion
             :parameters {:body schema_create_static_page}
             :responses {200 {:body schema_export_static_page}
-                        406 {:body s/Any}}}
-    ; static_page list / query
+                        406 {:description "Not Acceptable."
+                             :schema s/Str
+                             :examples {"application/json" {:message "Could not create static_page."}}}
+                        409 {:description "Conflict."
+                             :schema s/Str
+                             :examples {"application/json" {:message "Entry already exists"}}}}}
+
      :get {:summary (sd/sum_adm "List static_pages.")
            :handler handle_list-static_pages
            :coercion reitit.coercion.schema/coercion
            :parameters {:query {(s/optional-key :full_data) s/Bool}}}}]
-    ; edit static_page
+
    ["/:id"
     {:get {:summary (sd/sum_adm "Get static_pages by id.")
            :handler handle_get-static_page
@@ -129,7 +145,9 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Uuid}}
            :responses {200 {:body schema_export_static_page}
-                       404 {:body s/Any}}}
+                       404 {:description "Not Found."
+                            :schema s/Str
+                            :examples {"application/json" {:message "No such entity in :static_pages as :id with <id>"}}}}}
 
      :put {:summary (sd/sum_adm "Update static_pages with id.")
            :handler handle_update-static_page
@@ -139,7 +157,9 @@
                         :body schema_update_static_page}
            :responses {200 {:body schema_export_static_page}
                        406 {:body s/Any}
-                       404 {:body s/Any}}}
+                       404 {:description "Not Found."
+                            :schema s/Str
+                            :examples {"application/json" {:message "No such entity in :static_pages as :id with <id>"}}}}}
 
      :delete {:summary (sd/sum_adm "Delete static_page by id.")
               :coercion reitit.coercion.schema/coercion
@@ -147,4 +167,10 @@
               :middleware [(wwrap-find-static_page :id)]
               :parameters {:path {:id s/Uuid}}
               :responses {200 {:body schema_export_static_page}
-                          404 {:body s/Any}}}}]])
+                          404 {:description "Not Found."
+                               :schema s/Str
+                               :examples {"application/json" {:message "No such entity in :static_pages as :id with <id>"}}}
+
+                          422 {:description "Unprocessable Entity."
+                               :schema s/Str
+                               :examples {"application/json" {:message "Could not delete static page."}}}}}}]])

@@ -1,12 +1,11 @@
 (ns madek.api.resources.media-resources.permissions
   (:require
-   [clojure.java.jdbc :as jdbc]
-   [clojure.tools.logging :as logging]
-   [logbug.catcher :as catcher]
-   [logbug.debug :as debug]
-   [logbug.thrown :as thrown]
-   [madek.api.utils.rdbms :as rdbms]
-   [madek.api.utils.sql :as sql]))
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [madek.api.db.core :refer [get-ds]]
+   [madek.api.utils.helper :refer [convert-map-if-exist to-uuid]]
+   [next.jdbc :as jdbc]
+   [taoensso.timbre :refer [info]]))
 
 (defn- user-table
   [mr-type]
@@ -43,8 +42,8 @@
      "Collection" (resource-permission-get-query (:id media-resource) "collections")))
 
   ([mr-id mr-table]
-   (-> (jdbc/query (rdbms/get-ds)
-                   [(str "SELECT * FROM " mr-table " WHERE id = ?") mr-id]) first)))
+   (-> (jdbc/execute-one! (get-ds)
+                          (-> (sql/select :*) (sql/from (keyword mr-table)) (sql/where [:= :id mr-id]) (sql-format))))))
 
 (defn- build-user-permissions-query
   [media-resource-id user-id perm-name mr-type]
@@ -53,7 +52,7 @@
       (sql/where [:= (resource-key mr-type) media-resource-id]
                  [:= :user_id user-id]
                  [:= perm-name true])
-      (sql/format)))
+      (sql-format)))
 
 (defn- build-user-permission-get-query
   [media-resource-id mr-type user-id]
@@ -61,25 +60,25 @@
       (sql/from (user-table mr-type))
       (sql/where [:= (resource-key mr-type) media-resource-id]
                  [:= :user_id user-id])
-      (sql/format)))
+      (sql-format)))
 
 (defn- build-user-permission-list-query
   [media-resource-id mr-type]
   (-> (sql/select :*)
       (sql/from (user-table mr-type))
       (sql/where [:= (resource-key mr-type) media-resource-id])
-      (sql/format)))
+      (sql-format)))
 
 (defn- build-user-groups-query [user-id]
   (-> (sql/select :groups.*)
       (sql/from :groups)
-      (sql/merge-join :groups_users [:= :groups.id :groups_users.group_id])
+      (sql/join :groups_users [:= :groups.id :groups_users.group_id])
       (sql/where [:= :groups_users.user_id user-id])
-      (sql/format)))
+      (sql-format)))
 
 (defn- query-user-groups [user-id]
   (->> (build-user-groups-query user-id)
-       (jdbc/query (rdbms/get-ds))))
+       (jdbc/execute! (get-ds))))
 
 (defn- build-group-permissions-query
   [media-resource-id group-ids perm-name mr-type]
@@ -88,7 +87,7 @@
       (sql/where [:= (resource-key mr-type) media-resource-id]
                  [:in :group_id group-ids]
                  [:= perm-name true])
-      (sql/format)))
+      (sql-format)))
 
 (defn- build-group-permission-get-query
   [media-resource-id mr-type group-id]
@@ -96,14 +95,14 @@
       (sql/from (group-table mr-type))
       (sql/where [:= (resource-key mr-type) media-resource-id]
                  [:= :group_id group-id])
-      (sql/format)))
+      (sql-format)))
 
 (defn- build-group-permission-list-query
   [media-resource-id mr-type]
   (-> (sql/select :*)
       (sql/from (group-table mr-type))
       (sql/where [:= (resource-key mr-type) media-resource-id])
-      (sql/format)))
+      (sql-format)))
 
 ; ============================================================
 
@@ -117,7 +116,7 @@
                        (-> (sql/select :delegation_id)
                            (sql/from :delegations_users)
                            (sql/where [:= :delegations_users.user_id user_id]))]}]
-    (map #(:delegation_id %) (jdbc/query (rdbms/get-ds) (sql/format query)))))
+    (map #(:delegation_id %) (jdbc/execute! (get-ds) (sql-format query)))))
 
 ;(defn- query-api-client-permissions
 ;  [resource api-client-id perm-name mr-type]
@@ -134,43 +133,42 @@
 ; TODO try catch logwrite
 (defn update-resource-permissions
   [resource perm-data]
-  (let [mr-id (-> resource :id str)
+  (let [mr-id (-> resource :id)
         tname (case (:type resource)
                 "MediaEntry" :media_entries
                 "Collection" :collections)
-        whcl (-> (sql/where [:= :id mr-id])
-                 (sql/format)
-                 (update-in [0] #(clojure.string/replace % "WHERE" "")))]
-    (logging/info "update resource permissions"
-                  "\ntable\n" tname
-                  "\nwhcl\n" whcl
-                  "\nperm-data\n" perm-data)
-    (jdbc/update! (rdbms/get-ds) tname perm-data whcl)))
+        update-stmt (-> (sql/update tname)
+                        (sql/set (convert-map-if-exist perm-data))
+                        (sql/where [:= :id (to-uuid mr-id)])
+                        sql-format)
+        upd-result (jdbc/execute-one! (get-ds) update-stmt)]
+    (info "update resource permissions"
+          "\ntable\n" tname
+          "\nperm-data\n" perm-data)
+    upd-result))
 
 (defn- query-user-permissions
   [resource user-id perm-name mr-type]
-  (->> (build-user-permissions-query
-        (:id resource) user-id perm-name mr-type)
-       (jdbc/query (rdbms/get-ds))))
+  (->> (build-user-permissions-query (:id resource) user-id perm-name mr-type)
+       (jdbc/execute! (get-ds))))
 
 (defn query-list-user-permissions
   [resource mr-type]
   (->> (build-user-permission-list-query
         (:id resource) mr-type)
-       (jdbc/query (rdbms/get-ds))))
+       (jdbc/execute! (get-ds))))
 
 (defn query-get-user-permission
   [resource mr-type user-id]
-  (first (jdbc/query (rdbms/get-ds)
+  (jdbc/execute-one! (get-ds)
                      (build-user-permission-get-query
-                      (:id resource) mr-type user-id))))
+                      (:id resource) mr-type user-id)))
 
 (defn- sql-cls-resource-and
-  [mr-type mr-id and-key and-id]
-  (-> (sql/where [:= (resource-key mr-type) mr-id]
-                 [:= and-key and-id])
-      (sql/format)
-      (update-in [0] #(clojure.string/replace % "WHERE" ""))))
+  [stmt mr-type mr-id and-key and-id]
+  (-> stmt
+      (sql/where [:= (resource-key mr-type) mr-id]
+                 [:= and-key and-id])))
 
 ;TODO logwrite
 (defn create-user-permissions
@@ -180,13 +178,18 @@
   (let [mr-id (:id resource)
         tname (user-table mr-type)
         insdata (assoc data :user_id user-id (resource-key mr-type) mr-id)
-        ins-result (jdbc/insert! (rdbms/get-ds) tname insdata)]
-    (logging/info "create-user-permissions" mr-id mr-type user-id tname insdata)
-    (if-let [result (first ins-result)]
+        insert-stmt (-> (sql/insert-into tname)
+                        (sql/values [insdata])
+                        (sql/returning :*)
+                        sql-format)
+        ins-result (jdbc/execute-one! (get-ds) insert-stmt)]
+
+    (info "create-user-permissions" mr-id mr-type user-id tname insdata)
+    (if-let [result ins-result]
       result
       nil)))
    ; (catch Exception ex
-   ;   (logging/error "Could not create resource user permissions." (ex-message ex)))))
+   ;   (error "Could not create resource user permissions." (ex-message ex)))))
 
 ; TODO logwrite
 (defn delete-user-permissions
@@ -195,14 +198,16 @@
   ;  (catcher/with-logging {}
   (let [mr-id (:id resource)
         tname (user-table mr-type)
-        delquery (sql-cls-resource-and mr-type mr-id :user_id user-id)
-        delresult (jdbc/delete! (rdbms/get-ds) tname delquery)]
-    (logging/info "delete-user-permissions: " mr-id user-id delresult)
-    (if (= 1 (first delresult))
+        delete-stmt (-> (sql/delete-from tname)
+                        (sql-cls-resource-and mr-type mr-id :user_id user-id)
+                        sql-format)
+        delresult (jdbc/execute-one! (get-ds) delete-stmt)]
+    (info "delete-user-permissions: " mr-id user-id delresult)
+    (if (= 1 (::jdbc/update-count delresult))
       true
       false)))
     ;(catch Exception ex
-    ;  ((logging/error "Could not delete resource user permissions." (ex-message ex))
+    ;  ((error "Could not delete resource user permissions." (ex-message ex))
     ;     false))))
 
 ; TODO logwrite
@@ -211,14 +216,16 @@
 
   (let [mr-id (:id resource)
         tname (user-table mr-type)
-        whcl (sql-cls-resource-and mr-type mr-id :user_id user-id)
         perm-data {(keyword perm-name) perm-val}
-        result (jdbc/update! (rdbms/get-ds) tname perm-data whcl)]
-    (logging/info "update user permissions"
-                  "\ntable\n" tname
-                  "\nwhcl\n" whcl
-                  "\nperm-data\n" perm-data
-                  "\nresult:\n" result)
+        update-stmt (-> (sql/update tname)
+                        (sql/set perm-data)
+                        (sql-cls-resource-and mr-type mr-id :user_id user-id)
+                        sql-format)
+        result (jdbc/execute-one! (get-ds) update-stmt)]
+    (info "update user permissions"
+          "\ntable\n" tname
+          "\nperm-data\n" perm-data
+          "\nresult:\n" result)
     result))
 
 (defn- query-group-permissions
@@ -226,34 +233,38 @@
   (if-let [user-groups (seq (query-user-groups user-id))]
     (->> (build-group-permissions-query
           (:id resource) (map :id user-groups) perm-name mr-type)
-         (jdbc/query (rdbms/get-ds)))))
+         (jdbc/execute! (get-ds)))))
 
 (defn query-get-group-permission
   [resource mr-type group-id]
-  (first (jdbc/query (rdbms/get-ds)
+  (jdbc/execute-one! (get-ds)
                      (build-group-permission-get-query
-                      (:id resource) mr-type group-id))))
+                      (:id resource) mr-type group-id)))
 
 (defn query-list-group-permissions
   [resource mr-type]
   (->> (build-group-permission-list-query
         (:id resource) mr-type)
-       (jdbc/query (rdbms/get-ds))))
+       (jdbc/execute! (get-ds))))
 
 (defn create-group-permissions
   [resource mr-type group-id data]
   ;(try
-    ;(catcher/with-logging {}
+  ;(catcher/with-logging {}
   (let [mr-id (:id resource)
         tname (group-table mr-type)
         insdata (assoc data :group_id group-id (resource-key mr-type) mr-id)
-        insresult (jdbc/insert! (rdbms/get-ds) tname insdata)]
-    (logging/info "create-group-permissions" mr-id mr-type group-id tname insdata)
-    (if-let [result (first insresult)]
+        insert-stmt (-> (sql/insert-into tname)
+                        (sql/values [(convert-map-if-exist insdata)])
+                        (sql/returning :*)
+                        sql-format)
+        insresult (jdbc/execute-one! (get-ds) insert-stmt)]
+    (info "create-group-permissions" mr-id mr-type group-id tname insdata)
+    (if-let [result insresult]
       result
       nil)))
-    ;(catch Exception ex
-    ;  (logging/error "ERROR: Could not create resource group permissions." (ex-message ex)))))
+;(catch Exception ex
+;  (error "ERROR: Could not create resource group permissions." (ex-message ex)))))
 
 (defn delete-group-permissions
   [resource mr-type group-id]
@@ -261,29 +272,33 @@
   ;  (catcher/with-logging {}
   (let [mr-id (:id resource)
         tname (group-table mr-type)
-        delquery (sql-cls-resource-and mr-type mr-id :group_id group-id)
-        delresult (jdbc/delete! (rdbms/get-ds) tname delquery)]
-    (logging/info "delete-group-permissions: " mr-id group-id delresult)
-    (if (= 1 (first delresult))
+        delete-stmt (-> (sql/delete-from tname)
+                        (sql-cls-resource-and mr-type mr-id :group_id group-id)
+                        sql-format)
+        delresult (jdbc/execute-one! (get-ds) delete-stmt)]
+    (info "delete-group-permissions: " mr-id group-id delresult)
+    (if (= 1 (::jdbc/update-count delresult))
       true
       false)))
-  ;  (catch Exception ex
-  ;    ((logging/error "ERROR: Could not delete resource group permissions." (ex-message ex))
-  ;     false))))
+;  (catch Exception ex
+;    ((error "ERROR: Could not delete resource group permissions." (ex-message ex))
+;     false))))
 
 ; TODO logwrite
 (defn update-group-permissions
   [resource mr-type group-id perm-name perm-val]
   (let [mr-id (:id resource)
         tname (group-table mr-type)
-        whcl (sql-cls-resource-and mr-type mr-id :group_id group-id)
         perm-data {(keyword perm-name) perm-val}
-        result (jdbc/update! (rdbms/get-ds) tname perm-data whcl)]
-    (logging/info "update group permissions"
-                  "\ntable\n" tname
-                  "\nwhcl\n" whcl
-                  "\nperm-data\n" perm-data
-                  "\nresult\n" result)
+        update-stmt (-> (sql/update tname)
+                        (sql/set perm-data)
+                        (sql-cls-resource-and mr-type mr-id :group_id group-id)
+                        sql-format)
+        result (jdbc/execute-one! (get-ds) update-stmt)]
+    (info "update group permissions"
+          "\ntable\n" tname
+          "\nperm-data\n" perm-data
+          "\nresult\n" result)
     result))
 
 (defn permission-by-auth-entity? [resource auth-entity perm-name mr-type]

@@ -4,29 +4,27 @@
    [buddy.core.hash :as hash]
    [clj-time.core :as time]
    [clj-time.format :as time-format]
-   [clojure.java.jdbc :as jdbc]
-   [clojure.tools.logging :as logging]
    [clojure.walk :refer [keywordize-keys]]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
+   [madek.api.db.core :refer [get-ds]]
    [madek.api.legacy.session.encryptor :refer [decrypt]]
    [madek.api.legacy.session.signature :refer [valid?]]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.config :refer [get-config
                                    parse-config-duration-to-seconds]]
-   [madek.api.utils.rdbms :as rdbms]
-
-   [next.jdbc :as njdbc]
-   [taoensso.timbre :refer [debug spy]]))
+   [next.jdbc :as jdbc]
+   [taoensso.timbre :refer [debug info]]))
 
 (defn- get-session-secret []
   (-> (get-config) :madek_master_secret))
 
 (defn- get-user [user-id]
-  (when-let [user (-> (jdbc/query (rdbms/get-ds)
-                                  ["SELECT * FROM users WHERE id = ? " user-id])
-                      first)]
+  (when-let [user (jdbc/execute-one! (get-ds) (-> (sql/select :*)
+                                                  (sql/from :users)
+                                                  (sql/where [:= :id user-id])
+                                                  sql-format))]
     (assoc user :type "User")))
 
 (defn- get-madek-session-cookie-name []
@@ -100,7 +98,7 @@
   (-> token-hash
       user-session-query
       (sql-format :inline false)
-      (#(njdbc/execute! (rdbms/get-ds) %))))
+      (#(jdbc/execute! (get-ds) %))))
 
 (defn- session-enbabled? []
   (-> (get-config) :madek_api_session_enabled boolean))
@@ -120,11 +118,11 @@
         (let [user-id (:users/user_id user-session)
               expires-at (:session_expires_at user-session)
               user (assoc (sd/query-eq-find-one :users :id user-id) :type "User")]
-          #_(logging/info "handle session: "
-                          "\nfound user session:\n " user-session
-                          "\n user-id:  " user-id
-                          "\n expires-at: " expires-at
-                          "\n user: " user)
+          #_(info "handle session: "
+                  "\nfound user session:\n " user-session
+                  "\n user-id:  " user-id
+                  "\n expires-at: " expires-at
+                  "\n user: " user)
           (handler (assoc request
                           :authenticated-entity user
                           :is_admin (sd/is-admin user-id)
