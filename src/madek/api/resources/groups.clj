@@ -31,7 +31,7 @@
 (defn get-group [id-or-institutinal-group-id]
   (if-let [group (groups/find-group id-or-institutinal-group-id)]
     {:body (dissoc group :previous_id :searchable)}
-    {:status 404 :body "No such group found"}))
+    {:status 404 :body "No such group found"}))             ; 204 No Content
 
 ;### delete group ##############################################################
 
