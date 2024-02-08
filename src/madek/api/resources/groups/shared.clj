@@ -11,8 +11,8 @@
   ([group-id] (sql-merge-where-id {} group-id))
   ([sql-map group-id]
    (if (re-matches
-         #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-         group-id)
+        #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+        group-id)
      (sql/where sql-map [:or
                          [:= :groups.id (to-uuid group-id)]
                          [:= :groups.institutional_id group-id]])
