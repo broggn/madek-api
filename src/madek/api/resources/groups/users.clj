@@ -1,15 +1,34 @@
 (ns madek.api.resources.groups.users
   (:require
    [clj-uuid]
-   [clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
    [logbug.debug :as debug]
    [madek.api.pagination :as pagination]
    [madek.api.resources.groups.shared :as groups]
    [madek.api.resources.shared :as sd]
-   [madek.api.utils.rdbms :as rdbms]
-   [madek.api.utils.sql :as sql]
-   [schema.core :as s]))
+   ;[madek.api.utils.rdbms :as rdbms]
+   ;[madek.api.utils.sql :as sql]
+
+   [clojure.java.jdbc :as jdbco]
+
+   ; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [next.jdbc :as jdbc]
+   [honey.sql.helpers :as sql]
+   [madek.api.db.core :refer [get-ds]]
+
+
+   [taoensso.timbre :refer [debug info warn error spy]]
+
+   [schema.core :as s])
+  (:import (java.time ZonedDateTime)
+           (java.time ZoneId)
+           (java.time.format DateTimeFormatter)
+           (java.util UUID)))
+
+
+
+
 
 ;;; temporary users stuff ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -17,52 +36,57 @@
   ([] (sql-select {}))
   ([sql-map]
    (sql/select sql-map :*
-               ;:users.id :users.email :users.institutional_id :users.login
-               ;:users.created_at :users.updated_at
-               ;:users.person_id
-               )))
+     ;:users.id :users.email :users.institutional_id :users.login
+     ;:users.created_at :users.updated_at
+     ;:users.person_id
+     )))
 
 (defn sql-merge-user-where-id
   ([id] (sql-merge-user-where-id {} id))
   ([sql-map id]
    (if (re-matches
-        #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-        id)
-     (sql/merge-where sql-map [:or
-                               [:= :users.id id]
-                               [:= :users.institutional_id id]
-                               [:= :users.email id]])
-     (sql/merge-where sql-map [:or
-                               [:= :users.institutional_id id]
-                               [:= :users.email id]]))))
+         #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+         id)
+     (sql/where sql-map [:or
+                         [:= :users.id [:cast id :uuid]]
+                         [:= :users.institutional_id id]
+                         [:= :users.email id]])
+     (sql/where sql-map [:or
+                         [:= :users.institutional_id id]
+                         [:= :users.email id]]))))
 
 (defn find-user-sql [some-id]
   (-> (sql-select)
       (sql-merge-user-where-id some-id)
       (sql/from :users)
-      sql/format))
+      sql-format))
 
 (defn find-user [some-id]
   (->> some-id find-user-sql
-       (jdbc/query (rdbms/get-ds)) first))
+    (jdbc/execute-one! (get-ds))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn group-user-query [group-id user-id]
-  (-> ;(users/sql-select)
+  (println ">o> group-user-query ??" user-id)
+
+  (->                                                       ;(users/sql-select)
    (sql/select {} :users.id :users.institutional_id :users.email :users.person_id)
    (sql/from :users)
-   (sql/merge-join :groups_users [:= :users.id :groups_users.user_id])
-   (sql/merge-join :groups [:= :groups.id :groups_users.group_id])
+   (sql/join :groups_users [:= :users.id :groups_users.user_id])
+   (sql/join :groups [:= :groups.id :groups_users.group_id])
    (sql-merge-user-where-id user-id)
    (groups/sql-merge-where-id group-id)
-   sql/format))
+   sql-format))
 
 (defn find-group-user [group-id user-id]
   ;(logging/info "find-group-user" group-id ":" user-id)
+
+  (println ">o> find-group-user")
+
   (->> (group-user-query group-id user-id)
-       (jdbc/query (rdbms/get-ds))
-       first))
+    (jdbc/execute-one! (get-ds))
+    ))
 
 (defn get-group-user [group-id user-id]
   (if-let [user (find-group-user group-id user-id)]
@@ -74,16 +98,16 @@
 (defn group-users-query [group-id request]
   (-> (sql/select :users.id :users.institutional_id :users.email :users.person_id)
       (sql/from :users)
-      (sql/merge-join :groups_users [:= :users.id :groups_users.user_id])
-      (sql/merge-join :groups [:= :groups.id :groups_users.group_id])
+      (sql/join :groups_users [:= :users.id :groups_users.user_id])
+      (sql/join :groups [:= :groups.id :groups_users.group_id])
       (sql/order-by [:users.id :asc])
       (groups/sql-merge-where-id group-id)
       (pagination/add-offset-for-honeysql (-> request :parameters :query))
-      sql/format))
+      sql-format))
 
 (defn group-users [group-id request]
-  (jdbc/query (rdbms/get-ds)
-              (group-users-query group-id request)))
+  (jdbc/execute! (get-ds)
+    (group-users-query group-id request)))
 
 (defn get-group-users [group-id request]
   (sd/response_ok {:users (group-users group-id request)}))
@@ -98,9 +122,18 @@
           user (find-user user-id)]
       (if-not (and group user)
         (sd/response_not_found "No such user or group.")
-        (do (jdbc/insert! (rdbms/get-ds)
-                          :groups_users {:group_id (:id group)
-                                         :user_id (:id user)})
+        ;(do (jdbc/insert! (get-ds)
+        (do (jdbc/execute! (get-ds)
+              (-> (sql/insert-into :groups_users)
+                  (sql/values [{:group_id (:id group)
+                                :user_id (:id user)}])
+                  sql-format)
+
+
+              ;:groups_users {:group_id (:id group)
+              ;               :user_id (:id user)}
+              ;
+              )
             (sd/response_ok {:users (group-users group-id nil)}))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -108,10 +141,21 @@
 (defn remove-user [group-id user-id]
   (if-let [user (find-group-user group-id user-id)]
     (if-let [group (groups/find-group group-id)]
-      (let [delok (jdbc/delete! (rdbms/get-ds)
-                                :groups_users
-                                ["group_id = ? AND user_id = ?"
-                                 (:id group) (:id user)])]
+      (let [
+            delok (jdbc/execute! (get-ds)
+                    (-> (sql/delete-from :groups_users)
+                        ;(sql/where [:= :group_id (:id group)])
+                        ;(sql/where [:= :user_id (:id user)])
+
+                        (sql/where [:= :group_id (:id group)] [:= :user_id (:id user)])
+                        ;(sql/where [:= :user_id (:id user)])
+                        sql-format))]
+
+
+        ;delok (jdbc/delete! (get-ds)
+        ;                    :groups_users
+        ;                    ["group_id = ? AND user_id = ?"
+        ;                     (:id group) (:id user)])]
         (sd/response_ok {:users (group-users group-id nil)}))
       (sd/response_not_found "No such group"))
     (sd/response_not_found "No such group user.")))
@@ -119,49 +163,171 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn current-group-users-ids [tx group-id]
-  (->> (-> (sql/select [:user_id :id])
-           (sql/from :groups_users)
-           (sql/where [:= :groups_users.group_id group-id])
-           sql/format)
-       (jdbc/query tx)
-       (map :id)
-       set))
+
+  (let [
+        sql (-> (sql/select [:user_id :id])
+                (sql/from :groups_users)
+                (sql/where [:= :groups_users.group_id [:cast group-id :uuid]])
+                sql-format)
+        p (println ">o> sql current-group-users-ids-1" sql)
+
+        res (jdbc/execute! tx sql)
+        p (println ">o> res current-group-users-ids-2a" res)
+
+        ; broken
+        ;res (jdbc/execute! (get-ds) sql)
+        ;p (println ">o> res current-group-users-ids-2b" res)
+
+        defres res
+
+        ;res (->> defres
+        ;      (map :id)
+        ;      set)
+        ;p (println ">o> 1 res current-group-users-ids-3" res)
+
+        res (->> defres
+              (map :groups_users/id)
+              set)
+        p (println ">o> 2 res current-group-users-ids-3" res)
+
+
+        ] res))
+
+
+  ;(->> (-> (sql/select [:user_id :id])
+  ;         (sql/from :groups_users)
+  ;         (sql/where [:= :groups_users.group_id [:cast group-id :uuid]])
+  ;         sql-format)
+  ;  (jdbc/execute! tx)
+  ;  (map :id)
+  ;  set))
+
+(defn to-uuid [id] (if (instance? String id) (UUID/fromString id) id))
+
+
+(comment
+  (let [
+        users [{:id #uuid "690263d1-9379-41c5-89cf-b3db8563edd1"} {:id #uuid "56c4bc56-13b2-49b8-ba8f-e5151735bc9a" :identity true}]
+
+        fnc (->> users
+              ;(map #(-> (to-uuid %) :id str))
+              (map #(-> % :id to-uuid))
+
+              ;(map #(-> % :id str))
+              ;(map #(-> % to-uuid))
+
+              (filter identity)
+
+              )
+
+        ;p (println ">o> fnc" fnc)
+
+        ] fnc
+          ))
 
 (defn target-group-users-query [users]
   (-> (sql/select :id)
       (sql/from :users)
-      (sql/where ;[:or
-       [:in :users.id (->> users (map #(-> % :id str)) (filter identity))]
-                  ;[:in :users.institutional_id (->> users (map #(-> % :institutional_id str)) (filter identity))]
-                  ;[:in :users.email (->> users (map :email) (filter identity))]
-                  ;]
-       )
-      sql/format))
+      (sql/where                                            ;[:or
+        [:in :users.id (->> users
+                         (map #(-> % :id to-uuid))
+                         (filter identity)
+                         )
+
+         ]
+        ;[:in :users.id (->> users (map #(-> % [:cast :id :uuid] str)) (filter identity))]
+        ;[:in :users.institutional_id (->> users (map #(-> % :institutional_id str)) (filter identity))]
+        ;[:in :users.email (->> users (map :email) (filter identity))]
+        ;]
+        )
+      sql-format
+      spy
+      )
+
+  )
 
 (defn target-group-users-ids [tx users]
-  (->> (target-group-users-query users)
-       (jdbc/query tx)
-       (map :id)
-       set))
+  ; FIXME: CASTING IS MISSING
+
+
+  (let [
+        res (target-group-users-query users)
+        p (println ">o> res1" res)
+
+        res (jdbc/execute! tx res)
+        p (println ">o> res2" res)
+
+
+        res (->> res
+              (map :users/id)
+              set)
+
+        p (println ">o> res3" res)
+
+        ] res)
+
+  ;(->> (target-group-users-query users)
+  ;     (jdbc/execute! tx)
+  ;     (map :id)
+  ;     set)
+
+  )
 
 (defn update-delete-query [group-id ids]
   (-> (sql/delete-from :groups_users)
-      (sql/merge-where [:= :groups_users.group_id group-id])
-      (sql/merge-where [:in :groups_users.user_id ids])
-      sql/format))
+      (sql/where [:= :groups_users.group_id [:cast group-id :uuid]])
+      (sql/where [:in :groups_users.user_id ids])
+      sql-format))
 
 (defn update-insert-query [group-id ids]
-  (-> (sql/insert-into :groups_users)
-      (sql/columns :group_id :user_id)
-      (sql/values (->> ids (map (fn [id] [group-id id]))))
-      sql/format))
+
+(let [
+      p (println ">o> update-insert-query-1" group-id)
+      p (println ">o> update-insert-query-2" ids)
+
+      ids (->> ids (map (fn [id] [(to-uuid group-id) (to-uuid id)])))
+      p (println ">o> update-insert-query-3" ids)
+
+      sql (-> (sql/insert-into :groups_users)
+              (sql/columns :group_id :user_id)
+              (sql/values ids)
+              sql-format)
+      p (println ">o> update-insert-query-4" sql)
+
+
+      ]sql)
+
+  )
+  ;(-> (sql/insert-into :groups_users)
+  ;    (sql/columns :group_id :user_id)
+  ;    (sql/values (->> ids (map (fn [id] [group-id id]))))
+  ;    sql-format))
 
 (defn update-group-users [group-id data]
-  (jdbc/with-db-transaction [tx (rdbms/get-ds)]
-    (let [current-group-users-ids (current-group-users-ids tx group-id)
-          target-group-users-ids (if (first (:users data))
+
+  (println ">o> update-group-users1" group-id)
+  (println ">o> update-group-users2" data)
+
+  ; fix this
+
+  ;(jdbc/with-db-transaction [tx (get-ds)]
+  (jdbc/with-transaction [tx (get-ds)]
+    (let [
+          p (println ">o> target-group-users-ids-x (:users data)= " (:users data))
+
+          current-group-users-ids (current-group-users-ids tx group-id)
+          target-group-users-ids (if (spy (first (:users data)))
                                    (target-group-users-ids tx (:users data))
                                    [])
+
+          p (println ">o> target-group-users-ids-a current-group-users-ids= " current-group-users-ids)
+          p (println ">o> target-group-users-ids-b target-group-users-ids= " target-group-users-ids)
+
+
+
+          p (println ">o> target-group-users-ids-1 ids= " target-group-users-ids)
+          p (println ">o> target-group-users-ids-2 count= " (count target-group-users-ids))
+
           del-users (clojure.set/difference current-group-users-ids target-group-users-ids)
           ins-users (clojure.set/difference target-group-users-ids current-group-users-ids)
           del-query (update-delete-query group-id del-users)
@@ -173,16 +339,16 @@
       ;(logging/info "update-group-users" "\nins-q\n" ins-query)
       (when (first del-users)
         (jdbc/execute!
-         tx
-         del-query))
+          tx
+          del-query))
       (when (first ins-users)
         (jdbc/execute!
-         tx
-         ins-query))
+          tx
+          ins-query))
 
       ;{:status 200}
-      (sd/response_ok {:users (jdbc/query tx
-                                          (group-users-query group-id nil))}))))
+      (sd/response_ok {:users (jdbc/execute! tx
+                                (group-users-query group-id nil))}))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -217,6 +383,8 @@
     (get-group-user group-id user-id)))
 
 (defn handle_delete-group-user [req]
+  (println ">o> handle_delete-group-user1")
+
   (let [group-id (-> req :parameters :path :group-id)
         user-id (-> req :parameters :path :user-id)]
     (logging/info "handle_delete-group-user" "\ngroup-id\n" group-id "\nuser-id\n" user-id)
@@ -238,4 +406,4 @@
     (add-user group-id user-id)))
 
 ;### Debug ####################################################################
-;(debug/debug-ns *ns*)
+(debug/debug-ns *ns*)

@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'json'
 
 context 'groups' do
 
@@ -9,8 +10,15 @@ context 'groups' do
   context 'non admin user' do
     include_context :json_client_for_authenticated_user do
       it 'is forbidden to delete any group' do
+        res = client.delete("/api/admin/groups/#{@group.id}")
+
+        # print body for debugging
+
+        puts ">1> #{res}"
+        puts ">1> #{res.body}"
+
         expect(
-          client.delete("/api/admin/groups/#{@group.id}").status
+          res.status
         ).to be== 403
       end
     end

@@ -5,6 +5,7 @@ describe 'updating group-users' do
   before :each do
 
     C = 110
+    C = 4
 
     @group = FactoryBot.create :institutional_group
 
@@ -32,6 +33,8 @@ describe 'updating group-users' do
     include_context :json_client_for_authenticated_admin_user do
 
       let :response do
+        puts ">request> PUT #{"/api/admin/groups/#{CGI.escape(@group.id)}/users/"}"
+        puts ">request> PUT body= #{{users: @update_data}.to_json}"
         client.put("/api/admin/groups/#{CGI.escape(@group.id)}/users/") do |req|
           req.body = {users: @update_data}.to_json
           req.headers['Content-Type'] = 'application/json'
@@ -39,10 +42,24 @@ describe 'updating group-users' do
       end
 
       it 'works and sets the group users to exactly those given with the request' do
+
+        puts ">1> #{response.body}"
+        puts "-----------------"
+        puts ">1> #{response.body['users']}"
+        puts "-----------------"
+        puts ">1> #{response.body['users'].count}"
+
         expect(response.status).to be== 200
+
+        puts ">2a> #{Set.new(@group.users.reload.map(&:id)).count}"
+        puts ">2a> #{Set.new(@group.users.reload.map(&:id))}.sort"
+        puts "-----------------"
+        puts ">2b> #{Set.new(@update_users.map(&:id)).count}"
+        puts ">2b> #{Set.new(@update_users.map(&:id))}.sort"
+
         expect(
-          Set.new(@group.users.reload.map(&:id))
-        ).to be== Set.new(@update_users.map(&:id))
+          Set.new(@group.users.reload.map(&:id)).sort
+        ).to be== Set.new(@update_users.map(&:id)).sort
 
       end
     end
