@@ -2,33 +2,20 @@
   (:require
    [clj-uuid]
    [clojure.tools.logging :as logging]
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
    [logbug.debug :as debug]
+   [madek.api.db.core :refer [get-ds]]
    [madek.api.pagination :as pagination]
    [madek.api.resources.groups.shared :as groups]
-   [madek.api.resources.shared :as sd]
-   ;[madek.api.utils.rdbms :as rdbms]
-   ;[madek.api.utils.sql :as sql]
-
-   [clojure.java.jdbc :as jdbco]
 
    ; all needed imports
-   [honey.sql :refer [format] :rename {format sql-format}]
+   [madek.api.resources.shared :as sd]
+   [madek.api.utils.helper :refer [to-uuid to-uuids]]
    [next.jdbc :as jdbc]
-   [honey.sql.helpers :as sql]
-   [madek.api.db.core :refer [get-ds]]
-
-
-   [taoensso.timbre :refer [debug info warn error spy]]
-
-   [schema.core :as s])
-  (:import (java.time ZonedDateTime)
-           (java.time ZoneId)
-           (java.time.format DateTimeFormatter)
-           (java.util UUID)))
-
-
-
-
+   [schema.core :as s]
+   [taoensso.timbre :refer [spy]])
+  (:import (java.util UUID)))
 
 ;;; temporary users stuff ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -48,7 +35,8 @@
          #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
          id)
      (sql/where sql-map [:or
-                         [:= :users.id [:cast id :uuid]]
+                         [:= :users.id (to-uuid id)]
+                         ;[:= :users.id id]
                          [:= :users.institutional_id id]
                          [:= :users.email id]])
      (sql/where sql-map [:or
@@ -167,7 +155,7 @@
   (let [
         sql (-> (sql/select [:user_id :id])
                 (sql/from :groups_users)
-                (sql/where [:= :groups_users.group_id [:cast group-id :uuid]])
+                (sql/where [:= :groups_users.group_id (to-uuid group-id)])
                 sql-format)
         p (println ">o> sql current-group-users-ids-1" sql)
 
@@ -190,40 +178,8 @@
               set)
         p (println ">o> 2 res current-group-users-ids-3" res)
 
-
         ] res))
 
-
-  ;(->> (-> (sql/select [:user_id :id])
-  ;         (sql/from :groups_users)
-  ;         (sql/where [:= :groups_users.group_id [:cast group-id :uuid]])
-  ;         sql-format)
-  ;  (jdbc/execute! tx)
-  ;  (map :id)
-  ;  set))
-
-(defn to-uuid [id] (if (instance? String id) (UUID/fromString id) id))
-
-
-(comment
-  (let [
-        users [{:id #uuid "690263d1-9379-41c5-89cf-b3db8563edd1"} {:id #uuid "56c4bc56-13b2-49b8-ba8f-e5151735bc9a" :identity true}]
-
-        fnc (->> users
-              ;(map #(-> (to-uuid %) :id str))
-              (map #(-> % :id to-uuid))
-
-              ;(map #(-> % :id str))
-              ;(map #(-> % to-uuid))
-
-              (filter identity)
-
-              )
-
-        ;p (println ">o> fnc" fnc)
-
-        ] fnc
-          ))
 
 (defn target-group-users-query [users]
   (-> (sql/select :id)
@@ -247,61 +203,54 @@
   )
 
 (defn target-group-users-ids [tx users]
-  ; FIXME: CASTING IS MISSING
 
+  (->> (jdbc/execute! tx (target-group-users-query users))
+    (map :users/id)
+    set)
 
-  (let [
-        res (target-group-users-query users)
-        p (println ">o> res1" res)
-
-        res (jdbc/execute! tx res)
-        p (println ">o> res2" res)
-
-
-        res (->> res
-              (map :users/id)
-              set)
-
-        p (println ">o> res3" res)
-
-        ] res)
-
-  ;(->> (target-group-users-query users)
-  ;     (jdbc/execute! tx)
-  ;     (map :id)
-  ;     set)
+  ;(let [
+  ;      res (target-group-users-query users)
+  ;      p (println ">o> res1" res)
+  ;
+  ;      res (jdbc/execute! tx res)
+  ;      p (println ">o> res2" res)
+  ;
+  ;      res (->> res
+  ;            (map :users/id)
+  ;            set)
+  ;      p (println ">o> res3" res)
+  ;      ] res)
 
   )
 
 (defn update-delete-query [group-id ids]
   (-> (sql/delete-from :groups_users)
-      (sql/where [:= :groups_users.group_id [:cast group-id :uuid]])
+      (sql/where [:= :groups_users.group_id (to-uuid group-id)])
       (sql/where [:in :groups_users.user_id ids])
       sql-format))
 
 (defn update-insert-query [group-id ids]
+  (-> (sql/insert-into :groups_users)
+      (sql/columns :group_id :user_id)
+      (sql/values (->> ids (map (fn [id] [(to-uuid group-id) (to-uuid id)]))))
+      sql-format)
 
-(let [
-      p (println ">o> update-insert-query-1" group-id)
-      p (println ">o> update-insert-query-2" ids)
-
-      ids (->> ids (map (fn [id] [(to-uuid group-id) (to-uuid id)])))
-      p (println ">o> update-insert-query-3" ids)
-
-      sql (-> (sql/insert-into :groups_users)
-              (sql/columns :group_id :user_id)
-              (sql/values ids)
-              sql-format)
-      p (println ">o> update-insert-query-4" sql)
-
-
-      ]sql)
-
+  ;(let [
+  ;      p (println ">o> update-insert-query-1" group-id)
+  ;      p (println ">o> update-insert-query-2" ids)
+  ;
+  ;      ids (->> ids (map (fn [id] [(to-uuid group-id) (to-uuid id)])))
+  ;      p (println ">o> update-insert-query-3" ids)
+  ;
+  ;      sql (-> (sql/insert-into :groups_users)
+  ;              (sql/columns :group_id :user_id)
+  ;              (sql/values ids)
+  ;              sql-format)
+  ;      p (println ">o> update-insert-query-4" sql)
+  ;
+  ;      ] sql)
   )
-  ;(-> (sql/insert-into :groups_users)
-  ;    (sql/columns :group_id :user_id)
-  ;    (sql/values (->> ids (map (fn [id] [group-id id]))))
-  ;    sql-format))
+
 
 (defn update-group-users [group-id data]
 
