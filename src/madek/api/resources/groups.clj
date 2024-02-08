@@ -1,15 +1,18 @@
 (ns madek.api.resources.groups
   (:require [clj-uuid]
-            [clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as logging]
+   ;; all needed imports
+            [honey.sql.helpers :as sql]
             [madek.api.pagination :as pagination]
             [madek.api.resources.groups.shared :as groups]
-            ;[madek.api.resources.groups.users :as users]
+   ;[madek.api.resources.groups.users :as users]
             [madek.api.resources.groups.users :as group-users]
             [madek.api.resources.shared :as sd]
+
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
             [madek.api.utils.rdbms :as rdbms]
-            [madek.api.utils.sql :as sql]
+            [next.jdbc :as jdbc]
+
             [reitit.coercion.schema]
             [schema.core :as s]))
 
@@ -19,6 +22,7 @@
   (let [params (as-> (:body request) params
                  (or params {})
                  (assoc params :id (or (:id params) (clj-uuid/v4))))]
+
     {:body (dissoc
             (->> (jdbc/insert!
                   (rdbms/get-ds) :groups params)
@@ -45,7 +49,7 @@
 (defn db_update-group [group-id body]
   (let [query (groups/jdbc-update-group-id-where-clause group-id)
         db-do (jdbc/update! (rdbms/get-ds) :groups body query)]
-     ;(logging/info "db_update-group" "\ngroup-id\n" group-id "\nbody\n" body "\nquery\n" query)
+    ;(logging/info "db_update-group" "\ngroup-id\n" group-id "\nbody\n" body "\nquery\n" query)
     (first db-do)))
 
 (defn patch-group [{body :body {group-id :group-id} :params}]
@@ -162,7 +166,7 @@
                 :swagger {:produces "application/json"}
                 :content-type "application/json"
                 :parameters {:query schema_query-groups}
-                   ;:accept "application/json"
+                ;:accept "application/json"
                 :coercion reitit.coercion.schema/coercion
                 :responses {200 {:body {:groups [schema_export-group]}}}}}]
     ["/:id" {:get {:summary "Get group by id"
@@ -231,10 +235,10 @@
                   :coercion reitit.coercion.schema/coercion
                   :parameters {:path {:id s/Str}
                                :body schema_update-group}
-                  :responses {200 {:body s/Any};groups/schema_export-group}
+                  :responses {200 {:body s/Any} ;groups/schema_export-group}
                               404 {:body s/Any}}}}] ; TODO error handling
 
-     ; groups-users/ring-routes
+   ; groups-users/ring-routes
    ["/:group-id/users/" {:get {:summary "Get group users by id"
                                :description "Get group users by id."
                                :swagger {:produces "application/json"}
@@ -249,7 +253,7 @@
                                :responses {200 {:body {:users [group-users/schema_export-group-user-simple]}} ; TODO schema
                                            404 {:body s/Str}}}
 
-          ; TODO works with tests, but not with the swagger ui
+                         ; TODO works with tests, but not with the swagger ui
                          :put {:summary "Update group users by group-id and list of users."
                                :description "Update group users by group-id and list of users."
                                :swagger {:consumes "application/json" :produces "application/json"}
@@ -260,7 +264,7 @@
                                :parameters {:path {:group-id s/Str}
                                             :body group-users/schema_update-group-user-list}
 
-                             ;:body {:users [s/Any]}}
+                               ;:body {:users [s/Any]}}
                                :responses {200 {:body s/Any} ;groups/schema_export-group}
                                            404 {:body s/Str}}}}]
 
@@ -288,8 +292,8 @@
 
                                  :delete {:summary "Deletes a group-user by group-id and user-id"
                                           :description "Delete a group-user by group-id and user-id."
-                           ;:swagger {:produces "application/json"}
-                           ;:content-type "application/json"
+                                          ;:swagger {:produces "application/json"}
+                                          ;:content-type "application/json"
                                           :handler group-users/handle_delete-group-user
                                           :middleware [wrap-authorize-admin!]
                                           :coercion reitit.coercion.schema/coercion
