@@ -19,27 +19,26 @@
      (sql/where sql-map [:= :groups.institutional_id group-id]))))
 
 (defn jdbc-update-group-id-where-clause [id]
-  (println ">o> jdbc-update-group-id-where-clause" id)
   (-> id sql-merge-where-id sql-format
       (update-in [0] #(clojure.string/replace % "WHERE" ""))))
 
 (defn find-group-sql [id]
-  (println ">o> find-group-sql" id)
   (-> (sql-merge-where-id id)
       (sql/select :*)
       (sql/from :groups)
       sql-format))
 
+; TODO: remove this
 ;(def builder-fn-options
 ;  {:builder-fn next.jdbc.result-set/as-unqualified-lower-maps})
 
 (defn find-group [id]
-  ; works correctly
+  ; TODO: works correctly
   (jdbc/execute-one! (get-ds) (find-group-sql id))
 
-  ; BROKEN: "groups/institution": "local",
+  ; TODO: BROKEN: "groups/institution": "local",
   ;(jdbc/execute-one! (rdbms/get-ds) (find-group-sql id))
 
-  ; works correctly
+  ; TODO: works correctly
   ;(jdbc/execute-one! (rdbms/get-ds) (find-group-sql id) builder-fn-options)
   )
