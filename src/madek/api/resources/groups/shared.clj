@@ -8,8 +8,9 @@
    [next.jdbc :as jdbc]))
 
 (defn sql-merge-where-id
-  ([group-id] (sql-merge-where-id {} group-id))
+  ([group-id] (println ">> 1") (sql-merge-where-id {} group-id))
   ([sql-map group-id]
+   (println ">> 2" sql-map group-id)
    (if (re-matches
         #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
         group-id)
@@ -19,8 +20,11 @@
      (sql/where sql-map [:= :groups.institutional_id group-id]))))
 
 (defn jdbc-update-group-id-where-clause [id]
+  (println ">> 3")
   (-> id sql-merge-where-id sql-format
-      (update-in [0] #(clojure.string/replace % "WHERE" ""))))
+      ;(update-in [0] #(clojure.string/replace % "WHERE" ""))
+
+      ))
 
 (defn find-group-sql [id]
   (-> (sql-merge-where-id id)

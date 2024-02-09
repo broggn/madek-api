@@ -1,17 +1,27 @@
 (ns madek.api.resources.groups
   (:require [clj-uuid]
+            [clojure.java.jdbc :as jdbco]
             [clojure.tools.logging :as logging]
+            [honey.sql :refer [format] :rename {format sql-format}]
    ;; all needed imports
             [honey.sql.helpers :as sql]
+            [madek.api.db.core :refer [get-ds]]
             [madek.api.pagination :as pagination]
-            [madek.api.resources.groups.shared :as groups]
    ;[madek.api.resources.groups.users :as users]
+            [madek.api.resources.groups.shared :as groups]
             [madek.api.resources.groups.users :as group-users]
-            [madek.api.resources.shared :as sd]
 
+            [madek.api.resources.shared :as sd]
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+
+
+
             [madek.api.utils.rdbms :as rdbms]
+            [madek.api.utils.sql :as sqlo]
             [next.jdbc :as jdbc]
+
+
+
 
             [reitit.coercion.schema]
             [schema.core :as s]))
@@ -21,34 +31,312 @@
 (defn create-group [request]
   (let [params (as-> (:body request) params
                  (or params {})
-                 (assoc params :id (or (:id params) (clj-uuid/v4))))]
+                 (assoc params :id (or (:id params) (clj-uuid/v4))))
+
+        p (println ">o> params" params)
+        ]
 
     {:body (dissoc
-            (->> (jdbc/insert!
-                  (rdbms/get-ds) :groups params)
-                 first)
-            :previous_id :searchable)
+             (->> (jdbc/execute-one! (get-ds) (-> (sql/insert-into :groups)
+                                                  (sql/values [params])
+                                                  (sql/returning :*)
+                                                  sql-format
+                                                  )))
+             :previous_id :searchable)
      :status 201}))
+
+
+;(ns leihs.my.back.html
+;    (:refer-clojure :exclude [keyword str])
+;    (:require
+;      [hiccup.page :refer [html5]]
+;      [honey.sql :refer [format] :rename {format sql-format}]
+;      [honey.sql.helpers :as sql]
+;      [leihs.core.http-cache-buster2 :as cache-buster]
+;      [leihs.core.json :refer [to-json]]
+;      [leihs.core.remote-navbar.shared :refer [navbar-props]]
+;      [leihs.core.shared :refer [head]]
+;      [leihs.core.url.core :as url]
+;      [leihs.my.authorization :as auth]
+;      [leihs.core.db :as db]
+;      [next.jdbc :as jdbc]))
+
+
+
+;(defn merge-query-parts [query-parts]
+;  (let [placeholder-count (reduce + 0 (map #(count (re-seq #"\?" %)) query-parts))
+;
+;        p (println ">o> placeholder-count" placeholder-count)
+;
+;        ;required-entries (+ 1 placeholder-count)
+;        required-entries (- (count query-parts) placeholder-count)
+;        p (println ">o> required-entries" required-entries)
+;
+;        merged (apply str (take required-entries query-parts))
+;
+;        p (println ">o> merged" merged)
+;        remaining (drop required-entries query-parts)]
+;    (cons merged remaining)))
+
+(defn merge-query-parts [query-parts]
+  (let [placeholder-count (reduce + 0 (map #(count (re-seq #"\?" %)) query-parts))
+        ;; Print placeholder count for debugging
+        _ (println ">o> placeholder-count" placeholder-count)
+        ;; Calculate required entries
+        required-entries (- (count query-parts) placeholder-count)
+        ;; Print required entries for debugging
+        _ (println ">o> required-entries" required-entries)
+        ;; Merge with spaces between entries
+        merged (vector (apply str (interpose " " (take required-entries query-parts))))
+
+        merged ["select * from groups where institutional_id = ?"]
+
+        ;; Print merged result for debugging
+        _ (println ">o> merged" merged)
+        _ (println ">o> merged" (count merged))
+        _ (println ">o> merged" (class merged))
+        ;; Calculate remaining parts
+        remaining (vector (drop required-entries query-parts))
+        ;remaining (vector (drop required-entries query-parts))
+
+        remaining ["ab"]
+
+        ]
+    _ (println ">o> 2merged" remaining)
+    _ (println ">o> 2merged" (count remaining))
+    _ (println ">o> 2merged" (class remaining))
+    ;; Combine merged with remaining parts
+    (concat merged remaining)))
+;(+ merged remaining)))
+;(cons merged remaining)))
+
+
+;(defn merge-query-parts [query-parts]
+;  (let [placeholder-count (reduce + 0 (map #(count (re-seq #"\?" %)) query-parts))
+;        _ (println ">o> placeholder-count" placeholder-count)
+;        required-entries (- (count query-parts) placeholder-count)
+;        _ (println ">o> required-entries" required-entries)
+;        merged (apply str (interpose " " (take required-entries query-parts)))
+;        _ (println ">o> merged" merged)
+;        remaining (drop required-entries query-parts)]
+;    (vector merged @remaining))) ; Change here to ensure the result is a vector of strings
+
+(comment
+
+  ;[honey.sql :refer [format] :rename {format sql-format}]
+  ;[leihs.core.db :as db]
+  ;[next.jdbc :as jdbc]
+  ;[honey.sql.helpers :as sql]
+
+  (let [
+
+
+        id "ab"
+
+        fir (-> (sql/delete-from :groups)
+
+                ;(sql/where (groups/jdbc-update-group-id-where-clause id))
+
+                sql-format)
+        p (println ">o> abc fir" fir)
+
+        sec (groups/jdbc-update-group-id-where-clause id)
+        p (println ">o> abc sec" sec)
+
+        p (println ">o> abc both" fir sec)
+
+        both (concat fir sec)
+        p (println ">o> abc both" both)
+        p (println ">o> abc both" (count both))
+
+        ;both (vector (merge-query-parts both))
+        merged  (merge-query-parts both)
+
+        res (jdbc/execute! (get-ds) merged)
+        p (println ">o> res=" res)
+
+        ]
+
+      res
+    )
+
+  )
+
+
+(comment
+
+  (let [
+        params {
+                :name "test22"
+                :type "Group"
+                :institutional_id "test22"
+                :institutional_name "test22"
+                :institution "test22"
+                :searchable "test"
+                }
+
+        ;; java.jdbc
+        ;res (->> (jdbco/insert!
+        ;       (rdbms/get-ds) :groups params)
+        ;  fir)
+
+        ;(fir (jdbco/delete! (rdbms/get-ds)
+        ;         :groups (groups/jdbc-update-group-id-where-clause id)))
+
+        ;; next.jdbc
+        ;    [madek.api.db.core :refer [get-ds]]
+        ;    [honey.sql :refer [format] :rename {format sql-format}]
+        ;res (->> (jdbc/execute-one! (get-ds) (-> (sql/insert-into :groups)
+        ;                                         (sql/values [params])
+        ;                                         (sql/returning :*)
+        ;                                         sql-format
+        ;                                         )))
+
+        id "e3e3e3e3-e3e3-e3e3-e3e3-e3e3e3e3e3e3"
+
+
+        id "ab"
+
+        sql (groups/jdbc-update-group-id-where-clause id)
+        p (println ">o> sql" sql)
+        p (println ">o> sql" (class sql))
+
+        ;res (jdbco/delete! (rdbms/get-ds)
+        ;  :groups sql)
+
+        ;(def query ("DELETE FROM groups" " WHERE groups.institutional_id = ?" "ab"))
+
+
+
+        fir (-> (sql/delete-from :groups)
+
+                  ;(sql/where (groups/jdbc-update-group-id-where-clause id))
+
+                  sql-format)
+        p (println ">o> abc fir" fir)
+
+        ;sec (groups/jdbc-update-group-id-where-clause id)
+        ;p (println ">o> abc sec" sec)
+        ;
+        ;p (println ">o> abc both" fir sec)
+        ;
+        ;both (concat fir sec)
+        ;p (println ">o> abc both" both)
+        ;p (println ">o> abc both" (count both))
+        ;
+        ;both (vector (merge-query-parts both))
+        ;both  (merge-query-parts both)
+        ;
+
+        both ["DELETE FROM groups WHERE groups.institutional_id = ?" "ab"]
+
+        ;
+        p (println ">>1" both)
+        p (println ">>1 count=" (count both))
+        ;p (println ">>1 fir=" (fir both))
+
+        ;p (println ">o> abc" (groups/jdbc-update-group-id-where-clause id))
+        ;p (println ">o> abc" (class (groups/jdbc-update-group-id-where-clause id)))
+
+
+
+
+
+
+
+        ;; TODO: one
+        ;res (jdbc/execute-one! (get-ds) both)
+        ;p (println ">> !! res=" res)
+        ;
+        ;result-map (get  res :next.jdbc/update-count)
+        ;p (println ">> !! a1a=" result-map)
+
+        ;; TODO: all
+        res (jdbc/execute! (get-ds) both)
+        p (println ">> !! res=" res)
+
+        result-map (get  (first res) :next.jdbc/update-count)
+        res (get  (first res) :next.jdbc/update-count)
+
+        p (println ">> !! final-result=" res)
+
+
+
+
+
+
+
+
+
+        ;;p (println ">> !! a1=" (res [0]))
+        ;p (println ">> !! a1=" (fir res))
+        ;p (println ">> !! a1=" (::jdbc/update-count (fir res)))
+        ;
+        ;
+        ;
+        ;
+        ;count (-> (fir res) :next.jdbc/update-count)
+        ;p (println ">> !! count=" count)
+
+        ;res (jdbc/execute! (get-ds) fir (groups/jdbc-update-group-id-where-clause id) )
+        ;res (jdbc/execute-one! (get-ds)  (-> (sql/delete-from :groups)
+        ;                                     (sql/where groups/jdbc-update-group-id-where-clause id)
+        ;                                                                              sql-format
+        ;                                     ))
+
+        ;res sql
+
+        ]
+    res
+    )                                                       ;;HERE
+  )
+
+
+
+
+(comment
+
+  ;(def query ["DELETE FROM groups" " WHERE groups.institutional_id = ?" "ab"])
+
+
+
+  ;; Example usage
+
+  (let [
+
+        query ["DELETE FROM groups" " WHERE groups.institutional_id = ?" "ab"]
+        ;query ["DELETE FROM groups" " WHERE groups.institutional_id = ?" " AND x=? And a between(? ?)" "ab" "cd" "1" "4"]
+
+        res (merge-query-parts query)
+
+        p (println ">>1" res)
+        p (println ">>1 count=" (count res))
+        p (println ">>1 first=" (first res))
+
+        ]
+    )
+  )
+
 
 ;### get group ################################################################
 
 (defn get-group [id-or-institutinal-group-id]
   (if-let [group (groups/find-group id-or-institutinal-group-id)]
     {:body (dissoc group :previous_id :searchable)}
-    {:status 404 :body "No such group found"})) ; TODO: toAsk 204 No Content
+    {:status 404 :body "No such group found"}))             ; TODO: toAsk 204 No Content
 
 ;### delete group ##############################################################
 
 (defn delete-group [id]
-  (if (= 1 (first (jdbc/delete! (rdbms/get-ds)
-                                :groups (groups/jdbc-update-group-id-where-clause id))))
+  (if (= 1 (first (jdbco/delete! (rdbms/get-ds)
+                    :groups (groups/jdbc-update-group-id-where-clause id))))
     {:status 204}
     {:status 404}))
 
 ;### patch group ##############################################################
 (defn db_update-group [group-id body]
   (let [query (groups/jdbc-update-group-id-where-clause group-id)
-        db-do (jdbc/update! (rdbms/get-ds) :groups body query)]
+        db-do (jdbco/update! (rdbms/get-ds) :groups body query)]
     ;(logging/info "db_update-group" "\ngroup-id\n" group-id "\nbody\n" body "\nquery\n" query)
     (first db-do)))
 
@@ -62,10 +350,10 @@
 (defn build-index-query [req]
   (let [query-params (-> req :parameters :query)]
     (-> (if (true? (:full_data query-params))
-          (sql/select :*)
-          (sql/select :id))
-        (sql/from :groups)
-        (sql/order-by [:id :asc])
+          (sqlo/select :*)
+          (sqlo/select :id))
+        (sqlo/from :groups)
+        (sqlo/order-by [:id :asc])
         (sd/build-query-param query-params :id)
         (sd/build-query-param query-params :institutional_id)
         (sd/build-query-param query-params :type)
@@ -76,10 +364,10 @@
         (sd/build-query-param-like query-params :institution)
         (sd/build-query-param-like query-params :searchable)
         (pagination/add-offset-for-honeysql query-params)
-        sql/format)))
+        sqlo/format)))
 
 (defn index [request]
-  (let [result (jdbc/query (rdbms/get-ds) (build-index-query request))]
+  (let [result (jdbco/query (rdbms/get-ds) (build-index-query request))]
     (sd/response_ok {:groups result})))
 
 ;### routes ###################################################################
@@ -105,7 +393,7 @@
 (def schema_export-group
   {:id s/Uuid
    (s/optional-key :name) s/Str
-   (s/optional-key :type) s/Str ; TODO enum
+   (s/optional-key :type) s/Str                             ; TODO enum
    (s/optional-key :created_by_user_id) (s/maybe s/Uuid)
    (s/optional-key :created_at) s/Any
    (s/optional-key :updated_at) s/Any
@@ -121,7 +409,7 @@
   (let [params (get-in request [:parameters :body])
         data_wid (assoc params :id (or (:id params) (clj-uuid/v4)))
         data_wtype (assoc data_wid :type (or (:type data_wid) "Group"))
-        resultdb (->> (jdbc/insert! (rdbms/get-ds) :groups data_wtype) first)
+        resultdb (->> (jdbco/insert! (rdbms/get-ds) :groups data_wtype) first)
         result (dissoc resultdb :previous_id :searchable)]
     (logging/info (apply str ["handler_create-group: \ndata:" data_wtype "\nresult-db: " resultdb "\nresult: " result]))
     ;{:status 201 :body {:id result}}
@@ -180,6 +468,8 @@
                    :responses {200 {:body schema_export-group}
                                404 {:body s/Any}}}}]]])
 
+
+;; api/admin/..
 (def ring-routes
   ["/groups"
    ["/" {:get {:summary "Get all group ids"
@@ -235,8 +525,8 @@
                   :coercion reitit.coercion.schema/coercion
                   :parameters {:path {:id s/Str}
                                :body schema_update-group}
-                  :responses {200 {:body s/Any} ;groups/schema_export-group}
-                              404 {:body s/Any}}}}] ; TODO error handling
+                  :responses {200 {:body s/Any}             ;groups/schema_export-group}
+                              404 {:body s/Any}}}}]         ; TODO error handling
 
    ; groups-users/ring-routes
    ["/:group-id/users/" {:get {:summary "Get group users by id"
