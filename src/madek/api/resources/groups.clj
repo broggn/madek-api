@@ -2,20 +2,15 @@
   (:require [clj-uuid]
             [clojure.tools.logging :as logging]
             [honey.sql :refer [format] :rename {format sql-format}]
-   ;; all needed imports
             [honey.sql.helpers :as sql]
             [madek.api.db.core :refer [get-ds]]
             [madek.api.pagination :as pagination]
             [madek.api.resources.groups.shared :as groups]
-   ;[madek.api.resources.groups.users :as users]
             [madek.api.resources.groups.users :as group-users]
             [madek.api.resources.shared :as sd]
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-            [madek.api.utils.helper :refer [merge-query-parts]]
-
             [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
             [next.jdbc :as jdbc]
-
             [reitit.coercion.schema]
             [schema.core :as s]))
 
@@ -47,18 +42,12 @@
 ;### delete group ##############################################################
 
 (defn delete-group [id]
-
-  (let [fir (-> (sql/delete-from :groups)
+  (let [sec (groups/jdbc-update-group-id-where-clause id)
+        fir (-> (sql/delete-from :groups)
+                (sql/where (:where sec))
                 sql-format)
-
-        sec (groups/jdbc-update-group-id-where-clause id)
-
-        merged (merge-query-parts (concat fir sec))
-        p (println ">o> merged" merged)
-
-        res (jdbc/execute! (get-ds) merged)
+        res (jdbc/execute-one! (get-ds) fir)
         p (println ">o> res=" res)
-
         update-count (get res :next.jdbc/update-count)
         p (println ">o> update-count=" update-count)]
 
