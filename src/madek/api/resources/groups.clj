@@ -11,6 +11,7 @@
    ;[madek.api.resources.groups.users :as users]
             [madek.api.resources.groups.users :as group-users]
             [madek.api.resources.shared :as sd]
+            [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
 
             [madek.api.utils.helper :refer [merge-query-parts]]
@@ -277,10 +278,94 @@
 
 ;### patch group ##############################################################
 (defn db_update-group [group-id body]
-  (let [query (groups/jdbc-update-group-id-where-clause group-id)
-        db-do (jdbco/update! (rdbms/get-ds) :groups body query)]
-    ;(logging/info "db_update-group" "\ngroup-id\n" group-id "\nbody\n" body "\nquery\n" query)
-    (first db-do)))
+  (println ">o> abc" group-id)
+  (println ">o> abc2" body)
+
+  (let [
+        sett (-> body convert-sequential-values-to-sql-arrays)
+        p (println ">o> sett" sett)
+
+        where-clause (:where (groups/jdbc-update-group-id-where-clause group-id))
+        p (println ">o> where-clause" where-clause)
+
+        fir (-> (sql/update :groups)
+                (sql/set (-> body convert-sequential-values-to-sql-arrays))
+                (sql/where  where-clause)
+                sql-format)
+        p (println ">o> sql-fir" fir)
+
+        res (jdbc/execute! (get-ds) fir)
+        p (println ">o> res=" res)
+
+        update-count (get (first res) :next.jdbc/update-count)
+        p (println ">o> update-count=" update-count)
+        ]
+    update-count
+
+    )
+
+  ;(let [query (groups/jdbc-update-group-id-where-clause group-id)
+  ;      db-do (jdbco/update! (rdbms/get-ds) :groups body query)]
+  ;  ;(logging/info "db_update-group" "\ngroup-id\n" group-id "\nbody\n" body "\nquery\n" query)
+  ;  (first db-do))
+
+  )
+
+
+(comment
+
+  (let [
+        body {
+                :name "test22"
+                :type "Group"
+                :institutional_id "test22"
+                :institutional_name "test22"
+                :institution "test22"
+                :searchable "test"
+                }
+
+        ;; has to be str
+        group-id "59d28b15-23c5-45ad-b273-4b6e1594833e"
+
+
+
+
+        ;sett (-> body convert-sequential-values-to-sql-arrays)
+        ;p (println ">o> sett" sett)
+        ;
+        ;hmm (groups/jdbc-update-group-id-where-clause group-id)
+        ;p (println ">o> hmm" hmm)
+        ;hmm (:where hmm)
+        ;p (println ">o> hmm" hmm)
+        ;
+        ;
+        ;fir (-> (sql/update :groups)
+        ;        (sql/set (-> body convert-sequential-values-to-sql-arrays))
+        ;        (sql/where  hmm)
+        ;        sql-format)
+        ;p (println ">o> sql-fir" fir)
+        ;
+        ;res (jdbc/execute! (get-ds) fir)
+        ;p (println ">o> res=" res)
+        ;
+        ;update-count (get (first res) :next.jdbc/update-count)
+        ;p (println ">o> update-count=" update-count)
+        ;
+        ;res update-count
+
+
+
+
+        ;; next.jdbc, res=1
+        res (let [query (groups/jdbc-update-group-id-where-clause-old group-id)
+              db-do (jdbco/update! (rdbms/get-ds) :groups body query)]
+          ;(logging/info "db_update-group" "\ngroup-id\n" group-id "\nbody\n" body "\nquery\n" query)
+          (first db-do))
+        ]
+    res
+    )                                                       ;; TODO update
+  )
+
 
 (defn patch-group [{body :body {group-id :group-id} :params}]
   (if (= 1 (db_update-group group-id body))

@@ -9,6 +9,7 @@
 
 (defn sql-merge-where-id
   ([group-id] (println ">> 1") (sql-merge-where-id {} group-id))
+
   ([sql-map group-id]
    (println ">> 2" sql-map group-id)
    (if (re-matches
@@ -21,9 +22,16 @@
 
 (defn jdbc-update-group-id-where-clause [id]
   (println ">> 3")
-  (-> id sql-merge-where-id sql-format
+  (-> id sql-merge-where-id
+      ;sql-format
       ;(update-in [0] #(clojure.string/replace % "WHERE" ""))
 
+      ))
+
+(defn jdbc-update-group-id-where-clause-old [id]
+  (println ">> 3")
+  (-> id sql-merge-where-id sql-format
+      (update-in [0] #(clojure.string/replace % "WHERE" ""))
       ))
 
 (defn find-group-sql [id]

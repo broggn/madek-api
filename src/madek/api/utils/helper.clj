@@ -15,3 +15,13 @@
         merged (vector (apply str (interpose " " (take required-entries query-parts))))
         remaining (drop required-entries query-parts)]
     (concat merged remaining)))
+
+
+(defn convert-map [entry]
+  (-> entry
+      (update :created_at #(if (contains? entry :created_at) (to-uuid %)))
+      ;(update :start_date #(if (contains? entry :start_date) (format-date %)))
+      ;(update :end_date #(if (contains? entry :end_date) (format-date %)))
+      ;(update :inspection_start_date #(if (contains? entry :inspection_start_date) (format-date %)))
+      ;(update :updated_at #(if (contains? entry :updated_at) (format-date %)))
+      ))
