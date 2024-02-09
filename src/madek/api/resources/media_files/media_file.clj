@@ -20,6 +20,14 @@
                                    (previews/get-index media-file))})})))
 
 (defn- media-file-path [media-file]
+
+  ;; TODO: ??
+  (let [
+    p (println ">o> (:guid media-file)" (:guid media-file))
+    p (println ">o> (:previews/guid media-file)" (:previews/guid media-file))
+    ])
+
+
   (let [id (:guid media-file)
         [first-char] id]
     (clojure.string/join
@@ -28,10 +36,10 @@
 
 (defn get-media-file-data-stream [request]
   (catcher/snatch {}
-                  (when-let [media-file (:media-file request)]
+                  (when-let [media-file (:previews/media-file request)]
                     (when-let [file-path (media-file-path media-file)]
                       (data-streaming/respond-with-file file-path
-                                                        (:content_type media-file))))))
+                                                        (:previews/content_type media-file) "fromMediaFile")))))
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

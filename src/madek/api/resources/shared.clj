@@ -1,16 +1,22 @@
 (ns madek.api.resources.shared
   (:require [cheshire.core :as cheshire]
-            [clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as logging]
             [clojure.walk :refer [keywordize-keys]]
-            ;[honeysql.helpers :as h2helpers]
+   ;[honeysql.helpers :as h2helpers]
+            [honey.sql :refer [format] :rename {format sql-format}]
+            [honey.sql.helpers :as sql]
             [java-time.api :as jt]
             [logbug.catcher :as catcher]
+
             [madek.api.authorization :refer [authorized?]]
+
+
             [madek.api.constants :as mc]
             [madek.api.semver :as semver]
-            [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-            [madek.api.utils.sql :as sql]
+            [madek.api.utils.helper :refer [to-uuid]]
+
+            [madek.api.utils.rdbms :refer [get-ds]]
+            [next.jdbc :as jdbc]
             [schema.core :as s]))
 
 (def schema_ml_list
@@ -34,7 +40,7 @@
   (let [pval (-> query-params param mc/presence)]
     (if (nil? pval)
       query
-      (-> query (sql/merge-where [:= param pval])))))
+      (-> query (sql/where [:= param pval])))))
 
 (defn try-instant-on-presence [data keyword]
   (try
@@ -59,16 +65,16 @@
 (defn try-parse-date-time [dt_string]
   (try
     (logging/info "try-parse-date-time "
-                  dt_string)
+      dt_string)
     (let [zoneid (java.time.ZoneId/systemDefault)
 
           parsed2 (jt/local-date-time (jt/offset-date-time dt_string) zoneid)
           pcas (.toString parsed2)]
       (logging/info "try-parse-date-time "
-                    dt_string
-                    "\n zoneid " zoneid
-                    "\n parsed " parsed2
-                    "\n result:  " pcas)
+        dt_string
+        "\n zoneid " zoneid
+        "\n parsed " parsed2
+        "\n result:  " pcas)
       pcas)
 
     (catch Exception ex
@@ -84,8 +90,7 @@
         (logging/info "build-query-created-or-updated-after: " pval ":" parsed)
         (if (nil? parsed)
           query
-          (-> query (sql/merge-where
-                     (sql/raw (str "'" parsed "'::timestamp < " col-name)))))))))
+          (-> query (sql/where [:raw (str "'" parsed "'::timestamp < " col-name)])))))))
 
 (defn build-query-created-or-updated-after [query query-params param]
   (let [pval (-> query-params param mc/presence)]
@@ -96,9 +101,9 @@
         (logging/info "build-query-created-or-updated-after: " pval ":" parsed)
         (if (nil? parsed)
           query
-          (-> query (sql/merge-where [:or
-                                      (sql/raw (str "'" parsed "'::timestamp < created_at"))
-                                      (sql/raw (str "'" parsed "'::timestamp < updated_at"))])))))))
+          (-> query (sql/where [:or
+                                [:raw (str "'" parsed "'::timestamp < created_at")]
+                                [:raw (str "'" parsed "'::timestamp < updated_at")]])))))))
 
 ; TODO use honeysql 2.x for ilike feature
 (defn build-query-param-like
@@ -109,19 +114,19 @@
          qval (str "%" pval "%")]
      (if (nil? pval)
        query
-       (-> query (sql/merge-where [:like db-param qval]))
-      ;(-> query (h2helpers/merge-where [:like param qval]))
+       (-> query (sql/where [:like db-param qval]))
+       ;(-> query (h2helpers/where [:like param qval]))
        ))))
 (defn- sql-query-find-eq
   ([table-name col-name row-data]
    (-> (build-query-base table-name :*)
-       (sql/merge-where [:= col-name row-data])
-       sql/format))
+       (sql/where [:= col-name row-data])
+       sql-format))
   ([table-name col-name row-data col-name2 row-data2]
    (-> (build-query-base table-name :*)
-       (sql/merge-where [:= col-name row-data])
-       (sql/merge-where [:= col-name2 row-data2])
-       sql/format)))
+       (sql/where [:= col-name row-data])
+       (sql/where [:= col-name2 row-data2])
+       sql-format)))
 
 (defn sql-update-clause
   "Generates an sql update clause"
@@ -140,22 +145,22 @@
 (defn query-find-all
   [table-key col-keys]
   (let [db-query (-> (build-query-base table-key col-keys)
-                     sql/format)
-        db-result (jdbc/query (get-ds) db-query)]
+                     sql-format)
+        db-result (jdbc/execute! (get-ds) db-query)]
     db-result))
 
 (defn query-eq-find-all
   ([table-name col-name row-data]
    (catcher/snatch {}
-                   (jdbc/query
-                    (get-ds)
-                    (sql-query-find-eq table-name col-name row-data))))
+     (jdbc/execute!
+       (get-ds)
+       (sql-query-find-eq table-name col-name row-data))))
 
   ([table-name col-name row-data col-name2 row-data2]
    (catcher/snatch {}
-                   (jdbc/query
-                    (get-ds)
-                    (sql-query-find-eq table-name col-name row-data col-name2 row-data2)))))
+     (jdbc/execute!
+       (get-ds)
+       (sql-query-find-eq table-name col-name row-data col-name2 row-data2)))))
 
 (defn query-eq-find-one
   ([table-name col-name row-data]
@@ -165,9 +170,9 @@
 
 #_(defn query-eq2-find-all [table-name col-name row-data col-name2 row-data2]
     (catcher/snatch {}
-                    (jdbc/query
-                     (get-ds)
-                     (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))
+      (jdbc/query
+        (get-ds)
+        (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))
 
 #_(defn query-eq2-find-one [table-name col-name row-data col-name2 row-data2]
     (first (query-eq-find-all table-name col-name row-data col-name2 row-data2)))
@@ -228,14 +233,14 @@
     (logging/info "WRITE: User: " auth-id "; Message: " msg)
     (logging/info "WRITE: anonymous; Message: " msg)))
 
-  ;([auth-entity msg entity]
-  ; (logging/info
-  ;  "WRITE: "
-  ;  (if (nil? auth-entity)
-  ;    "anonymous; "
-  ;    (str "user: " (:id auth-entity) "; "))
-  ;  "E: " entity
-  ;  "M: " msg)))
+;([auth-entity msg entity]
+; (logging/info
+;  "WRITE: "
+;  (if (nil? auth-entity)
+;    "anonymous; "
+;    (str "user: " (:id auth-entity) "; "))
+;  "E: " entity
+;  "M: " msg)))
 
 ; begin generic path param find in db and assoc with request
 
@@ -286,9 +291,15 @@
 
 (defn is-admin [user-id]
   (let [none (->
-              (jdbc/query
-               (get-ds)
-               ["SELECT * FROM admins WHERE user_id = ? " user-id]) empty?)
+              (jdbc/execute!
+                (get-ds)
+                (-> (sql/select :*)
+                    (sql/from :admins)
+                    (sql/where [:= :user_id (to-uuid user-id)])
+                    sql-format)
+
+                ;["SELECT * FROM admins WHERE user_id = ? " user-id]
+                ) empty?)
         result (not none)]
     ;(logging/info "is-admin: " user-id " : " result)
     result))
@@ -301,21 +312,41 @@
    If creating collection-media-entry-arc, the collection permission is checked."
   ([request]
    (or (get-media-resource request :collection_id "collections" "Collection")
-       (get-media-resource request :media_entry_id "media_entries" "MediaEntry")))
+     (get-media-resource request :media_entry_id "media_entries" "MediaEntry")))
 
   ([request id-key table-name type]
+   (println ">o> !!! sql" (-> (sql/select :*)
+                                ;(sql/from [:raw table-name])
+                                (sql/from table-name)
+                                (sql/where [:= :id (to-uuid (-> request :parameters :path id-key))])
+                                sql-format))
    (try
      (when-let [id (-> request :parameters :path id-key)]
        ;(logging/info "get-media-resource" "\nid\n" id)
-       (when-let [resource (-> (jdbc/query (get-ds)
-                                           [(str "SELECT * FROM " table-name "
-                                               WHERE id = ?") id]) first)]
-         (assoc resource :type type :table-name table-name)))
+       (when-let [
+
+                  ;resource (-> (jdbc/query (get-ds)
+                  ;                         [(str "SELECT * FROM " table-name "
+                  ;                             WHERE id = ?") id]) first)
+
+
+
+                  resource (jdbc/execute-one! (get-ds)
+                             (-> (sql/select :*)
+                                 ;(sql/from (table-name))
+                                 (sql/from table-name)
+                                 ;(sql/from [:raw table-name])
+                                 (sql/where [:= :id (to-uuid id)])
+                                 sql-format))
+                  ]
+         (assoc resource :type type :table-name table-name))
+
+       )
 
      (catch Exception e
        (logging/error "ERROR: get-media-resource: " (ex-data e))
        (merge (ex-data e)
-              {:statuc 406,:body {:message (.getMessage e)}})))))
+         {:statuc 406, :body {:message (.getMessage e)}})))))
 
 (defn- ring-add-media-resource [request handler]
   (if-let [media-resource (get-media-resource request)]
@@ -331,22 +362,30 @@
 (defn query-meta-datum [request]
   (let [id (-> request :parameters :path :meta_datum_id)]
     #_(logging/info "query-meta-datum" "\nid\n" id)
-    (or (-> (jdbc/query (get-ds)
-                        [(str "SELECT * FROM meta_data "
-                              "WHERE id = ? ") id])
-            first)
-        (throw (IllegalStateException. (str "We expected to find a MetaDatum for "
-                                            id " but did not."))))))
+    (or
+
+      ;(-> (jdbc/query (get-ds)
+      ;                  [(str "SELECT * FROM meta_data "
+      ;                        "WHERE id = ? ") id])
+      ;first)
+      (jdbc/execute-one! (get-ds)
+        (-> (sql/select :*)
+            (sql/from :meta_data)
+            (sql/where [:= :id (to-uuid id)])
+            sql-format))
+
+      (throw (IllegalStateException. (str "We expected to find a MetaDatum for "
+                                          id " but did not."))))))
 
 (defn- query-media-resource-for-meta-datum [meta-datum]
   (or (when-let [id (:media_entry_id meta-datum)]
         (get-media-resource {:parameters {:path {:media_entry_id id}}}
-                            :media_entry_id "media_entries" "MediaEntry"))
-      (when-let [id (:collection_id meta-datum)]
-        (get-media-resource {:parameters {:path {:collection_id id}}}
-                            :collection_id "collections" "Collection"))
-      (throw (IllegalStateException. (str "Getting the resource for "
-                                          meta-datum "
+          :media_entry_id "media_entries" "MediaEntry"))
+    (when-let [id (:collection_id meta-datum)]
+      (get-media-resource {:parameters {:path {:collection_id id}}}
+        :collection_id "collections" "Collection"))
+    (throw (IllegalStateException. (str "Getting the resource for "
+                                        meta-datum "
                                           is not implemented yet.")))))
 
 (defn- ring-add-meta-datum-with-media-resource [request handler]
@@ -367,32 +406,32 @@
 
 (defn- authorize-request-for-media-resource [request handler scope]
   ;(
-   ;(logging/info "auth-request-for-mr" 
-   ;              "\nscope: " scope
-   ;              "\nauth entity:\n" (-> request :authenticated-entity)
-   ;              "\nis-admin:\n" (-> request :is_admin)
-   ;              )
+  ;(logging/info "auth-request-for-mr"
+  ;              "\nscope: " scope
+  ;              "\nauth entity:\n" (-> request :authenticated-entity)
+  ;              "\nis-admin:\n" (-> request :is_admin)
+  ;              )
   (if-let [media-resource (:media-resource request)]
 
     (if (and (= scope :view) (public? media-resource))
-       ; viewable if public
+      ; viewable if public
       (handler request)
 
       (if-let [auth-entity (-> request :authenticated-entity)]
         (if (-> request :is_admin true?)
-            ; do all as admin
+          ; do all as admin
           (handler request)
 
-            ; if not admin check user auth
+          ; if not admin check user auth
           (if (authorized? auth-entity media-resource scope)
             (handler request)
-              ;else
+            ;else
             {:status 403 :body {:message "Not authorized for media-resource"}}))
 
-;else
+        ;else
         {:status 401 :body {:message "Not authorized"}}))
 
-; else
+    ; else
     (let [response {:status 500 :body {:message "No media-resource in request."}}]
       (logging/warn 'authorize-request-for-media-resource response [request handler])
       response))
@@ -412,8 +451,8 @@
   ;((assoc-in request [:query-params2] (-> request :parameters :query))
   (handler (assoc request :query-params
                   (->> request :query-params
-                       (map (fn [[k v]] [k (try-as-json v)]))
-                       (into {})))))
+                    (map (fn [[k v]] [k (try-as-json v)]))
+                    (into {})))))
 
 ; end json query param helpers
 
