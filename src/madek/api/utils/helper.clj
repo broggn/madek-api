@@ -16,7 +16,6 @@
         remaining (drop required-entries query-parts)]
     (concat merged remaining)))
 
-
 (defn convert-map [entry]
   (-> entry
       (update :created_at #(if (contains? entry :created_at) (to-uuid %)))

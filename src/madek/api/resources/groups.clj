@@ -1,6 +1,5 @@
 (ns madek.api.resources.groups
   (:require [clj-uuid]
-            [clojure.java.jdbc :as jdbco]
             [clojure.tools.logging :as logging]
             [honey.sql :refer [format] :rename {format sql-format}]
    ;; all needed imports
@@ -14,12 +13,8 @@
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
             [madek.api.utils.helper :refer [merge-query-parts]]
 
-            [madek.api.utils.rdbms :as rdbms]
             [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
             [next.jdbc :as jdbc]
-
-
-
 
             [reitit.coercion.schema]
             [schema.core :as s]))
@@ -32,101 +27,28 @@
                  (or params {})
                  (assoc params :id (or (:id params) (clj-uuid/v4))))
 
-        p (println ">o> params" params)
-        ]
+        p (println ">o> params" params)]
 
     {:body (dissoc
-             (->> (jdbc/execute-one! (get-ds) (-> (sql/insert-into :groups)
-                                                  (sql/values [params])
-                                                  (sql/returning :*)
-                                                  sql-format
-                                                  )))
-             :previous_id :searchable)
+            (->> (jdbc/execute-one! (get-ds) (-> (sql/insert-into :groups)
+                                                 (sql/values [params])
+                                                 (sql/returning :*)
+                                                 sql-format)))
+            :previous_id :searchable)
      :status 201}))
-
-
-(comment
-
-  ;[honey.sql :refer [format] :rename {format sql-format}]
-  ;[leihs.core.db :as db]
-  ;[next.jdbc :as jdbc]
-  ;[honey.sql.helpers :as sql]
-
-  (let [
-
-        id "ab"
-
-        fir (-> (sql/delete-from :groups)
-
-                ;(sql/where (groups/jdbc-update-group-id-where-clause id))
-
-                sql-format)
-        p (println ">o> abc fir" fir)
-
-        sec (groups/jdbc-update-group-id-where-clause id)
-        p (println ">o> abc sec" sec)
-
-        p (println ">o> abc both" fir sec)
-
-        both (concat fir sec)
-        p (println ">o> abc both" both)
-        p (println ">o> abc both" (count both))
-
-        ;both (vector (merge-query-parts both))
-        merged (merge-query-parts both)
-
-        res (jdbc/execute! (get-ds) merged)
-        p (println ">o> res=" res)
-
-        ]
-
-    res
-    )
-
-  )
-
-
-
-
-
-
-(comment
-
-  ;(def query ["DELETE FROM groups" " WHERE groups.institutional_id = ?" "ab"])
-
-
-
-  ;; Example usage
-
-  (let [
-
-        query ["DELETE FROM groups" " WHERE groups.institutional_id = ?" "ab"]
-        ;query ["DELETE FROM groups" " WHERE groups.institutional_id = ?" " AND x=? And a between(? ?)" "ab" "cd" "1" "4"]
-
-        res (merge-query-parts query)
-
-        p (println ">>1" res)
-        p (println ">>1 count=" (count res))
-        p (println ">>1 first=" (first res))
-
-        ]
-    )
-  )
-
 
 ;### get group ################################################################
 
 (defn get-group [id-or-institutinal-group-id]
   (if-let [group (groups/find-group id-or-institutinal-group-id)]
     {:body (dissoc group :previous_id :searchable)}
-    {:status 404 :body "No such group found"}))             ; TODO: toAsk 204 No Content
+    {:status 404 :body "No such group found"})) ; TODO: toAsk 204 No Content
 
 ;### delete group ##############################################################
 
 (defn delete-group [id]
 
-  (let [
-        fir (-> (sql/delete-from :groups)
+  (let [fir (-> (sql/delete-from :groups)
                 sql-format)
 
         sec (groups/jdbc-update-group-id-where-clause id)
@@ -138,22 +60,18 @@
         p (println ">o> res=" res)
 
         update-count (get res :next.jdbc/update-count)
-        p (println ">o> update-count=" update-count)
-        ]
+        p (println ">o> update-count=" update-count)]
 
     (if (= 1 update-count)
       {:status 204}
-      {:status 404})
-    )
-  )
+      {:status 404})))
 
 ;### patch group ##############################################################
 (defn db_update-group [group-id body]
   (println ">o> abc" group-id)
   (println ">o> abc2" body)
 
-  (let [
-        sett (-> body convert-sequential-values-to-sql-arrays)
+  (let [sett (-> body convert-sequential-values-to-sql-arrays)
         p (println ">o> sett" sett)
 
         where-clause (:where (groups/jdbc-update-group-id-where-clause group-id))
@@ -169,87 +87,20 @@
         p (println ">o> res=" res)
 
         update-count (get (first res) :next.jdbc/update-count)
-        p (println ">o> update-count=" update-count)
-        ]
-    update-count
-
-    )
-
-  ;(let [query (groups/jdbc-update-group-id-where-clause group-id)
-  ;      db-do (jdbco/update! (rdbms/get-ds) :groups body query)]
-  ;  ;(logging/info "db_update-group" "\ngroup-id\n" group-id "\nbody\n" body "\nquery\n" query)
-  ;  (first db-do))
-
-  )
-
-
-(comment
-
-  (let [
-        body {
-              :name "test22"
-              :type "Group"
-              :institutional_id "test22"
-              :institutional_name "test22"
-              :institution "test22"
-              :searchable "test"
-              }
-
-        ;; has to be str
-        group-id "59d28b15-23c5-45ad-b273-4b6e1594833e"
-
-
-
-
-        ;sett (-> body convert-sequential-values-to-sql-arrays)
-        ;p (println ">o> sett" sett)
-        ;
-        ;hmm (groups/jdbc-update-group-id-where-clause group-id)
-        ;p (println ">o> hmm" hmm)
-        ;hmm (:where hmm)
-        ;p (println ">o> hmm" hmm)
-        ;
-        ;
-        ;fir (-> (sql/update :groups)
-        ;        (sql/set (-> body convert-sequential-values-to-sql-arrays))
-        ;        (sql/where  hmm)
-        ;        sql-format)
-        ;p (println ">o> sql-fir" fir)
-        ;
-        ;res (jdbc/execute! (get-ds) fir)
-        ;p (println ">o> res=" res)
-        ;
-        ;update-count (get (first res) :next.jdbc/update-count)
-        ;p (println ">o> update-count=" update-count)
-        ;
-        ;res update-count
-
-
-
-
-        ;; next.jdbc, res=1
-        res (let [query (groups/jdbc-update-group-id-where-clause-old group-id)
-                  db-do (jdbco/update! (rdbms/get-ds) :groups body query)]
-              ;(logging/info "db_update-group" "\ngroup-id\n" group-id "\nbody\n" body "\nquery\n" query)
-              (first db-do))
-        ]
-    res
-    )                                                       ;; TODO update
-  )
-
+        p (println ">o> update-count=" update-count)]
+    update-count))
 
 (defn patch-group [{body :body {group-id :group-id} :params}]
   (if (= 1 (db_update-group group-id body))
     {:body (groups/find-group group-id)}
     {:status 404}))
 
-;### index ####################################################################
-; TODO test query and paging
+  ;### index ####################################################################
+  ; TODO test query and paging
 (defn build-index-query [req]
   (let [query-params (-> req :parameters :query)
 
-        p (println ">o> query-params" query-params)
-        ]
+        p (println ">o> query-params" query-params)]
     (-> (if (true? (:full_data query-params))
           (sql/select :*)
           (sql/select :id))
@@ -265,89 +116,19 @@
         (sd/build-query-param-like query-params :institution)
         (sd/build-query-param-like query-params :searchable)
         (pagination/add-offset-for-honeysql query-params)
-        sql-format
-        )))
-
-;(defn build-index-query-old [req]
-;  (-> build-index-query
-;      sql-format))
-
-
-
-
-(comment
-
-  (let [
-        params {
-                :name "test22ab"
-                :type "Group"
-                :institutional_id "test22ab"
-                :institutional_name "test22ab"
-                :institution "test22ab"
-                :searchable "testba"
-                }
-
-        ;; java.jdbc
-
-        ;sql (build-index-query {:parameters {:query {::institutional_name "ab"}}})
-        ;p (println ">o> sql" sql)
-        ;
-        ;;sql (conj sql {:returning ":*"})
-        ;p (println ">o> sql" sql)
-
-        ;res (jdbco/query (rdbms/get-ds) sql)
-        ;=> ({:id #uuid"59d28b15-23c5-45ad-b273-4b6e1594833e"})
-
-
-        ;res (jdbc/execute! (get-ds) (-> sql
-        ;                                ;(sql/returning :*)
-        ;                                sql-format))
-
-        ;res (jdbc/execute! (get-ds) sql)
-
-        ;res (->> (jdbco/insert!
-        ;       (rdbms/get-ds) :groups params)
-        ;  fir)
-
-        ;(fir (jdbco/delete! (rdbms/get-ds)
-        ;         :groups (groups/jdbc-update-group-id-where-clause id)))
-
-
-        ;res (->> (jdbco/insert! (rdbms/get-ds) :groups params) first)
-
-
-        ;; next.jdbc
-        ;    [madek.api.db.core :refer [get-ds]]
-        ;    [honey.sql :refer [format] :rename {format sql-format}]
-        res (->> (jdbc/execute-one! (get-ds) (-> (sql/insert-into :groups)
-                                                 (sql/values [params])
-                                                 (sql/returning :*)
-                                                 sql-format
-                                                 )))
-
-
-
-
-        ;res sql
-
-        ]
-    res
-    )                                                       ;;HERE
-  )
-
-
+        sql-format)))
 
 (defn index [request]
   (let [result (jdbc/execute! (get-ds) (build-index-query request))]
-  ;(let [result (jdbco/query (rdbms/get-ds) (build-index-query request))]
+      ;(let [result (jdbco/query (rdbms/get-ds) (build-index-query request))]
     (sd/response_ok {:groups result})))
 
-;### routes ###################################################################
+  ;### routes ###################################################################
 
 (def schema_import-group
   {(s/optional-key :id) s/Str
    :name s/Str
-   ;:type (s/enum "Group" "AuthenticationGroup" "InstitutionalGroup")
+     ;:type (s/enum "Group" "AuthenticationGroup" "InstitutionalGroup")
    (s/optional-key :type) (s/enum "Group" "AuthenticationGroup" "InstitutionalGroup")
    (s/optional-key :institutional_id) (s/maybe s/Str)
    (s/optional-key :institutional_name) (s/maybe s/Str)
@@ -365,7 +146,7 @@
 (def schema_export-group
   {:id s/Uuid
    (s/optional-key :name) s/Str
-   (s/optional-key :type) s/Str                             ; TODO enum
+   (s/optional-key :type) s/Str ; TODO enum
    (s/optional-key :created_by_user_id) (s/maybe s/Uuid)
    (s/optional-key :created_at) s/Any
    (s/optional-key :updated_at) s/Any
@@ -382,17 +163,16 @@
         data_wid (assoc params :id (or (:id params) (clj-uuid/v4)))
         data_wtype (assoc data_wid :type (or (:type data_wid) "Group"))
 
-        ;resultdb (->> (jdbco/insert! (rdbms/get-ds) :groups data_wtype) first)
+          ;resultdb (->> (jdbco/insert! (rdbms/get-ds) :groups data_wtype) first)
 
         resultdb (->> (jdbc/execute-one! (get-ds) (-> (sql/insert-into :groups)
-                                                 (sql/values [data_wtype])
-                                                 (sql/returning :*)
-                                                 sql-format)))
-
+                                                      (sql/values [data_wtype])
+                                                      (sql/returning :*)
+                                                      sql-format)))
 
         result (dissoc resultdb :previous_id :searchable)]
     (logging/info (apply str ["handler_create-group: \ndata:" data_wtype "\nresult-db: " resultdb "\nresult: " result]))
-    ;{:status 201 :body {:id result}}
+      ;{:status 201 :body {:id result}}
     {:status 201 :body result}))
 
 (defn handle_get-group [req]
@@ -407,7 +187,7 @@
 (defn handle_update-group [req]
   (let [id (-> req :parameters :path :id)
         body (-> req :parameters :body)]
-    ;(logging/info "handle_update-group" "\nid\n" id "\nbody\n" body)
+      ;(logging/info "handle_update-group" "\nid\n" id "\nbody\n" body)
     (patch-group {:params {:group-id id} :body body})))
 
 (def schema_query-groups
@@ -434,7 +214,7 @@
                 :swagger {:produces "application/json"}
                 :content-type "application/json"
                 :parameters {:query schema_query-groups}
-                ;:accept "application/json"
+                  ;:accept "application/json"
                 :coercion reitit.coercion.schema/coercion
                 :responses {200 {:body {:groups [schema_export-group]}}}}}]
     ["/:id" {:get {:summary "Get group by id"
@@ -447,7 +227,6 @@
                    :parameters {:path {:id s/Str}}
                    :responses {200 {:body schema_export-group}
                                404 {:body s/Any}}}}]]])
-
 
 ;; api/admin/..
 (def ring-routes
@@ -505,10 +284,10 @@
                   :coercion reitit.coercion.schema/coercion
                   :parameters {:path {:id s/Str}
                                :body schema_update-group}
-                  :responses {200 {:body s/Any}             ;groups/schema_export-group}
-                              404 {:body s/Any}}}}]         ; TODO error handling
+                  :responses {200 {:body s/Any} ;groups/schema_export-group}
+                              404 {:body s/Any}}}}] ; TODO error handling
 
-   ; groups-users/ring-routes
+     ; groups-users/ring-routes
    ["/:group-id/users/" {:get {:summary "Get group users by id"
                                :description "Get group users by id."
                                :swagger {:produces "application/json"}
@@ -523,7 +302,7 @@
                                :responses {200 {:body {:users [group-users/schema_export-group-user-simple]}} ; TODO schema
                                            404 {:body s/Str}}}
 
-                         ; TODO works with tests, but not with the swagger ui
+                           ; TODO works with tests, but not with the swagger ui
                          :put {:summary "Update group users by group-id and list of users."
                                :description "Update group users by group-id and list of users."
                                :swagger {:consumes "application/json" :produces "application/json"}
@@ -534,7 +313,7 @@
                                :parameters {:path {:group-id s/Str}
                                             :body group-users/schema_update-group-user-list}
 
-                               ;:body {:users [s/Any]}}
+                                 ;:body {:users [s/Any]}}
                                :responses {200 {:body s/Any} ;groups/schema_export-group}
                                            404 {:body s/Str}}}}]
 
@@ -562,8 +341,8 @@
 
                                  :delete {:summary "Deletes a group-user by group-id and user-id"
                                           :description "Delete a group-user by group-id and user-id."
-                                          ;:swagger {:produces "application/json"}
-                                          ;:content-type "application/json"
+                                            ;:swagger {:produces "application/json"}
+                                            ;:content-type "application/json"
                                           :handler group-users/handle_delete-group-user
                                           :middleware [wrap-authorize-admin!]
                                           :coercion reitit.coercion.schema/coercion
@@ -571,5 +350,5 @@
                                           :responses {200 {:body {:users [group-users/schema_export-group-user-simple]}}
                                                       406 {:body s/Str}}}}] ; TODO error handling
    ])
-;### Debug ####################################################################
-;(debug/debug-ns *ns*)
+  ;### Debug ####################################################################
+  ;(debug/debug-ns *ns*)

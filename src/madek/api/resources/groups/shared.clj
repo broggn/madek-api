@@ -25,14 +25,11 @@
   (-> id sql-merge-where-id
       ;sql-format
       ;(update-in [0] #(clojure.string/replace % "WHERE" ""))
-
       ))
-
 (defn jdbc-update-group-id-where-clause-old [id]
   (println ">> 3")
   (-> id sql-merge-where-id sql-format
-      (update-in [0] #(clojure.string/replace % "WHERE" ""))
-      ))
+      (update-in [0] #(clojure.string/replace % "WHERE" ""))))
 
 (defn find-group-sql [id]
   (-> (sql-merge-where-id id)
