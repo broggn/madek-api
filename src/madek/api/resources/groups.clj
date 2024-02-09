@@ -7,15 +7,13 @@
             [honey.sql.helpers :as sql]
             [madek.api.db.core :refer [get-ds]]
             [madek.api.pagination :as pagination]
-   ;[madek.api.resources.groups.users :as users]
             [madek.api.resources.groups.shared :as groups]
+   ;[madek.api.resources.groups.users :as users]
             [madek.api.resources.groups.users :as group-users]
-
             [madek.api.resources.shared :as sd]
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
 
-
-
+            [madek.api.utils.helper :refer [merge-query-parts]]
             [madek.api.utils.rdbms :as rdbms]
             [madek.api.utils.sql :as sqlo]
             [next.jdbc :as jdbc]
@@ -28,6 +26,7 @@
 
 ;### create group #############################################################
 
+;; FIXME: not in use?
 (defn create-group [request]
   (let [params (as-> (:body request) params
                  (or params {})
@@ -45,81 +44,6 @@
              :previous_id :searchable)
      :status 201}))
 
-
-;(ns leihs.my.back.html
-;    (:refer-clojure :exclude [keyword str])
-;    (:require
-;      [hiccup.page :refer [html5]]
-;      [honey.sql :refer [format] :rename {format sql-format}]
-;      [honey.sql.helpers :as sql]
-;      [leihs.core.http-cache-buster2 :as cache-buster]
-;      [leihs.core.json :refer [to-json]]
-;      [leihs.core.remote-navbar.shared :refer [navbar-props]]
-;      [leihs.core.shared :refer [head]]
-;      [leihs.core.url.core :as url]
-;      [leihs.my.authorization :as auth]
-;      [leihs.core.db :as db]
-;      [next.jdbc :as jdbc]))
-
-
-
-;(defn merge-query-parts [query-parts]
-;  (let [placeholder-count (reduce + 0 (map #(count (re-seq #"\?" %)) query-parts))
-;
-;        p (println ">o> placeholder-count" placeholder-count)
-;
-;        ;required-entries (+ 1 placeholder-count)
-;        required-entries (- (count query-parts) placeholder-count)
-;        p (println ">o> required-entries" required-entries)
-;
-;        merged (apply str (take required-entries query-parts))
-;
-;        p (println ">o> merged" merged)
-;        remaining (drop required-entries query-parts)]
-;    (cons merged remaining)))
-
-(defn merge-query-parts [query-parts]
-  (let [placeholder-count (reduce + 0 (map #(count (re-seq #"\?" %)) query-parts))
-        ;; Print placeholder count for debugging
-        _ (println ">o> placeholder-count" placeholder-count)
-        ;; Calculate required entries
-        required-entries (- (count query-parts) placeholder-count)
-        ;; Print required entries for debugging
-        _ (println ">o> required-entries" required-entries)
-        ;; Merge with spaces between entries
-        merged (vector (apply str (interpose " " (take required-entries query-parts))))
-
-        merged ["select * from groups where institutional_id = ?"]
-
-        ;; Print merged result for debugging
-        _ (println ">o> merged" merged)
-        _ (println ">o> merged" (count merged))
-        _ (println ">o> merged" (class merged))
-        ;; Calculate remaining parts
-        remaining (vector (drop required-entries query-parts))
-        ;remaining (vector (drop required-entries query-parts))
-
-        remaining ["ab"]
-
-        ]
-    _ (println ">o> 2merged" remaining)
-    _ (println ">o> 2merged" (count remaining))
-    _ (println ">o> 2merged" (class remaining))
-    ;; Combine merged with remaining parts
-    (concat merged remaining)))
-;(+ merged remaining)))
-;(cons merged remaining)))
-
-
-;(defn merge-query-parts [query-parts]
-;  (let [placeholder-count (reduce + 0 (map #(count (re-seq #"\?" %)) query-parts))
-;        _ (println ">o> placeholder-count" placeholder-count)
-;        required-entries (- (count query-parts) placeholder-count)
-;        _ (println ">o> required-entries" required-entries)
-;        merged (apply str (interpose " " (take required-entries query-parts)))
-;        _ (println ">o> merged" merged)
-;        remaining (drop required-entries query-parts)]
-;    (vector merged @remaining))) ; Change here to ensure the result is a vector of strings
 
 (comment
 
@@ -328,10 +252,28 @@
 ;### delete group ##############################################################
 
 (defn delete-group [id]
-  (if (= 1 (first (jdbco/delete! (rdbms/get-ds)
-                    :groups (groups/jdbc-update-group-id-where-clause id))))
-    {:status 204}
-    {:status 404}))
+
+  (let [
+        fir (-> (sql/delete-from :groups)
+                sql-format)
+
+        sec (groups/jdbc-update-group-id-where-clause id)
+
+        merged (merge-query-parts (concat fir sec))
+        p (println ">o> merged" merged)
+
+        res (jdbc/execute! (get-ds) merged)
+        p (println ">o> res=" res)
+
+        update-count (get res :next.jdbc/update-count)
+        p (println ">o> update-count=" update-count)
+        ]
+
+    (if (= 1 update-count)
+      {:status 204}
+      {:status 404})
+    )
+  )
 
 ;### patch group ##############################################################
 (defn db_update-group [group-id body]
