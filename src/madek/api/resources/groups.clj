@@ -11,12 +11,11 @@
    ;[madek.api.resources.groups.users :as users]
             [madek.api.resources.groups.users :as group-users]
             [madek.api.resources.shared :as sd]
-            [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-
             [madek.api.utils.helper :refer [merge-query-parts]]
+
             [madek.api.utils.rdbms :as rdbms]
-            [madek.api.utils.sql :as sqlo]
+            [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
             [next.jdbc :as jdbc]
 
 
@@ -55,7 +54,6 @@
 
   (let [
 
-
         id "ab"
 
         fir (-> (sql/delete-from :groups)
@@ -75,146 +73,19 @@
         p (println ">o> abc both" (count both))
 
         ;both (vector (merge-query-parts both))
-        merged  (merge-query-parts both)
+        merged (merge-query-parts both)
 
         res (jdbc/execute! (get-ds) merged)
         p (println ">o> res=" res)
 
         ]
 
-      res
+    res
     )
 
   )
 
 
-(comment
-
-  (let [
-        params {
-                :name "test22"
-                :type "Group"
-                :institutional_id "test22"
-                :institutional_name "test22"
-                :institution "test22"
-                :searchable "test"
-                }
-
-        ;; java.jdbc
-        ;res (->> (jdbco/insert!
-        ;       (rdbms/get-ds) :groups params)
-        ;  fir)
-
-        ;(fir (jdbco/delete! (rdbms/get-ds)
-        ;         :groups (groups/jdbc-update-group-id-where-clause id)))
-
-        ;; next.jdbc
-        ;    [madek.api.db.core :refer [get-ds]]
-        ;    [honey.sql :refer [format] :rename {format sql-format}]
-        ;res (->> (jdbc/execute-one! (get-ds) (-> (sql/insert-into :groups)
-        ;                                         (sql/values [params])
-        ;                                         (sql/returning :*)
-        ;                                         sql-format
-        ;                                         )))
-
-        id "e3e3e3e3-e3e3-e3e3-e3e3-e3e3e3e3e3e3"
-
-
-        id "ab"
-
-        sql (groups/jdbc-update-group-id-where-clause id)
-        p (println ">o> sql" sql)
-        p (println ">o> sql" (class sql))
-
-        ;res (jdbco/delete! (rdbms/get-ds)
-        ;  :groups sql)
-
-        ;(def query ("DELETE FROM groups" " WHERE groups.institutional_id = ?" "ab"))
-
-
-
-        fir (-> (sql/delete-from :groups)
-
-                  ;(sql/where (groups/jdbc-update-group-id-where-clause id))
-
-                  sql-format)
-        p (println ">o> abc fir" fir)
-
-        ;sec (groups/jdbc-update-group-id-where-clause id)
-        ;p (println ">o> abc sec" sec)
-        ;
-        ;p (println ">o> abc both" fir sec)
-        ;
-        ;both (concat fir sec)
-        ;p (println ">o> abc both" both)
-        ;p (println ">o> abc both" (count both))
-        ;
-        ;both (vector (merge-query-parts both))
-        ;both  (merge-query-parts both)
-        ;
-
-        both ["DELETE FROM groups WHERE groups.institutional_id = ?" "ab"]
-
-        ;
-        p (println ">>1" both)
-        p (println ">>1 count=" (count both))
-        ;p (println ">>1 fir=" (fir both))
-
-        ;p (println ">o> abc" (groups/jdbc-update-group-id-where-clause id))
-        ;p (println ">o> abc" (class (groups/jdbc-update-group-id-where-clause id)))
-
-
-
-
-
-
-
-        ;; TODO: one
-        ;res (jdbc/execute-one! (get-ds) both)
-        ;p (println ">> !! res=" res)
-        ;
-        ;result-map (get  res :next.jdbc/update-count)
-        ;p (println ">> !! a1a=" result-map)
-
-        ;; TODO: all
-        res (jdbc/execute! (get-ds) both)
-        p (println ">> !! res=" res)
-
-        result-map (get  (first res) :next.jdbc/update-count)
-        res (get  (first res) :next.jdbc/update-count)
-
-        p (println ">> !! final-result=" res)
-
-
-
-
-
-
-
-
-
-        ;;p (println ">> !! a1=" (res [0]))
-        ;p (println ">> !! a1=" (fir res))
-        ;p (println ">> !! a1=" (::jdbc/update-count (fir res)))
-        ;
-        ;
-        ;
-        ;
-        ;count (-> (fir res) :next.jdbc/update-count)
-        ;p (println ">> !! count=" count)
-
-        ;res (jdbc/execute! (get-ds) fir (groups/jdbc-update-group-id-where-clause id) )
-        ;res (jdbc/execute-one! (get-ds)  (-> (sql/delete-from :groups)
-        ;                                     (sql/where groups/jdbc-update-group-id-where-clause id)
-        ;                                                                              sql-format
-        ;                                     ))
-
-        ;res sql
-
-        ]
-    res
-    )                                                       ;;HERE
-  )
 
 
 
@@ -290,7 +161,7 @@
 
         fir (-> (sql/update :groups)
                 (sql/set (-> body convert-sequential-values-to-sql-arrays))
-                (sql/where  where-clause)
+                (sql/where where-clause)
                 sql-format)
         p (println ">o> sql-fir" fir)
 
@@ -316,13 +187,13 @@
 
   (let [
         body {
-                :name "test22"
-                :type "Group"
-                :institutional_id "test22"
-                :institutional_name "test22"
-                :institution "test22"
-                :searchable "test"
-                }
+              :name "test22"
+              :type "Group"
+              :institutional_id "test22"
+              :institutional_name "test22"
+              :institution "test22"
+              :searchable "test"
+              }
 
         ;; has to be str
         group-id "59d28b15-23c5-45ad-b273-4b6e1594833e"
@@ -358,9 +229,9 @@
 
         ;; next.jdbc, res=1
         res (let [query (groups/jdbc-update-group-id-where-clause-old group-id)
-              db-do (jdbco/update! (rdbms/get-ds) :groups body query)]
-          ;(logging/info "db_update-group" "\ngroup-id\n" group-id "\nbody\n" body "\nquery\n" query)
-          (first db-do))
+                  db-do (jdbco/update! (rdbms/get-ds) :groups body query)]
+              ;(logging/info "db_update-group" "\ngroup-id\n" group-id "\nbody\n" body "\nquery\n" query)
+              (first db-do))
         ]
     res
     )                                                       ;; TODO update
@@ -375,12 +246,15 @@
 ;### index ####################################################################
 ; TODO test query and paging
 (defn build-index-query [req]
-  (let [query-params (-> req :parameters :query)]
+  (let [query-params (-> req :parameters :query)
+
+        p (println ">o> query-params" query-params)
+        ]
     (-> (if (true? (:full_data query-params))
-          (sqlo/select :*)
-          (sqlo/select :id))
-        (sqlo/from :groups)
-        (sqlo/order-by [:id :asc])
+          (sql/select :*)
+          (sql/select :id))
+        (sql/from :groups)
+        (sql/order-by [:id :asc])
         (sd/build-query-param query-params :id)
         (sd/build-query-param query-params :institutional_id)
         (sd/build-query-param query-params :type)
@@ -391,10 +265,81 @@
         (sd/build-query-param-like query-params :institution)
         (sd/build-query-param-like query-params :searchable)
         (pagination/add-offset-for-honeysql query-params)
-        sqlo/format)))
+        sql-format
+        )))
+
+;(defn build-index-query-old [req]
+;  (-> build-index-query
+;      sql-format))
+
+
+
+
+(comment
+
+  (let [
+        params {
+                :name "test22ab"
+                :type "Group"
+                :institutional_id "test22ab"
+                :institutional_name "test22ab"
+                :institution "test22ab"
+                :searchable "testba"
+                }
+
+        ;; java.jdbc
+
+        ;sql (build-index-query {:parameters {:query {::institutional_name "ab"}}})
+        ;p (println ">o> sql" sql)
+        ;
+        ;;sql (conj sql {:returning ":*"})
+        ;p (println ">o> sql" sql)
+
+        ;res (jdbco/query (rdbms/get-ds) sql)
+        ;=> ({:id #uuid"59d28b15-23c5-45ad-b273-4b6e1594833e"})
+
+
+        ;res (jdbc/execute! (get-ds) (-> sql
+        ;                                ;(sql/returning :*)
+        ;                                sql-format))
+
+        ;res (jdbc/execute! (get-ds) sql)
+
+        ;res (->> (jdbco/insert!
+        ;       (rdbms/get-ds) :groups params)
+        ;  fir)
+
+        ;(fir (jdbco/delete! (rdbms/get-ds)
+        ;         :groups (groups/jdbc-update-group-id-where-clause id)))
+
+
+        ;res (->> (jdbco/insert! (rdbms/get-ds) :groups params) first)
+
+
+        ;; next.jdbc
+        ;    [madek.api.db.core :refer [get-ds]]
+        ;    [honey.sql :refer [format] :rename {format sql-format}]
+        res (->> (jdbc/execute-one! (get-ds) (-> (sql/insert-into :groups)
+                                                 (sql/values [params])
+                                                 (sql/returning :*)
+                                                 sql-format
+                                                 )))
+
+
+
+
+        ;res sql
+
+        ]
+    res
+    )                                                       ;;HERE
+  )
+
+
 
 (defn index [request]
-  (let [result (jdbco/query (rdbms/get-ds) (build-index-query request))]
+  (let [result (jdbc/execute! (get-ds) (build-index-query request))]
+  ;(let [result (jdbco/query (rdbms/get-ds) (build-index-query request))]
     (sd/response_ok {:groups result})))
 
 ;### routes ###################################################################
@@ -436,7 +381,15 @@
   (let [params (get-in request [:parameters :body])
         data_wid (assoc params :id (or (:id params) (clj-uuid/v4)))
         data_wtype (assoc data_wid :type (or (:type data_wid) "Group"))
-        resultdb (->> (jdbco/insert! (rdbms/get-ds) :groups data_wtype) first)
+
+        ;resultdb (->> (jdbco/insert! (rdbms/get-ds) :groups data_wtype) first)
+
+        resultdb (->> (jdbc/execute-one! (get-ds) (-> (sql/insert-into :groups)
+                                                 (sql/values [data_wtype])
+                                                 (sql/returning :*)
+                                                 sql-format)))
+
+
         result (dissoc resultdb :previous_id :searchable)]
     (logging/info (apply str ["handler_create-group: \ndata:" data_wtype "\nresult-db: " resultdb "\nresult: " result]))
     ;{:status 201 :body {:id result}}
