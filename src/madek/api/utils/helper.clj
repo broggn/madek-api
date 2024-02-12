@@ -4,12 +4,19 @@
 ; [madek.api.utils.helper :refer [to-uuid]]
 (defn to-uuid [id] (if (instance? String id) (UUID/fromString id) id))
 
-(defn to-uuid [id key]
-  ;(def keys-to-cast-to-uuid [:id :media_entry_id :media_file_id :preview_id :media_entry_id :media_resource_id :media_file])
-  (def keys-to-cast-to-uuid [:media_entry_id :media_file_id :preview_id :media_entry_id :media_resource_id :media_file])
-  (if (:and (contains? keys-to-cast-to-uuid key) (instance? String id))
-    (UUID/fromString id)
-    id))
+; [madek.api.utils.helper :refer [to-uuid]]
+(defn to-uuid
+  ([id]
+   (if (instance? String id) (UUID/fromString id) id))
+
+  ([id key]
+   (def keys-to-cast-to-uuid [:media_entry_id :media_file_id :preview_id :media_entry_id :media_resource_id :media_file])
+   (if (:and (contains? keys-to-cast-to-uuid key) (instance? String id))
+     (UUID/fromString id)
+     id)))
+
+;[madek.api.utils.helper :refer [to-uuids]]
+(defn to-uuids [ids] (map (fn [id] (if (instance? String id) (UUID/fromString id) id)) ids))
 
 ; [madek.api.utils.helper :refer [to-uuids]]
 (defn to-uuids [ids]
