@@ -12,7 +12,8 @@
 
 (defn handle_list-io_interface
   [req]
-  (let [full_data (true? (-> req :parameters :query :full_data))
+  (let [p (println ">o> ??? handle_list-io_interface")
+        full_data (true? (-> req :parameters :query :full_data))
         qd (if (true? full_data) :* :io_interfaces.id)
         db-result (sd/query-find-all :io_interfaces qd)]
     ;(logging/info "handle_list-io_interface" "\nqd\n" qd "\nresult\n" db-result)
@@ -28,7 +29,8 @@
   [req]
   (try
     (catcher/with-logging {}
-      (let [data (-> req :parameters :body)
+      (let [p (println ">o> ??? handle_create-io_interfaces")
+            data (-> req :parameters :body)
             ins-res (jdbc/insert! (get-ds) :io_interfaces data)]
         (logging/info "handle_create-io_interfaces: " "\ndata:\n" data "\nresult:\n" ins-res)
 
@@ -59,6 +61,7 @@
 
 (defn handle_delete-io_interface
   [req]
+  (println ">o> ??? wrap-find-io_interface")
   (try
     (catcher/with-logging {}
       (let [io_interface (-> req :io_interface)
@@ -72,6 +75,7 @@
     (catch Exception e (sd/response_exception e))))
 
 (defn wrap-find-io_interface [handler]
+  (println ">o> ??? wrap-find-io_interface")
   (fn [request] (sd/req-find-data request handler :id
                                   :io_interfaces
                                   :id :io_interface true)))

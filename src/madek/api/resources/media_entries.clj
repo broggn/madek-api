@@ -4,14 +4,14 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.spec.alpha :as sa]
             [clojure.tools.logging :as logging]
-    [madek.api.utils.helper :refer [to-uuid]]
-
             [madek.api.authorization :as authorization]
+
             [madek.api.constants :refer [FILE_STORAGE_DIR]]
             [madek.api.resources.media-entries.index :refer [get-index
                                                              get-index_related_data]]
             [madek.api.resources.media-entries.media-entry :refer [get-media-entry]]
             [madek.api.resources.shared :as sd]
+            [madek.api.utils.helper :refer [to-uuid]]
             [madek.api.utils.rdbms :as rdbms]
             [reitit.coercion.schema]
             [reitit.coercion.spec]

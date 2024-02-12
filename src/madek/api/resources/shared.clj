@@ -8,15 +8,21 @@
             [java-time.api :as jt]
             [logbug.catcher :as catcher]
 
-            [madek.api.authorization :refer [authorized?]]
+            [logbug.debug :as debug]
 
+            [madek.api.authorization :refer [authorized?]]
             [madek.api.constants :as mc]
+
+            [madek.api.db.core :refer [get-ds]]
             [madek.api.semver :as semver]
             [madek.api.utils.helper :refer [to-uuid]]
 
-            [madek.api.utils.rdbms :refer [get-ds]]
+            ;[madek.api.utils.rdbms :refer [get-ds]]
+
             [next.jdbc :as jdbc]
-            [schema.core :as s]))
+
+            [schema.core :as s]
+            [taoensso.timbre :refer [info warn error spy]]))
 
 (def schema_ml_list
   {(s/optional-key :de) (s/maybe s/Str)
@@ -116,17 +122,22 @@
        (-> query (sql/where [:like db-param qval]))
        ;(-> query (h2helpers/where [:like param qval]))
        ))))
+
 (defn- sql-query-find-eq
   ([table-name col-name row-data]
-   (-> (build-query-base table-name :*)
-       ;(sql/where [:= col-name row-data])
-       (sql/where [:= col-name (to-uuid row-data col-name)])
-       sql-format))
+   ;(println ">o> ??? sql-query-find-eq table-name1" table-name "col-name" col-name "row-data" row-data)
+   (println ">o> ??? sql-query-find-eq table-name1" table-name)
+   (spy (-> (build-query-base table-name :*)
+            (sql/where [:= col-name (to-uuid row-data col-name)])
+            sql-format)))
+
   ([table-name col-name row-data col-name2 row-data2]
-   (-> (build-query-base table-name :*)
-       (sql/where [:= col-name (to-uuid row-data col-name)])
-       (sql/where [:= col-name2 (to-uuid row-data col-name)])
-       sql-format)))
+   ;(println ">o> ??? table-name2" table-name "col-name" col-name "row-data" row-data "col-name2" col-name2 "row-data2" row-data2)
+   (println ">o> ??? table-name2" table-name "col-name")
+   (spy (-> (build-query-base table-name :*)
+            (sql/where [:= col-name (to-uuid row-data col-name)])
+            (sql/where [:= col-name2 (to-uuid row-data2 col-name2)])
+            sql-format))))
 
 (defn sql-update-clause
   "Generates an sql update clause"
@@ -144,23 +155,24 @@
 
 (defn query-find-all
   [table-key col-keys]
-  (let [db-query (-> (build-query-base table-key col-keys)
+  (let [p (println ">o> query-find-all" table-key col-keys)
+        db-query (-> (build-query-base table-key col-keys)
                      sql-format)
-        db-result (jdbc/execute! (get-ds) db-query)]
-    db-result))
+        db-result (jdbc/execute! (get-ds) (spy db-query))]
+    (spy db-result)))
 
 (defn query-eq-find-all
   ([table-name col-name row-data]
    (catcher/snatch {}
-                   (jdbc/execute!
-                    (get-ds)
-                    (sql-query-find-eq table-name col-name row-data))))
+                   (spy (jdbc/execute!
+                         (get-ds)
+                         (sql-query-find-eq table-name col-name row-data)))))
 
   ([table-name col-name row-data col-name2 row-data2]
    (catcher/snatch {}
-                   (jdbc/execute!
-                    (get-ds)
-                    (sql-query-find-eq table-name col-name row-data col-name2 row-data2)))))
+                   (spy (jdbc/execute!
+                         (get-ds)
+                         (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))))
 
 (defn query-eq-find-one
   ([table-name col-name row-data]
@@ -293,16 +305,16 @@
   (let [none (->
               (jdbc/execute!
                (get-ds)
-               (-> (sql/select :*)
-                   (sql/from :admins)
-                   (sql/where [:= :user_id (to-uuid user-id)])
-                   sql-format)
+               (spy (-> (sql/select :*)
+                        (sql/from :admins)
+                        (sql/where [:= :user_id (to-uuid user-id)])
+                        sql-format))
 
                 ;["SELECT * FROM admins WHERE user_id = ? " user-id]
                )empty?)
         result (not none)]
     ;(logging/info "is-admin: " user-id " : " result)
-    result))
+    (spy result)))
 
 ; end user and other util wrappers
 
@@ -507,4 +519,4 @@
 (defn sum_adm_todo [text] (sum_todo (sum_adm text)))
 ; end swagger docu summary helpers
 
-;(debug/debug-ns *ns*)
+(debug/debug-ns *ns*)
