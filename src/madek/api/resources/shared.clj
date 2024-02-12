@@ -318,6 +318,54 @@
 
 ; end user and other util wrappers
 
+
+
+
+
+
+
+
+;(ns leihs.my.back.html
+;    (:refer-clojure :exclude [keyword str])
+;    (:require
+;      [hiccup.page :refer [html5]]
+;      [honey.sql :refer [format] :rename {format sql-format}]
+;      [honey.sql.helpers :as sql]
+;      [leihs.core.http-cache-buster2 :as cache-buster]
+;      [leihs.core.json :refer [to-json]]
+;      [leihs.core.remote-navbar.shared :refer [navbar-props]]
+;      [leihs.core.shared :refer [head]]
+;      [leihs.core.url.core :as url]
+;      [leihs.my.authorization :as auth]
+;      [leihs.core.db :as db]
+;      [next.jdbc :as jdbc]))
+
+(comment
+
+  (let [
+
+
+        table-name :users
+        table-name "users"
+
+        res (spy (jdbc/execute-one! (get-ds)
+                        (spy (-> (sql/select :*)
+                                 ;(sql/from [:raw table-name])
+                                 ;(sql/from table-name)
+                                 ;(sql/from [[:inline table-name]])
+                                 (sql/from (keyword table-name))
+                                 sql-format))))
+
+
+        p (println "\nres=" res)
+        ]
+
+       )
+  )
+
+
+
+
 ; begin media resources helpers
 (defn- get-media-resource
   "First checks for collection_id, then for media_entry_id.
@@ -327,25 +375,17 @@
        (get-media-resource request :media_entry_id "media_entries" "MediaEntry")))
 
   ([request id-key table-name type]
-   (println ">o> !!! sql" (-> (sql/select :*)
-                                ;(sql/from [:raw table-name])
-                              (sql/from table-name)
-                              (sql/where [:= :id (to-uuid (-> request :parameters :path id-key))])
-                              sql-format))
+
+   (println ">o> !!! sql1 / table-name=" table-name ", id-key=" id-key ", type=" type)
+
    (try
      (when-let [id (-> request :parameters :path id-key)]
        ;(logging/info "get-media-resource" "\nid\n" id)
-       (when-let [;resource (-> (jdbc/query (get-ds)
-                  ;                         [(str "SELECT * FROM " table-name "
-                  ;                             WHERE id = ?") id]) first)
-
-                  resource (jdbc/execute-one! (get-ds)
-                                              (-> (sql/select :*)
-                                 ;(sql/from (table-name))
-                                                  (sql/from table-name)
-                                 ;(sql/from [:raw table-name])
+       (when-let [resource (spy (jdbc/execute-one! (get-ds)
+                                              (spy (-> (sql/select :*)
+                                                   (sql/from (keyword table-name))
                                                   (sql/where [:= :id (to-uuid id)])
-                                                  sql-format))]
+                                                  sql-format))))]
          (assoc resource :type type :table-name table-name)))
 
      (catch Exception e
