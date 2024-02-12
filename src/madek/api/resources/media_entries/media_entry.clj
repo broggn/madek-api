@@ -4,7 +4,7 @@
    [clojure.tools.logging :as logging]
    [logbug.debug :as debug]
 
-    [madek.api.utils.helper :refer [to-uuid]]
+   [madek.api.utils.helper :refer [to-uuid]]
    [madek.api.utils.rdbms :as rdbms]
    [madek.api.utils.sql :as sql]))
 
