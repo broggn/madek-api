@@ -318,13 +318,6 @@
 
 ; end user and other util wrappers
 
-
-
-
-
-
-
-
 ;(ns leihs.my.back.html
 ;    (:refer-clojure :exclude [keyword str])
 ;    (:require
@@ -342,29 +335,18 @@
 
 (comment
 
-  (let [
-
-
-        table-name :users
+  (let [table-name :users
         table-name "users"
 
         res (spy (jdbc/execute-one! (get-ds)
-                        (spy (-> (sql/select :*)
+                                    (spy (-> (sql/select :*)
                                  ;(sql/from [:raw table-name])
                                  ;(sql/from table-name)
                                  ;(sql/from [[:inline table-name]])
-                                 (sql/from (keyword table-name))
-                                 sql-format))))
+                                             (sql/from (keyword table-name))
+                                             sql-format))))
 
-
-        p (println "\nres=" res)
-        ]
-
-       )
-  )
-
-
-
+        p (println "\nres=" res)]))
 
 ; begin media resources helpers
 (defn- get-media-resource
@@ -382,10 +364,10 @@
      (when-let [id (-> request :parameters :path id-key)]
        ;(logging/info "get-media-resource" "\nid\n" id)
        (when-let [resource (spy (jdbc/execute-one! (get-ds)
-                                              (spy (-> (sql/select :*)
-                                                   (sql/from (keyword table-name))
-                                                  (sql/where [:= :id (to-uuid id)])
-                                                  sql-format))))]
+                                                   (spy (-> (sql/select :*)
+                                                            (sql/from (keyword table-name))
+                                                            (sql/where [:= :id (to-uuid id)])
+                                                            sql-format))))]
          (assoc resource :type type :table-name table-name)))
 
      (catch Exception e

@@ -2,23 +2,21 @@
   (:require
    [clojure.java.jdbc :as jdbco]
 
-
-         ;; all needed imports
-               [honey.sql :refer [format] :rename {format sql-format}]
-
-               [next.jdbc :as jdbc]
-               [honey.sql.helpers :as sql]
-
-   [madek.api.db.core :refer [get-ds]]
-
-
    [clojure.tools.logging :as logging]
+
+               ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+
    [logbug.catcher :as catcher]
+
    [logbug.debug :as debug]
    [madek.api.constants]
    [madek.api.data-streaming :as data-streaming]
+   [madek.api.db.core :refer [get-ds]]
    ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   [madek.api.utils.sql :as sqlo]))
+   [madek.api.utils.sql :as sqlo]
+   [next.jdbc :as jdbc]))
 
 (defn db-get-preview [id]
 
