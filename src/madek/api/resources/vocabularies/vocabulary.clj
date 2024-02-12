@@ -1,12 +1,10 @@
 (ns madek.api.resources.vocabularies.vocabulary
   (:require
    [clojure.java.jdbc :as jdbc]
-   [clojure.tools.logging :as logging]
-   [logbug.debug :as debug]
    [madek.api.resources.locales :refer [add-field-for-default-locale]]
    [madek.api.resources.shared :as sd]
    [madek.api.resources.vocabularies.permissions :as permissions]
-   [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+   [madek.api.utils.rdbms :refer [get-ds]]
    [madek.api.utils.sql :as sql]))
 
 (defn transform_ml [vocab]

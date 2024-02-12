@@ -1,26 +1,12 @@
 (ns madek.api.resources.vocabularies.index
   (:require
-   [clojure.java.jdbc :as jdbco]
-   [clojure.tools.logging :as logging]
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-   [logbug.debug :as debug]
-
-       [taoensso.timbre :refer [info warn error spy]]
-           [logbug.debug :as debug]
-
-
-   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-         ;; all needed imports
-               [honey.sql :refer [format] :rename {format sql-format}]
-               ;[leihs.core.db :as db]
-               [next.jdbc :as jdbc]
-               [honey.sql.helpers :as sql]
-
-               [madek.api.db.core :refer [get-ds]]
-
+   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
    [madek.api.resources.vocabularies.permissions :as permissions]
-   [madek.api.utils.sql :as sqlo]))
+   [next.jdbc :as jdbc]))
 
 (defn- where-clause
   [user-id]
@@ -29,7 +15,7 @@
       [:= :vocabularies.enabled_for_public_view true]
       [:or
        [:= :vocabularies.enabled_for_public_view true]
-       [:in :vocabularies.id (spy vocabulary-ids)]])))
+       [:in :vocabularies.id vocabulary-ids]])))
 
 (defn- base-query
   [user-id]

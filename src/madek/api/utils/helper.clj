@@ -49,12 +49,9 @@
         ;p (println "\nquery result=" (to-uuid k :user_id))
         ;p (println "\nquery class=" (class (to-uuid k :user_id)))
         ]))
+
 ;[madek.api.utils.helper :refer [to-uuids]]
 (defn to-uuids [ids] (map (fn [id] (if (instance? String id) (UUID/fromString id) id)) ids))
-
-; [madek.api.utils.helper :refer [to-uuids]]
-(defn to-uuids [ids]
-  (map (fn [id] (if (instance? String id) (UUID/fromString id) id)) ids))
 
 ; [madek.api.utils.helper :refer [merge-query-parts]]
 (defn merge-query-parts "DEPR" [query-parts]
