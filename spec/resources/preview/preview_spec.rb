@@ -37,23 +37,14 @@ describe 'Getting a random preview for a specific media-entry' do
         #  resource.relation('data-stream').get
         #end
         let :data_stream_resource_response do
-          puts ">> media-url #{"/api/previews/#{@preview.id}/data-stream"}"
           #data_stream_resource.response
           plain_faraday_json_client.get("/api/previews/#{@preview.id}/data-stream")
           # TODO json roa remove: test relation: preview data stream
         end
         let :content_type do
-          puts ">> content-type xxx #{data_stream_resource_response.headers}"
           data_stream_resource_response.headers['content-type']
         end
-
-        let :header do
-          puts ">> header xxx #{data_stream_resource_response.headers}"
-          data_stream_resource_response.headers
-        end
-
         let :body do
-          # puts ">> body #{data_stream_resource_response.body}"
           data_stream_resource_response.body
         end
 
@@ -74,12 +65,7 @@ describe 'Getting a random preview for a specific media-entry' do
         end
 
         it 'has the proper content type' do
-          puts ">> header !?!  >#{header}<"
-          puts ">> content_type !?!  >#{content_type}<"
-          puts ">> data_stream_resource_response.headers['content-type'] !?!  >#{data_stream_resource_response.headers['content-type']}<"
-
           expect(content_type).to be == 'image/jpeg'
-          expect(data_stream_resource_response.headers['content-type']).to be == 'image/jpeg'
         end
 
         it 'has the proper hashsum' do

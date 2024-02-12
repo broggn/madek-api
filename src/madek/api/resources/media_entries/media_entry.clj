@@ -3,6 +3,8 @@
    [clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
    [logbug.debug :as debug]
+
+    [madek.api.utils.helper :refer [to-uuid]]
    [madek.api.utils.rdbms :as rdbms]
    [madek.api.utils.sql :as sql]))
 
@@ -19,7 +21,7 @@
                   (sql/from :media_entries)
                   (sql/merge-join :media_files [:= :media_entries.id :media_files.media_entry_id])
                   (sql/merge-join :previews [:= :media_files.id :previews.media_file_id])
-                  (sql/merge-where [:= :previews.id preview-id])
+                  (sql/merge-where [:= :previews.id (to-uuid preview-id)])
                   (sql/format))
         dbresult (first (jdbc/query (rdbms/get-ds) query))]
     ;(logging/info "get-media-entry-for-preview" "\npreview-id\n" preview-id "\ndbresult\n" dbresult)

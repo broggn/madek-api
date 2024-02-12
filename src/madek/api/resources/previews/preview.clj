@@ -24,58 +24,25 @@
     {:body result}))
 
 (defn- preview-file-path [preview]
-  (let [
-        ; TODO why is this needed for compojure
+  (let [; TODO why is this needed for compojure
         ;filename (:filename preview)
         ; TODO why is this needed for reitit
 
-        filename (:filename preview)
-        filename (:previews/filename preview)               ;FIXME: handle prefix
-        [first-char] filename
-
-        p (println ">o> filename ??" filename)
-        p (println ">o> first-char ??" first-char)
-        p (println ">o> [first-char] ??" [first-char])
-        ]
+        ;filename (:filename preview)
+        filename (:previews/filename preview) ;FIXME: handle prefix
+        [first-char] filename]
     (clojure.string/join
      (java.io.File/separator)
      [madek.api.constants/THUMBNAILS_STORAGE_DIR first-char filename])))
 
 (defn get-preview-file-data-stream [request]
-  ;(println ">o> request >>>1>>>>" request)
-  ;(println ">o> request >>>2>>>>" (get-in request [:previews]))
-  ;(println ">o> request >>>3>>>>" (get-in request [:previews :filename]))
-  ;(println ">o> request >>>4>>>>" (get-in request [:previews/filename]))
-  ;(println ">o> request >>>5>>>>" (:previews/filename request ))
-  ;(println ">o> request >>>6>>>>" (:filename request ))
-  ;
-  ;(println ">o> request >>>2>>>>" (get-in request ["previews"]))
-  ;(println ">o> request >>>3>>>>" (get-in request ["previews" "filename"]))
-  ;(println ">o> request >>>4>>>>" (get-in request ["previews/filename"]))
-
-  (let [
-        ;p (println ">o> >>>>>1>>>>" (:preview request))
-        p (println ">o> >>>>>2>>>>" (:previews/filename (:preview request))) ;works
-        ;p (println ">o> >>>>>3>>>>" (:filename (:preview request)))
-        ;p (println ">o> >>>>>4>>>>" (get-in request [:preview :previews :filename]))
-        p (println ">o> >>>>>5>>>>" (get-in request [:preview :previews/filename])) ;works
-        ])
-
-
   (catcher/snatch {}
                   (when-let [preview (:preview request)]
                     (logging/info "get-preview-file-ds" "\npreview\n" preview)
-
-                    ;(let [file-path (preview-file-path preview)]
-                    ;   (println ">o> file-path !!!!" file-path)
-                    ;
-                    ;  )
-
                     (when-let [file-path (preview-file-path preview)]
                       (logging/info "get-preview-file-ds" "\nfilepath\n" file-path)
                       (data-streaming/respond-with-file file-path
-                                                        ;(:content_type preview))))))
-                                                        (:previews/content_type preview) "fromPreview")))))
+                                                        (:previews/content_type preview))))))
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)
