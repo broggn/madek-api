@@ -1,13 +1,26 @@
 (ns madek.api.resources.vocabularies.index
   (:require
-   [clojure.java.jdbc :as jdbc]
+   [clojure.java.jdbc :as jdbco]
    [clojure.tools.logging :as logging]
    [logbug.catcher :as catcher]
    [logbug.debug :as debug]
+
+       [taoensso.timbre :refer [info warn error spy]]
+           [logbug.debug :as debug]
+
+
+   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+         ;; all needed imports
+               [honey.sql :refer [format] :rename {format sql-format}]
+               ;[leihs.core.db :as db]
+               [next.jdbc :as jdbc]
+               [honey.sql.helpers :as sql]
+
+               [madek.api.db.core :refer [get-ds]]
+
    [madek.api.resources.shared :as sd]
    [madek.api.resources.vocabularies.permissions :as permissions]
-   [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   [madek.api.utils.sql :as sql]))
+   [madek.api.utils.sql :as sqlo]))
 
 (defn- where-clause
   [user-id]
@@ -16,20 +29,20 @@
       [:= :vocabularies.enabled_for_public_view true]
       [:or
        [:= :vocabularies.enabled_for_public_view true]
-       [:in :vocabularies.id vocabulary-ids]])))
+       [:in :vocabularies.id (spy vocabulary-ids)]])))
 
 (defn- base-query
   [user-id]
   (-> (sql/select :*);:id)
       (sql/from :vocabularies)
-      (sql/merge-where (where-clause user-id))
-      sql/format))
+      (sql/where (where-clause user-id))
+      sql-format))
 
 (defn- query-index-resources [request]
   (let [user-id (-> request :authenticated-entity :id)
         query (base-query user-id)]
     ;(logging/info "query-index-resources: " query)
-    (jdbc/query (get-ds) query)))
+    (jdbc/execute! (get-ds) query)))
 
 (defn transform_ml [vocab]
   (assoc vocab
