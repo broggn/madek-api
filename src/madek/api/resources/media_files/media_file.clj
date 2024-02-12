@@ -28,10 +28,10 @@
 
 (defn get-media-file-data-stream [request]
   (catcher/snatch {}
-                  (when-let [media-file (:previews/media-file request)]
+                  (when-let [media-file (:media-file request)]
                     (when-let [file-path (media-file-path media-file)]
                       (data-streaming/respond-with-file file-path
-                                                        (:previews/content_type media-file))))))
+                                                        (:content_type media-file))))))
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)
