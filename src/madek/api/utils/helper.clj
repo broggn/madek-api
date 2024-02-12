@@ -2,18 +2,31 @@
   (:import (java.util UUID)))
 
 ; [madek.api.utils.helper :refer [to-uuid]]
-(defn to-uuid [id] (if (instance? String id) (UUID/fromString id) id))
-
-; [madek.api.utils.helper :refer [to-uuid]]
 (defn to-uuid
   ([id]
-   (if (instance? String id) (UUID/fromString id) id))
+
+   (try
+     (let [result (if (instance? String id) (UUID/fromString id) id)]
+       ; success path, result is available for further processing if needed
+       result)
+     (catch Exception e
+       ; catch block, log the error and return id as the error handling result
+       (println (str ">>> ERROR in to-uuid[id], id=" id ", exception=" e))
+       id)))
 
   ([id key]
    (def keys-to-cast-to-uuid [:media_entry_id :media_file_id :preview_id :media_entry_id :media_resource_id :media_file])
    (if (:and (contains? keys-to-cast-to-uuid key) (instance? String id))
      (UUID/fromString id)
      id)))
+
+(comment
+  (let [
+        p (println "\nquery ok1" (to-uuid "123e4567-e89b-12d3-a456-426614174000"))
+        p (println "\nquery error1" (to-uuid "abc"))
+        ]
+    )
+  )
 
 ;[madek.api.utils.helper :refer [to-uuids]]
 (defn to-uuids [ids] (map (fn [id] (if (instance? String id) (UUID/fromString id) id)) ids))
