@@ -1,38 +1,21 @@
 (ns madek.api.resources.previews.preview
   (:require
-   [clojure.java.jdbc :as jdbco]
-
    [clojure.tools.logging :as logging]
-
-               ;; all needed imports
+   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-
    [logbug.catcher :as catcher]
-
-   [logbug.debug :as debug]
    [madek.api.constants]
    [madek.api.data-streaming :as data-streaming]
    [madek.api.db.core :refer [get-ds]]
-   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   [madek.api.utils.sql :as sqlo]
    [next.jdbc :as jdbc]))
 
 (defn db-get-preview [id]
-
   (let [query (-> (sql/select :*)
                   (sql/from :previews)
                   (sql/where [:= :id id])
                   (sql-format))]
-    (jdbc/execute-one! (get-ds) query))
-
-  ;(let [query (-> (sql/select :*)
-  ;                (sql/from :previews)
-  ;                (sql/merge-where
-  ;                 [:= :previews.id id])
-  ;                (sql/format))]
-  ;  (first (jdbc/query (rdbms/get-ds) query)))
-  )
+    (jdbc/execute-one! (get-ds) query)))
 
 (defn get-preview [request]
   (let [id (-> request :parameters :path :preview_id)
@@ -46,7 +29,6 @@
         ; TODO why is this needed for reitit
 
         filename (:filename preview)
-        ;filename (:previews/filename preview) ;FIXME: handle prefix
         [first-char] filename]
     (clojure.string/join
      (java.io.File/separator)

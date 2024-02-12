@@ -1,19 +1,11 @@
 (ns madek.api.resources.media-files.authorization
   (:require
-   [clojure.java.jdbc :as jdbco]
    [clojure.tools.logging :as logging]
    ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-
-   [logbug.catcher :as catcher]
-   [logbug.debug :as debug]
-               ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
    [madek.api.db.core :refer [get-ds]]
-
    [madek.api.resources.media-entries.permissions :as me-permissions]
-
-   ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]))
 
 (defn- media-file-authorize [request handler scope]
