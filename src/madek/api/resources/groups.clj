@@ -43,6 +43,7 @@
 
 (defn delete-group [id]
   (let [sec (groups/jdbc-update-group-id-where-clause id)
+        sec (groups/jdbc-update-group-id-where-clause id)
         fir (-> (sql/delete-from :groups)
                 (sql/where (:where sec))
                 sql-format)

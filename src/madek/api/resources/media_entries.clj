@@ -4,6 +4,8 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.spec.alpha :as sa]
             [clojure.tools.logging :as logging]
+    [madek.api.utils.helper :refer [to-uuid]]
+
             [madek.api.authorization :as authorization]
             [madek.api.constants :refer [FILE_STORAGE_DIR]]
             [madek.api.resources.media-entries.index :refer [get-index
@@ -48,7 +50,8 @@
 
 (defn- get-context-keys-4-context [contextId]
   (map :meta_key_id
-       (sd/query-eq-find-all :context_keys :context_id contextId)))
+       ;(sd/query-eq-find-all :context_keys :context_id contextId)))
+       (sd/query-eq-find-all :context_keys :context_id (to-uuid contextId))))
 
 (defn- check-has-meta-data-for-context-key [meId mkId]
   (let [md (sd/query-eq-find-one :meta_data :media_entry_id (str meId) :meta_key_id mkId)
