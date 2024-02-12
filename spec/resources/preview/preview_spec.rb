@@ -60,6 +60,10 @@ describe 'Getting a random preview for a specific media-entry' do
                                             media_entry: media_entry)
             @preview = FactoryBot.create(:preview,
                                           media_file: media_file)
+
+            puts ">> status >> media_file: #{data_stream_resource_response.status}"
+            puts ">> status >> media_file: #{data_stream_resource_response}"
+
             expect(data_stream_resource_response.status).to be == 404
           end
         end

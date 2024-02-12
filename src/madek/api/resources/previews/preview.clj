@@ -1,21 +1,40 @@
 (ns madek.api.resources.previews.preview
   (:require
-   [clojure.java.jdbc :as jdbc]
+   [clojure.java.jdbc :as jdbco]
+
+
+         ;; all needed imports
+               [honey.sql :refer [format] :rename {format sql-format}]
+
+               [next.jdbc :as jdbc]
+               [honey.sql.helpers :as sql]
+
+   [madek.api.db.core :refer [get-ds]]
+
+
    [clojure.tools.logging :as logging]
    [logbug.catcher :as catcher]
    [logbug.debug :as debug]
    [madek.api.constants]
    [madek.api.data-streaming :as data-streaming]
-   [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   [madek.api.utils.sql :as sql]))
+   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+   [madek.api.utils.sql :as sqlo]))
 
 (defn db-get-preview [id]
+
   (let [query (-> (sql/select :*)
                   (sql/from :previews)
-                  (sql/merge-where
-                   [:= :previews.id id])
-                  (sql/format))]
-    (first (jdbc/query (rdbms/get-ds) query))))
+                  (sql/where [:= :id id])
+                  (sql-format))]
+    (jdbc/execute-one! (get-ds) query))
+
+  ;(let [query (-> (sql/select :*)
+  ;                (sql/from :previews)
+  ;                (sql/merge-where
+  ;                 [:= :previews.id id])
+  ;                (sql/format))]
+  ;  (first (jdbc/query (rdbms/get-ds) query)))
+  )
 
 (defn get-preview [request]
   (let [id (-> request :parameters :path :preview_id)
@@ -28,8 +47,8 @@
         ;filename (:filename preview)
         ; TODO why is this needed for reitit
 
-        ;filename (:filename preview)
-        filename (:previews/filename preview) ;FIXME: handle prefix
+        filename (:filename preview)
+        ;filename (:previews/filename preview) ;FIXME: handle prefix
         [first-char] filename]
     (clojure.string/join
      (java.io.File/separator)
@@ -42,7 +61,7 @@
                     (when-let [file-path (preview-file-path preview)]
                       (logging/info "get-preview-file-ds" "\nfilepath\n" file-path)
                       (data-streaming/respond-with-file file-path
-                                                        (:previews/content_type preview))))))
+                                                        (:content_type preview))))))
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)
