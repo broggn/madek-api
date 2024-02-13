@@ -1,12 +1,23 @@
 (ns madek.api.resources.admins
-  (:require [clojure.java.jdbc :as jdbc]
-            [clojure.tools.logging :as logging]
-            [logbug.catcher :as catcher]
-            [madek.api.resources.shared :as sd]
-            [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-            [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-            [reitit.coercion.schema]
-            [schema.core :as s]))
+  (:require
+   [clojure.tools.logging :as logging]
+   [clojure.java.jdbc :as jdbco]
+   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+
+
+         ;; all needed imports
+               [honey.sql :refer [format] :rename {format sql-format}]
+               ;[leihs.core.db :as db]
+               [next.jdbc :as jdbc]
+               [honey.sql.helpers :as sql]
+
+               [madek.api.db.core :refer [get-ds]]
+
+   [logbug.catcher :as catcher]
+   [madek.api.resources.shared :as sd]
+   [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+   [reitit.coercion.schema]
+   [schema.core :as s]))
 
 (defn handle_list-admin
   [req]
@@ -30,10 +41,20 @@
       ; already has admin
       (sd/response_ok admin)
       ; create admin entry
-      (let [user (-> req :user)
-            id (:id user)
-            data {:user_id id}
-            ins-res (jdbc/insert! (get-ds) :admins data)]
+      ;(let [user (-> req :user)
+      ;      id (:id user)
+      ;      data {:user_id id}
+      ;      ins-res (jdbc/insert! (get-ds) :admins data)]
+
+        (let [user (-> req :user)
+              id (:id user)
+              data {:user_id id}
+              sql-map {:insert-into :admins
+                       :values [data]}
+              sql (-> sql-map sql-format :sql)
+              ins-res (jdbc/execute! (get-ds) [sql id])]
+
+
         (sd/logwrite req (str "handle_create-admin:" " user-id: " id " result: " ins-res))
         (if-let [result (first ins-res)]
           (sd/response_ok result)
@@ -42,9 +63,18 @@
 (defn handle_delete-admin
   [req]
   (catcher/with-logging {}
-    (let [admin (-> req :admin)
-          admin-id (-> req :admin :id)
-          del-result (jdbc/delete! (get-ds) :admins ["id = ?" admin-id])]
+
+    ;(let [admin (-> req :admin)
+    ;      admin-id (-> req :admin :id)
+    ;      del-result (jdbc/delete! (get-ds) :admins ["id = ?" admin-id])]
+
+      (let [admin (-> req :admin)
+            admin-id (:id admin)
+            sql-map {:delete :admins
+                     :where [:= :id admin-id]}
+            sql (-> sql-map sql-format :sql)
+            del-result (jdbc/execute! (get-ds) [sql admin-id])]
+
       (sd/logwrite req (str "handle_delete-admin: " " data:\n" admin "\nresult: " del-result))
       (if (= 1 (first del-result))
         (sd/response_ok admin)
@@ -55,14 +85,14 @@
 (defn wwrap-find-admin [param colname send404]
   (fn [handler]
     (fn [request] (sd/req-find-data
-                   request handler param
-                   :admins colname :admin send404))))
+                    request handler param
+                    :admins colname :admin send404))))
 
 (defn wwrap-find-user [param]
   (fn [handler]
     (fn [request] (sd/req-find-data
-                   request handler param
-                   :users :id :user true))))
+                    request handler param
+                    :users :id :user true))))
 
 ;### swagger io schema ########################################################
 
@@ -84,7 +114,7 @@
       :coercion reitit.coercion.schema/coercion
       :parameters {:query {(s/optional-key :full_data) s/Bool}}
       :responses {200 {:body {:admins [schema_export-admin]}}}}}]
-    ; edit admin
+   ; edit admin
    ["/admins/:id"
     {:get
      {:summary (sd/sum_adm "Get admin by id.")
