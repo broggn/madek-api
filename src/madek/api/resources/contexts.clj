@@ -5,6 +5,10 @@
             [madek.api.resources.shared :as sd]
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
             [reitit.coercion.schema]
+
+       [taoensso.timbre :refer [info warn error spy]]
+           [logbug.debug :as debug]
+
             
    ;         [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
    ;[clojure.java.jdbc :as jdbc]
@@ -68,8 +72,9 @@
 
 
       (let [data (-> req :parameters :body)
-            sql (-> {:insert-into :contexts :values [data]} sql-format :sql)
-            ins-res (jdbc/execute! (get-ds) [sql data])]
+            sql (spy (-> {:insert-into :contexts :values [data]} sql-format))
+            ;ins-res (jdbc/execute! (get-ds) [sql data])]
+            ins-res (spy (jdbc/execute! (get-ds) [sql data]))]
 
         (sd/logwrite req (str "handle_create-contexts: " "\nnew-data:\n" data "\nresult:\n" ins-res))
 
@@ -99,7 +104,7 @@
               sql-map {:update :contexts
                        :set dwid
                        :where [:= :id id]}
-              sql (-> sql-map sql-format :sql)
+              sql (-> sql-map sql-format)
               upd-result (jdbc/execute! (get-ds) [sql (vals dwid)])]
 
 
@@ -124,7 +129,7 @@
               id (-> req :context :id)
               sql-map {:delete :contexts
                        :where [:= :id id]}
-              sql (-> sql-map sql-format :sql)
+              sql (-> sql-map sql-format)
               del-result (jdbc/execute! (get-ds) [sql [id]])]
 
         (sd/logwrite req (str "handle_delete-context: " id " result: " del-result))

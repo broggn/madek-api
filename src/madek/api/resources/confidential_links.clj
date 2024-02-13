@@ -68,7 +68,7 @@
                       :token token))
         sql-map {:insert-into :confidential_links
                  :values [ins-data]}
-        sql (-> sql-map sql-format :sql)
+        sql (-> sql-map sql-format )
         ins-result (jdbc/execute! (get-ds) [sql ins-data])]
 
 
@@ -114,7 +114,7 @@
               sql-map {:update :confidential_links
                        :set upd-data
                        :where [:= :id id]}
-              sql (-> sql-map sql-format :sql)
+              sql (-> sql-map sql-format )
               upd-result (jdbc/execute! (get-ds) [sql (vals upd-data)])]
 
 
@@ -137,7 +137,7 @@
 
             (let [sql-map {:delete :confidential_links
                            :where [:= :id id]}
-                  sql (-> sql-map sql-format :sql)
+                  sql (-> sql-map sql-format )
                   del-result (jdbc/execute! (get-ds) [sql [id]])]
 
             (sd/logwrite req (str "handle_delete-conf-link:" "\ndelete data: " del-data "\nresult: " del-result))

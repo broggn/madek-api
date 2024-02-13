@@ -58,11 +58,17 @@
    ;(let [ins-data (assoc data :collection_id col-id :media_entry_id me-id)
    ;      ins-res (first (jdbc/insert! tx "collection_media_entry_arcs" ins-data))]
 
-     (let [ins-data (assoc data :collection_id col-id :media_entry_id me-id)
-           sql-map {:insert-into :collection_media_entry_arcs
-                    :values [ins-data]}
-           sql (-> sql-map sql-format :sql)
-           ins-res (next.jdbc/execute! tx [sql ins-data])]
+     ;(let [ins-data (assoc data :collection_id col-id :media_entry_id me-id)
+     ;      sql-map {:insert-into :collection_media_entry_arcs
+     ;               :values [ins-data]}
+     ;      sql (-> sql-map sql-format )
+     ;      ins-res (next.jdbc/execute! tx [sql ins-data])]
+
+       (let [ins-data (assoc data :collection_id col-id :media_entry_id me-id)
+             sql (-> (sql/insert-into :collection_media_entry_arcs)
+                     (sql/values [ins-data])
+                     sql-format)
+             ins-res (jdbc/execute! tx sql)]
 
      ins-res)))
 
@@ -96,15 +102,26 @@
       ;                           :collection_media_entry_arcs
       ;                           data whcl)]
 
-      (let [col-id (-> req :parameters :path :collection_id)
-            me-id (-> req :parameters :path :media_entry_id)
-            data (-> req :parameters :body)
-            sql-map {:update :collection_media_entry_arcs
-                     :set data
-                     :where [:= :collection_id col-id
-                             := :media_entry_id me-id]}
-            sql (-> sql-map sql-format :sql)
-            result (next.jdbc/execute! (get-ds) [sql data])]
+      ;(let [col-id (-> req :parameters :path :collection_id)
+      ;      me-id (-> req :parameters :path :media_entry_id)
+      ;      data (-> req :parameters :body)
+      ;      sql-map {:update :collection_media_entry_arcs
+      ;               :set data
+      ;               :where [:= :collection_id col-id
+      ;                       := :media_entry_id me-id]}
+      ;      sql (-> sql-map sql-format )
+      ;      result (next.jdbc/execute! (get-ds) [sql data])]
+
+        (let [col-id (-> req :parameters :path :collection_id)
+              me-id (-> req :parameters :path :media_entry_id)
+              data (-> req :parameters :body)
+              sql (-> (sql/update :collection_media_entry_arcs)
+                      (sql/set data)
+                      (sql/where [:= :collection_id col-id]
+                        [:= :media_entry_id me-id])
+                      sql-format)
+              ;result (jdbc/execute! (get-ds) [sql])]
+              result (jdbc/execute! (get-ds) sql)]
 
         (if (= 1 (first result))
           (sd/response_ok (sd/query-eq-find-one
@@ -125,14 +142,24 @@
       ;      delresult (jdbc/delete! (get-ds) :collection_media_entry_arcs delquery)]
 
 
-        (let [col-id (-> req :parameters :path :collection_id)
-              me-id (-> req :parameters :path :media_entry_id)
-              data (-> req :col-me-arc)
-              sql-map {:delete :collection_media_entry_arcs
-                       :where [:= :collection_id col-id
-                               := :media_entry_id me-id]}
-              sql (-> sql-map sql-format :sql)
-              delresult (jdbc/execute! (get-ds) [sql [col-id me-id]])]
+        ;(let [col-id (-> req :parameters :path :collection_id)
+        ;      me-id (-> req :parameters :path :media_entry_id)
+        ;      data (-> req :col-me-arc)
+        ;      sql-map {:delete :collection_media_entry_arcs
+        ;               :where [:= :collection_id col-id
+        ;                       := :media_entry_id me-id]}
+        ;      sql (-> sql-map sql-format )
+        ;      delresult (jdbc/execute! (get-ds) [sql [col-id me-id]])]
+
+
+          (let [col-id (-> req :parameters :path :collection_id)
+                me-id (-> req :parameters :path :media_entry_id)
+                data (-> req :col-me-arc)
+                sql (-> (sql/delete :collection_media_entry_arcs)
+                        (sql/where [:= :collection_id col-id]
+                          [:= :media_entry_id me-id])
+                        sql-format)
+                delresult (jdbc/execute! (get-ds) sql)]
 
 
         (if (= 1 (first delresult))

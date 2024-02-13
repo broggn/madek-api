@@ -46,7 +46,7 @@
                 ins-data (assoc req-data :creator_id auth-id :responsible_user_id auth-id)
                 sql-map {:insert-into :collections
                          :values [ins-data]}
-                sql (-> sql-map sql-format :sql)
+                sql (-> sql-map sql-format )
                 ins-result (jdbc/execute! (get-ds) [sql ins-data])]
 
           (sd/logwrite req (str "handle_create-collection: " ins-result))
@@ -72,7 +72,7 @@
               sql-map {:update :collections
                        :set data
                        :where [:= :id col-id]}
-              sql (-> sql-map sql-format :sql)
+              sql (-> sql-map sql-format )
               params (concat (vals data) [col-id])
               result (jdbc/execute! (get-ds) [sql params])]
 
@@ -97,7 +97,7 @@
               col-id (:id collection)
               sql-map {:delete :collections
                        :where [:= :id col-id]}
-              sql (-> sql-map sql-format :sql)
+              sql (-> sql-map sql-format )
               delresult (jdbc/execute! (get-ds) [sql [col-id]])]
 
 

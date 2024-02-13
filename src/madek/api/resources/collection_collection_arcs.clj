@@ -82,7 +82,7 @@
             sql-map {:insert-into :collection_collection_arcs
                      :values [ins-data]}
 
-            sql (-> sql-map sql-format :sql)]
+            sql (-> sql-map sql-format )]
             (if-let [ins-res (next.jdbc/execute! (get-ds) [sql ins-data])]
 
           (sd/response_ok ins-res)
@@ -115,7 +115,7 @@
                        :set data
                        :where [:= :parent_id parent-id
                                := :child_id child-id]}
-              sql (-> sql-map sql-format :sql)
+              sql (-> sql-map sql-format)
               result (next.jdbc/execute! (get-ds) [sql data])]
 
         (if (= 1 (first result))
@@ -149,7 +149,7 @@
               sql-map {:delete :collection_collection_arcs
                        :where [:= :parent_id parent-id
                                := :child_id child-id]}
-              sql (-> sql-map sql-format :sql)
+              sql (-> sql-map sql-format)
               delresult (next.jdbc/execute! (get-ds) [sql [parent-id child-id]])]
 
         (if (= 1 (first delresult))

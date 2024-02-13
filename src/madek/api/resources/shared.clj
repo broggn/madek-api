@@ -129,7 +129,9 @@
    (println ">o> ??? sql-query-find-eq table-name1" table-name)
    (spy (-> (build-query-base table-name :*)
             (sql/where [:= col-name (to-uuid row-data col-name)])
-            sql-format)))
+            sql-format
+            spy
+            )))
 
   ([table-name col-name row-data col-name2 row-data2]
    ;(println ">o> ??? table-name2" table-name "col-name" col-name "row-data" row-data "col-name2" col-name2 "row-data2" row-data2)
@@ -137,7 +139,9 @@
    (spy (-> (build-query-base table-name :*)
             (sql/where [:= col-name (to-uuid row-data col-name)])
             (sql/where [:= col-name2 (to-uuid row-data2 col-name2)])
-            sql-format))))
+            sql-format
+            spy
+            ))))
 
 (defn sql-update-clause
   "Generates an sql update clause"
@@ -176,9 +180,9 @@
 
 (defn query-eq-find-one
   ([table-name col-name row-data]
-   (first (query-eq-find-all table-name col-name row-data)))
+   (spy (first (spy (query-eq-find-all table-name col-name row-data)))))
   ([table-name col-name row-data col-name2 row-data2]
-   (first (query-eq-find-all table-name col-name row-data col-name2 row-data2))))
+   (spy (first (spy (query-eq-find-all table-name col-name row-data col-name2 row-data2))))))
 
 #_(defn query-eq2-find-all [table-name col-name row-data col-name2 row-data2]
     (catcher/snatch {}

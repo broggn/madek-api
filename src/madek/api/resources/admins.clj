@@ -1,23 +1,23 @@
 (ns madek.api.resources.admins
   (:require
-   [clojure.tools.logging :as logging]
-   [clojure.java.jdbc :as jdbco]
    ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
 
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
 
-         ;; all needed imports
-               [honey.sql :refer [format] :rename {format sql-format}]
-               ;[leihs.core.db :as db]
-               [next.jdbc :as jdbc]
-               [honey.sql.helpers :as sql]
 
-               [madek.api.db.core :refer [get-ds]]
-
+   ;; all needed imports
    [logbug.catcher :as catcher]
+   ;[leihs.core.db :as db]
+   [madek.api.db.core :refer [get-ds]]
+
    [madek.api.resources.shared :as sd]
+
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+   [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-   [schema.core :as s]))
+   [schema.core :as s]
+   [taoensso.timbre :refer [spy]]))
 
 (defn handle_list-admin
   [req]
@@ -46,13 +46,24 @@
       ;      data {:user_id id}
       ;      ins-res (jdbc/insert! (get-ds) :admins data)]
 
-        (let [user (-> req :user)
-              id (:id user)
-              data {:user_id id}
-              sql-map {:insert-into :admins
-                       :values [data]}
-              sql (-> sql-map sql-format :sql)
-              ins-res (jdbc/execute! (get-ds) [sql id])]
+      ;(let [user (-> req :user)
+      ;      id (:id user)
+      ;      data {:user_id id}
+      ;      sql-map {:insert-into :admins
+      ;               :values [data]}
+      ;      sql (-> sql-map sql-format)
+      ;      ins-res (jdbc/execute! (get-ds) [sql id])]
+
+      (let [user (-> req :user)
+            id (:id user)
+            data {:user_id id}
+            sql (spy (-> (sql/insert-into :admins)
+                         (sql/values [data])
+                         (sql/returning :*)
+                         sql-format))
+            ;ins-res (spy (jdbc/execute! (get-ds) [sql])) broken
+            ins-res (spy (jdbc/execute! (get-ds) sql))
+            ]
 
 
         (sd/logwrite req (str "handle_create-admin:" " user-id: " id " result: " ins-res))
@@ -68,15 +79,27 @@
     ;      admin-id (-> req :admin :id)
     ;      del-result (jdbc/delete! (get-ds) :admins ["id = ?" admin-id])]
 
-      (let [admin (-> req :admin)
-            admin-id (:id admin)
-            sql-map {:delete :admins
-                     :where [:= :id admin-id]}
-            sql (-> sql-map sql-format :sql)
-            del-result (jdbc/execute! (get-ds) [sql admin-id])]
+    ;(let [admin (-> req :admin)
+    ;      admin-id (:id admin)
+    ;      sql-map {:delete :admins
+    ;               :where [:= :id admin-id]}
+    ;      sql (spy (-> sql-map sql-format))
+    ;      del-result (spy (jdbc/execute! (get-ds) [sql admin-id]))]
+
+    (let [admin (-> req :admin)
+          admin-id (:id admin)
+          sql (-> (sql/delete-from :admins)
+                  (sql/where [:= :id admin-id])
+                  sql-format
+                  spy )
+          ;del-result (jdbc/execute! (get-ds) [sql])]
+          del-result (spy (jdbc/execute-one! (get-ds) sql))
+
+          ]
 
       (sd/logwrite req (str "handle_delete-admin: " " data:\n" admin "\nresult: " del-result))
-      (if (= 1 (first del-result))
+      ;(if (= 1 (first del-result))
+      (if (= 1 (::jdbc/update-count del-result))
         (sd/response_ok admin)
         (sd/response_failed "Could not delete admin." 406)))))
 

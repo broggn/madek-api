@@ -95,7 +95,7 @@
         (let [data (-> req :parameters :body)
               sql-map {:insert-into :context_keys
                        :values [data]}
-              sql (-> sql-map sql-format :sql)
+              sql (-> sql-map sql-format )
               ins-res (jdbc/execute! (get-ds) [sql data])]
 
         (sd/logwrite req (str "handle_create-context_keys: " "\new-data:\n" data "\nresult:\n" ins-res))
@@ -121,7 +121,7 @@
               sql-map {:update :context_keys
                        :set dwid
                        :where [:= :id id]}
-              sql (-> sql-map sql-format :sql)
+              sql (-> sql-map sql-format )
               upd-result (jdbc/execute! (get-ds) [sql (vals dwid)])]
 
         (sd/logwrite req (str "handle_update-context_keys: " id "\nnew-data\n" dwid "\nupd-result: " upd-result))
@@ -145,7 +145,7 @@
               id (-> req :context_key :id)
               sql-map {:delete :context_keys
                        :where [:= :id id]}
-              sql (-> sql-map sql-format :sql)
+              sql (-> sql-map sql-format )
               del-result (jdbc/execute! (get-ds) [sql [id]])]
 
         (sd/logwrite req (str "handle_delete-context_key: " id " result: " del-result))
