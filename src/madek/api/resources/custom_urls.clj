@@ -1,11 +1,20 @@
 (ns madek.api.resources.custom-urls
-  (:require [clojure.java.jdbc :as jdbc]
-            [clojure.tools.logging :as logging]
+  (:require [clojure.tools.logging :as logging]
+            [honey.sql :refer [format] :rename {format sql-format}]
+            [honey.sql.helpers :as sql]
+   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+   ;[madek.api.utils.sql :as sql]
             [logbug.catcher :as catcher]
+
+
+   ;; all needed imports
+            [madek.api.db.core :refer [get-ds]]
+   ;[leihs.core.db :as db]
             [madek.api.resources.shared :as sd]
-            [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-            [madek.api.utils.sql :as sql]
+            [next.jdbc :as jdbc]
+
             [reitit.coercion.schema]
+
             [schema.core :as s]))
 
 (defn build-query [query-params]
@@ -17,12 +26,12 @@
         (sd/build-query-param-like query-params :id)
         (sd/build-query-param query-params :collection_id)
         (sd/build-query-param query-params :media_entry_id)
-        sql/format)))
+        sql-format)))
 
 (defn handle_list-custom-urls
   [req]
   (let [db-query (build-query (-> req :parameters :query))
-        db-result (jdbc/query (get-ds) db-query)]
+        db-result (jdbc/execute! (get-ds) db-query)]
     (logging/info "handle_list-custom-urls" "\ndb-query\n" db-query "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
@@ -41,9 +50,10 @@
         col-name (if (= mr-type "MediaEntry") :media_entry_id :collection_id)]
 
     (logging/info "handle_get-custom-urls"
-                  "\ntype\n" mr-type
-                  "\nmr-id\n" mr-id
-                  "\ncol-name\n" col-name)
+      "\ntype: " mr-type
+      "\nmr-id: " mr-id
+      "\ncol-name: " col-name)
+
     (if-let [result (sd/query-eq-find-one :custom_urls col-name mr-id)]
       (sd/response_ok result)
       (sd/response_not_found (str "No such custom_url for " mr-type " with id: " mr-id)))))
@@ -52,6 +62,17 @@
   [req]
   (try
     (catcher/with-logging {}
+
+      ;(let [u-id (-> req :authenticated-entity :id)
+      ;      mr (-> req :media-resource)
+      ;      mr-type (-> mr :type)
+      ;      mr-id (-> mr :id str)
+      ;      data (-> req :parameters :body)
+      ;      dwid (if (= mr-type "MediaEntry")
+      ;             (assoc data :media_entry_id mr-id :creator_id u-id :updator_id u-id)
+      ;             (assoc data :collection_id mr-id :creator_id u-id :updator_id u-id))
+      ;      ins-res (jdbc/insert! (rdbms/get-ds) :custom_urls dwid)]
+
       (let [u-id (-> req :authenticated-entity :id)
             mr (-> req :media-resource)
             mr-type (-> mr :type)
@@ -60,13 +81,17 @@
             dwid (if (= mr-type "MediaEntry")
                    (assoc data :media_entry_id mr-id :creator_id u-id :updator_id u-id)
                    (assoc data :collection_id mr-id :creator_id u-id :updator_id u-id))
-            ins-res (jdbc/insert! (rdbms/get-ds) :custom_urls dwid)]
+            sql (-> (sql/insert-into :custom_urls)
+                    (sql/values [dwid])
+                    sql-format)
+            ins-res (jdbc/execute! (get-ds) sql)]
+
 
         (sd/logwrite req (str "handle_create-custom-urls"
-                              "mr-type: " mr-type
-                              "mr-id: " mr-id
-                              "\nnew-data\n" dwid
-                              "\nresult:\n" ins-res))
+                              "\nmr-type: " mr-type
+                                            "\nmr-id: " mr-id
+                                            "\nnew-dat: " dwid
+                                            "\nresult: " ins-res))
 
         (if-let [result (first ins-res)]
           (sd/response_ok result)
@@ -78,24 +103,41 @@
   [req]
   (try
     (catcher/with-logging {}
+
+      ;(let [u-id (-> req :authenticated-entity :id)
+      ;      mr (-> req :media-resource)
+      ;      mr-type (-> mr :type)
+      ;      mr-id (-> mr :id str)
+      ;      col-name (if (= mr-type "MediaEntry")
+      ;                 :media_entry_id
+      ;                 :collection_id)
+      ;      data (-> req :parameters :body)
+      ;      dwid (if (= mr-type "MediaEntry")
+      ;             (assoc data :media_entry_id mr-id :updator_id u-id)
+      ;             (assoc data :collection_id mr-id :updator_id u-id))
+      ;      upd-result (jdbc/update! (get-ds) :custom_urls dwid (sd/sql-update-clause col-name mr-id))]
+
+
       (let [u-id (-> req :authenticated-entity :id)
             mr (-> req :media-resource)
             mr-type (-> mr :type)
             mr-id (-> mr :id str)
-            col-name (if (= mr-type "MediaEntry")
-                       :media_entry_id
-                       :collection_id)
+            col-name (if (= mr-type "MediaEntry") :media_entry_id :collection_id)
             data (-> req :parameters :body)
             dwid (if (= mr-type "MediaEntry")
                    (assoc data :media_entry_id mr-id :updator_id u-id)
                    (assoc data :collection_id mr-id :updator_id u-id))
-            upd-result (jdbc/update! (get-ds) :custom_urls dwid (sd/sql-update-clause col-name mr-id))]
+            sql (-> (sql/update :custom_urls)
+                    (sql/set dwid)
+                    (sql/where [:= col-name mr-id])
+                    sql-format)
+            upd-result (jdbc/execute! (get-ds) sql)]
 
         (sd/logwrite req (str "handle_update-custom-urls"
                               "\nmr-type: " mr-type
-                              "\nmr-id: " mr-id
-                              "\nnew-data\n" dwid
-                              "\nresult:\n" upd-result))
+                                            "\nmr-id: " mr-id
+                                            "\nnew-data\n" dwid
+                                            "\nresult:\n" upd-result))
 
         (if (= 1 (first upd-result))
           (sd/response_ok (sd/query-eq-find-one :custom_urls col-name mr-id))
@@ -108,6 +150,7 @@
   [req]
   (try
     (catcher/with-logging {}
+
       (let [u-id (-> req :authenticated-entity :id)
             mr (-> req :media-resource)
             mr-type (-> mr :type)
@@ -115,15 +158,23 @@
             col-name (if (= mr-type "MediaEntry")
                        :media_entry_id
                        :collection_id)]
-        (if-let [del-data (sd/query-eq-find-one :custom_urls col-name mr-id)]
-          (let [del-result (jdbc/delete! (rdbms/get-ds)
-                                         :custom_urls
-                                         (sd/sql-update-clause col-name mr-id))]
 
-            (sd/logwrite req (str "handle_delete-custom-urls:"
+        ;(if-let [del-data (sd/query-eq-find-one :custom_urls col-name mr-id)]
+        ;  (let [del-result (jdbc/delete! (rdbms/get-ds)
+        ;                     :custom_urls
+        ;                     (sd/sql-update-clause col-name mr-id))]
+
+
+        (if-let [del-data (sd/query-eq-find-one :custom_urls col-name mr-id)]
+          (let [sql (-> (sql/delete-from :custom_urls)
+                        (sql/where [:= col-name mr-id])
+                        sql-format)
+                del-result (jdbc/execute! (get-ds) sql)]
+
+            (sd/logwrite req (str "handle_delete-custom-urls"
                                   "\nmr-type: " mr-type
-                                  "\nmr-id: " mr-id
-                                  "\nresult:\n" del-result))
+                                                "\nmr-id: " mr-id
+                                                "\nresult: " del-result))
 
             (if (= 1 (first del-result))
               (sd/response_ok del-data)
