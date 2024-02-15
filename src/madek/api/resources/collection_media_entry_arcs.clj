@@ -87,7 +87,7 @@
 (defn- sql-cls-update [col-id me-id]
   (-> (sql/where [:= :collection_id col-id]
                  [:= :media_entry_id me-id])
-      (sql-format)
+      sql-format
       (update-in [0] #(clojure.string/replace % "WHERE" ""))))
 
 ; TODO logwrite

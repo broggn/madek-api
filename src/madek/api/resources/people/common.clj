@@ -49,5 +49,5 @@
 
 (defn find-person-by-uid [uid ds]
   (-> (person-query uid)
-      (sql-format)
+      sql-format
       (->> (jdbc/execute-one! ds))))

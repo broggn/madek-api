@@ -5,9 +5,13 @@
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [madek.api.db.core :refer [get-ds]]
+
    [madek.api.resources.shared :as sd]
+
+
    [madek.api.utils.helper :refer [to-uuid]]
-   [next.jdbc :as jdbc]))
+   [next.jdbc :as jdbc]
+   [taoensso.timbre :refer [spy]]))
 
 (defn- execute-query
   [query]
@@ -22,7 +26,7 @@
                     ;(sql/modifiers :distinct)
                     (sql/from :groups_users)
                     (sql/where [:= :groups_users.user_id (to-uuid user-id)]) ; TODO??
-                    (sql-format))]
+                    sql-format)]
       (map :group_id (execute-query query)))))
 
 (defn- user-permissions-query
@@ -38,9 +42,9 @@
      (-> (sql/select :vocabulary_id)
          (sql/from :vocabulary_user_permissions)
          (sql/where
-          [:= :vocabulary_user_permissions.user_id (to-uuid user-id)]
-          [:= (keyword (apply str "vocabulary_user_permissions." acc-type)) true])
-         (sql-format)))))
+           [:= :vocabulary_user_permissions.user_id (to-uuid user-id)]
+           [:= (keyword (apply str "vocabulary_user_permissions." acc-type)) true])
+         sql-format))))
 
 (defn- pluck-vocabulary-ids
   [query]
@@ -58,9 +62,9 @@
        (-> (sql/select :vocabulary_id)
            (sql/from :vocabulary_group_permissions)
            (sql/where
-            [:in :vocabulary_group_permissions.group_id groups-ids-result]
-            [:= (keyword (apply str "vocabulary_group_permissions." acc-type)) true])
-           (sql-format))))))
+             [:in :vocabulary_group_permissions.group_id groups-ids-result]
+             [:= (keyword (apply str "vocabulary_group_permissions." acc-type)) true])
+           sql-format)))))
 
 (defn accessible-vocabulary-ids
   ([user-id] (accessible-vocabulary-ids user-id "view"))
@@ -68,28 +72,28 @@
    ; acc-type: "view" or "edit"
    (if-not (str/blank? (str user-id))
      (concat
-      (pluck-vocabulary-ids (user-permissions-query user-id acc-type))
-      (pluck-vocabulary-ids (group-permissions-query user-id acc-type)))
+       (pluck-vocabulary-ids (user-permissions-query user-id acc-type))
+       (pluck-vocabulary-ids (group-permissions-query user-id acc-type)))
 
      '())))
 
 (defn handle_list-vocab-user-perms [req]
   (let [id (-> req :parameters :path :id)
         result (sd/query-eq-find-all
-                :vocabulary_user_permissions
-                :vocabulary_id id)]
+                 :vocabulary_user_permissions
+                 :vocabulary_id id)]
     (sd/response_ok result
       ;{:vocabulary_id id
       ; :vocabulary_user_permissions result}
-                    )))
+      )))
 
 (defn handle_get-vocab-user-perms [req]
   (let [id (-> req :parameters :path :id)
         uid (-> req :parameters :path :user_id)]
     (if-let [result (sd/query-eq-find-one
-                     :vocabulary_user_permissions
-                     :vocabulary_id id
-                     :user_id uid)]
+                      :vocabulary_user_permissions
+                      :vocabulary_id id
+                      :user_id uid)]
       (sd/response_ok result)
       (sd/response_not_found "No such vocabulary user permission."))))
 
@@ -102,9 +106,12 @@
             ins-data (assoc data
                             :vocabulary_id vid
                             :user_id uid)
+            p (println ">o> handle_create-vocab-user-perms")
             query (-> (sql/insert-into :vocabulary_user_permissions)
-                      (sql/values ins-data)
-                      (sql-format))
+                      (sql/values [(spy ins-data)])
+                      sql-format
+                      spy)
+
             ins-result (jdbc/execute! (get-ds) query)]
         (if-let [result (first ins-result)]
           (sd/response_ok result)
@@ -121,13 +128,13 @@
             query (-> (sql/update :vocabulary_user_permissions)
                       (sql/set upd-data)
                       (sql/where upd-clause)
-                      (sql-format))
+                      sql-format)
             upd-result (jdbc/execute! (get-ds) query)]
         (if (= 1 (first upd-result))
           (sd/response_ok (sd/query-eq-find-one
-                           :vocabulary_user_permissions
-                           :vocabulary_id vid
-                           :user_id uid))
+                            :vocabulary_user_permissions
+                            :vocabulary_id vid
+                            :user_id uid))
           (sd/response_failed "Could not update vocabulary user permission" 406))))
     (catch Exception ex (sd/response_exception ex))))
 
@@ -137,13 +144,13 @@
       (let [vid (-> req :parameters :path :id)
             uid (-> req :parameters :path :user_id)]
         (if-let [old-data (sd/query-eq-find-one
-                           :vocabulary_user_permissions
-                           :vocabulary_id vid
-                           :user_id uid)]
+                            :vocabulary_user_permissions
+                            :vocabulary_id vid
+                            :user_id uid)]
           (let [del-clause (sd/sql-update-clause "vocabulary_id" vid "user_id" uid)
                 query (-> (sql/delete-from :vocabulary_user_permissions)
                           (sql/where del-clause)
-                          (sql-format))
+                          sql-format)
                 del-result (jdbc/execute! (get-ds) query)]
             (if (= 1 (first del-result))
               (sd/response_ok old-data)
@@ -154,17 +161,17 @@
 (defn handle_list-vocab-group-perms [req]
   (let [id (-> req :parameters :path :id)
         result (sd/query-eq-find-all
-                :vocabulary_group_permissions
-                :vocabulary_id id)]
+                 :vocabulary_group_permissions
+                 :vocabulary_id id)]
     (sd/response_ok result)))
 
 (defn handle_get-vocab-group-perms [req]
   (let [id (-> req :parameters :path :id)
         gid (-> req :parameters :path :group_id)]
     (if-let [result (sd/query-eq-find-one
-                     :vocabulary_group_permissions
-                     :vocabulary_id id
-                     :group_id gid)]
+                      :vocabulary_group_permissions
+                      :vocabulary_id id
+                      :group_id gid)]
       (sd/response_ok result)
       (sd/response_not_found "No such vocabulary group permission."))))
 
@@ -179,7 +186,7 @@
                             :group_id gid)
             query (-> (sql/insert-into :vocabulary_group_permissions)
                       (sql/values ins-data)
-                      (sql-format))
+                      sql-format)
             ins-result (jdbc/execute! (get-ds) query)]
         (if-let [result (first ins-result)]
           (sd/response_ok result)
@@ -192,23 +199,27 @@
       (let [vid (-> req :parameters :path :id)
             gid (-> req :parameters :path :group_id)]
         (if-let [old-data (sd/query-eq-find-one
-                           :vocabulary_group_permissions
-                           :vocabulary_id vid
-                           :group_id gid)]
+                            :vocabulary_group_permissions
+                            :vocabulary_id vid
+                            :group_id gid)]
           (let [upd-data (-> req :parameters :body)
                 upd-clause (sd/sql-update-clause
-                            "vocabulary_id" vid
-                            "group_id" gid)
+                             "vocabulary_id" vid
+                             "group_id" gid)
+
+
                 query (-> (sql/update :vocabulary_group_permissions)
-                          (sql/set upd-data)
+                          (sql/set (spy upd-data))
                           (sql/where upd-clause)
-                          (sql-format))
+                          sql-format
+                          spy )
+
                 upd-result (jdbc/execute! (get-ds) query)]
             (if (= 1 (first upd-result))
               (sd/response_ok (sd/query-eq-find-one
-                               :vocabulary_group_permissions
-                               :vocabulary_id vid
-                               :group_id gid))
+                                :vocabulary_group_permissions
+                                :vocabulary_id vid
+                                :group_id gid))
               (sd/response_failed "Could not update vocabulary group permission" 406)))
           (sd/response_not_found "No such vocabulary group permission"))))
     (catch Exception ex (sd/response_exception ex))))
@@ -219,15 +230,15 @@
       (let [vid (-> req :parameters :path :id)
             gid (-> req :parameters :path :group_id)]
         (if-let [old-data (sd/query-eq-find-one
-                           :vocabulary_group_permissions
-                           :vocabulary_id vid
-                           :group_id gid)]
+                            :vocabulary_group_permissions
+                            :vocabulary_id vid
+                            :group_id gid)]
           (let [del-clause (sd/sql-update-clause
-                            "vocabulary_id" vid
-                            "group_id" gid)
+                             "vocabulary_id" vid
+                             "group_id" gid)
                 query (-> (sql/delete-from :vocabulary_group_permissions)
                           (sql/where del-clause)
-                          (sql-format))
+                          sql-format)
                 del-result (jdbc/execute! (get-ds) query)]
             (if (= 1 (first del-result))
               (sd/response_ok old-data)
@@ -238,17 +249,17 @@
 (defn handle_list-vocab-perms [req]
   (let [id (-> req :parameters :path :id)
         resource-perms (sd/query-eq-find-one
-                        :vocabularies :id id)
+                         :vocabularies :id id)
         user-perms (sd/query-eq-find-all
-                    :vocabulary_user_permissions
-                    :vocabulary_id id)
-        group-perms (sd/query-eq-find-all
-                     :vocabulary_group_permissions
+                     :vocabulary_user_permissions
                      :vocabulary_id id)
+        group-perms (sd/query-eq-find-all
+                      :vocabulary_group_permissions
+                      :vocabulary_id id)
         result {:vocabulary (select-keys resource-perms
-                                         [:id
-                                          :enabled_for_public_view
-                                          :enabled_for_public_use])
+                              [:id
+                               :enabled_for_public_view
+                               :enabled_for_public_use])
                 :users user-perms
                 :groups group-perms}]
     (sd/response_ok result)))

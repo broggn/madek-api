@@ -14,7 +14,7 @@
   (let [query (-> (sql/select :*)
                   (sql/from :previews)
                   (sql/where [:= :id id])
-                  (sql-format))]
+                  sql-format)]
     (jdbc/execute-one! (get-ds) query)))
 
 (defn get-preview [request]

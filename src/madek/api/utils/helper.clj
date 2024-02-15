@@ -1,5 +1,7 @@
 (ns madek.api.utils.helper
-  (:require [clojure.tools.logging :as logging])
+  (:require [clojure.tools.logging :as logging]
+            [pghstore-clj.core :refer [to-hstore]]
+            )
   (:import (java.util UUID)))
 
 ; [madek.api.utils.helper :refer [to-uuid]]
@@ -70,3 +72,16 @@
       ;(update :inspection_start_date #(if (contains? entry :inspection_start_date) (format-date %)))
       ;(update :updated_at #(if (contains? entry :updated_at) (format-date %)))
       ))
+
+
+; [madek.api.utils.helper :refer [cast-to-hstore]]
+(defn cast-to-hstore [data]
+  (let [keys [:labels :descriptions :hints :documentation_urls]]
+    (reduce (fn [acc key]
+              (if (contains? acc key)
+                (let [field-value (get acc key)
+                      transformed-value (to-hstore field-value)] ; Assume to-hstore is defined elsewhere
+                  (assoc acc key transformed-value))
+                acc))
+      data
+      keys)))

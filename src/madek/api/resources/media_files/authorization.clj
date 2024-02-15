@@ -18,7 +18,7 @@
         query (-> (sql/select :*)
                   (sql/from :media_entries)
                   (sql/where [:= :id media-entry-id])
-                  (sql-format))
+                  sql-format)
         media-entry (jdbc/execute-one! (get-ds) query)]
 
     (logging/info "authorize" "\nmedia-entry-id\n" media-entry-id "\nmedia-entry\n" media-entry)

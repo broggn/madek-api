@@ -30,7 +30,7 @@
   (debug id)
   (if-let [person (-> (person-query id)
                       spy
-                      (sql-format)
+                      sql-format
                       spy
                       (->> (jdbc/execute-one! ds)))]
     (sd/response_ok person)

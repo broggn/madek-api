@@ -17,7 +17,7 @@
                     (sql/where [:= :media_type "image"]
                                [:= :thumbnail "large"])
                     (sql/order-by [:previews.filename :asc] [:previews.created_at :desc])
-                    (sql-format))]
+                    sql-format)]
       (let [previews (jdbc/execute! (get-ds) query)]
         (:id (get-first-or-30-percent previews))))
     nil))
@@ -30,7 +30,7 @@
                    (sql/from :previews)
                    (sql/where [:= :previews.media_file_id (:id media-file)])
                    (sql/order-by [:previews.created_at :desc])
-                   (sql-format))]
+                   sql-format)]
     (let [detected-id (detect-ui-preview-id sqlmap (:media_type media-file))]
       (add-preview-pointer-to
        (jdbc/execute! (get-ds) sqlmap)

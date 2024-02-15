@@ -33,7 +33,7 @@
 (defn db-get-app-settings [ds]
   (-> (sql/select :*)
       (sql/from :app_settings)
-      (sql-format)
+      sql-format
       ((partial jdbc/execute-one! ds))))
 
 (defn handle_get-app-settings [{ds :tx}]

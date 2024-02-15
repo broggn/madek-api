@@ -24,7 +24,7 @@
   (try
     (let [{id :id} (-> (sql/insert-into :users)
                        (sql/values [data])
-                       (sql-format)
+                       sql-format
                        ((partial jdbc/execute-one! ds) {:return-keys true}))]
       (sd/response_ok (find-user-by-uid id ds) 201))
     (catch Exception e
