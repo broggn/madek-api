@@ -121,16 +121,24 @@
 (defn handle_update-vocab-user-perms [req]
   (try
     (catcher/with-logging {}
-      (let [vid (-> req :parameters :path :id)
-            uid (-> req :parameters :path :user_id)
+      (let [vid  (-> req :parameters :path :id)
+            uid (to-uuid(-> req :parameters :path :user_id))
             upd-data (-> req :parameters :body)
             upd-clause (sd/sql-update-clause "vocabulary_id" vid "user_id" uid)
             query (-> (sql/update :vocabulary_user_permissions)
-                      (sql/set upd-data)
-                      (sql/where upd-clause)
-                      sql-format)
-            upd-result (jdbc/execute! (get-ds) query)]
-        (if (= 1 (first upd-result))
+
+                      ;(sql/set [(spy upd-data)])
+                      (sql/set (spy upd-data))
+
+                      ;(sql/where (spy upd-clause))
+
+                      (sql/where [:and [:= :vocabulary_id vid] [:= :user_id uid]])
+
+                      sql-format
+                      spy
+                      )
+            upd-result (jdbc/execute-one! (get-ds) query)]
+        (if (= 1 (::jdbc/update-count (spy upd-result)))
           (sd/response_ok (sd/query-eq-find-one
                             :vocabulary_user_permissions
                             :vocabulary_id vid
@@ -142,17 +150,20 @@
   (try
     (catcher/with-logging {}
       (let [vid (-> req :parameters :path :id)
-            uid (-> req :parameters :path :user_id)]
+            uid (to-uuid(-> req :parameters :path :user_id))]
         (if-let [old-data (sd/query-eq-find-one
                             :vocabulary_user_permissions
                             :vocabulary_id vid
                             :user_id uid)]
           (let [del-clause (sd/sql-update-clause "vocabulary_id" vid "user_id" uid)
                 query (-> (sql/delete-from :vocabulary_user_permissions)
-                          (sql/where del-clause)
-                          sql-format)
-                del-result (jdbc/execute! (get-ds) query)]
-            (if (= 1 (first del-result))
+                          ;(sql/where del-clause)
+                          (sql/where [:= :vocabulary_id vid] [:= :user_id uid])
+                          sql-format
+                          spy
+                          )
+                del-result (jdbc/execute-one! (get-ds) query)]
+            (if (= 1 (::jdbc/update-count del-result))
               (sd/response_ok old-data)
               (sd/response_failed "Could not delete vocabulary user permission" 406)))
           (sd/response_not_found "No such vocabulary user permission."))))
@@ -185,10 +196,17 @@
                             :vocabulary_id vid
                             :group_id gid)
             query (-> (sql/insert-into :vocabulary_group_permissions)
-                      (sql/values ins-data)
-                      sql-format)
-            ins-result (jdbc/execute! (get-ds) query)]
-        (if-let [result (first ins-result)]
+
+                      (sql/values [(spy ins-data)])
+
+                      ;(sql/values [(spy (cast-to-hstore data))])
+
+
+                      sql-format spy)
+            ins-result (jdbc/execute-one! (get-ds) query)
+            p (println ">o> ??????????? ins-result" ins-result)
+            ]
+        (if-let [result ins-result]
           (sd/response_ok result)
           (sd/response_failed "Could not create vocabulary group permission" 406))))
     (catch Exception ex (sd/response_exception ex))))
@@ -210,12 +228,13 @@
 
                 query (-> (sql/update :vocabulary_group_permissions)
                           (sql/set (spy upd-data))
-                          (sql/where upd-clause)
+                          ;(sql/where upd-clause)
+                          (sql/where [:= :vocabulary_id vid] [:= :group_id gid])
                           sql-format
                           spy )
 
-                upd-result (jdbc/execute! (get-ds) query)]
-            (if (= 1 (first upd-result))
+                upd-result (jdbc/execute-one! (get-ds) (spy query))]
+            (if (= 1 (::jdbc/update-count (spy upd-result)))
               (sd/response_ok (sd/query-eq-find-one
                                 :vocabulary_group_permissions
                                 :vocabulary_id vid
@@ -237,10 +256,12 @@
                              "vocabulary_id" vid
                              "group_id" gid)
                 query (-> (sql/delete-from :vocabulary_group_permissions)
-                          (sql/where del-clause)
+                          ;(sql/where del-clause)
+                          (sql/where [:= :vocabulary_id vid] [:= :group_id gid])
                           sql-format)
-                del-result (jdbc/execute! (get-ds) query)]
-            (if (= 1 (first del-result))
+                del-result (jdbc/execute-one! (get-ds) query)]
+            ;(if (= 1 (first del-result))
+            (if (= 1 (::jdbc/update-count del-result))
               (sd/response_ok old-data)
               (sd/response_failed "Could not delete vocabulary group permission" 406)))
           (sd/response_not_found "No such vocabulary group permission."))))
