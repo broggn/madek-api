@@ -1,12 +1,22 @@
 (ns madek.api.resources.workflows
   (:require [cheshire.core :as cheshire]
-            [clojure.java.jdbc :as jdbc]
+            ;[clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as logging]
             [logbug.catcher :as catcher]
             [madek.api.authorization :as authorization]
             [madek.api.resources.shared :as sd]
-            [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+            ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
             [reitit.coercion.schema]
+
+
+                  ;; all needed imports
+                        [honey.sql :refer [format] :rename {format sql-format}]
+                        ;[leihs.core.db :as db]
+                        [next.jdbc :as jdbc]
+                        [honey.sql.helpers :as sql]
+
+                        [madek.api.db.core :refer [get-ds]]
+
             [schema.core :as s]))
 
 (defn handle_list-workflows
@@ -35,13 +45,22 @@
             conf-data (sd/try-as-json conf-data-or-str)
             uid (-> req :authenticated-entity :id)
             ins-data (assoc data :creator_id uid :configuration (with-meta conf-data {:pgtype "jsonb"}))
-            ins-res (jdbc/insert! (rdbms/get-ds) :workflows ins-data)]
+
+
+            ;ins-res (jdbc/insert! (rdbms/get-ds) :workflows ins-data)]
+
+        sql-query (-> (sql/insert-into :workflows)
+                      (sql/values [ins-data])
+                      sql-format)
+        ins-res (jdbc/execute-one! (get-ds) sql-query)]
+
+
 
         (logging/info "handle_create-workflow: "
                       "\ndata:\n" ins-data
                       "\nresult:\n" ins-res)
 
-        (if-let [result (first ins-res)]
+        (if-let [result (::jdbc/update-count ins-res)]
           (sd/response_ok result)
           (sd/response_failed "Could not create workflow." 406))))
     (catch Exception e (sd/response_exception e))))
@@ -53,13 +72,20 @@
             id (-> req :parameters :path :id)
             dwid (assoc data :id id)
             upd-query (sd/sql-update-clause "id" (str id))
-            upd-result (jdbc/update! (rdbms/get-ds)
-                                     :workflows
-                                     dwid upd-query)]
+
+            ;upd-result (jdbc/update! (rdbms/get-ds)
+            ;                         :workflows
+            ;                         dwid upd-query)]
+
+        sql-query (-> (sql/update :workflows)
+                      (sql/set dwid)
+                      (sql/where upd-query)
+                      sql-format)
+        upd-result (jdbc/execute! (get-ds) sql-query)]
 
         (logging/info "handle_update-workflow: " "\nid\n" id "\ndwid\n" dwid "\nupd-result:" upd-result)
 
-        (if (= 1 (first upd-result))
+        (if (= 1 (::jdbc/update-count upd-result))
           (sd/response_ok (sd/query-eq-find-one :workflows :id id))
           (sd/response_failed "Could not update workflow." 406))))
     (catch Exception e (sd/response_exception e))))
@@ -69,10 +95,18 @@
     (catcher/with-logging {}
       (let [olddata (-> req :workflow)
             id (-> req :parameters :path :id)
-            delresult (jdbc/delete! (rdbms/get-ds)
-                                    :workflows
-                                    ["id = ?" id])]
-        (if (= 1 (first delresult))
+
+            ;delresult (jdbc/delete! (rdbms/get-ds)
+            ;                        :workflows
+            ;                        ["id = ?" id])]
+
+
+        sql-query (-> (sql/delete-from :workflows)
+                      (sql/where [:= :id id])
+                      sql-format)
+        delresult (jdbc/execute! (get-ds) sql-query)]
+
+        (if (= 1 (::jdbc/update-count delresult))
           (sd/response_ok olddata)
           (sd/response_failed "Could not delete workflow." 422))))
     (catch Exception e (sd/response_exception e))))

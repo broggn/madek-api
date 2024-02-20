@@ -1,9 +1,19 @@
 (ns madek.api.resources.static-pages
-  (:require [clojure.java.jdbc :as jdbc]
+  (:require
+
+   ;[clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as logging]
             [logbug.catcher :as catcher]
             [madek.api.resources.shared :as sd]
-            [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+            ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+
+         ;; all needed imports
+               [honey.sql :refer [format] :rename {format sql-format}]
+               ;[leihs.core.db :as db]
+               [next.jdbc :as jdbc]
+               [honey.sql.helpers :as sql]
+
+               [madek.api.db.core :refer [get-ds]]
             [reitit.coercion.schema]
             [schema.core :as s]))
 
@@ -25,15 +35,22 @@
       (let [data (-> req :parameters :body)
             contents-json (sd/try-as-json (:contents data))
             ins-data (assoc data :contents contents-json)
-            ins-res (jdbc/insert! (rdbms/get-ds)
-                                  :static_pages
-                                  ins-data)]
+
+            ;ins-res (jdbc/insert! (rdbms/get-ds)
+            ;                      :static_pages
+            ;                      ins-data)]
+
+            sql-query (-> (sql/insert-into :static_pages)
+                          (sql/values [ins-data])
+                          sql-format)
+            ins-res (jdbc/execute-one! (get-ds) sql-query)]
+
 
         (logging/info "handle_create-static-page:"
                       "\ninsert data:\n" ins-data
                       "\nresult:\n " ins-res)
 
-        (if-let [result (first ins-res)]
+        (if-let [result (::jdbc/update-count ins-res)]
           (sd/response_ok result)
           (sd/response_failed "Could not create static_page." 406))))
     (catch Exception e (sd/response_exception e))))
@@ -46,16 +63,24 @@
             contents-json (sd/try-as-json (:contents data))
             dwid (assoc data :id id :contents contents-json)
             upd-query (sd/sql-update-clause "id" (str id))
-            upd-result (jdbc/update! (rdbms/get-ds)
-                                     :static_pages
-                                     dwid upd-query)]
+
+
+            ;upd-result (jdbc/update! (rdbms/get-ds)
+            ;                         :static_pages
+            ;                         dwid upd-query)]
+
+            sql-query (-> (sql/update :static_pages)
+                          (sql/set dwid)
+                          (sql/where upd-query)
+                          sql-format)
+            upd-result (jdbc/execute! (get-ds) sql-query)]
 
         (logging/info "handle_update-static_pages: "
                       "\nid:\n" id
                       "\nnew-data:\n" dwid
                       "\nupd-result:" upd-result)
 
-        (if (= 1 (first upd-result))
+        (if (= 1 (::jdbc/update-count upd-result))
           (sd/response_ok (sd/query-eq-find-one :static_pages :id id))
           (sd/response_failed "Could not update static_page." 406))))
     (catch Exception e (sd/response_exception e))))
@@ -65,13 +90,21 @@
     (catcher/with-logging {}
       (let [olddata (-> req :static_page)
             id (-> req :parameters :path :id)
-            delresult (jdbc/delete! (rdbms/get-ds)
-                                    :static_pages
-                                    ["id = ?" id])]
+
+            ;delresult (jdbc/delete! (rdbms/get-ds)
+            ;                        :static_pages
+            ;                        ["id = ?" id])]
+
+        sql-query (-> (sql/delete-from :static_pages)
+                      (sql/where [:= :id id])
+                      sql-format)
+        delresult (jdbc/execute-one! (get-ds) sql-query)]
+
+
         (logging/info "handle_delete-static_page: "
                       " id: " id
                       " result: " delresult)
-        (if (= 1 (first delresult))
+        (if (= 1 (::jdbc/update-count delresult))
           (sd/response_ok olddata)
           (sd/response_failed "Could not delete static page." 422))))
     (catch Exception e (sd/response_exception e))))
