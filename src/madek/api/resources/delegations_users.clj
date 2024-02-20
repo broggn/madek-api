@@ -1,11 +1,21 @@
 (ns madek.api.resources.delegations-users
   (:require
-   [clojure.java.jdbc :as jdbc]
+   [clojure.java.jdbc :as jdbco]
    [clojure.tools.logging :as logging]
    [madek.api.resources.shared :as sd]
-   [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   [madek.api.utils.sql :as sql]
+   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+   [madek.api.utils.sql :as sqlo]
    [reitit.coercion.schema]
+
+
+         ;; all needed imports
+               [honey.sql :refer [format] :rename {format sql-format}]
+               ;[leihs.core.db :as db]
+               [next.jdbc :as jdbc]
+               [honey.sql.helpers :as sql]
+
+               [madek.api.db.core :refer [get-ds]]
+
    [schema.core :as s]))
 
 (def res-req-name :delegation_user)
@@ -42,22 +52,25 @@
   [req]
   (let [user (or (-> req :user) (-> req :authenticated-entity))
         delegation (-> req :delegation)
-        data {:user_id (:id user) :delegation_id (:id delegation)}]
-    (if-let [delegations_user (-> req res-req-name)]
-      ; already has delegations_user
-      (sd/response_ok delegations_user)
-      ; create delegations_user entry
-      (if-let [ins_res (first (jdbc/insert! (rdbms/get-ds) res-table-name data))]
-        ; TODO clean result
-        (sd/response_ok ins_res)
-        (sd/response_failed "Could not create delegations_user." 406)))))
+        data {:user_id (:id user) :delegation_id (:id delegation)}
+        sql-query (-> (sql/insert-into :delegations_users) (sql/values [data]) sql-format)]
+    (if-let [ins-res (first (jdbc/execute! (get-ds) sql-query))]
+      (sd/response_ok ins-res)
+      (sd/response_failed "Could not create delegations_user." 406))))
 
 (defn handle_delete-delegations_user
   [req]
   (let [delegations_user (-> req res-req-name)
         user-id (:user_id delegations_user)
-        delegation-id (res-col-name delegations_user)]
-    (if (= 1 (first (jdbc/delete! (rdbms/get-ds) res-table-name ["user_id = ? AND delegation_id = ?" user-id delegation-id])))
+        delegation-id (res-col-name delegations_user)
+        
+    ;    ]
+    ;(if (= 1 (first (jdbc/delete! (rdbms/get-ds) res-table-name ["user_id = ? AND delegation_id = ?" user-id delegation-id])))
+
+      sql-query (-> (sql/delete-from :delegations_users) (sql/where [:= :user_id user-id] [:= :delegation_id delegation-id]) sql-format)]
+(if (= 1 (first (jdbc/execute! (get-ds) sql-query)))
+      
+      
       (sd/response_ok delegations_user)
       (logging/error "Failed delete delegations_user "
                      "user-id: " user-id "delegation-id: " delegation-id))))

@@ -1,12 +1,25 @@
 (ns madek.api.resources.favorite-collections
-  (:require [clojure.java.jdbc :as jdbc]
-            [clojure.tools.logging :as logging]
+  (:require [clojure.tools.logging :as logging]
+            [honey.sql :refer [format] :rename {format sql-format}]
+            [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
             [madek.api.authorization :as authorization]
+   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+            [madek.api.db.core :refer [get-ds]]
+
             [madek.api.resources.shared :as sd]
+
+       [taoensso.timbre :refer [info warn error spy]]
+           [logbug.debug :as debug]
+
+
+   ;; all needed imports
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-            [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+   ;[leihs.core.db :as db]
+            [next.jdbc :as jdbc]
+
             [reitit.coercion.schema]
+
             [schema.core :as s]))
 
 (def res-req-name :favorite_collection)
@@ -40,12 +53,13 @@
     (catcher/with-logging {}
       (let [user-id (or (-> req :user :id) (-> req :authenticated-entity :id))
             col-id (-> req :collection :id)
-            data {:user_id user-id res-col-name col-id}]
+            data {:user_id user-id res-col-name col-id}
+            sql-query (-> (sql/insert-into :favorite_collections) (sql/values [data]) sql-format)]
         (if-let [favorite_collection (-> req res-req-name)]
-        ; already has favorite_collection
+          ; already has favorite_collection
           (sd/response_ok favorite_collection)
-        ; create favorite_collection entry
-          (if-let [ins_res (first (jdbc/insert! (rdbms/get-ds) res-table-name data))]
+          ; create favorite_collection entry
+          (if-let [ins_res (first (jdbc/execute! (get-ds) sql-query))]
             (sd/response_ok ins_res)
             (sd/response_failed "Could not create favorite_collection." 406)))))
     (catch Exception ex (sd/response_exception ex))))
@@ -55,11 +69,22 @@
   [req]
   (try
     (catcher/with-logging {}
+
       (let [favorite_collection (-> req res-req-name)
             user-id (:user_id favorite_collection)
             collection-id (res-col-name favorite_collection)
-            del-query ["user_id = ? AND collection_id = ?" user-id collection-id]]
-        (if (= 1 (first (jdbc/delete! (rdbms/get-ds) res-table-name del-query)))
+
+            ;    sql-query (-> (sql/delete-from :favorite_collections) (sql/where [:= :user_id user-id] [:= :collection_id collection-id]) sql-format)]
+            ;(if (= 1 (first (jdbc/execute! (get-ds) sql-query)))
+
+            sql-query (-> (sql/delete-from :favorite_collections) (sql/where [:= :user_id user-id] [:= :collection_id collection-id]) sql-format)
+            p (println ">o> ?????????????")
+
+            del-result (spy (jdbc/execute-one! (get-ds) (spy sql-query)))
+            ]
+        (if (= 1 (spy (::jdbc/update-count del-result)))
+          ;(if (= 1 (spy (::jdbc/update-count del-result)))
+
           (sd/response_ok favorite_collection)
           (sd/response_failed "Could not delete favorite collection: " 406))))
     (catch Exception ex (sd/response_exception ex))))
@@ -68,12 +93,12 @@
   (fn [handler]
     (fn [request]
       (sd/req-find-data2
-       request handler
-       :user_id :collection_id
-       :favorite_collections
-       :user_id :collection_id
-       res-req-name
-       send404))))
+        request handler
+        :user_id :collection_id
+        :favorite_collections
+        :user_id :collection_id
+        res-req-name
+        send404))))
 
 (defn wwrap-find-favorite_collection-by-auth [send404]
   (fn [handler]
@@ -82,24 +107,24 @@
             col-id (-> request :parameters :path :collection_id str)]
         (logging/info "uid\n" user-id "col-id\n" col-id)
         (sd/req-find-data-search2
-         request handler
-         user-id col-id
-         :favorite_collections
-         :user_id :collection_id
-         res-req-name
-         send404)))))
+          request handler
+          user-id col-id
+          :favorite_collections
+          :user_id :collection_id
+          res-req-name
+          send404)))))
 
 (defn wwrap-find-user [param]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler param
-                                    :users :id
-                                    :user true))))
+                    :users :id
+                    :user true))))
 
 (defn wwrap-find-collection [param]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler param
-                                    :collections :id
-                                    :collection true))))
+                    :collections :id
+                    :collection true))))
 
 (def schema_favorite_collection_export
   {:user_id s/Uuid
@@ -154,11 +179,11 @@
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
       ; TODO query params?
-      :parameters {:query {;(s/optional-key :user_id) s/Uuid 
+      :parameters {:query {;(s/optional-key :user_id) s/Uuid
                            ;(s/optional-key :collection_id) s/Uuid
                            (s/optional-key :full_data) s/Bool}}
       :responses {200 {:body [schema_favorite_collection_export]}}}}]
-    ; edit favorite collections for other users
+   ; edit favorite collections for other users
    ["/favorite/collections/:collection_id/:user_id"
     {:post {:summary (sd/sum_adm "Create favorite_collection for user and collection.")
             :handler handle_create-favorite_collection

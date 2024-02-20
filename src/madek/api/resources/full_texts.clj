@@ -1,12 +1,24 @@
 (ns madek.api.resources.full-texts
-  (:require [clojure.java.jdbc :as jdbc]
-            [clojure.tools.logging :as logging]
+  (:require [clojure.tools.logging :as logging]
+            [honey.sql :refer [format] :rename {format sql-format}]
             [logbug.catcher :as catcher]
+            [madek.api.db.core :refer [get-ds]]
             [madek.api.pagination :as pagination]
             [madek.api.resources.shared :as sd]
+
+
+   ;; all needed imports
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+   ;[leihs.core.db :as db]
             [madek.api.utils.rdbms :as rdbms]
-            [madek.api.utils.sql :as sql]
+            [madek.api.utils.sql :as sqlo]
+
+            [next.jdbc :as jdbc]
+
+
+                        [honey.sql.helpers :as sql]
+
+
             [reitit.coercion.schema]
             [schema.core :as s]))
 
@@ -22,9 +34,12 @@
                      (sd/build-query-param query-params :media_resource_id)
                      (sd/build-query-param-like query-params :text)
                      (pagination/add-offset-for-honeysql query-params)
-                     sql/format)
+                     sql-format)
 
-        db-result (jdbc/query (rdbms/get-ds) db-query)]
+        ;db-result (jdbc/query (rdbms/get-ds) db-query)]
+
+          db-result (jdbc/execute! (get-ds) db-query)]
+
 
     (logging/info "handle_list-full_texts:" "\nquery:\n" db-query)
     (sd/response_ok db-result)))
@@ -44,7 +59,12 @@
                       (-> req :parameters :path :collection_id)
                       (-> req :parameters :path :media_entry_id))
             ins-data (assoc rdata :media_resource_id mr-id)
-            ins-res (jdbc/insert! (rdbms/get-ds) :full_texts ins-data)]
+
+            ;ins-res (jdbc/insert! (rdbms/get-ds) :full_texts ins-data)]
+
+
+        sql-query (-> (sql/insert-into :full_texts) (sql/values [ins-data]) sql-format)
+        ins-res (first (jdbc/execute! (get-ds) [sql-query]))]
 
         (logging/info "handle_create-full_texts: " "\nnew-data:\n" ins-data "\nresult:\n" ins-res)
 
@@ -65,11 +85,22 @@
             dwid (assoc data :media_resource_id mr-id)
         ;old-data (-> req :full_text)
             upd-query (sd/sql-update-clause "media_resource_id" (str mr-id))
-            upd-result (jdbc/update! (rdbms/get-ds) :full_texts dwid upd-query)]
 
-        (logging/info "handle_update-full_texts: " mr-id "\new-data:\n" dwid "\nresult:\n" upd-result)
+            ;upd-result (jdbc/update! (rdbms/get-ds) :full_texts dwid upd-query)]
 
-        (if (= 1 (first upd-result))
+            sql-query (-> (sql/update :full_texts)
+                          (sql/set dwid)
+                          (sql/where [:= :media_resource_id mr-id]) sql-format)
+            ;upd-result (jdbc/update! (rdbms/get-ds) :full_texts dwid upd-query)]
+        upd-result (first (jdbc/execute! (get-ds) [sql-query]))]
+
+
+(logging/info "handle_update-full_texts: " mr-id "\new-data:\n" dwid "\nresult:\n" upd-result)
+
+
+
+
+(if (= 1 (first upd-result))
           (sd/response_ok (sd/query-eq-find-one :full_texts :media_resource_id mr-id))
           (sd/response_failed "Could not update full_text." 406))))
     (catch Exception e (sd/response_exception e))))
@@ -80,9 +111,21 @@
     (catcher/with-logging {}
       (let [full-text (-> req :full_text)
             mr-id (:media_resource_id full-text)
-            del-result (jdbc/delete! (rdbms/get-ds)
-                                     :full_texts
-                                     ["media_resource_id = ?" mr-id])]
+
+
+
+            ;del-result (jdbc/delete! (rdbms/get-ds)
+            ;                         :full_texts
+            ;                         ["media_resource_id = ?" mr-id])]
+
+
+
+        sql-query (-> (sql/delete-from :full_texts)
+                            (sql/where [:= :media_resource_id mr-id])
+                            sql-format)
+              del-result (first (jdbc/execute! (get-ds) [sql-query]))]
+
+
 
         (logging/info "handle_delete-full_texts: " mr-id " result: " del-result)
 

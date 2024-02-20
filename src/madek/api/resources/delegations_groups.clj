@@ -1,10 +1,16 @@
 (ns madek.api.resources.delegations-groups
   (:require
-   [clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [madek.api.db.core :refer [get-ds]]
+
+
+   ;; all needed imports
    [madek.api.resources.shared :as sd]
-   [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   [madek.api.utils.sql :as sql]
+   ;[leihs.core.db :as db]
+   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+   [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]))
 
@@ -43,12 +49,13 @@
   [req]
   (let [group (or (-> req :group) (-> req :authenticated-entity))
         delegation (-> req :delegation)
-        data {:group_id (:id group) :delegation_id (:id delegation)}]
+        data {:group_id (:id group) :delegation_id (:id delegation)}
+        sql-query (-> (sql/insert-into :delegations_groups) (sql/values [data]) sql-format)]
     (if-let [delegations_group (-> req res-req-name)]
       ; already has delegations_group
       (sd/response_ok delegations_group)
       ; create delegations_group entry
-      (if-let [ins_res (first (jdbc/insert! (rdbms/get-ds) res-table-name data))]
+      (if-let [ins_res (first (jdbc/execute! (get-ds) sql-query))]
         ; TODO clean result
         (sd/response_ok ins_res)
         (sd/response_failed "Could not create delegations_group." 406)))))
@@ -57,22 +64,31 @@
   [req]
   (let [delegations_group (-> req res-req-name)
         group-id (:group_id delegations_group)
-        delegation-id (res-col-name delegations_group)]
-    (if (= 1 (first (jdbc/delete! (rdbms/get-ds) res-table-name ["group_id = ? AND delegation_id = ?" group-id delegation-id])))
+        delegation-id (res-col-name delegations_group)
+        ;]
+
+        sql-query (-> (sql/delete-from :delegations_groups)
+                      (sql/where [:= :group_id group-id] [:= :delegation_id delegation-id])
+                      sql-format)]
+    (if (= 1 (first (jdbc/execute! (get-ds) sql-query)))
+
+      ;(if (= 1 (first (jdbc/delete! (rdbms/get-ds) res-table-name ["group_id = ? AND delegation_id = ?" group-id delegation-id])))
+
+
       (sd/response_ok delegations_group)
       (logging/error "Failed delete delegations_group "
-                     "group-id: " group-id "delegation-id: " delegation-id))))
+        "group-id: " group-id "delegation-id: " delegation-id))))
 
 (defn wwrap-find-delegations_group [send404]
   (fn [handler]
     (fn [request]
       (sd/req-find-data2
-       request handler
-       :group_id :delegation_id
-       :delegations_groups
-       :group_id :delegation_id
-       res-req-name
-       send404))))
+        request handler
+        :group_id :delegation_id
+        :delegations_groups
+        :group_id :delegation_id
+        res-req-name
+        send404))))
 
 ; rubbish find by users groups
 (defn wwrap-find-delegations_group-by-auth [send404]
@@ -82,24 +98,24 @@
             del-id (-> request :parameters :path :delegation_id str)]
         (logging/info "uid\n" group-id "del-id\n" del-id)
         (sd/req-find-data-search2
-         request handler
-         group-id del-id
-         :delegations_groups
-         :group_id :delegation_id
-         res-req-name
-         send404)))))
+          request handler
+          group-id del-id
+          :delegations_groups
+          :group_id :delegation_id
+          res-req-name
+          send404)))))
 
 (defn wwrap-find-group [param]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler param
-                                    :groups :id
-                                    :group true))))
+                    :groups :id
+                    :group true))))
 
 (defn wwrap-find-delegation [param]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler param
-                                    :delegations :id
-                                    :delegation true))))
+                    :delegations :id
+                    :delegation true))))
 
 (def schema_delegations_groups_export
   {:group_id s/Uuid
