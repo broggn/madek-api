@@ -1,12 +1,24 @@
 (ns madek.api.resources.keywords
-  (:require [clojure.java.jdbc :as jdbc]
-            [logbug.catcher :as catcher]
-            [madek.api.resources.keywords.keyword :as kw]
-            [madek.api.resources.shared :as sd]
-            [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-            [madek.api.utils.rdbms :refer [get-ds]]
-            [reitit.coercion.schema]
-            [schema.core :as s]))
+  (:require
+   ;[clojure.java.jdbc :as jdbc]
+   [honey.sql.helpers :as sql]
+   [logbug.catcher :as catcher]
+   ;[madek.api.db.core :refer [get-ds]]
+   [madek.api.resources.keywords.keyword :as kw]
+   [madek.api.resources.shared :as sd]
+
+               [honey.sql :refer [format] :rename {format sql-format}]
+
+
+   ;; all needed imports
+   [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+   ;[leihs.core.db :as db]
+   [madek.api.utils.rdbms :refer [get-ds]]
+   [next.jdbc :as jdbc]
+
+   [reitit.coercion.schema]
+
+   [schema.core :as s]))
 
 ;### swagger io schema ####################################################################
 
@@ -66,13 +78,13 @@
    ; [:id :meta_key_id :term :description :external_uris :rdf_class
    ;  :created_at])
    (dissoc :creator_id :created_at :updated_at)
-   (assoc ; support old (singular) version of field
+   (assoc                                                   ; support old (singular) version of field
     :external_uri (first (keyword :external_uris)))))
 
 (defn adm-export-keyword [keyword]
   (->
    keyword
-   (assoc ; support old (singular) version of field
+   (assoc                                                   ; support old (singular) version of field
     :external_uri (first (keyword :external_uris)))))
 
 ;### handlers get and query ####################################################################
@@ -107,7 +119,12 @@
       (let [uid (-> req :authenticated-entity :id)
             data (-> req :parameters :body)
             dwid (assoc data :creator_id uid)
-            ins-result (jdbc/insert! (get-ds) :keywords dwid)]
+            ;ins-result (jdbc/insert! (get-ds) :keywords dwid)]
+
+            sql-query (-> (sql/insert-into :keywords)
+                          (sql/values [dwid])
+                          sql-format)
+            ins-result (jdbc/execute! (get-ds) sql-query)]
 
         (if-let [result (first ins-result)]
           (sd/response_ok (adm-export-keyword result))
@@ -119,9 +136,17 @@
     (catcher/with-logging {}
       (let [id (-> req :parameters :path :id)
             data (-> req :parameters :body)
-            upd-res (jdbc/update!
-                     (get-ds) :keywords data
-                     (sd/sql-update-clause "id" id))]
+            
+            ;upd-res (jdbc/update!
+            ;          (get-ds) :keywords data
+            ;          (sd/sql-update-clause "id" id))]
+
+
+        sql-query (-> (sql/update :keywords)
+                      (sql/set data)
+                      (sql/where [:= :id id])
+                      sql-format)
+        upd-res (jdbc/execute! (get-ds) sql-query)]
 
         (if (= 1 (first upd-res))
           ;(sd/response_ok (adm-export-keyword (kw/db-keywords-get-one id)))
@@ -136,9 +161,16 @@
     (catcher/with-logging {}
       (let [id (-> req :parameters :path :id)
             old-data (-> req :keyword)
-            del-res (jdbc/delete!
-                     (get-ds) :keywords
-                     (sd/sql-update-clause "id" id))]
+            
+            ;del-res (jdbc/delete!
+            ;          (get-ds) :keywords
+            ;          (sd/sql-update-clause "id" id))]
+        
+        sql-query (-> (sql/delete :keywords)
+                      (sql/where [:= :id id])
+                      sql-format)
+        del-res (jdbc/execute! (get-ds) sql-query)]
+        
         ; logwrite
         (if [(= 1 (first del-res))]
           (sd/response_ok (adm-export-keyword old-data))
@@ -149,9 +181,9 @@
 
 (defn wrap-find-keyword [handler]
   (fn [request] (sd/req-find-data request handler
-                                  :id
-                                  :keywords :id
-                                  :keyword true)))
+                  :id
+                  :keywords :id
+                  :keyword true)))
 
 (def query-routes
   ["/keywords"

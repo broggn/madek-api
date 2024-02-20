@@ -1,5 +1,6 @@
 (ns madek.api.resources.meta-keys
-  (:require [clojure.java.jdbc :as jdbc]
+  (:require 
+   ;[clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as logging]
             [madek.api.resources.meta-keys.index :as mkindex]
             [madek.api.resources.meta-keys.meta-key :as mk]
@@ -7,6 +8,27 @@
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
             [madek.api.utils.rdbms :as rdbms]
             [reitit.coercion.schema]
+
+
+                  ;; all needed imports
+                        [honey.sql :refer [format] :rename {format sql-format}]
+                        ;[leihs.core.db :as db]
+                        [next.jdbc :as jdbc]
+                        [honey.sql.helpers :as sql]
+
+                        [madek.api.db.core :refer [get-ds]]
+
+
+
+   [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
+   ;; all needed imports
+            [madek.api.resources.shared :as sd]
+   ;[leihs.core.db :as db]
+            [next.jdbc :as jdbc]
+            [reitit.coercion.schema]
+            [reitit.coercion.spec]
+            
             [schema.core :as s]))
 
 (defn adm-export-meta-key [meta-key]
@@ -79,20 +101,37 @@
 
 (defn handle_create_meta-key [req]
   (let [data (-> req :parameters :body)
-        db-result (jdbc/insert! (rdbms/get-ds) :meta_keys data)]
 
-    (sd/response_ok (first db-result))))
+        sql-query (-> (sql/insert-into :meta_keys)
+                      (sql/values [data])
+                      (sql/returning :*)
+                      sql-format)
+        db-result (jdbc/execute-one! (get-ds) sql-query)]
+        
+        ;db-result (jdbc/insert! (get-ds) :meta_keys data)]
+
+    (sd/response_ok db-result)))
 
 (defn handle_update_meta-key [req]
   (let [;old-data (-> req :meta_key)
         data (-> req :parameters :body)
         id (-> req :parameters :path :id)
-        dwid (assoc data :id id)]
+        dwid (assoc data :id id)
+
+        sql-query (-> (sql/update :meta_keys)
+                      (sql/set dwid)
+                      (sql/where [:= :id id])
+                      sql-format)
+        db-result (jdbc/execute! (get-ds) sql-query)]
+
     (logging/info "handle_update_meta-key:"
                   "\nid: " id
                   "\ndwid\n" dwid)
-    (if-let [db-result (jdbc/update! (rdbms/get-ds)
-                                     :meta_keys dwid ["id = ?" id])]
+    ;(if-let [db-result (jdbc/update! (get-ds)
+    ;                                 :meta_keys dwid ["id = ?" id])]
+
+      (if db-result
+
       (let [new-data (sd/query-eq-find-one :meta_keys :id id)]
         (logging/info "handle_update_meta-key:"
                       "\ndb-result:\n" db-result
@@ -102,8 +141,15 @@
 
 (defn handle_delete_meta-key [req]
   (let [meta-key (-> req :meta_key)
-        db-result (jdbc/delete! (rdbms/get-ds) :meta_keys ["id = ?" (:id meta-key)])]
-    (if (= 1 (first db-result))
+
+        ;db-result (jdbc/delete! (get-ds) :meta_keys ["id = ?" (:id meta-key)])]
+
+        sql-query (-> (sql/delete-from :meta_keys)
+                      (sql/where [:= :id (:id meta-key)])
+                      sql-format)
+        db-result (jdbc/execute-one! (get-ds) sql-query)]
+
+    (if (= 1 (::jdbc/update-count db-result))
       (sd/response_ok meta-key)
       (sd/response_failed "Could not delete meta-key." 406))))
 

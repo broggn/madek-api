@@ -1,11 +1,25 @@
 (ns madek.api.resources.io-interfaces
-  (:require [clojure.java.jdbc :as jdbc]
+  (:require
+   ;[clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as logging]
             [logbug.catcher :as catcher]
             [madek.api.resources.shared :as sd]
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-            [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+            ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
             [reitit.coercion.schema]
+
+                  ;; all needed imports
+                        [honey.sql :refer [format] :rename {format sql-format}]
+                        ;[leihs.core.db :as db]
+                        [next.jdbc :as jdbc]
+                        [honey.sql.helpers :as sql]
+
+                        [madek.api.db.core :refer [get-ds]]
+
+                [taoensso.timbre :refer [info warn error spy]]
+                    [logbug.debug :as debug]
+
+
             [schema.core :as s]))
 
 ;### handlers #################################################################
@@ -30,8 +44,17 @@
   (try
     (catcher/with-logging {}
       (let [p (println ">o> ??? handle_create-io_interfaces")
-            data (-> req :parameters :body)
-            ins-res (jdbc/insert! (get-ds) :io_interfaces data)]
+        ;    data (-> req :parameters :body)
+        ;    ins-res (jdbc/insert! (get-ds) :io_interfaces data)]
+        ;
+        ;(let [
+              data (-> req :parameters :body)
+              sql-query (-> (sql/insert-into :io_interfaces)
+                            (sql/values [data])
+                            sql-format)
+              ins-res (jdbc/execute! (get-ds) sql-query)]
+
+
         (logging/info "handle_create-io_interfaces: " "\ndata:\n" data "\nresult:\n" ins-res)
 
         (if-let [result (first ins-res)]
@@ -47,10 +70,16 @@
             id (-> req :parameters :path :id)
             dwid (assoc data :id id)
         ;old-data (-> req :io_interface)
-            upd-query (sd/sql-update-clause "id" (str id))
-            upd-result (jdbc/update! (get-ds)
-                                     :io_interfaces
-                                     dwid upd-query)]
+        ;    upd-query (sd/sql-update-clause "id" (str id))
+        ;    upd-result (jdbc/update! (get-ds)
+        ;                             :io_interfaces
+        ;                             dwid upd-query)]
+
+        sql-query (-> (sql/update :io_interfaces)
+                      (sql/set dwid)
+                      (sql/where [:= :id id])
+                      sql-format)
+        upd-result (jdbc/execute! (get-ds) sql-query)]
 
         (logging/info "handle_update-io_interfaces: " "id: " id "\nnew-data:\n" dwid "\nresult: " upd-result)
 
@@ -66,9 +95,16 @@
     (catcher/with-logging {}
       (let [io_interface (-> req :io_interface)
             id (-> req :parameters :path :id)
-            del-result (jdbc/delete! (get-ds)
-                                     :io_interfaces
-                                     ["id = ?" id])]
+            
+            ;del-result (jdbc/delete! (get-ds)
+            ;                         :io_interfaces
+            ;                         ["id = ?" id])]
+        sql-query (-> (sql/delete :io_interfaces)
+                      (sql/where [:= :id id])
+                      sql-format)
+        del-result (jdbc/execute! (get-ds) sql-query)]
+        
+        
         (if (= 1 (first del-result))
           (sd/response_ok io_interface)
           (logging/error "Could not delete io_interface: " id))))
