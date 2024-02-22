@@ -7,6 +7,11 @@
    [madek.api.resources.keywords.keyword :as kw]
    [madek.api.resources.shared :as sd]
 
+
+       [taoensso.timbre :refer [info warn error spy]]
+           [logbug.debug :as debug]
+
+
                [honey.sql :refer [format] :rename {format sql-format}]
 
 
@@ -123,10 +128,13 @@
 
             sql-query (-> (sql/insert-into :keywords)
                           (sql/values [dwid])
-                          sql-format)
-            ins-result (jdbc/execute! (get-ds) sql-query)]
+                          (sql/returning :*)
+                          sql-format
+                          spy
+                          )
+            ins-result (jdbc/execute-one! (get-ds) sql-query)]
 
-        (if-let [result (first ins-result)]
+        (if-let [result ins-result]
           (sd/response_ok (adm-export-keyword result))
           (sd/response_failed "Could not create keyword" 406))))
     (catch Exception ex (sd/response_exception ex))))
