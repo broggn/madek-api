@@ -4,37 +4,45 @@
             )
   (:import (java.util UUID)))
 
+
+(defn is-valid-uuid [id]
+  (if (instance? String id)
+    (try
+      (UUID/fromString id)
+      true
+      (catch IllegalArgumentException e
+        false))
+    false))
+
+
 ; [madek.api.utils.helper :refer [to-uuid]]
 (defn to-uuid
-  ([id]
-
+  ([value]
    (try
-     (let [result (if (instance? String id) (UUID/fromString id) id)]
+     (let [result (if (instance? String value) (UUID/fromString value) value)]
        ; success path, result is available for further processing if needed
        result)
      (catch Exception e
        ; catch block, log the error and return id as the error handling result
-       (logging/error ">>> ERROR in to-uuid[id], id=" id ", exception=" (.getMessage e))
-       id)))
+       (logging/warn ">>> ERROR in to-uuid[id], id=" value ", exception=" (.getMessage e))
+       value)))
 
-  ([id key]
-   ;(def keys-to-cast-to-uuid [:media_entry_id :media_file_id :preview_id :media_resource_id :media_file])
-   ;(def keys-to-cast-to-uuid [])
+  ([value key]
+  ; ;(def keys-to-cast-to-uuid [:media_entry_id :media_file_id :preview_id :media_resource_id :media_file])
+  ; ;(def keys-to-cast-to-uuid [])
    (def keys-to-cast-to-uuid [:user_id :id])
 
    ;(println (str "??? INFO / CAST TO UUID, id=" id ", key=" key ", keys\"=" keys-to-cast-to-uuid))
 
    (try
-     (if (:and (contains? keys-to-cast-to-uuid key) (instance? String id))
-       (UUID/fromString id)
-       id)
+     (if (:and (contains? keys-to-cast-to-uuid key) (instance? String value))
+       (UUID/fromString value)
+       value)
      (catch Exception e
+       (logging/warn ">>> ERROR2 in to-uuid[id], id=" value ", key=" key " exception=" (.getMessage e))
+       value)))
 
-       (logging/error ">>> ERROR2 in to-uuid[id], id=" id ", key=" key " exception=" (.getMessage e))
-
-; catch block, log the error and return id as the error handling result
-       ;(println (str ">>> ERROR2 in to-uuid[id], id=" id ", key=" key " exception=" e))
-       id))))
+)
 
 (comment
   (let [;p (println "\nquery ok1" (to-uuid "123e4567-e89b-12d3-a456-426614174000" :user_id))

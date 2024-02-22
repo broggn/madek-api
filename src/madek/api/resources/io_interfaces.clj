@@ -51,13 +51,15 @@
               data (-> req :parameters :body)
               sql-query (-> (sql/insert-into :io_interfaces)
                             (sql/values [data])
+(sql/returning :*)
                             sql-format)
-              ins-res (jdbc/execute! (get-ds) sql-query)]
+              ins-res (jdbc/execute-one! (get-ds) sql-query)]
 
 
         (logging/info "handle_create-io_interfaces: " "\ndata:\n" data "\nresult:\n" ins-res)
 
-        (if-let [result (first ins-res)]
+        ;(if-let [result (::jdbc/update-count ins-res)]
+        (if-let [result  ins-res]
           (sd/response_ok result)
           (sd/response_failed "Could not create io_interface." 406))))
     (catch Exception ex (sd/response_exception ex))))
@@ -79,11 +81,11 @@
                       (sql/set dwid)
                       (sql/where [:= :id id])
                       sql-format)
-        upd-result (jdbc/execute! (get-ds) sql-query)]
+        upd-result (jdbc/execute-one! (get-ds) sql-query)]
 
         (logging/info "handle_update-io_interfaces: " "id: " id "\nnew-data:\n" dwid "\nresult: " upd-result)
 
-        (if (= 1 (first upd-result))
+        (if (= 1 (::jdbc/update-count upd-result))
           (sd/response_ok (sd/query-eq-find-one :io_interfaces :id id))
           (sd/response_failed "Could not update io_interface." 406))))
     (catch Exception ex (sd/response_exception ex))))
@@ -99,13 +101,15 @@
             ;del-result (jdbc/delete! (get-ds)
             ;                         :io_interfaces
             ;                         ["id = ?" id])]
-        sql-query (-> (sql/delete :io_interfaces)
+        sql-query (-> (sql/delete-from :io_interfaces)
                       (sql/where [:= :id id])
-                      sql-format)
-        del-result (jdbc/execute! (get-ds) sql-query)]
+                      sql-format
+                      spy
+                      )
+        del-result (jdbc/execute-one! (get-ds) sql-query)]
         
         
-        (if (= 1 (first del-result))
+        (if (= 1 (spy (::jdbc/update-count del-result)))
           (sd/response_ok io_interface)
           (logging/error "Could not delete io_interface: " id))))
     (catch Exception e (sd/response_exception e))))
