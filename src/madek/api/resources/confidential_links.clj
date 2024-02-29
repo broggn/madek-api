@@ -1,22 +1,22 @@
 (ns madek.api.resources.confidential-links
   (:require [buddy.core.codecs :refer [bytes->b64u bytes->str]]
             [buddy.core.hash :as hash]
-            [clojure.tools.logging :as logging]
-            [logbug.catcher :as catcher]
-            [madek.api.resources.shared :as sd]
-            [reitit.coercion.schema]
-
             [clojure.java.jdbc :as jdbco]
+            [clojure.tools.logging :as logging]
+            ;; all needed imports
+            [honey.sql :refer [format] :rename {format sql-format}]
+            [honey.sql.helpers :as sql]
+
+            [logbug.catcher :as catcher]
             ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
             ;[madek.api.utils.sql :as sqlo]
 
-                  ;; all needed imports
-                        [honey.sql :refer [format] :rename {format sql-format}]
+            [madek.api.db.core :refer [get-ds]]
+            [madek.api.resources.shared :as sd]
                         ;[leihs.core.db :as db]
-                        [next.jdbc :as jdbc]
-                        [honey.sql.helpers :as sql]
+            [next.jdbc :as jdbc]
 
-                        [madek.api.db.core :refer [get-ds]]
+            [reitit.coercion.schema]
 
             [schema.core :as s]))
 
@@ -47,8 +47,7 @@
             data (-> req :parameters :body)
             token (create-conf-link-token)
 
-
-            ;ins-data (-> data
+;ins-data (-> data
             ;             (sd/try-instant-on-presence :expires_at)
             ;             (assoc
             ;              :user_id u-id
@@ -57,20 +56,17 @@
             ;              :token token))
             ;ins-result (jdbc/insert! (get-ds) :confidential_links ins-data)]
 
-
-
-        ins-data (-> data
-                     (sd/try-instant-on-presence :expires_at)
-                     (assoc
-                      :user_id u-id
-                      :resource_type mr-type
-                      :resource_id mr-id
-                      :token token))
-        sql-map {:insert-into :confidential_links
-                 :values [ins-data]}
-        sql (-> sql-map sql-format )
-        ins-result (jdbc/execute! (get-ds) [sql ins-data])]
-
+            ins-data (-> data
+                         (sd/try-instant-on-presence :expires_at)
+                         (assoc
+                          :user_id u-id
+                          :resource_type mr-type
+                          :resource_id mr-id
+                          :token token))
+            sql-map {:insert-into :confidential_links
+                     :values [ins-data]}
+            sql (-> sql-map sql-format)
+            ins-result (jdbc/execute! (get-ds) [sql ins-data])]
 
         (if-let [result (first ins-result)]
           (sd/response_ok result)
@@ -100,23 +96,20 @@
   (try
     (catcher/with-logging {}
 
-
-      ;(let [id (-> req :parameters :path :id)
+;(let [id (-> req :parameters :path :id)
       ;      data (-> req :parameters :body)
       ;      upd-data (sd/try-instant-on-presence data :expires_at)
       ;      upd-clause (sd/sql-update-clause "id" id)
       ;      upd-result (jdbc/update! (get-ds) :confidential_links upd-data upd-clause)]
 
-
-        (let [id (-> req :parameters :path :id)
-              data (-> req :parameters :body)
-              upd-data (sd/try-instant-on-presence data :expires_at)
-              sql-map {:update :confidential_links
-                       :set upd-data
-                       :where [:= :id id]}
-              sql (-> sql-map sql-format )
-              upd-result (jdbc/execute! (get-ds) [sql (vals upd-data)])]
-
+      (let [id (-> req :parameters :path :id)
+            data (-> req :parameters :body)
+            upd-data (sd/try-instant-on-presence data :expires_at)
+            sql-map {:update :confidential_links
+                     :set upd-data
+                     :where [:= :id id]}
+            sql (-> sql-map sql-format)
+            upd-result (jdbc/execute! (get-ds) [sql (vals upd-data)])]
 
         (sd/logwrite req (str "handle_update-conf-link:" "\nupdate data: " upd-data "\nresult: " upd-result))
         (if (= 1 (first upd-result))
@@ -135,10 +128,10 @@
           ;(let [del-clause (sd/sql-update-clause "id" id)
           ;      del-result (jdbc/delete! (get-ds) :confidential_links del-clause)]
 
-            (let [sql-map {:delete :confidential_links
-                           :where [:= :id id]}
-                  sql (-> sql-map sql-format )
-                  del-result (jdbc/execute! (get-ds) [sql [id]])]
+          (let [sql-map {:delete :confidential_links
+                         :where [:= :id id]}
+                sql (-> sql-map sql-format)
+                del-result (jdbc/execute! (get-ds) [sql [id]])]
 
             (sd/logwrite req (str "handle_delete-conf-link:" "\ndelete data: " del-data "\nresult: " del-result))
             (if (= 1 (first del-result))

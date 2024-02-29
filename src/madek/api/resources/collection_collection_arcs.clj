@@ -1,24 +1,21 @@
 (ns madek.api.resources.collection-collection-arcs
   (:require
-   
-   
+
    [clojure.java.jdbc :as jdbco]
+   ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+
+   [honey.sql.helpers :as sql]
+   [logbug.catcher :as catcher]
+   [madek.api.db.core :refer [get-ds]]
+
+   [madek.api.pagination :as pagination]
+
+   [madek.api.resources.shared :as sd]
    ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
    [madek.api.utils.sql :as sqlo]
-   
-   
-         ;; all needed imports
-               [honey.sql :refer [format] :rename {format sql-format}]
-               ;[leihs.core.db :as db]
-               [next.jdbc :as jdbc]
-               [honey.sql.helpers :as sql]
-               
-               [madek.api.db.core :refer [get-ds]]
-   
-   
-   [logbug.catcher :as catcher]
-   [madek.api.pagination :as pagination]
-   [madek.api.resources.shared :as sd]
+   ;[leihs.core.db :as db]
+   [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]))
 
@@ -74,7 +71,6 @@
       ;
       ;  (if-let [ins-res (jdbc/insert! (get-ds) :collection_collection_arcs ins-data)]
 
-
       (let [parent-id (-> req :parameters :path :parent_id)
             child-id (-> req :parameters :path :child_id)
             data (-> req :parameters :body)
@@ -82,8 +78,8 @@
             sql-map {:insert-into :collection_collection_arcs
                      :values [ins-data]}
 
-            sql (-> sql-map sql-format )]
-            (if-let [ins-res (next.jdbc/execute! (get-ds) [sql ins-data])]
+            sql (-> sql-map sql-format)]
+        (if-let [ins-res (next.jdbc/execute! (get-ds) [sql ins-data])]
 
           (sd/response_ok ins-res)
           (sd/response_failed "Could not create collection-collection-arc" 406))))
@@ -107,16 +103,15 @@
       ;                           :collection_collection_arcs
       ;                           data whcl)]
 
-
-        (let [parent-id (-> req :parameters :path :parent_id)
-              child-id (-> req :parameters :path :child_id)
-              data (-> req :parameters :body)
-              sql-map {:update :collection_collection_arcs
-                       :set data
-                       :where [:= :parent_id parent-id
-                               := :child_id child-id]}
-              sql (-> sql-map sql-format)
-              result (next.jdbc/execute! (get-ds) [sql data])]
+      (let [parent-id (-> req :parameters :path :parent_id)
+            child-id (-> req :parameters :path :child_id)
+            data (-> req :parameters :body)
+            sql-map {:update :collection_collection_arcs
+                     :set data
+                     :where [:= :parent_id parent-id
+                             := :child_id child-id]}
+            sql (-> sql-map sql-format)
+            result (next.jdbc/execute! (get-ds) [sql data])]
 
         (if (= 1 (first result))
           (sd/response_ok (sd/query-eq-find-one
@@ -139,18 +134,17 @@
       ;      delquery (sql-cls-update parent-id child-id)
       ;      delresult (jdbc/delete! (get-ds) :collection_collection_arcs delquery)]
 
-
-        (let [parent-id (-> req :parameters :path :parent_id)
-              child-id (-> req :parameters :path :child_id)
-              olddata (sd/query-eq-find-one
-                        :collection_collection_arcs
-                        :parent_id parent-id
-                        :child_id child-id)
-              sql-map {:delete :collection_collection_arcs
-                       :where [:= :parent_id parent-id
-                               := :child_id child-id]}
-              sql (-> sql-map sql-format)
-              delresult (next.jdbc/execute! (get-ds) [sql [parent-id child-id]])]
+      (let [parent-id (-> req :parameters :path :parent_id)
+            child-id (-> req :parameters :path :child_id)
+            olddata (sd/query-eq-find-one
+                     :collection_collection_arcs
+                     :parent_id parent-id
+                     :child_id child-id)
+            sql-map {:delete :collection_collection_arcs
+                     :where [:= :parent_id parent-id
+                             := :child_id child-id]}
+            sql (-> sql-map sql-format)
+            delresult (next.jdbc/execute! (get-ds) [sql [parent-id child-id]])]
 
         (if (= 1 (first delresult))
           (sd/response_ok olddata)

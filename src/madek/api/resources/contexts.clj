@@ -1,28 +1,27 @@
 (ns madek.api.resources.contexts
-  (:require 
-            [clojure.tools.logging :as logging]
-            [logbug.catcher :as catcher]
-            [madek.api.resources.shared :as sd]
-            [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-            [reitit.coercion.schema]
+  (:require
+   [clojure.tools.logging :as logging]
+            ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [logbug.catcher :as catcher]
+   [logbug.debug :as debug]
 
-       [taoensso.timbre :refer [info warn error spy]]
-           [logbug.debug :as debug]
+   [madek.api.db.core :refer [get-ds]]
+   [madek.api.resources.shared :as sd]
 
-            
-   ;         [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+;         [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
    ;[clojure.java.jdbc :as jdbc]
    ;         [madek.api.utils.sql :as sql]
-            
-                  ;; all needed imports
-                        [honey.sql :refer [format] :rename {format sql-format}]
+
+   [madek.api.utils.auth :refer [wrap-authorize-admin!]]
                         ;[leihs.core.db :as db]
-                        [next.jdbc :as jdbc]
-                        [honey.sql.helpers :as sql]
-                        
-                        [madek.api.db.core :refer [get-ds]]
-            
-            [schema.core :as s]))
+   [next.jdbc :as jdbc]
+   [reitit.coercion.schema]
+
+   [schema.core :as s]
+
+   [taoensso.timbre :refer [info warn error spy]]))
 
 (defn- context_transform_ml [context]
   (assoc context
@@ -35,8 +34,7 @@
                      (sql/from :contexts)
                      sql-format)
         db-result (jdbc/execute! (get-ds) db-query)
-        
-        
+
         result (map context_transform_ml db-result)]
     ;(logging/info "handle_adm-list-context" "\nquery\n" db-query "\nresult\n" result)
     (sd/response_ok result)))
@@ -70,7 +68,6 @@
       ;(let [data (-> req :parameters :body)
       ;      ins-res (jdbc/insert! (get-ds) :contexts data)]
 
-
       (let [data (-> req :parameters :body)
             sql (spy (-> {:insert-into :contexts :values [data]} sql-format))
             ;ins-res (jdbc/execute! (get-ds) [sql data])]
@@ -89,25 +86,21 @@
   (try
     (catcher/with-logging {}
 
-
-      ;(let [data (-> req :parameters :body)
+;(let [data (-> req :parameters :body)
       ;      id (-> req :parameters :path :id)
       ;      dwid (assoc data :id id)
       ;  ;old-data (-> req :context)
       ;      upd-query (sd/sql-update-clause "id" (str id))
       ;      upd-result (jdbc/update! (get-ds) :contexts dwid upd-query)]
 
-
-        (let [data (-> req :parameters :body)
-              id (-> req :parameters :path :id)
-              dwid (assoc data :id id)
-              sql-map {:update :contexts
-                       :set dwid
-                       :where [:= :id id]}
-              sql (-> sql-map sql-format)
-              upd-result (jdbc/execute! (get-ds) [sql (vals dwid)])]
-
-
+      (let [data (-> req :parameters :body)
+            id (-> req :parameters :path :id)
+            dwid (assoc data :id id)
+            sql-map {:update :contexts
+                     :set dwid
+                     :where [:= :id id]}
+            sql (-> sql-map sql-format)
+            upd-result (jdbc/execute! (get-ds) [sql (vals dwid)])]
 
         (sd/logwrite req (str "handle_update-contexts: " id "\nnew-data:\n" dwid "\nupd-result\n" upd-result))
 
@@ -125,12 +118,12 @@
       ;      id (-> req :context :id)
       ;      del-result (jdbc/delete! (get-ds) :contexts ["id = ?" id])]
 
-        (let [context (-> req :context)
-              id (-> req :context :id)
-              sql-map {:delete :contexts
-                       :where [:= :id id]}
-              sql (-> sql-map sql-format)
-              del-result (jdbc/execute! (get-ds) [sql [id]])]
+      (let [context (-> req :context)
+            id (-> req :context :id)
+            sql-map {:delete :contexts
+                     :where [:= :id id]}
+            sql (-> sql-map sql-format)
+            del-result (jdbc/execute! (get-ds) [sql [id]])]
 
         (sd/logwrite req (str "handle_delete-context: " id " result: " del-result))
 

@@ -2,23 +2,23 @@
   (:require [clj-uuid]
             ;[clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as log]
+            ;; all needed imports
+            [honey.sql :refer [format] :rename {format sql-format}]
+            [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
+            [madek.api.db.core :refer [get-ds]]
             [madek.api.pagination :as pagination]
             [madek.api.resources.shared :as sd]
+
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-            ;[madek.api.utils.rdbms :as rdbms]
+                        ;[leihs.core.db :as db]
+            [next.jdbc :as jdbc]
+                        ;[madek.api.utils.rdbms :as rdbms]
             ;[madek.api.utils.sql :as sql]
             [next.jdbc :as njdbc]
+
             reitit.coercion.schema
-            
-                  ;; all needed imports
-                        [honey.sql :refer [format] :rename {format sql-format}]
-                        ;[leihs.core.db :as db]
-                        [next.jdbc :as jdbc]
-                        [honey.sql.helpers :as sql]
-                        
-                        [madek.api.db.core :refer [get-ds]]
-            
+
             [schema.core :as s]))
 
 ; TODO clean code
@@ -58,7 +58,7 @@
    (id-where-clause id)
    (sql/select :*)
    (sql/from :people)
-   (sql/returning :* )
+   (sql/returning :*)
    sql/format))
 
 (defn db-person-get [id]
@@ -198,13 +198,12 @@
                             :id (or (:id data) (clj-uuid/v4))
                             :subtype (-> data :subtype str))
 
+;db-result (jdbc/insert! (get-ds) :people data_wid)]
 
-            ;db-result (jdbc/insert! (get-ds) :people data_wid)]
-
-        sql-query (-> (sql/insert-into :people)
-                      (sql/values [data_wid])
-                      sql/format)
-        db-result (jdbc/execute-one! (get-ds) sql-query)]
+            sql-query (-> (sql/insert-into :people)
+                          (sql/values [data_wid])
+                          sql/format)
+            db-result (jdbc/execute-one! (get-ds) sql-query)]
 
         (if-let [result (::njdbc/update-count db-result)]
           (sd/response_ok (transform_export result) 201)
@@ -226,11 +225,10 @@
 
           ;(let [del-result (jdbc/delete! (get-ds) :people (jdbc-id-where-clause id))]
 
-            (let [sql-query (-> (sql/delete-from :people)
-                                (sql/where (jdbc-id-where-clause id))
-                                sql/format)
-                  del-result (jdbc/execute! (get-ds) sql-query)]
-
+          (let [sql-query (-> (sql/delete-from :people)
+                              (sql/where (jdbc-id-where-clause id))
+                              sql/format)
+                del-result (jdbc/execute! (get-ds) sql-query)]
 
             (if (= 1 (::jdbc/update-count del-result))
               (sd/response_ok (transform_export old-data) 200)
@@ -252,7 +250,6 @@
             upd-result (jdbc/execute! (get-ds) sql-query)]
 
             ;upd-result (jdbc/update! (get-ds) :people body (jdbc-id-where-clause id))]
-
 
         (if (= 1 (first upd-result))
           (sd/response_ok (transform_export (db-person-get id)))

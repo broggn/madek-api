@@ -5,8 +5,6 @@
 
    [honey.sql :refer [format] :rename {format sql-format}]
 
-   [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-
    [honey.sql.helpers :as sql]
 
    [logbug.catcher :as catcher]
@@ -14,9 +12,11 @@
    [madek.api.db.core :refer [get-ds]]
 
    [madek.api.pagination :as pagination]
+
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.helper :refer [cast-to-hstore]]
+   [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
 
    ;; all needed imports
    [next.jdbc :as jdbc]
@@ -60,8 +60,8 @@
   [req]
   (let [req-query (-> req :parameters :query)
         db-query (-> (sql/select :id :context_id :meta_key_id
-                       :is_required :position :length_min :length_max
-                       :labels :hints :descriptions :documentation_urls)
+                                 :is_required :position :length_min :length_max
+                                 :labels :hints :descriptions :documentation_urls)
                      (sql/from :context_keys)
                      (sd/build-query-param req-query :id)
                      (sd/build-query-param req-query :context_id)
@@ -87,7 +87,6 @@
     ;(logging/info "handle_usr-get-context_key" "\nbefore\n" context_key "\nresult\n" result)
     (sd/response_ok result)))
 
-
 ;(defn cast-to-hstore [data]
 ;  (let [keys [:labels :descriptions :hints :documentation_urls]]
 ;    (reduce (fn [acc key]
@@ -99,14 +98,9 @@
 ;      data
 ;      keys)))
 
-
-
 (comment
 
-  (let [
-        x (use '[pghstore-clj.core])
-
-
+  (let [x (use '[pghstore-clj.core])
 
         data_row {:hints {:de "labelde99", :en "labelen88"} :context_id "agree-strikebreaker"
                   :meta_key_id "madek_core:title"}
@@ -122,11 +116,9 @@
                 (sql/returning :*)
                 sql-format)
 
+;;;;; =================================================================================================
 
-        ;;;;; =================================================================================================
-
-
-        ;hints_casted (to-hstore {:de "labelde", :en "labelen"})
+;hints_casted (to-hstore {:de "labelde", :en "labelen"})
         ;p (println "res-2" hints_casted)
         ;sql (-> (sql/insert-into :context_keys)
         ;
@@ -135,18 +127,11 @@
         ;          (sql/returning :*)
         ;          sql-format)
 
-
-
         p (println "res-1" sql)
 
-        res (jdbc/execute! (get-ds) sql)
+        res (jdbc/execute! (get-ds) sql)]
 
-        ]
-    res
-    )
-  )
-
-
+    res))
 
 (defn convert-hints [data]
   (let [cast-keys [:hints :descriptions]
@@ -159,28 +144,21 @@
                                                          (clojure.string/join ", "
                                                            ;(map (fn [[k v]] (str k " => \"" v "\""))
 
-                                                           (map (fn [[k v]] (str (name k) " => \"" v "\""))
+                                                                              (map (fn [[k v]] (str (name k) " => \"" v "\""))
                                                              ;(map (fn [[k v]] (str (name k) " => '" v "'"))
-                                                             val))
+                                                                                   val))
                                                          :hstore]))]
                                   (assoc data key hstore-val))
-                                data)
+                                data))]
 
-                              )]
     (reduce process-hstore-cast data cast-keys)))
-
-
-
 
 (defn map-to-hstore [m]
   (clojure.string/join ", " (map (fn [[k v]] (str "\"" k "\" => \"" (clojure.string/replace v "\"" "\\\"") "\"")) m)))
 
-
 (comment
 
-  (let [
-
-        ;;data {:hints {:de "labelde", :en "labelen"}}
+  (let [;;data {:hints {:de "labelde", :en "labelen"}}
         ;;data {:hints {:de "labelde"}}
         ;;data {:hints [:cast "de => \"labelde\"" :hstore]}
         ;
@@ -191,7 +169,6 @@
         ;data (convert-hints data)
         ;
         ;p (println ">o> res" data)
-
 
         data {:hints [:cast "de => \"labelde\"" :hstore]}
         ;data {:hints [:cast [:raw "de => \"labelde\""] :hstore]}
@@ -212,32 +189,22 @@
         query (-> (sql/insert-into :context_keys)
                   (sql/values [data]
                     ;(sql/returning :*)
-                    sql-format))
+                              sql-format))
 
-
-
-        ;query {:insert-into [:context_keys], :values [{:hints "de => 'abc'"}]}
+;query {:insert-into [:context_keys], :values [{:hints "de => 'abc'"}]}
         ;query {:insert-into [:context_keys], :values [{:hints "de => \"abc\""}]}
         ;query {:insert-into [:context_keys], :values [{:hints "\"de\" => \"abc\"" :context_id "agree-strikebreaker" :meta_key_id "madek_core:title"}]}
 
-
-        ;; this works
+;; this works
         ;query ["INSERT INTO context_keys (hints, context_id, meta_key_id) VALUES (
         ;'\"key1\" => \"value1\", \"key2\" => \"value2\"',
         ;'agree-strikebreaker',
         ;'madek_core:title'
         ;)"]
 
-
         p (println "res-1" query)
         res (jdbc/execute! (get-ds) query)
-        p (println "res-2" res)
-        ]
-
-    )
-  )
-
-
+        p (println "res-2" res)]))
 
 (defn handle_create-context_keys
   [req]
@@ -255,7 +222,6 @@
                     spy)
             ins-res (jdbc/execute-one! (get-ds) sql)]
 
-
         (sd/logwrite req (str "handle_create-context_keys: " "\new-data:\n" data "\nresult:\n" (spy ins-res)))
 
         ;(if-let [result (first ins-res)]
@@ -263,8 +229,6 @@
           (sd/response_ok (context_key_transform_ml result))
           (sd/response_failed "Could not create context_key." 406))))
     (catch Exception ex (sd/response_exception ex))))
-
-
 
 (defn handle_update-context_keys
   [req]
@@ -275,8 +239,6 @@
       ;      dwid (assoc data :id id)
       ;      upd-query (sd/sql-update-clause "id" (str id))
       ;      upd-result (jdbc/update! (get-ds) :context_keys dwid upd-query)]
-
-
 
       (let [data (-> req :parameters :body)
             id (-> req :parameters :path :id)
@@ -305,7 +267,6 @@
           (sd/response_failed "Could not update context_key." 406))))
     (catch Exception ex (sd/response_exception ex))))
 
-
 (defn handle_delete-context_key
   [req]
   (try
@@ -314,7 +275,6 @@
       ;      id (-> req :context_key :id)
       ;      del-query (sd/sql-update-clause "id" id)
       ;      del-result (jdbc/delete! (rdbms/get-ds) :context_keys del-query)]
-
 
       (let [context_key (-> req :context_key)
             id (-> req :context_key :id)
@@ -331,13 +291,12 @@
           (logging/error "Could not delete context_key: " id))))
     (catch Exception ex (sd/response_exception ex))))
 
-
 (defn wwrap-find-context_key [param colname send404]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler
-                    param
-                    :context_keys colname
-                    :context_key send404))))
+                                    param
+                                    :context_keys colname
+                                    :context_key send404))))
 
 (def schema_import_context_keys
   {;:id s/Str

@@ -2,17 +2,17 @@
   (:require
    [clojure.java.jdbc :as jdbco]
    [clojure.tools.logging :as logging]
+   ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+
+   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
-   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+               ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
    [madek.api.utils.sql :as sqlo]
 
-         ;; all needed imports
-               [honey.sql :refer [format] :rename {format sql-format}]
                ;[leihs.core.db :as db]
-               [next.jdbc :as jdbc]
-               [honey.sql.helpers :as sql]
-
-               [madek.api.db.core :refer [get-ds]]
+   [next.jdbc :as jdbc]
 
    [reitit.coercion.schema]
    [schema.core :as s]))
@@ -63,16 +63,15 @@
 
         sql-query (-> (sql/update :delegations) (sql/set dwid) (sql/where [:= :id id]) sql-format)]
 
-
-        ; create delegation entry
+; create delegation entry
     (logging/info "handle_update-delegations: " "\nid\n" id "\ndwid\n" dwid
                   "\nold-data\n" old-data
                   "\nupd-query\n" upd-query)
-        (if-let [ins-res (first (jdbc/execute! (get-ds) sql-query))]
-          (let [new-data (sd/query-eq-find-one :delegations :id id)]
-            (logging/info "handle_update-delegations:" "\nnew-data\n" new-data)
-            (sd/response_ok new-data))
-          (sd/response_failed "Could not update delegation." 406))))
+    (if-let [ins-res (first (jdbc/execute! (get-ds) sql-query))]
+      (let [new-data (sd/query-eq-find-one :delegations :id id)]
+        (logging/info "handle_update-delegations:" "\nnew-data\n" new-data)
+        (sd/response_ok new-data))
+      (sd/response_failed "Could not update delegation." 406))))
 
     ;(if-let [ins-res (jdbc/update! (get-ds) :delegations dwid upd-query)]
     ;    ; TODO clean result
@@ -91,11 +90,10 @@
   ;  ; TODO use shared update clause
   ;  (if (= 1 (first (jdbc/delete! (get-ds) :delegations ["id = ?" delegation-id])))
 
-
-      (let [delegation (-> req :delegation)
-            delegation-id (-> req :delegation :id)
-            sql-query (-> (sql/delete-from :delegations) (sql/where [:= :id delegation-id]) sql-format)]
-        (if (= 1 (first (jdbc/execute! (get-ds) sql-query)))
+  (let [delegation (-> req :delegation)
+        delegation-id (-> req :delegation :id)
+        sql-query (-> (sql/delete-from :delegations) (sql/where [:= :id delegation-id]) sql-format)]
+    (if (= 1 (first (jdbc/execute! (get-ds) sql-query)))
 
       (sd/response_ok delegation)
       (logging/error "Failed delete delegation " delegation-id))))

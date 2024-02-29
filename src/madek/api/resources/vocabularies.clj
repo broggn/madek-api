@@ -33,21 +33,17 @@
     (catcher/with-logging {}
       (let [data (-> req :parameters :body)
 
-
-            ;ins-res (jdbc/insert! (rdbms/get-ds) :vocabularies data)]
+;ins-res (jdbc/insert! (rdbms/get-ds) :vocabularies data)]
 
             sql-query (-> (sql/insert-into :vocabularies)
                           (sql/values [data])
                           sql-format)
             ins-res (jdbc/execute-one! (get-ds) sql-query)]
 
-
         (if-let [result (::jdbc/update-count ins-res)]
           (sd/response_ok (transform_ml result))
           (sd/response_failed "Could not create vocabulary." 406))))
     (catch Exception ex (sd/response_exception ex))))
-
-
 
 ;(defn handle_update-vocab [req]
 ;  (try
@@ -81,9 +77,6 @@
 ;          (sd/response_not_found "No such vocabulary."))))
 ;    (catch Exception ex (sd/response_exception ex))))
 
-
-
-
 (defn handle_update-vocab [req]
   (try
     (catcher/with-logging {}
@@ -100,15 +93,11 @@
             (if-let [result (::jdbc/update-count upd-res)]
               (let [new-data (sd/query-eq-find-one :vocabularies :id id)]
                 (logging/info "handle_update-vocab"
-                  "\nid: " id "\nnew-data:\n" new-data)
+                              "\nid: " id "\nnew-data:\n" new-data)
                 (sd/response_ok (transform_ml new-data)))
               (sd/response_failed "Could not update vocabulary." 406)))
           (sd/response_not_found "No such vocabulary."))))
     (catch Exception ex (sd/response_exception ex))))
-
-
-
-
 
 ;(defn handle_delete-vocab [req]
 ;  (try
@@ -132,8 +121,6 @@
 ;        (sd/response_not_found "No such vocabulary."))))
 ;  (catch Exception ex (sd/response_exception ex)))
 
-
-
 (defn handle_delete-vocab [req]
   (try
     (catch Exception ex (sd/response_exception ex)))
@@ -149,9 +136,6 @@
             (sd/response_ok (transform_ml old-data))
             (sd/response_failed "Could not delete vocabulary." 406)))
         (sd/response_not_found "No such vocabulary.")))))
-
-
-
 
 (def schema_export-vocabulary
   {:id s/Str

@@ -5,8 +5,7 @@
    [honey.sql.helpers :as sql]
    [madek.api.db.core :refer [get-ds]]
 
-
-   ;; all needed imports
+;; all needed imports
    [madek.api.resources.shared :as sd]
    ;[leihs.core.db :as db]
    ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
@@ -74,21 +73,20 @@
 
       ;(if (= 1 (first (jdbc/delete! (rdbms/get-ds) res-table-name ["group_id = ? AND delegation_id = ?" group-id delegation-id])))
 
-
       (sd/response_ok delegations_group)
       (logging/error "Failed delete delegations_group "
-        "group-id: " group-id "delegation-id: " delegation-id))))
+                     "group-id: " group-id "delegation-id: " delegation-id))))
 
 (defn wwrap-find-delegations_group [send404]
   (fn [handler]
     (fn [request]
       (sd/req-find-data2
-        request handler
-        :group_id :delegation_id
-        :delegations_groups
-        :group_id :delegation_id
-        res-req-name
-        send404))))
+       request handler
+       :group_id :delegation_id
+       :delegations_groups
+       :group_id :delegation_id
+       res-req-name
+       send404))))
 
 ; rubbish find by users groups
 (defn wwrap-find-delegations_group-by-auth [send404]
@@ -98,24 +96,24 @@
             del-id (-> request :parameters :path :delegation_id str)]
         (logging/info "uid\n" group-id "del-id\n" del-id)
         (sd/req-find-data-search2
-          request handler
-          group-id del-id
-          :delegations_groups
-          :group_id :delegation_id
-          res-req-name
-          send404)))))
+         request handler
+         group-id del-id
+         :delegations_groups
+         :group_id :delegation_id
+         res-req-name
+         send404)))))
 
 (defn wwrap-find-group [param]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler param
-                    :groups :id
-                    :group true))))
+                                    :groups :id
+                                    :group true))))
 
 (defn wwrap-find-delegation [param]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler param
-                    :delegations :id
-                    :delegation true))))
+                                    :delegations :id
+                                    :delegation true))))
 
 (def schema_delegations_groups_export
   {:group_id s/Uuid

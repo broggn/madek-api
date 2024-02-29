@@ -1,20 +1,20 @@
 (ns madek.api.resources.collections
   (:require [clojure.java.jdbc :as jdbco]
             [clojure.tools.logging :as logging]
+            ;; all needed imports
+            [honey.sql :refer [format] :rename {format sql-format}]
+            [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
             [madek.api.authorization :as authorization]
+            [madek.api.db.core :refer [get-ds]]
             [madek.api.resources.collections.index :refer [get-index]]
+
             [madek.api.resources.shared :as sd]
             [madek.api.utils.rdbms :as rdbms]
-            [reitit.coercion.schema]
-
-                  ;; all needed imports
-                        [honey.sql :refer [format] :rename {format sql-format}]
                         ;[leihs.core.db :as db]
-                        [next.jdbc :as jdbc]
-                        [honey.sql.helpers :as sql]
+            [next.jdbc :as jdbc]
 
-                        [madek.api.db.core :refer [get-ds]]
+            [reitit.coercion.schema]
 
             [schema.core :as s]))
 
@@ -42,12 +42,12 @@
         ;      ins-data (assoc req-data :creator_id auth-id :responsible_user_id auth-id)
         ;      ins-result (jdbc/insert! (rdbms/get-ds) "collections" ins-data)]
 
-          (let [req-data (-> req :parameters :body)
-                ins-data (assoc req-data :creator_id auth-id :responsible_user_id auth-id)
-                sql-map {:insert-into :collections
-                         :values [ins-data]}
-                sql (-> sql-map sql-format )
-                ins-result (jdbc/execute! (get-ds) [sql ins-data])]
+        (let [req-data (-> req :parameters :body)
+              ins-data (assoc req-data :creator_id auth-id :responsible_user_id auth-id)
+              sql-map {:insert-into :collections
+                       :values [ins-data]}
+              sql (-> sql-map sql-format)
+              ins-result (jdbc/execute! (get-ds) [sql ins-data])]
 
           (sd/logwrite req (str "handle_create-collection: " ins-result))
           (if-let [result (first ins-result)]
@@ -66,15 +66,15 @@
       ;      whcl ["id = ? " col-id]
       ;      result (jdbc/update! (rdbms/get-ds) :collections data whcl)]
 
-        (let [collection (:media-resource req)
-              col-id (:id collection)
-              data (-> req :parameters :body)
-              sql-map {:update :collections
-                       :set data
-                       :where [:= :id col-id]}
-              sql (-> sql-map sql-format )
-              params (concat (vals data) [col-id])
-              result (jdbc/execute! (get-ds) [sql params])]
+      (let [collection (:media-resource req)
+            col-id (:id collection)
+            data (-> req :parameters :body)
+            sql-map {:update :collections
+                     :set data
+                     :where [:= :id col-id]}
+            sql (-> sql-map sql-format)
+            params (concat (vals data) [col-id])
+            result (jdbc/execute! (get-ds) [sql params])]
 
         (sd/logwrite req (str "handle_update-collection: " col-id result))
 
@@ -93,13 +93,12 @@
       ;      delquery ["id = ? " col-id]
       ;      delresult (jdbc/delete! (rdbms/get-ds) :collections delquery)]
 
-        (let [collection (:media-resource req)
-              col-id (:id collection)
-              sql-map {:delete :collections
-                       :where [:= :id col-id]}
-              sql (-> sql-map sql-format )
-              delresult (jdbc/execute! (get-ds) [sql [col-id]])]
-
+      (let [collection (:media-resource req)
+            col-id (:id collection)
+            sql-map {:delete :collections
+                     :where [:= :id col-id]}
+            sql (-> sql-map sql-format)
+            delresult (jdbc/execute! (get-ds) [sql [col-id]])]
 
         (sd/logwrite req (str "handle_delete-collection: " col-id delresult))
         (if (= 1 (first delresult))

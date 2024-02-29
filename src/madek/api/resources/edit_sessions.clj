@@ -2,25 +2,24 @@
   (:require
    [clojure.java.jdbc :as jdbco]
    [clojure.tools.logging :as logging]
+   ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [madek.api.authorization :as authorization]
+   [madek.api.db.core :refer [get-ds]]
    [madek.api.pagination :as pagination]
+
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   [madek.api.utils.sql :as sqlo]
-   
-         ;; all needed imports
-               [honey.sql :refer [format] :rename {format sql-format}]
-               ;[leihs.core.db :as db]
-               [next.jdbc :as jdbc]
-               [honey.sql.helpers :as sql]
-
    [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
 
-               
-               [madek.api.db.core :refer [get-ds]]
-   
+   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+   [madek.api.utils.sql :as sqlo]
+
+;[leihs.core.db :as db]
+   [next.jdbc :as jdbc]
+
    [reitit.coercion.schema]
    [schema.core :as s]))
 
@@ -112,8 +111,6 @@
           (sd/response_failed "Could not create edit session." 406))))
     (catch Exception ex (sd/response_exception ex))))
 
-
-
 ;(defn handle_adm_delete-edit-sessions
 ;  [req]
 ;  (try
@@ -141,11 +138,9 @@
           ;(let [del-clause (sd/sql-update-clause "id" id)
           ;      del-result (jdbc/delete! (rdbms/get-ds) :edit_sessions del-clause)]
 
-            (let [
-                  ;del-clause (sd/sql-update-clause "id" id)
-                  sql-query (-> (sql/delete-from :edit_sessions) (sql/where [:= :id (to-uuid id)]) sql-format)
-                  del-result (jdbc/execute! (get-ds) [sql-query])]
-
+          (let [;del-clause (sd/sql-update-clause "id" id)
+                sql-query (-> (sql/delete-from :edit_sessions) (sql/where [:= :id (to-uuid id)]) sql-format)
+                del-result (jdbc/execute! (get-ds) [sql-query])]
 
             (sd/logwrite req (str "handle_adm_delete-edit-sessions:" "\ndelete data: " del-data "\nresult: " del-result))
 

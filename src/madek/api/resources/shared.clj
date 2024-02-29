@@ -130,8 +130,7 @@
    (spy (-> (build-query-base table-name :*)
             (sql/where [:= col-name (to-uuid row-data col-name)])
             sql-format
-            spy
-            )))
+            spy)))
 
   ([table-name col-name row-data col-name2 row-data2]
    ;(println ">o> ??? table-name2" table-name "col-name" col-name "row-data" row-data "col-name2" col-name2 "row-data2" row-data2)
@@ -140,8 +139,7 @@
             (sql/where [:= col-name (to-uuid row-data col-name)])
             (sql/where [:= col-name2 (to-uuid row-data2 col-name2)])
             sql-format
-            spy
-            ))))
+            spy))))
 
 (defn sql-update-clause
   "Generates an sql update clause"

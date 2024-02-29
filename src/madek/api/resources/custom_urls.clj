@@ -6,8 +6,7 @@
    ;[madek.api.utils.sql :as sql]
             [logbug.catcher :as catcher]
 
-
-   ;; all needed imports
+;; all needed imports
             [madek.api.db.core :refer [get-ds]]
    ;[leihs.core.db :as db]
             [madek.api.resources.shared :as sd]
@@ -50,9 +49,9 @@
         col-name (if (= mr-type "MediaEntry") :media_entry_id :collection_id)]
 
     (logging/info "handle_get-custom-urls"
-      "\ntype: " mr-type
-      "\nmr-id: " mr-id
-      "\ncol-name: " col-name)
+                  "\ntype: " mr-type
+                  "\nmr-id: " mr-id
+                  "\ncol-name: " col-name)
 
     (if-let [result (sd/query-eq-find-one :custom_urls col-name mr-id)]
       (sd/response_ok result)
@@ -86,12 +85,11 @@
                     sql-format)
             ins-res (jdbc/execute! (get-ds) sql)]
 
-
         (sd/logwrite req (str "handle_create-custom-urls"
                               "\nmr-type: " mr-type
-                                            "\nmr-id: " mr-id
-                                            "\nnew-dat: " dwid
-                                            "\nresult: " ins-res))
+                              "\nmr-id: " mr-id
+                              "\nnew-dat: " dwid
+                              "\nresult: " ins-res))
 
         (if-let [result (first ins-res)]
           (sd/response_ok result)
@@ -117,7 +115,6 @@
       ;             (assoc data :collection_id mr-id :updator_id u-id))
       ;      upd-result (jdbc/update! (get-ds) :custom_urls dwid (sd/sql-update-clause col-name mr-id))]
 
-
       (let [u-id (-> req :authenticated-entity :id)
             mr (-> req :media-resource)
             mr-type (-> mr :type)
@@ -135,9 +132,9 @@
 
         (sd/logwrite req (str "handle_update-custom-urls"
                               "\nmr-type: " mr-type
-                                            "\nmr-id: " mr-id
-                                            "\nnew-data\n" dwid
-                                            "\nresult:\n" upd-result))
+                              "\nmr-id: " mr-id
+                              "\nnew-data\n" dwid
+                              "\nresult:\n" upd-result))
 
         (if (= 1 (first upd-result))
           (sd/response_ok (sd/query-eq-find-one :custom_urls col-name mr-id))
@@ -164,7 +161,6 @@
         ;                     :custom_urls
         ;                     (sd/sql-update-clause col-name mr-id))]
 
-
         (if-let [del-data (sd/query-eq-find-one :custom_urls col-name mr-id)]
           (let [sql (-> (sql/delete-from :custom_urls)
                         (sql/where [:= col-name mr-id])
@@ -173,8 +169,8 @@
 
             (sd/logwrite req (str "handle_delete-custom-urls"
                                   "\nmr-type: " mr-type
-                                                "\nmr-id: " mr-id
-                                                "\nresult: " del-result))
+                                  "\nmr-id: " mr-id
+                                  "\nresult: " del-result))
 
             (if (= 1 (first del-result))
               (sd/response_ok del-data)

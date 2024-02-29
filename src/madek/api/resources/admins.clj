@@ -5,8 +5,7 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
 
-
-   ;; all needed imports
+;; all needed imports
    [logbug.catcher :as catcher]
    ;[leihs.core.db :as db]
    [madek.api.db.core :refer [get-ds]]
@@ -62,9 +61,7 @@
                          (sql/returning :*)
                          sql-format))
             ;ins-res (spy (jdbc/execute! (get-ds) [sql])) broken
-            ins-res (spy (jdbc/execute! (get-ds) sql))
-            ]
-
+            ins-res (spy (jdbc/execute! (get-ds) sql))]
 
         (sd/logwrite req (str "handle_create-admin:" " user-id: " id " result: " ins-res))
         (if-let [result (first ins-res)]
@@ -91,11 +88,9 @@
           sql (-> (sql/delete-from :admins)
                   (sql/where [:= :id admin-id])
                   sql-format
-                  spy )
+                  spy)
           ;del-result (jdbc/execute! (get-ds) [sql])]
-          del-result (spy (jdbc/execute-one! (get-ds) sql))
-
-          ]
+          del-result (spy (jdbc/execute-one! (get-ds) sql))]
 
       (sd/logwrite req (str "handle_delete-admin: " " data:\n" admin "\nresult: " del-result))
       ;(if (= 1 (first del-result))
@@ -108,14 +103,14 @@
 (defn wwrap-find-admin [param colname send404]
   (fn [handler]
     (fn [request] (sd/req-find-data
-                    request handler param
-                    :admins colname :admin send404))))
+                   request handler param
+                   :admins colname :admin send404))))
 
 (defn wwrap-find-user [param]
   (fn [handler]
     (fn [request] (sd/req-find-data
-                    request handler param
-                    :users :id :user true))))
+                   request handler param
+                   :users :id :user true))))
 
 ;### swagger io schema ########################################################
 

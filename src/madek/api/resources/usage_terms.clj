@@ -2,23 +2,22 @@
   (:require
 
    ;[clojure.java.jdbc :as jdbc]
-            [clojure.tools.logging :as logging]
-            [logbug.catcher :as catcher]
-            [madek.api.resources.shared :as sd]
-            [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-            ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-            [reitit.coercion.schema]
+   [clojure.tools.logging :as logging]
+            ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [logbug.catcher :as catcher]
+   [madek.api.db.core :refer [get-ds]]
 
-
-         ;; all needed imports
-               [honey.sql :refer [format] :rename {format sql-format}]
+   [madek.api.resources.shared :as sd]
+   [madek.api.utils.auth :refer [wrap-authorize-admin!]]
                ;[leihs.core.db :as db]
-               [next.jdbc :as jdbc]
-               [honey.sql.helpers :as sql]
+   [next.jdbc :as jdbc]
 
-               [madek.api.db.core :refer [get-ds]]
+               ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+   [reitit.coercion.schema]
 
-            [schema.core :as s]))
+   [schema.core :as s]))
 
 (defn handle_list-usage_term
   [req]
@@ -68,12 +67,11 @@
             ;                         :usage_terms
             ;                         dwid upd-query)]
 
-
-        sql-query (-> (sql/update :usage_terms)
-                      (sql/set dwid)
-                      (sql/where upd-query)
-                      sql-format)
-        upd-result (jdbc/execute-one! (get-ds) sql-query)]
+            sql-query (-> (sql/update :usage_terms)
+                          (sql/set dwid)
+                          (sql/where upd-query)
+                          sql-format)
+            upd-result (jdbc/execute-one! (get-ds) sql-query)]
 
         (logging/info "handle_update-usage_terms: " "\nid\n" id "\ndwid\n" dwid "\nupd-result:" upd-result)
 
@@ -88,15 +86,14 @@
       (let [olddata (-> req :usage_term)
             id (-> req :parameters :path :id)
 
-
-            ;delresult (jdbc/delete! (rdbms/get-ds)
+;delresult (jdbc/delete! (rdbms/get-ds)
             ;                        :usage_terms
             ;                        ["id = ?" id])]
 
-        sql-query (-> (sql/delete-from :usage_terms)
-                      (sql/where [:= :id id])
-                      sql-format)
-        delresult (jdbc/execute-one! (get-ds) sql-query)]
+            sql-query (-> (sql/delete-from :usage_terms)
+                          (sql/where [:= :id id])
+                          sql-format)
+            delresult (jdbc/execute-one! (get-ds) sql-query)]
 
         (if (= 1 (::jdbc/update-count delresult))
           (sd/response_ok olddata)

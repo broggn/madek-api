@@ -1,9 +1,7 @@
 (ns madek.api.utils.helper
   (:require [clojure.tools.logging :as logging]
-            [pghstore-clj.core :refer [to-hstore]]
-            )
+            [pghstore-clj.core :refer [to-hstore]])
   (:import (java.util UUID)))
-
 
 ;
 
@@ -32,8 +30,7 @@
        value)
      (catch Exception e
        (logging/warn ">>> ERROR2 in to-uuid[id], id=" value ", key=" key " exception=" (.getMessage e))
-       value)))
-)
+       value))))
 
 (comment
   (let [;p (println "\nquery ok1" (to-uuid "123e4567-e89b-12d3-a456-426614174000" :user_id))
@@ -72,8 +69,6 @@
       ;(update :inspection_start_date #(if (contains? entry :inspection_start_date) (format-date %)))
       ;(update :updated_at #(if (contains? entry :updated_at) (format-date %)))
       ))
-
-
 ; [madek.api.utils.helper :refer [cast-to-hstore]]
 (defn cast-to-hstore [data]
   (let [keys [:labels :descriptions :hints :documentation_urls]]
@@ -83,14 +78,12 @@
                       transformed-value (to-hstore field-value)] ; Assume to-hstore is defined elsewhere
                   (assoc acc key transformed-value))
                 acc))
-      data
-      keys)))
-
+            data
+            keys)))
 
 (defn array-to-map [arr]
-  (zipmap arr (range (count arr))))(defn array-to-map [arr]
-  (zipmap arr (range (count arr))))
-
+  (zipmap arr (range (count arr)))) (defn array-to-map [arr]
+                                      (zipmap arr (range (count arr))))
 
 (defn map-to-array [m]
   (map first (sort-by val m)))

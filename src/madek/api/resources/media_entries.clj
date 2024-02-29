@@ -16,7 +16,7 @@
             [madek.api.resources.media-entries.media-entry :refer [get-media-entry]]
             [madek.api.resources.shared :as sd]
             [madek.api.utils.helper :refer [to-uuid]]
-            [next.jdbc :as jdbc]                             ;[pantomime.mime :refer [mime-type-of]]
+            [next.jdbc :as jdbc] ;[pantomime.mime :refer [mime-type-of]]
 
    ;; all needed imports
             [reitit.coercion.schema]
@@ -24,9 +24,7 @@
             [reitit.coercion.spec]
             [reitit.ring.middleware.multipart :as multipart]
 
-            [schema.core :as s]
-
-            ))
+            [schema.core :as s]))
 (defn handle_query_media_entry [req]
   (get-index req))
 
@@ -44,13 +42,10 @@
 
         mr (-> req :media-resource)
 
-
-        ;fclause ["media_entry_id = ?" eid]
+;fclause ["media_entry_id = ?" eid]
         ;fresult (jdbc/delete! (get-ds) :media_files fclause)
         ;dclause ["id = ?" eid]
         ;dresult (jdbc/delete! (rdbms/get-ds) :media_entries dclause)]
-
-
 
         sql-query-files (-> (sql/delete :media_files)
                             (sql/where [:= :media_entry_id eid])
@@ -59,26 +54,22 @@
         sql-query-entries (-> (sql/delete :media_entries)
                               (sql/where [:= :id eid])
                               sql-format)
-        dresult (jdbc/execute! (get-ds) sql-query-entries)
-        ]
+        dresult (jdbc/execute! (get-ds) sql-query-entries)]
 
-
-        (logging/info "handle_delete_media_entry"
-          "\n eid: \n" eid
+    (logging/info "handle_delete_media_entry"
+                  "\n eid: \n" eid
           ;"\n fclause: \n" fclause
-          "\n fresult: \n" fresult
+                  "\n fresult: \n" fresult
           ;"\n dclause: \n" dclause
-          "\n dresult: \n" dresult)
-        (if (= 1 (first dresult))
-          (sd/response_ok {:deleted mr})
-          (sd/response_failed {:message "Failed to delete media entry"} 406))
-
-    ))
+                  "\n dresult: \n" dresult)
+    (if (= 1 (first dresult))
+      (sd/response_ok {:deleted mr})
+      (sd/response_failed {:message "Failed to delete media entry"} 406))))
 
 (defn- get-context-keys-4-context [contextId]
   (map :meta_key_id
     ;(sd/query-eq-find-all :context_keys :context_id contextId)))
-    (sd/query-eq-find-all :context_keys :context_id (to-uuid contextId))))
+       (sd/query-eq-find-all :context_keys :context_id (to-uuid contextId))))
 
 (defn- check-has-meta-data-for-context-key [meId mkId]
   (let [md (sd/query-eq-find-one :meta_data :media_entry_id (str meId) :meta_key_id mkId)
@@ -104,17 +95,16 @@
         publishable (reduce (fn [tfresult tfval] (and tfresult (first tfval))) [true] tf)]
 
     (logging/info "handle_try-publish-media-entry"
-      "\n eid: \n" eid
-      "\n validationContexts: \n" validationContexts
-      "\n contextKeys: \n" contextKeys
-      "\n hasMetaData: \n" hasMetaData
-      "\n tf: \n" tf
-      "\n publishable: \n" publishable)
+                  "\n eid: \n" eid
+                  "\n validationContexts: \n" validationContexts
+                  "\n contextKeys: \n" contextKeys
+                  "\n hasMetaData: \n" hasMetaData
+                  "\n tf: \n" tf
+                  "\n publishable: \n" publishable)
     (if (true? publishable)
       (let [data {:is_published true}
 
-
-            ;dresult (jdbc/update! (rdbms/get-ds) :media_entries data ["id = ?" eid])]
+;dresult (jdbc/update! (rdbms/get-ds) :media_entries data ["id = ?" eid])]
 
             sql-query (-> (sql/update :media_entries)
                           (sql/set data)
@@ -123,8 +113,8 @@
             dresult (jdbc/execute-one! (get-ds) sql-query)]
 
         (logging/info "handle_try-publish-media-entry"
-          "\n published: entry_id: \n" eid
-          "\n dresult: \n" dresult)
+                      "\n published: entry_id: \n" eid
+                      "\n dresult: \n" dresult)
 
         (if (= 1 (::jdbc/update-count dresult))
           (sd/response_ok (sd/query-eq-find-one :media_entries :id eid))
@@ -205,14 +195,12 @@
               mf (new_media_file_attributes file user-id mime)
               new-mf (assoc mf :media_entry_id me-id)
 
-
               sql-query (-> (sql/insert-into :media_files)
                             (sql/values [new-mf])
                             sql-format)
               new-mfr (jdbc/execute-one! tx sql-query)
 
-
-              ;(first (jdbc/insert! tx "media_files" new-mf))
+;(first (jdbc/insert! tx "media_files" new-mf))
               ]
 
           (logging/info "\ncreate-me: " "\ncreated media-entry: " new-mer "\nnew media-file: " new-mf)
@@ -224,8 +212,7 @@
 
         (sd/response_failed "Could not create media-entry" 406))
 
-
-      ;(jdbc/with-db-transaction [tx (get-ds)]
+;(jdbc/with-db-transaction [tx (get-ds)]
       ;  (if-let [new-mer (first (jdbc/insert! tx "media_entries" new-me))]
       ;    (let [me-id (:id new-mer)
       ;          mf (new_media_file_attributes file user-id mime)
@@ -238,9 +225,7 @@
       ;        (sd/response_failed "Could not create media-file" 406)))
       ;
       ;    (sd/response_failed "Could not create media-entry" 406))
-
       )))
-
 ; this is only for dev
 ; no collection add
 ; no meta data / entry clone
@@ -258,12 +243,12 @@
         auth (-> req :authenticated-entity)]
 
     (logging/info "handle_create-media-entry"
-      "\nauth\n" (:id auth)
-      "\ncopy_md\n" copy-md-id
-      "\ncollection-id\n" collection-id
-      "\nfile\n" file
-      "\n content: " file-content-type
-      "\ntemppath\n" temppath)
+                  "\nauth\n" (:id auth)
+                  "\ncopy_md\n" copy-md-id
+                  "\ncollection-id\n" collection-id
+                  "\nfile\n" file
+                  "\n content: " file-content-type
+                  "\ntemppath\n" temppath)
 
     (let [;mime (or file-content-type (mime-type-of temppath) )
           mime file-content-type]
@@ -349,7 +334,7 @@
   {:id s/Uuid
    :media_entry_id s/Uuid
    :conversion_profiles [s/Any]
-   :media_type (s/maybe s/Str)                              ; TODO enum
+   :media_type (s/maybe s/Str) ; TODO enum
    :width (s/maybe s/Int)
    :height (s/maybe s/Int)
    :meta_data (s/maybe s/Str)

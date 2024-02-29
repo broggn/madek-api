@@ -2,20 +2,20 @@
   (:require
 
    ;[clojure.java.jdbc :as jdbc]
-            [clojure.tools.logging :as logging]
-            [logbug.catcher :as catcher]
-            [madek.api.resources.shared :as sd]
+   [clojure.tools.logging :as logging]
+            ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
             ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
 
-         ;; all needed imports
-               [honey.sql :refer [format] :rename {format sql-format}]
-               ;[leihs.core.db :as db]
-               [next.jdbc :as jdbc]
-               [honey.sql.helpers :as sql]
+   [logbug.catcher :as catcher]
+   [madek.api.db.core :refer [get-ds]]
+   [madek.api.resources.shared :as sd]
 
-               [madek.api.db.core :refer [get-ds]]
-            [reitit.coercion.schema]
-            [schema.core :as s]))
+               ;[leihs.core.db :as db]
+   [next.jdbc :as jdbc]
+   [reitit.coercion.schema]
+   [schema.core :as s]))
 
 (defn handle_list-static_pages
   [req]
@@ -45,7 +45,6 @@
                           sql-format)
             ins-res (jdbc/execute-one! (get-ds) sql-query)]
 
-
         (logging/info "handle_create-static-page:"
                       "\ninsert data:\n" ins-data
                       "\nresult:\n " ins-res)
@@ -64,8 +63,7 @@
             dwid (assoc data :id id :contents contents-json)
             upd-query (sd/sql-update-clause "id" (str id))
 
-
-            ;upd-result (jdbc/update! (rdbms/get-ds)
+;upd-result (jdbc/update! (rdbms/get-ds)
             ;                         :static_pages
             ;                         dwid upd-query)]
 
@@ -95,11 +93,10 @@
             ;                        :static_pages
             ;                        ["id = ?" id])]
 
-        sql-query (-> (sql/delete-from :static_pages)
-                      (sql/where [:= :id id])
-                      sql-format)
-        delresult (jdbc/execute-one! (get-ds) sql-query)]
-
+            sql-query (-> (sql/delete-from :static_pages)
+                          (sql/where [:= :id id])
+                          sql-format)
+            delresult (jdbc/execute-one! (get-ds) sql-query)]
 
         (logging/info "handle_delete-static_page: "
                       " id: " id

@@ -1,22 +1,21 @@
 (ns madek.api.resources.collection-media-entry-arcs
   (:require
-   
+
    [clojure.java.jdbc :as jdbco]
-   [madek.api.utils.sql :as sqlo]
-   
-         ;; all needed imports
-               [honey.sql :refer [format] :rename {format sql-format}]
-               ;[leihs.core.db :as db]
-               [next.jdbc :as jdbc]
-               [honey.sql.helpers :as sql]
-               
-               [madek.api.db.core :refer [get-ds]]
-   
-               
+   ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+
+   [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
+   [madek.api.db.core :refer [get-ds]]
+
    [madek.api.pagination :as pagination]
+
    [madek.api.resources.shared :as sd]
    [madek.api.utils.rdbms :as rdbms]
+   [madek.api.utils.sql :as sqlo]
+   ;[leihs.core.db :as db]
+   [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]))
 
@@ -30,7 +29,7 @@
   (let [id (-> request :parameters :path :id)
         db-query (arc-query id)
         db-result (jdbc/execute! (get-ds) db-query)]
-    
+
     (if-let [arc (first db-result)]
       (sd/response_ok arc)
       (sd/response_not_found "No such collection-media-entry-arc"))))
@@ -64,11 +63,11 @@
      ;      sql (-> sql-map sql-format )
      ;      ins-res (next.jdbc/execute! tx [sql ins-data])]
 
-       (let [ins-data (assoc data :collection_id col-id :media_entry_id me-id)
-             sql (-> (sql/insert-into :collection_media_entry_arcs)
-                     (sql/values [ins-data])
-                     sql-format)
-             ins-res (jdbc/execute! tx sql)]
+   (let [ins-data (assoc data :collection_id col-id :media_entry_id me-id)
+         sql (-> (sql/insert-into :collection_media_entry_arcs)
+                 (sql/values [ins-data])
+                 sql-format)
+         ins-res (jdbc/execute! tx sql)]
 
      ins-res)))
 
@@ -112,16 +111,16 @@
       ;      sql (-> sql-map sql-format )
       ;      result (next.jdbc/execute! (get-ds) [sql data])]
 
-        (let [col-id (-> req :parameters :path :collection_id)
-              me-id (-> req :parameters :path :media_entry_id)
-              data (-> req :parameters :body)
-              sql (-> (sql/update :collection_media_entry_arcs)
-                      (sql/set data)
-                      (sql/where [:= :collection_id col-id]
-                        [:= :media_entry_id me-id])
-                      sql-format)
+      (let [col-id (-> req :parameters :path :collection_id)
+            me-id (-> req :parameters :path :media_entry_id)
+            data (-> req :parameters :body)
+            sql (-> (sql/update :collection_media_entry_arcs)
+                    (sql/set data)
+                    (sql/where [:= :collection_id col-id]
+                               [:= :media_entry_id me-id])
+                    sql-format)
               ;result (jdbc/execute! (get-ds) [sql])]
-              result (jdbc/execute! (get-ds) sql)]
+            result (jdbc/execute! (get-ds) sql)]
 
         (if (= 1 (first result))
           (sd/response_ok (sd/query-eq-find-one
@@ -141,8 +140,7 @@
       ;      delquery (sql-cls-update col-id me-id)
       ;      delresult (jdbc/delete! (get-ds) :collection_media_entry_arcs delquery)]
 
-
-        ;(let [col-id (-> req :parameters :path :collection_id)
+;(let [col-id (-> req :parameters :path :collection_id)
         ;      me-id (-> req :parameters :path :media_entry_id)
         ;      data (-> req :col-me-arc)
         ;      sql-map {:delete :collection_media_entry_arcs
@@ -151,16 +149,14 @@
         ;      sql (-> sql-map sql-format )
         ;      delresult (jdbc/execute! (get-ds) [sql [col-id me-id]])]
 
-
-          (let [col-id (-> req :parameters :path :collection_id)
-                me-id (-> req :parameters :path :media_entry_id)
-                data (-> req :col-me-arc)
-                sql (-> (sql/delete :collection_media_entry_arcs)
-                        (sql/where [:= :collection_id col-id]
-                          [:= :media_entry_id me-id])
-                        sql-format)
-                delresult (jdbc/execute! (get-ds) sql)]
-
+      (let [col-id (-> req :parameters :path :collection_id)
+            me-id (-> req :parameters :path :media_entry_id)
+            data (-> req :col-me-arc)
+            sql (-> (sql/delete :collection_media_entry_arcs)
+                    (sql/where [:= :collection_id col-id]
+                               [:= :media_entry_id me-id])
+                    sql-format)
+            delresult (jdbc/execute! (get-ds) sql)]
 
         (if (= 1 (first delresult))
           (sd/response_ok data)

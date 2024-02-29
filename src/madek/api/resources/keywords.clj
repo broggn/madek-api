@@ -1,31 +1,28 @@
 (ns madek.api.resources.keywords
   (:require
+   [honey.sql :refer [format] :rename {format sql-format}]
    ;[clojure.java.jdbc :as jdbc]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-   ;[madek.api.db.core :refer [get-ds]]
+   [logbug.debug :as debug]
+
+;[madek.api.db.core :refer [get-ds]]
    [madek.api.resources.keywords.keyword :as kw]
    [madek.api.resources.shared :as sd]
 
-
-       [taoensso.timbre :refer [info warn error spy]]
-           [logbug.debug :as debug]
-
+;; all needed imports
+   [madek.api.utils.auth :refer [wrap-authorize-admin!]]
 
    [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
 
-               [honey.sql :refer [format] :rename {format sql-format}]
-
-
-   ;; all needed imports
-   [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   ;[leihs.core.db :as db]
+;[leihs.core.db :as db]
    [madek.api.utils.rdbms :refer [get-ds]]
    [next.jdbc :as jdbc]
-
    [reitit.coercion.schema]
 
-   [schema.core :as s]))
+   [schema.core :as s]
+
+   [taoensso.timbre :refer [info warn error spy]]))
 
 ;### swagger io schema ####################################################################
 
@@ -85,13 +82,13 @@
    ; [:id :meta_key_id :term :description :external_uris :rdf_class
    ;  :created_at])
    (dissoc :creator_id :created_at :updated_at)
-   (assoc                                                   ; support old (singular) version of field
+   (assoc ; support old (singular) version of field
     :external_uri (first (keyword :external_uris)))))
 
 (defn adm-export-keyword [keyword]
   (->
    keyword
-   (assoc                                                   ; support old (singular) version of field
+   (assoc ; support old (singular) version of field
     :external_uri (first (keyword :external_uris)))))
 
 ;### handlers get and query ####################################################################
@@ -126,15 +123,13 @@
       (let [uid (-> req :authenticated-entity :id)
             data (-> req :parameters :body)
 
-
             dwid (assoc data :creator_id uid)
             p (println ">o> ???? dwid0" dwid)
 
             converted_external_uris (str (array-to-map (:external_uris dwid)))
 
             ;dwid (assoc data :external_uris (str (data :external_uris) ))
-            dwid (assoc data :external_uris converted_external_uris )
-
+            dwid (assoc data :external_uris converted_external_uris)
 
             p (println ">o> ???? dwid1" dwid)
             p (println ">o> ???? dwid2" (:external_uris dwid))
@@ -145,8 +140,7 @@
                           (sql/values [dwid])
                           (sql/returning :*)
                           sql-format
-                          spy
-                          )
+                          spy)
             ins-result (jdbc/execute-one! (get-ds) sql-query)]
 
         (if-let [result ins-result]
@@ -159,17 +153,16 @@
     (catcher/with-logging {}
       (let [id (-> req :parameters :path :id)
             data (-> req :parameters :body)
-            
+
             ;upd-res (jdbc/update!
             ;          (get-ds) :keywords data
             ;          (sd/sql-update-clause "id" id))]
 
-
-        sql-query (-> (sql/update :keywords)
-                      (sql/set data)
-                      (sql/where [:= :id id])
-                      sql-format)
-        upd-res (jdbc/execute! (get-ds) sql-query)]
+            sql-query (-> (sql/update :keywords)
+                          (sql/set data)
+                          (sql/where [:= :id id])
+                          sql-format)
+            upd-res (jdbc/execute! (get-ds) sql-query)]
 
         (if (= 1 (first upd-res))
           ;(sd/response_ok (adm-export-keyword (kw/db-keywords-get-one id)))
@@ -184,16 +177,16 @@
     (catcher/with-logging {}
       (let [id (-> req :parameters :path :id)
             old-data (-> req :keyword)
-            
+
             ;del-res (jdbc/delete!
             ;          (get-ds) :keywords
             ;          (sd/sql-update-clause "id" id))]
-        
-        sql-query (-> (sql/delete :keywords)
-                      (sql/where [:= :id id])
-                      sql-format)
-        del-res (jdbc/execute! (get-ds) sql-query)]
-        
+
+            sql-query (-> (sql/delete :keywords)
+                          (sql/where [:= :id id])
+                          sql-format)
+            del-res (jdbc/execute! (get-ds) sql-query)]
+
         ; logwrite
         (if [(= 1 (first del-res))]
           (sd/response_ok (adm-export-keyword old-data))
@@ -204,9 +197,9 @@
 
 (defn wrap-find-keyword [handler]
   (fn [request] (sd/req-find-data request handler
-                  :id
-                  :keywords :id
-                  :keyword true)))
+                                  :id
+                                  :keywords :id
+                                  :keyword true)))
 
 (def query-routes
   ["/keywords"

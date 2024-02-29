@@ -1,32 +1,29 @@
 (ns madek.api.resources.full-texts
   (:require [clojure.tools.logging :as logging]
 
-            [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-
             [honey.sql :refer [format] :rename {format sql-format}]
+
+            ;; all needed imports
+            [honey.sql :refer [format] :rename {format sql-format}]
+            [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
+            [logbug.debug :as debug]
+            [madek.api.db.core :refer [get-ds]]
+
             [madek.api.db.core :refer [get-ds]]
             [madek.api.pagination :as pagination]
             [madek.api.resources.shared :as sd]
 
+            [madek.api.utils.auth :refer [wrap-authorize-admin!]]
 
-         ;; all needed imports
-               [honey.sql :refer [format] :rename {format sql-format}]
-               ;[leihs.core.db :as db]
-               [next.jdbc :as jdbc]
-               [honey.sql.helpers :as sql]
-
-               [madek.api.db.core :refer [get-ds]]
-
-
-       [taoensso.timbre :refer [info warn error spy]]
-           [logbug.debug :as debug]
+;[leihs.core.db :as db]
+            [next.jdbc :as jdbc]
+            [reitit.coercion.schema]
 
    ;; all needed imports
 
-
-            [reitit.coercion.schema]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [taoensso.timbre :refer [info warn error spy]]))
 
 (defn handle_list-full_texts
   [req]
@@ -46,7 +43,6 @@
 
         db-result (jdbc/execute! (get-ds) db-query)]
 
-
     (logging/info "handle_list-full_texts:" "\nquery:\n" db-query)
     (sd/response_ok db-result)))
 
@@ -61,13 +57,12 @@
     (catcher/with-logging {}
       (let [rdata (-> req :parameters :body)
             mr-id (or (:media_resource_id rdata)
-                    (-> req :parameters :path :media_resource_id)
-                    (-> req :parameters :path :collection_id)
-                    (-> req :parameters :path :media_entry_id))
+                      (-> req :parameters :path :media_resource_id)
+                      (-> req :parameters :path :collection_id)
+                      (-> req :parameters :path :media_entry_id))
             ins-data (assoc rdata :media_resource_id mr-id)
 
             ;ins-res (jdbc/insert! (rdbms/get-ds) :full_texts ins-data)]
-
 
             sql-query (-> (sql/insert-into :full_texts) (sql/values [ins-data]) sql-format)
             ins-res (first (jdbc/execute! (get-ds) [sql-query]))]
@@ -98,15 +93,11 @@
                           (sql/set dwid)
                           (sql/where [:= :media_resource_id mr-id]) sql-format)
             ;upd-result (jdbc/update! (rdbms/get-ds) :full_texts dwid upd-query)]
-        upd-result (first (jdbc/execute! (get-ds) [sql-query]))]
+            upd-result (first (jdbc/execute! (get-ds) [sql-query]))]
 
+        (logging/info "handle_update-full_texts: " mr-id "\new-data:\n" dwid "\nresult:\n" upd-result)
 
-(logging/info "handle_update-full_texts: " mr-id "\new-data:\n" dwid "\nresult:\n" upd-result)
-
-
-
-
-(if (= 1 (first upd-result))
+        (if (= 1 (first upd-result))
           (sd/response_ok (sd/query-eq-find-one :full_texts :media_resource_id mr-id))
           (sd/response_failed "Could not update full_text." 406))))
     (catch Exception e (sd/response_exception e))))
@@ -118,20 +109,14 @@
       (let [full-text (-> req :full_text)
             mr-id (:media_resource_id full-text)
 
-
-
-            ;del-result (jdbc/delete! (rdbms/get-ds)
+;del-result (jdbc/delete! (rdbms/get-ds)
             ;                         :full_texts
             ;                         ["media_resource_id = ?" mr-id])]
 
-
-
-        sql-query (-> (sql/delete-from :full_texts)
-                            (sql/where [:= :media_resource_id mr-id])
-                            sql-format)
-              del-result (first (jdbc/execute! (get-ds) [sql-query]))]
-
-
+            sql-query (-> (sql/delete-from :full_texts)
+                          (sql/where [:= :media_resource_id mr-id])
+                          sql-format)
+            del-result (first (jdbc/execute! (get-ds) [sql-query]))]
 
         (logging/info "handle_delete-full_texts: " mr-id " result: " del-result)
 
