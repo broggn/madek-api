@@ -5,15 +5,7 @@
   (:import (java.util UUID)))
 
 
-(defn is-valid-uuid [id]
-  (if (instance? String id)
-    (try
-      (UUID/fromString id)
-      true
-      (catch IllegalArgumentException e
-        false))
-    false))
-
+;
 
 ; [madek.api.utils.helper :refer [to-uuid]]
 (defn to-uuid
@@ -41,7 +33,6 @@
      (catch Exception e
        (logging/warn ">>> ERROR2 in to-uuid[id], id=" value ", key=" key " exception=" (.getMessage e))
        value)))
-
 )
 
 (comment
@@ -75,6 +66,7 @@
 (defn convert-map [entry]
   (-> entry
       (update :created_at #(if (contains? entry :created_at) (to-uuid %)))
+      ;(update :external_uris #(if (contains? entry :external_uris) ([:cast % :varchar])))
       ;(update :start_date #(if (contains? entry :start_date) (format-date %)))
       ;(update :end_date #(if (contains? entry :end_date) (format-date %)))
       ;(update :inspection_start_date #(if (contains? entry :inspection_start_date) (format-date %)))
@@ -93,3 +85,12 @@
                 acc))
       data
       keys)))
+
+
+(defn array-to-map [arr]
+  (zipmap arr (range (count arr))))(defn array-to-map [arr]
+  (zipmap arr (range (count arr))))
+
+
+(defn map-to-array [m]
+  (map first (sort-by val m)))

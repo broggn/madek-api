@@ -12,6 +12,8 @@
            [logbug.debug :as debug]
 
 
+   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
                [honey.sql :refer [format] :rename {format sql-format}]
 
 
@@ -123,7 +125,20 @@
     (catcher/with-logging {}
       (let [uid (-> req :authenticated-entity :id)
             data (-> req :parameters :body)
+
+
             dwid (assoc data :creator_id uid)
+            p (println ">o> ???? dwid0" dwid)
+
+            converted_external_uris (str (array-to-map (:external_uris dwid)))
+
+            ;dwid (assoc data :external_uris (str (data :external_uris) ))
+            dwid (assoc data :external_uris converted_external_uris )
+
+
+            p (println ">o> ???? dwid1" dwid)
+            p (println ">o> ???? dwid2" (:external_uris dwid))
+            p (println ">o> ???? dwid3" (class (:external_uris dwid)))
             ;ins-result (jdbc/insert! (get-ds) :keywords dwid)]
 
             sql-query (-> (sql/insert-into :keywords)
