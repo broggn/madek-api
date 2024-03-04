@@ -3,41 +3,52 @@
    [clojure.tools.logging :as logging]
    [logbug.catcher :as catcher]
    [logbug.debug :as debug]
-   [madek.api.utils.sql :as sql]))
+   ;[madek.api.utils.sql :as sql]
+   
+         ;; all needed imports
+               [honey.sql :refer [format] :rename {format sql-format}]
+               ;[leihs.core.db :as db]
+               [next.jdbc :as jdbc]
+               [honey.sql.helpers :as sql]
+               
+               [madek.api.db.core :refer [get-ds]]
+               
+         [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+   ))
 
 ;(defn- api-client-authorized-condition [perm id]
 ;  [:or
 ;   [:= (keyword (str "collections." perm)) true]
 ;   [:exists (-> (sql/select true)
 ;                (sql/from [:collection_api_client_permissions :cacp])
-;                (sql/merge-where [:= :cacp.collection_id :collections.id])
-;                (sql/merge-where [:= (keyword (str "cacp." perm)) true])
-;                (sql/merge-where [:= :cacp.api_client_id id]))]])
+;                (sql/where [:= :cacp.collection_id :collections.id])
+;                (sql/where [:= (keyword (str "cacp." perm)) true])
+;                (sql/where [:= :cacp.api_client_id id]))]])
 
 (defn- group-permission-exists-condition [perm id]
   [:exists (-> (sql/select true)
                (sql/from [:collection_group_permissions :cgp])
-               (sql/merge-where [:= :cgp.collection_id :collections.id])
-               (sql/merge-where [:= (keyword (str "cgp." perm)) true])
-               (sql/merge-where [:= :cgp.group_id id]))])
+               (sql/where [:= :cgp.collection_id :collections.id])
+               (sql/where [:= (keyword (str "cgp." perm)) true])
+               (sql/where [:= :cgp.group_id id]))])
 
 (defn- user-permission-exists-condition [perm id]
   [:exists (-> (sql/select true)
                (sql/from [:collection_user_permissions :cup])
-               (sql/merge-where [:= :cup.collection_id :collections.id])
-               (sql/merge-where [:= (keyword (str "cup." perm)) true])
-               (sql/merge-where [:= :cup.user_id id]))])
+               (sql/where [:= :cup.collection_id :collections.id])
+               (sql/where [:= (keyword (str "cup." perm)) true])
+               (sql/where [:= :cup.user_id id]))])
 
 (defn- group-permission-for-user-exists-condition [perm id]
   [:exists (-> (sql/select true)
                (sql/from [:collection_group_permissions :cgp])
-               (sql/merge-where [:= :cgp.collection_id :collections.id])
-               (sql/merge-where [:= (keyword (str "cgp." perm)) true])
-               (sql/merge-join :groups
+               (sql/where [:= :cgp.collection_id :collections.id])
+               (sql/where [:= (keyword (str "cgp." perm)) true])
+               (sql/join :groups
                                [:= :groups.id :cgp.group_id])
-               (sql/merge-join [:groups_users :gu]
+               (sql/join [:groups_users :gu]
                                [:= :gu.group_id :groups.id])
-               (sql/merge-where [:= :gu.user_id id]))])
+               (sql/where [:= :gu.user_id id]))])
 
 (defn- user-authorized-condition [perm id]
   [:or
@@ -58,10 +69,10 @@
 
 (defn- filter-by-permission-for-auth-entity [sqlmap permission authenticated-entity]
   (case (:type authenticated-entity)
-    "User" (sql/merge-where sqlmap (user-authorized-condition
+    "User" (sql/where sqlmap (user-authorized-condition
                                     permission (:id authenticated-entity)))
     ; TODO session
-    ;"ApiClient" (sql/merge-where sqlmap (api-client-authorized-condition
+    ;"ApiClient" (sql/where sqlmap (api-client-authorized-condition
     ;                                      permission (:id authenticated-entity)))
     (throw (ex-info (str "Filtering for " permission " requires a signed-in entity.")
                     {:status 422}))))
@@ -76,7 +87,7 @@
                         {:status 422})))))
   (cond-> sqlmap
     (:public_get_metadata_and_previews query-params)
-    (sql/merge-where [:= :collections.get_metadata_and_previews true])
+    (sql/where [:= :collections.get_metadata_and_previews true])
     (= (:me_get_metadata_and_previews query-params) true)
     (filter-by-permission-for-auth-entity "get_metadata_and_previews" authenticated-entity)
     ; 

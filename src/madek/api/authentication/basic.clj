@@ -2,7 +2,7 @@
   (:require
    [camel-snake-kebab.core :refer :all]
    [cider-ci.open-session.bcrypt :refer [checkpw]]
-   [clojure.java.jdbc :as jdbc]
+   ;[clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
    [clojure.walk :refer [keywordize-keys]]
    [inflections.core :refer :all]
@@ -10,25 +10,37 @@
    [logbug.thrown :as thrown]
    [madek.api.authentication.token :as token-authentication]
    [madek.api.resources.shared :as sd]
-   [madek.api.utils.rdbms :as rdbms])
+   ;[madek.api.utils.rdbms :as rdbms])
+   
+         ;; all needed imports
+               [honey.sql :refer [format] :rename {format sql-format}]
+               ;[leihs.core.db :as db]
+               [next.jdbc :as jdbc]
+               [honey.sql.helpers :as sql]
+               
+               [madek.api.db.core :refer [get-ds]]
+               
+         [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+   )
   (:import
    [java.util Base64]))
 
+  ;; TODO
 (defn- get-by-login [table-name login]
-  (->> (jdbc/query (rdbms/get-ds)
+  (->> (jdbc/execute! (get-ds)
                    [(str "SELECT * FROM " table-name " WHERE login = ?") login])
        (map #(assoc % :type (-> table-name ->PascalCase singular)))
        (map #(clojure.set/rename-keys % {:email :email_address}))
        first))
 
 (defn- get-api-client-by-login [login]
-  (->> (jdbc/query (rdbms/get-ds)
+  (->> (jdbc/execute! (get-ds)
                    [(str "SELECT * FROM api_clients WHERE login = ?") login])
        (map #(assoc % :type "ApiClient"))
        first))
 
 (defn- get-user-by-login-or-email-address [login-or-email]
-  (->> (jdbc/query (rdbms/get-ds)
+  (->> (jdbc/execute! (get-ds)
                    [(str "SELECT * FROM users WHERE login = ? OR email = ?")
                     login-or-email login-or-email])
        (map #(assoc % :type "User"))
@@ -40,7 +52,7 @@
       (get-user-by-login-or-email-address login-or-email)))
 
 (defn- get-auth-systems-user [userId]
-  (->> (jdbc/query (rdbms/get-ds)
+  (->> (jdbc/execute! (get-ds)
                    [(str "SELECT * FROM auth_systems_users WHERE auth_system_id = ? AND user_id = ? ")
                     "password" userId])
        first))

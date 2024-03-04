@@ -4,29 +4,42 @@
    [buddy.core.hash :as hash]
    [clj-time.core :as time]
    [clj-time.format :as time-format]
-   [clojure.java.jdbc :as jdbc]
+   ;[clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
    [clojure.walk :refer [keywordize-keys]]
-   [honey.sql :refer [format] :rename {format sql-format}]
-   [honey.sql.helpers :as sql]
+   ;[honey.sql :refer [format] :rename {format sql-format}]
+   ;[honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [madek.api.legacy.session.encryptor :refer [decrypt]]
    [madek.api.legacy.session.signature :refer [valid?]]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.config :refer [get-config
                                    parse-config-duration-to-seconds]]
-   [madek.api.utils.rdbms :as rdbms]
+   ;[madek.api.utils.rdbms :as rdbms]
 
-   [next.jdbc :as njdbc]
+   ;[next.jdbc :as njdbc]
+
+
+         ;; all needed imports
+               [honey.sql :refer [format] :rename {format sql-format}]
+               ;[leihs.core.db :as db]
+               [next.jdbc :as jdbc]
+               [honey.sql.helpers :as sql]
+
+               [madek.api.db.core :refer [get-ds]]
+
+         [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
    [taoensso.timbre :refer [debug spy]]))
 
 (defn- get-session-secret []
   (-> (get-config) :madek_master_secret))
 
 (defn- get-user [user-id]
-  (when-let [user (-> (jdbc/query (rdbms/get-ds)
-                                  ["SELECT * FROM users WHERE id = ? " user-id])
-                      first)]
+  (when-let [user (jdbc/execute-one! (get-ds)
+                    ["SELECT * FROM users WHERE id = ? " user-id])
+
+             ]
     (assoc user :type "User")))
 
 (defn- get-madek-session-cookie-name []
@@ -100,7 +113,7 @@
   (-> token-hash
       user-session-query
       (sql-format :inline false)
-      (#(njdbc/execute! (rdbms/get-ds) %))))
+      (#(jdbc/execute! (get-ds) %))))
 
 (defn- session-enbabled? []
   (-> (get-config) :madek_api_session_enabled boolean))

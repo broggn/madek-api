@@ -1,18 +1,50 @@
 (ns api-test-utils
   (:require
    [api-test-data :as td]
-   [clojure.java.jdbc :as jdbc]
-   [madek.api.utils.rdbms :as rdbms]))
+   ;[clojure.java.jdbc :as jdbc]
+   ;[madek.api.utils.rdbms :as rdbms]
+   
+         ;; all needed imports
+               [honey.sql :refer [format] :rename {format sql-format}]
+               ;[leihs.core.db :as db]
+               [next.jdbc :as jdbc]
+               [honey.sql.helpers :as sql]
+               
+               [madek.api.db.core :refer [get-ds]]
+               
+         [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+   ))
 
 (defn init-db [dburl]
   (rdbms/initialize dburl)
-  (when-let [ds rdbms/get-ds] ds))
+  (when-let [ds get-ds] ds))
+
+;(defn dbinsert [table data]
+;  (->> (jdbc/insert! (get-ds) table data) first))
 
 (defn dbinsert [table data]
-  (->> (jdbc/insert! (rdbms/get-ds) table data) first))
+  (let [insert-stmt (-> (sql/insert-into table)
+                        (sql/values [data])
+                        (sql-format))
+        result (jdbc/execute! (get-ds) [insert-stmt])]
+    (first result)))
+
+
+
+
+;(defn db-del-by-id [table id]
+;  (->> (jdbc/delete! (get-ds) table ["(id = ?)" id]) first))
 
 (defn db-del-by-id [table id]
-  (->> (jdbc/delete! (rdbms/get-ds) table ["(id = ?)" id]) first))
+  (let [delete-stmt (-> (sql/delete-from table)
+                        (sql/where [:= :id id])
+                        (sql-format))
+        result (jdbc/execute! (get-ds) [delete-stmt])]
+    (first result)))
+
+
+
+
 
 (defn init-test-person []
   (let [result (dbinsert :people td/person1)] result))

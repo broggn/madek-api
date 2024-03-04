@@ -1,23 +1,35 @@
 (ns madek.api.resources.collections.index
   (:require
-   [clojure.java.jdbc :as jdbc]
+   ;[clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
    [logbug.catcher :as catcher]
    [logbug.debug :as debug]
    [madek.api.pagination :as pagination]
    [madek.api.resources.collections.advanced-filter.permissions :as permissions :refer [filter-by-query-params]]
    [madek.api.resources.shared :as sd]
-   [madek.api.utils.rdbms :as rdbms]
-   [madek.api.utils.sql :as sql]))
+   ;[madek.api.utils.rdbms :as rdbms]
+   ;[madek.api.utils.sql :as sql]
+   
+   
+         ;; all needed imports
+               [honey.sql :refer [format] :rename {format sql-format}]
+               ;[leihs.core.db :as db]
+               [next.jdbc :as jdbc]
+               [honey.sql.helpers :as sql]
+               
+               [madek.api.db.core :refer [get-ds]]
+               
+         [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+   ))
 
 ;### collection_id ############################################################
 
 (defn- filter-by-collection-id [sqlmap {:keys [collection_id] :as query-params}]
   (cond-> sqlmap
     (seq collection_id)
-    (-> (sql/merge-join [:collection_collection_arcs :cca]
+    (-> (sql/join [:collection_collection_arcs :cca]
                         [:= :cca.child_id :collections.id])
-        (sql/merge-where [:= :cca.parent_id collection_id]))))
+        (sql/where [:= :cca.parent_id collection_id]))))
 
 ;### query ####################################################################
 
@@ -45,14 +57,14 @@
                       (permissions/filter-by-query-params query-params
                                                           authenticated-entity)
                       (pagination/add-offset-for-honeysql query-params)
-                      sql/format)]
+                      sql-format)]
     ;(logging/info "build-query"
     ;              "\nquery\n" query-params
     ;              "\nsql query:\n" sql-query)
     sql-query))
 
 (defn- query-index-resources [request]
-  (jdbc/query (rdbms/get-ds) (build-query request)))
+  (jdbc/execute! (get-ds) (build-query request)))
 
 ;### index ####################################################################
 
