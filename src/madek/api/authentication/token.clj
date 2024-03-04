@@ -3,24 +3,22 @@
    ;[clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
    [clojure.walk :refer [keywordize-keys]]
+   ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
    [logbug.debug :as debug]
    [logbug.thrown :as thrown]
+
+   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
-   ;[madek.api.utils.rdbms :as rdbms]
-   ;[madek.api.utils.sql :as sql]
-   [pandect.algo.sha256 :as algo.sha256]
-   
-   
-         ;; all needed imports
-               [honey.sql :refer [format] :rename {format sql-format}]
+   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
                ;[leihs.core.db :as db]
-               [next.jdbc :as jdbc]
-               [honey.sql.helpers :as sql]
-               
-               [madek.api.db.core :refer [get-ds]]
-               
-         [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-   )
+   [next.jdbc :as jdbc]
+
+         ;[madek.api.utils.rdbms :as rdbms]
+   ;[madek.api.utils.sql :as sql]
+   [pandect.algo.sha256 :as algo.sha256])
   (:import
    [java.util Base64]))
 
@@ -40,14 +38,13 @@
                        [:description :token_description])
            (sql/from :api_tokens)
            (sql/where [:in :api_tokens.token_hash
-                             (->> secrets
-                                  (filter identity)
-                                  (map hash-string))])
+                       (->> secrets
+                            (filter identity)
+                            (map hash-string))])
            (sql/where [:<> :api_tokens.revoked true])
 
            ;(sql/where (sql/raw "now() < api_tokens.expires_at"))
            (sql/where [:raw "now() < api_tokens.expires_at"])
-
 
            (sql/join :users [:= :users.id :api_tokens.user_id])
            (sql-format))

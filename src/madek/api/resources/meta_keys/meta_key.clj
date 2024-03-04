@@ -2,30 +2,29 @@
   (:require
    ;[clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
+   ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
    [logbug.debug :as debug]
-   [madek.api.resources.locales :refer [add-field-for-default-locale]]
-   [madek.api.resources.shared :as sd]
-   [madek.api.utils.config :as config :refer [get-config]]
+   [madek.api.db.core :refer [get-ds]]
    ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
    ;[madek.api.utils.sql :as sql]
 
-   ;; all needed imports
-   [honey.sql :refer [format] :rename {format sql-format}]
-   ;[leihs.core.db :as db]
-   [next.jdbc :as jdbc]
-   [honey.sql.helpers :as sql]
-
-   [madek.api.db.core :refer [get-ds]]
+   [madek.api.resources.locales :refer [add-field-for-default-locale]]
+   [madek.api.resources.shared :as sd]
+   [madek.api.utils.config :as config :refer [get-config]]
 
    [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-   ))
+
+   ;[leihs.core.db :as db]
+   [next.jdbc :as jdbc]))
 
 (defn add-fields-for-default-locale
   [result]
   (add-field-for-default-locale
-    "label" (add-field-for-default-locale
-              "description" (add-field-for-default-locale
-                              "hint" result))))
+   "label" (add-field-for-default-locale
+            "description" (add-field-for-default-locale
+                           "hint" result))))
 
 (defn- get-io-mappings
   [id]
@@ -42,8 +41,8 @@
       (map (fn [io-interface-id] {:id io-interface-id
                                   :keys (reduce (fn [m key-map]
                                                   (conj m {:key (:key_map key-map)}))
-                                          []
-                                          (get groupped io-interface-id))}) io-interfaces))))
+                                                []
+                                                (get groupped io-interface-id))}) io-interfaces))))
 
 (defn include-io-mappings
   [result id]

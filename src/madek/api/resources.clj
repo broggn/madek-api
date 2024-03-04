@@ -1,59 +1,58 @@
 (ns madek.api.resources
   (:require
    ;[clojure.java.jdbc :as jdbco]
-            [clojure.tools.logging :as logging]
+   [clojure.tools.logging :as logging]
+            ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
             ;[logbug.catcher :as catcher]
-            [logbug.debug :as debug]
-            [madek.api.authentication :as authentication]
-            [madek.api.resources.admins :as admins]
-            [madek.api.resources.app-settings :as app-settings]
-            [madek.api.resources.collection-collection-arcs :as collection-collection-arcs]
-            [madek.api.resources.collection-media-entry-arcs :as collection-media-entry-arcs]
-            [madek.api.resources.collections :as collections]
-            [madek.api.resources.confidential-links :as confidential-links]
-            [madek.api.resources.context-keys :as context_keys]
-            [madek.api.resources.contexts :as contexts]
-            [madek.api.resources.custom-urls :as custom-urls]
-            [madek.api.resources.delegations :as delegations]
-            [madek.api.resources.delegations-groups :as delegations_groups]
-            [madek.api.resources.delegations-users :as delegations_users]
-            [madek.api.resources.edit-sessions :as edit-sessions]
-            [madek.api.resources.favorite-collections :as favorite-collections]
-            [madek.api.resources.favorite-media-entries :as favorite-media-entries]
-            [madek.api.resources.full-texts :as full-texts]
-            [madek.api.resources.groups :as groups]
-            [madek.api.resources.io-interfaces :as io-interfaces]
-            ;[madek.api.resources.io-mappings :as io-mappings]
-            [madek.api.resources.keywords :as keywords]
-            [madek.api.resources.media-entries :as media-entries]
-            [madek.api.resources.media-files :as media-files]
+   [logbug.debug :as debug]
+   [madek.api.authentication :as authentication]
+   [madek.api.db.core :refer [get-ds]]
+   [madek.api.resources.admins :as admins]
+   [madek.api.resources.app-settings :as app-settings]
+   [madek.api.resources.collection-collection-arcs :as collection-collection-arcs]
+   [madek.api.resources.collection-media-entry-arcs :as collection-media-entry-arcs]
+   [madek.api.resources.collections :as collections]
+   [madek.api.resources.confidential-links :as confidential-links]
+   [madek.api.resources.context-keys :as context_keys]
+   [madek.api.resources.contexts :as contexts]
+   [madek.api.resources.custom-urls :as custom-urls]
+   [madek.api.resources.delegations :as delegations]
+   [madek.api.resources.delegations-groups :as delegations_groups]
+   [madek.api.resources.delegations-users :as delegations_users]
+   [madek.api.resources.edit-sessions :as edit-sessions]
+   [madek.api.resources.favorite-collections :as favorite-collections]
+   [madek.api.resources.favorite-media-entries :as favorite-media-entries]
+   [madek.api.resources.full-texts :as full-texts]
+   [madek.api.resources.groups :as groups]
+   [madek.api.resources.io-interfaces :as io-interfaces]
 
+;[madek.api.resources.io-mappings :as io-mappings]
+   [madek.api.resources.keywords :as keywords]
+   [madek.api.resources.media-entries :as media-entries]
+   [madek.api.resources.media-files :as media-files]
 
-                  ;; all needed imports
-                        [honey.sql :refer [format] :rename {format sql-format}]
-                        ;[leihs.core.db :as db]
-                        [next.jdbc :as jdbc]
-                        [honey.sql.helpers :as sql]
+   [madek.api.resources.meta-data :as meta-data]
 
-                        [madek.api.db.core :refer [get-ds]]
+   [madek.api.resources.meta-keys :as meta-keys]
 
-                  [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-
-            [madek.api.resources.meta-data :as meta-data]
-            [madek.api.resources.meta-keys :as meta-keys]
-            [madek.api.resources.people.main :as people]
+   [madek.api.resources.people.main :as people]
             ;[madek.api.resources.people :as people]
-            [madek.api.resources.permissions :as permissions]
-            [madek.api.resources.previews :as previews]
-            [madek.api.resources.roles :as roles]
-            [madek.api.resources.shared :as sd]
-            [madek.api.resources.static-pages :as static-pages]
-            [madek.api.resources.usage-terms :as usage-terms]
-            [madek.api.resources.users.main :as users]
-            [madek.api.resources.vocabularies :as vocabularies]
-            [madek.api.resources.workflows :as workflows]
+   [madek.api.resources.permissions :as permissions]
+   [madek.api.resources.previews :as previews]
+   [madek.api.resources.roles :as roles]
+   [madek.api.resources.shared :as sd]
+   [madek.api.resources.static-pages :as static-pages]
+   [madek.api.resources.usage-terms :as usage-terms]
+   [madek.api.resources.users.main :as users]
+   [madek.api.resources.vocabularies :as vocabularies]
+   [madek.api.resources.workflows :as workflows]
+   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+            ;[leihs.core.db :as db]
+   [next.jdbc :as jdbc]
             ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-            [reitit.coercion.schema]))
+   [reitit.coercion.schema]))
 
 ;### wrap media resource ######################################################
 
@@ -67,9 +66,9 @@
     context :context :as request}]
   (logging/debug request)
   (if-let [meta-data-id (-> (jdbc/execute! (get-ds)
-                                        [(str "SELECT id FROM meta_data "
-                                              "WHERE media_entry_id = ? "
-                                              "AND meta_key_id = ?") media-entry-id meta-key-id])
+                                           [(str "SELECT id FROM meta_data "
+                                                 "WHERE media_entry_id = ? "
+                                                 "AND meta_key_id = ?") media-entry-id meta-key-id])
                             first :id)]
     (ring.util.response/redirect (str context "/meta-data/" meta-data-id "/data-stream"))))
 
@@ -78,8 +77,8 @@
     context :context :as request}]
   (logging/debug request)
   (if-let [media-file-id (-> (jdbc/execute! (get-ds)
-                                         [(str "SELECT id FROM media_files "
-                                               "WHERE media_entry_id = ? ") media-entry-id])
+                                            [(str "SELECT id FROM media_files "
+                                                  "WHERE media_entry_id = ? ") media-entry-id])
                              first :id)]
     (ring.util.response/redirect (str context "/media-files/" media-file-id "/data-stream"))))
 

@@ -3,22 +3,22 @@
    [cheshire.core :as json]
    ;[clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
+   ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [logbug.debug :as debug]
-   [madek.api.resources.keywords.index :as keywords]
-   [madek.api.resources.shared :as sd]
    ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
    ;[madek.api.utils.sql :as sql]
 
-   ;; all needed imports
-   [honey.sql :refer [format] :rename {format sql-format}]
-   ;[leihs.core.db :as db]
-   [next.jdbc :as jdbc]
-   [honey.sql.helpers :as sql]
-
    [madek.api.db.core :refer [get-ds]]
+   [madek.api.resources.keywords.index :as keywords]
+   [madek.api.resources.shared :as sd]
 
    [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
+   ;[leihs.core.db :as db]
+   [next.jdbc :as jdbc]
 
    [ring.util.response :as ring-response]))
 
@@ -63,21 +63,21 @@
 
 (defn- prepare-meta-datum [meta-datum]
   (merge (select-keys meta-datum [:id :meta_key_id :type])
-    {:value (let [meta-datum-type (:type meta-datum)]
-              (case meta-datum-type
-                "MetaDatum::JSON" (json/generate-string (:json meta-datum) {:escape-non-ascii false})
+         {:value (let [meta-datum-type (:type meta-datum)]
+                   (case meta-datum-type
+                     "MetaDatum::JSON" (json/generate-string (:json meta-datum) {:escape-non-ascii false})
                 ; TODO meta-data json value transport Q as string
-                "MetaDatum::Text" (:string meta-datum)
-                "MetaDatum::TextDate" (:string meta-datum)
-                (map #(select-keys % [:id])
-                  ((case meta-datum-type
-                     "MetaDatum::Keywords" keywords/get-index
-                     "MetaDatum::People" get-people-index
-                     "MetaDatum::Roles" find-meta-data-roles)
-                   meta-datum))))}
-    (->> (select-keys meta-datum [:media_entry_id :collection_id])
-      (filter (fn [[k v]] v))
-      (into {}))))
+                     "MetaDatum::Text" (:string meta-datum)
+                     "MetaDatum::TextDate" (:string meta-datum)
+                     (map #(select-keys % [:id])
+                          ((case meta-datum-type
+                             "MetaDatum::Keywords" keywords/get-index
+                             "MetaDatum::People" get-people-index
+                             "MetaDatum::Roles" find-meta-data-roles)
+                           meta-datum))))}
+         (->> (select-keys meta-datum [:media_entry_id :collection_id])
+              (filter (fn [[k v]] v))
+              (into {}))))
 
 (defn- prepare-meta-datum-role
   [id]

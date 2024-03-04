@@ -7,28 +7,27 @@
    ;[clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
    [clojure.walk :refer [keywordize-keys]]
+   ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
    ;[honey.sql :refer [format] :rename {format sql-format}]
    ;[honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
+   [madek.api.db.core :refer [get-ds]]
    [madek.api.legacy.session.encryptor :refer [decrypt]]
-   [madek.api.legacy.session.signature :refer [valid?]]
-   [madek.api.resources.shared :as sd]
-   [madek.api.utils.config :refer [get-config
-                                   parse-config-duration-to-seconds]]
    ;[madek.api.utils.rdbms :as rdbms]
 
    ;[next.jdbc :as njdbc]
 
+   [madek.api.legacy.session.signature :refer [valid?]]
+   [madek.api.resources.shared :as sd]
+   [madek.api.utils.config :refer [get-config
+                                   parse-config-duration-to-seconds]]
 
-         ;; all needed imports
-               [honey.sql :refer [format] :rename {format sql-format}]
-               ;[leihs.core.db :as db]
-               [next.jdbc :as jdbc]
-               [honey.sql.helpers :as sql]
+   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
 
-               [madek.api.db.core :refer [get-ds]]
-
-         [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+         ;[leihs.core.db :as db]
+   [next.jdbc :as jdbc]
 
    [taoensso.timbre :refer [debug spy]]))
 
@@ -37,9 +36,8 @@
 
 (defn- get-user [user-id]
   (when-let [user (jdbc/execute-one! (get-ds)
-                    ["SELECT * FROM users WHERE id = ? " user-id])
+                                     ["SELECT * FROM users WHERE id = ? " user-id])]
 
-             ]
     (assoc user :type "User")))
 
 (defn- get-madek-session-cookie-name []

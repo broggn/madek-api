@@ -1,30 +1,25 @@
 (ns madek.api.resources.meta-data.index
   (:require
-   ;[clojure.java.jdbc :as jdbc]
+   ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+    ;[clojure.java.jdbc :as jdbc]
     ;[clojure.tools.logging :as logging]
    [logbug.catcher :as catcher]
    [logbug.debug :as debug]
-    ;[madek.api.authorization :as authorization]
-   [madek.api.constants :as constants]
-   [madek.api.resources.shared :as sd]
     ;[madek.api.pagination :as pagination]
-   
-   
-         ;; all needed imports
-               [honey.sql :refer [format] :rename {format sql-format}]
-               ;[leihs.core.db :as db]
-               [next.jdbc :as jdbc]
-               [honey.sql.helpers :as sql]
-               
-               [madek.api.db.core :refer [get-ds]]
-               
-         [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-   
+
+;[madek.api.authorization :as authorization]
+   [madek.api.constants :as constants]
+   [madek.api.db.core :refer [get-ds]]
+   [madek.api.resources.shared :as sd]
+
    [madek.api.resources.vocabularies.permissions :as permissions]
-   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   ;[madek.api.utils.sql :as sql]
-   
-   ))
+
+   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
+   ;[leihs.core.db :as db]
+   [next.jdbc :as jdbc]))
 
 ; TODO error if user-id is undefined (public)
 (defn md-vocab-where-clause
@@ -50,7 +45,7 @@
                   :meta_data.meta_data_updated_at)
       (sql/from :meta_data)
       (sql/where [:in :meta_data.type
-                        constants/SUPPORTED_META_DATA_TYPES])
+                  constants/SUPPORTED_META_DATA_TYPES])
       ; TODO use in other md access
       (sql/join :meta_keys [:= :meta_data.meta_key_id :meta_keys.id])
       (sql/join :vocabularies [:= :meta_keys.vocabulary_id :vocabularies.id])

@@ -1,24 +1,20 @@
 (ns madek.api.resources.vocabularies.vocabulary
   (:require
-   ;[clojure.java.jdbc :as jdbc]
+   ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [madek.api.db.core :refer [get-ds]]
+   ;[madek.api.utils.rdbms :refer [get-ds]]
+
+         ;[clojure.java.jdbc :as jdbc]
    [madek.api.resources.locales :refer [add-field-for-default-locale]]
    [madek.api.resources.shared :as sd]
    [madek.api.resources.vocabularies.permissions :as permissions]
-   ;[madek.api.utils.rdbms :refer [get-ds]]
-   
-         ;; all needed imports
-               [honey.sql :refer [format] :rename {format sql-format}]
-               ;[leihs.core.db :as db]
-               [next.jdbc :as jdbc]
-               [honey.sql.helpers :as sql]
-               
-               [madek.api.db.core :refer [get-ds]]
-               
-         [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-   
-   ;[madek.api.utils.sql :as sql]
 
-   ))
+   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
+         ;[leihs.core.db :as db]
+   [next.jdbc :as jdbc]))
 
 (defn transform_ml [vocab]
   (assoc vocab

@@ -2,25 +2,23 @@
   (:require
    ;[clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
+   ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [logbug.debug :as debug]
+   [madek.api.db.core :refer [get-ds]]
+   ;[madek.api.utils.rdbms :as rdbms]
+   ;[madek.api.utils.sql :as sql]
+
    [madek.api.resources.shared :as sd]
    [madek.api.resources.shared :as shared]
    [madek.api.resources.vocabularies.permissions :as permissions]
-   ;[madek.api.utils.rdbms :as rdbms]
-   ;[madek.api.utils.sql :as sql]
-   
-   
-         ;; all needed imports
-               [honey.sql :refer [format] :rename {format sql-format}]
-               ;[leihs.core.db :as db]
-               [next.jdbc :as jdbc]
-               [honey.sql.helpers :as sql]
-               
-               [madek.api.db.core :refer [get-ds]]
-               
-         [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-   ))
+
+   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
+         ;[leihs.core.db :as db]
+   [next.jdbc :as jdbc]))
 
 (defn- where-clause
   [user-id scope]
@@ -42,7 +40,7 @@
   (-> (sql/select :*); :meta_keys.id :meta_keys.vocabulary_id)
       (sql/from :meta_keys)
       (sql/join :vocabularies
-                      [:= :meta_keys.vocabulary_id :vocabularies.id])
+                [:= :meta_keys.vocabulary_id :vocabularies.id])
       (sql/where (where-clause user-id scope))))
 
 (defn- build-query [request]

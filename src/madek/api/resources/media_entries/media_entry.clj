@@ -2,22 +2,21 @@
   (:require
    ;[clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
-   [logbug.debug :as debug]
+   ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
 
-   [madek.api.utils.helper :refer [to-uuid]]
-   [madek.api.utils.rdbms :as rdbms]
+   [honey.sql.helpers :as sql]
+   [logbug.debug :as debug]
    ;[madek.api.utils.sql :as sql]
-   
-         ;; all needed imports
-               [honey.sql :refer [format] :rename {format sql-format}]
-               ;[leihs.core.db :as db]
-               [next.jdbc :as jdbc]
-               [honey.sql.helpers :as sql]
-               
-               [madek.api.db.core :refer [get-ds]]
-               
-         [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-   ))
+
+   [madek.api.db.core :refer [get-ds]]
+   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+   [madek.api.utils.helper :refer [to-uuid]]
+
+   [madek.api.utils.rdbms :as rdbms]
+
+         ;[leihs.core.db :as db]
+   [next.jdbc :as jdbc]))
 
 (def ^:private media-entry-keys
   [:id :created_at
@@ -34,7 +33,7 @@
                   (sql/join :previews [:= :media_files.id :previews.media_file_id])
                   (sql/where [:= :previews.id (to-uuid preview-id)])
                   (sql-format))
-        dbresult  (jdbc/execute-one! (get-ds) query)]
+        dbresult (jdbc/execute-one! (get-ds) query)]
     ;(logging/info "get-media-entry-for-preview" "\npreview-id\n" preview-id "\ndbresult\n" dbresult)
     dbresult))
 

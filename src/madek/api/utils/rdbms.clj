@@ -6,18 +6,18 @@
   (:require
    [clojure.java.jdbc :as jdbco]
    [clojure.tools.logging :as logging]
-   [logbug.catcher :as catcher]
-   [pg-types.all]
+   ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
 
-         ;; all needed imports
-               [honey.sql :refer [format] :rename {format sql-format}]
+   [logbug.catcher :as catcher]
+   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
                ;[leihs.core.db :as db]
-               [next.jdbc :as jdbc]
-               [honey.sql.helpers :as sql]
+   [next.jdbc :as jdbc]
 
                ;[madek.api.db.core :refer [get-ds]]
 
-         [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+   [pg-types.all]
 
    [ring.util.codec])
   (:import
@@ -33,7 +33,7 @@
     (catcher/snatch
      {:return-fn (fn [e] {:OK? false :error (.getMessage e)})}
      (assert (->> (jdbc/execute! @ds
-                              ["SELECT true AS state FROM schema_migrations LIMIT 1"])
+                                 ["SELECT true AS state FROM schema_migrations LIMIT 1"])
                   first :state))
      (let [c3p0ds (-> @ds :datasource)
            max (.getMaxPoolSize c3p0ds)

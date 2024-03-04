@@ -3,17 +3,16 @@
    [api-test-data :as td]
    ;[clojure.java.jdbc :as jdbc]
    ;[madek.api.utils.rdbms :as rdbms]
-   
+
          ;; all needed imports
-               [honey.sql :refer [format] :rename {format sql-format}]
-               ;[leihs.core.db :as db]
-               [next.jdbc :as jdbc]
-               [honey.sql.helpers :as sql]
-               
-               [madek.api.db.core :refer [get-ds]]
-               
-         [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-   ))
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [madek.api.db.core :refer [get-ds]]
+
+   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
+         ;[leihs.core.db :as db]
+   [next.jdbc :as jdbc]))
 
 (defn init-db [dburl]
   (rdbms/initialize dburl)
@@ -29,9 +28,6 @@
         result (jdbc/execute! (get-ds) [insert-stmt])]
     (first result)))
 
-
-
-
 ;(defn db-del-by-id [table id]
 ;  (->> (jdbc/delete! (get-ds) table ["(id = ?)" id]) first))
 
@@ -41,10 +37,6 @@
                         (sql-format))
         result (jdbc/execute! (get-ds) [delete-stmt])]
     (first result)))
-
-
-
-
 
 (defn init-test-person []
   (let [result (dbinsert :people td/person1)] result))

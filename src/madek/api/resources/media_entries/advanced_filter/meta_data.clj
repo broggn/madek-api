@@ -2,22 +2,21 @@
   (:require
    ;[clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
+   ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-   [logbug.debug :as debug]
-   [madek.api.resources.meta-keys.meta-key :as meta-key]
    ;[madek.api.utils.rdbms :as rdbms]
    ;[madek.api.utils.sql :as sql]
-   
-         ;; all needed imports
-               [honey.sql :refer [format] :rename {format sql-format}]
-               ;[leihs.core.db :as db]
-               [next.jdbc :as jdbc]
-               [honey.sql.helpers :as sql]
-               
-               [madek.api.db.core :refer [get-ds]]
-               
-         [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-   ))
+
+   [logbug.debug :as debug]
+   [madek.api.db.core :refer [get-ds]]
+   [madek.api.resources.meta-keys.meta-key :as meta-key]
+
+   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
+         ;[leihs.core.db :as db]
+   [next.jdbc :as jdbc]))
 
 (def ^:private match-columns {"meta_data_people" {:table "people",
                                                   :resource "person",
@@ -46,10 +45,10 @@
      (cond-> initial-sqlmap
        related-meta-data-table
        (sql/join [(keyword related-meta-data-table)
-                        (keyword related-meta-data-alias)]
-                       [:=
-                        (keyword (str related-meta-data-alias ".meta_datum_id"))
-                        (keyword (str meta-data-alias ".id"))])
+                  (keyword related-meta-data-alias)]
+                 [:=
+                  (keyword (str related-meta-data-alias ".meta_datum_id"))
+                  (keyword (str meta-data-alias ".id"))])
 
        (and related-meta-data-table match-value)
        (->
@@ -79,8 +78,8 @@
   ;(sql/raw
     ; we need to pass 'english' because it was also used
     ; when creating indexes
-   (str "to_tsvector('english', " column ")"
-        " @@ plainto_tsquery('english', '" search-string "')"))
+  (str "to_tsvector('english', " column ")"
+       " @@ plainto_tsquery('english', '" search-string "')"))
 ;)
 
 (defn- sql-merge-where-with-match
@@ -112,13 +111,13 @@
         vocabularies-alias (str "v" counter)]
     (-> sqlmap
         (sql/join [:meta_keys (keyword meta-keys-alias)]
-                        [:= (keyword (str meta-data-alias ".meta_key_id"))
-                         (keyword (str meta-keys-alias ".id"))])
+                  [:= (keyword (str meta-data-alias ".meta_key_id"))
+                   (keyword (str meta-keys-alias ".id"))])
         (sql/join [:vocabularies (keyword vocabularies-alias)]
-                        [:and
-                         [:= (keyword (str meta-keys-alias ".vocabulary_id"))
-                          (keyword (str vocabularies-alias ".id"))]
-                         [:= (keyword (str vocabularies-alias ".enabled_for_public_view")) true]]))))
+                  [:and
+                   [:= (keyword (str meta-keys-alias ".vocabulary_id"))
+                    (keyword (str vocabularies-alias ".id"))]
+                   [:= (keyword (str vocabularies-alias ".enabled_for_public_view")) true]]))))
 
 (defn- sql-merge-join-meta-data
   [sqlmap counter md-object-type {meta-key :key
@@ -140,8 +139,8 @@
                                  (or meta-key not-meta-key)]))]
 
     (-> (sql/join sqlmap
-                        [:meta_data (keyword meta-data-alias)]
-                        join-conditions)
+                  [:meta_data (keyword meta-data-alias)]
+                  join-conditions)
         (sql-meta-data-from-public-vocabularies meta-data-alias counter))))
 
 (defn sql-search-through-all [sqlmap search-string]
@@ -153,38 +152,34 @@
                    (-> (sql/select true)
                        (sql/from :meta_data)
                        (sql/where [:= :meta_data.media_entry_id :media_entries.id]
-                                        (sql-raw-text-search "meta_data.string"
-                                                             search-string)))]]
+                                  (sql-raw-text-search "meta_data.string"
+                                                       search-string)))]]
                  (map #(let [resource_table (get-in match-columns [% :table])]
                          [:exists
                           (-> (sql/select true)
                               (sql/from (keyword resource_table))
                               (sql/join (keyword %)
-                                              [:=
-                                               (keyword (str % "." (get-in match-columns [% :resource]) "_id"))
-                                               (keyword (str resource_table ".id"))])
+                                        [:=
+                                         (keyword (str % "." (get-in match-columns [% :resource]) "_id"))
+                                         (keyword (str resource_table ".id"))])
                               (sql/join :meta_data
-                                              [:=
-                                               (keyword (str % ".meta_datum_id"))
-                                               :meta_data.id])
+                                        [:=
+                                         (keyword (str % ".meta_datum_id"))
+                                         :meta_data.id])
                               (sql/where [:raw
 
                                           (sql-raw-text-search
 
-                                          (str resource_table "."
-                                                         (get-in match-columns [% :match_column]))
+                                           (str resource_table "."
+                                                (get-in match-columns [% :match_column]))
                                                          ;") @@ plainto_tsquery('english', '"
-                                                         search-string )])
+                                           search-string)])
 
-
-                               ; (sql/where
+; (sql/where
                                ;(sql-raw-text-search
                                ; (str resource_table "."
                                ;      (get-in match-columns [% :match_column]))
                                ; search-string))
-
-
-
 
                               (sql/where [:= :meta_data.media_entry_id :media_entries.id]))])
                       (keys match-columns)))))))

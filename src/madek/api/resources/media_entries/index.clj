@@ -7,30 +7,28 @@
    [clojure.set :refer [rename-keys]]
    [clojure.string :as str :refer [blank?]]
    [clojure.tools.logging :as logging]
+   ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [logbug.debug :as debug :refer [I> I>> identity-with-logging]]
+   [madek.api.db.core :refer [get-ds]]
    [madek.api.pagination :as pagination]
    [madek.api.resources.media-entries.advanced-filter :as advanced-filter]
    [madek.api.resources.media-entries.advanced-filter.permissions :as permissions :refer [filter-by-query-params]]
    [madek.api.resources.media-entries.permissions :as media-entry-perms]
    [madek.api.resources.media-files :as media-files]
+   ;[madek.api.utils.rdbms :as rdbms]
+   ;[madek.api.utils.sql :as sql]
+
    [madek.api.resources.meta-data.index :as meta-data.index]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.core :refer [str keyword]]
-   ;[madek.api.utils.rdbms :as rdbms]
-   ;[madek.api.utils.sql :as sql]
-   
-   
-         ;; all needed imports
-               [honey.sql :refer [format] :rename {format sql-format}]
-               ;[leihs.core.db :as db]
-               [next.jdbc :as jdbc]
-               [honey.sql.helpers :as sql]
-               
-               [madek.api.db.core :refer [get-ds]]
-               
-         [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-   ))
+
+   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
+         ;[leihs.core.db :as db]
+   [next.jdbc :as jdbc]))
 
 ;### collection_id ############################################################
 
@@ -39,7 +37,7 @@
     sqlmap
     (-> sqlmap
         (sql/join [:collection_media_entry_arcs :arcs]
-                        [:= :arcs.media_entry_id :media_entries.id])
+                  [:= :arcs.media_entry_id :media_entries.id])
         (sql/where [:= :arcs.collection_id collection_id])
         (sql/select
          [:arcs.created_at :arc_created_at]
@@ -117,13 +115,13 @@
                       (#(str "meta-data-" %)))]
     (-> query
         (sql/left-join [:meta_data from-name]
-                             [:= (keyword (str from-name ".meta_key_id")) meta-key-id])
+                       [:= (keyword (str from-name ".meta_key_id")) meta-key-id])
         (sql/order-by [(-> from-name (str ".string") keyword)
-                             (case (keyword order)
-                               :asc :asc
-                               :desc :desc
-                               :asc)
-                             :nulls-last])
+                       (case (keyword order)
+                         :asc :asc
+                         :desc :desc
+                         :asc)
+                       :nulls-last])
         (sql/where [:= (keyword (str from-name ".media_entry_id")) :media_entries.id]))))
 
 (defn- order-reducer [query [scope & more]]
@@ -140,7 +138,7 @@
   (let [query {:select [:sorting]
                :from [:collections]
                :where [:= :collections.id collection-id]}]
-    (:sorting  (jdbc/execute-one! (get-ds) (-> query sql-format)))))
+    (:sorting (jdbc/execute-one! (get-ds) (-> query sql-format)))))
 
 (defn- handle-missing-collection-id [collection-id code-to-run]
   (if (or (not collection-id) (nil? collection-id))

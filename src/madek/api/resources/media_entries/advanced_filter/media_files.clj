@@ -1,20 +1,19 @@
 (ns madek.api.resources.media-entries.advanced-filter.media-files
   (:require
    [clojure.tools.logging :as logging]
+   ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   ;[madek.api.utils.sql :as sql]
+
    [logbug.catcher :as catcher]
    [logbug.debug :as debug]
-   ;[madek.api.utils.sql :as sql]
-   
-         ;; all needed imports
-               [honey.sql :refer [format] :rename {format sql-format}]
-               ;[leihs.core.db :as db]
-               [next.jdbc :as jdbc]
-               [honey.sql.helpers :as sql]
-               
-               [madek.api.db.core :refer [get-ds]]
-               
-         [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-   ))
+   [madek.api.db.core :refer [get-ds]]
+
+   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
+         ;[leihs.core.db :as db]
+   [next.jdbc :as jdbc]))
 
 (defn- sql-merge-where-media-file-spec [sqlmap media-file-spec]
   (-> sqlmap

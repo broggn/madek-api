@@ -1,21 +1,19 @@
 (ns madek.api.resources.media-entries.advanced-filter.permissions
   (:require
    [clojure.tools.logging :as logging]
+   ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   ;[madek.api.utils.sql :as sql]
+
    [logbug.catcher :as catcher]
    [logbug.debug :as debug]
-   ;[madek.api.utils.sql :as sql]
-   
-   
-         ;; all needed imports
-               [honey.sql :refer [format] :rename {format sql-format}]
-               ;[leihs.core.db :as db]
-               [next.jdbc :as jdbc]
-               [honey.sql.helpers :as sql]
-               
-               [madek.api.db.core :refer [get-ds]]
-               
-         [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-   ))
+   [madek.api.db.core :refer [get-ds]]
+
+   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
+         ;[leihs.core.db :as db]
+   [next.jdbc :as jdbc]))
 
 (defn- delegation-ids-subquery [user_id]
   {:union
@@ -59,9 +57,9 @@
                (sql/where [:= :megp.media_entry_id :media_entries.id])
                (sql/where [:= (keyword (str "megp." perm)) true])
                (sql/join :groups
-                               [:= :groups.id :megp.group_id])
+                         [:= :groups.id :megp.group_id])
                (sql/join [:groups_users :gu]
-                               [:= :gu.group_id :groups.id])
+                         [:= :gu.group_id :groups.id])
                (sql/where [:= :gu.user_id id]))])
 
 (defn- user-authorized-condition [perm id]
@@ -95,7 +93,7 @@
 (defn- filter-by-permission-for-auth-entity [sqlmap permission authenticated-entity]
   (case (:type authenticated-entity)
     "User" (sql/where sqlmap (user-authorized-condition
-                                    permission (:id authenticated-entity)))
+                              permission (:id authenticated-entity)))
     ; TODO token
     ; TODO session
     ;"ApiClient" (sql/where sqlmap (api-client-authorized-condition
@@ -131,12 +129,12 @@
     (= (:me_edit_metadata query-params) true)
       ;(filter-by-permission-for-auth-entity "edit_metadata" authenticated-entity)
     (sql/where (user-authorized-condition-edit-md
-                      "edit_metadata" (:id authenticated-entity)))
+                "edit_metadata" (:id authenticated-entity)))
 
     (= (:me_edit_permissions query-params) true)
       ;(filter-by-permission-for-auth-entity "edit_permissions" authenticated-entity)
     (sql/where (user-authorized-condition-edit-perms
-                      "edit_permissions" (:id authenticated-entity)))))
+                "edit_permissions" (:id authenticated-entity)))))
 
 (defn- sql-merge-where-permission-spec [sqlmap permission-spec]
   (case (:key permission-spec)
@@ -156,8 +154,8 @@
     "responsible_user"
     (-> sqlmap
         (sql/where [:=
-                          :media_entries.responsible_user_id
-                          (:value permission-spec)]))
+                    :media_entries.responsible_user_id
+                    (:value permission-spec)]))
 
     "entrusted_to_user"
     (-> sqlmap
