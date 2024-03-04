@@ -15,7 +15,7 @@
    [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
 
    ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   [madek.api.utils.sql :as sqlo]
+   ;[madek.api.utils.sql :as sqlo]
 
 ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]

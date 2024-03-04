@@ -9,7 +9,7 @@
 
    [madek.api.resources.shared :as sd]
                ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   [madek.api.utils.sql :as sqlo]
+   ;[madek.api.utils.sql :as sqlo]
                ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
 
