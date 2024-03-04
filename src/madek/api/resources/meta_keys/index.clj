@@ -1,14 +1,26 @@
 (ns madek.api.resources.meta-keys.index
   (:require
-   [clojure.java.jdbc :as jdbc]
+   ;[clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
    [logbug.catcher :as catcher]
    [logbug.debug :as debug]
    [madek.api.resources.shared :as sd]
    [madek.api.resources.shared :as shared]
    [madek.api.resources.vocabularies.permissions :as permissions]
-   [madek.api.utils.rdbms :as rdbms]
-   [madek.api.utils.sql :as sql]))
+   ;[madek.api.utils.rdbms :as rdbms]
+   ;[madek.api.utils.sql :as sql]
+   
+   
+         ;; all needed imports
+               [honey.sql :refer [format] :rename {format sql-format}]
+               ;[leihs.core.db :as db]
+               [next.jdbc :as jdbc]
+               [honey.sql.helpers :as sql]
+               
+               [madek.api.db.core :refer [get-ds]]
+               
+         [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+   ))
 
 (defn- where-clause
   [user-id scope]
@@ -29,9 +41,9 @@
   [user-id scope]
   (-> (sql/select :*); :meta_keys.id :meta_keys.vocabulary_id)
       (sql/from :meta_keys)
-      (sql/merge-join :vocabularies
+      (sql/join :vocabularies
                       [:= :meta_keys.vocabulary_id :vocabularies.id])
-      (sql/merge-where (where-clause user-id scope))))
+      (sql/where (where-clause user-id scope))))
 
 (defn- build-query [request]
   (let [qparams (-> request :parameters :query)
@@ -43,13 +55,13 @@
         (sd/build-query-param qparams :meta_datum_object_type)
         (sd/build-query-param qparams :is_enabled_for_collections)
         (sd/build-query-param qparams :is_enabled_for_media_entries)
-        sql/format)))
+        sql-format)))
 
 (defn db-query-meta-keys [request]
   (catcher/with-logging {}
     (let [query (build-query request)]
       (logging/info "db-query-meta-keys: query: " query)
-      (jdbc/query (rdbms/get-ds) query))))
+      (jdbc/execute! (get-ds) query))))
 
 ;(defn get-index [request]
 ;  (catcher/with-logging {}

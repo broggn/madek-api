@@ -1,5 +1,6 @@
 (ns madek.api.resources
-  (:require [clojure.java.jdbc :as jdbc]
+  (:require
+   ;[clojure.java.jdbc :as jdbco]
             [clojure.tools.logging :as logging]
             ;[logbug.catcher :as catcher]
             [logbug.debug :as debug]
@@ -26,6 +27,18 @@
             [madek.api.resources.keywords :as keywords]
             [madek.api.resources.media-entries :as media-entries]
             [madek.api.resources.media-files :as media-files]
+
+
+                  ;; all needed imports
+                        [honey.sql :refer [format] :rename {format sql-format}]
+                        ;[leihs.core.db :as db]
+                        [next.jdbc :as jdbc]
+                        [honey.sql.helpers :as sql]
+
+                        [madek.api.db.core :refer [get-ds]]
+
+                  [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
             [madek.api.resources.meta-data :as meta-data]
             [madek.api.resources.meta-keys :as meta-keys]
             [madek.api.resources.people.main :as people]
@@ -39,7 +52,7 @@
             [madek.api.resources.users.main :as users]
             [madek.api.resources.vocabularies :as vocabularies]
             [madek.api.resources.workflows :as workflows]
-            [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+            ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
             [reitit.coercion.schema]))
 
 ;### wrap media resource ######################################################
@@ -53,7 +66,7 @@
      meta-key-id :meta_key_id} :route-params
     context :context :as request}]
   (logging/debug request)
-  (if-let [meta-data-id (-> (jdbc/query (get-ds)
+  (if-let [meta-data-id (-> (jdbc/execute! (get-ds)
                                         [(str "SELECT id FROM meta_data "
                                               "WHERE media_entry_id = ? "
                                               "AND meta_key_id = ?") media-entry-id meta-key-id])
@@ -64,7 +77,7 @@
   [{{media-entry-id :media_entry_id} :route-params
     context :context :as request}]
   (logging/debug request)
-  (if-let [media-file-id (-> (jdbc/query (get-ds)
+  (if-let [media-file-id (-> (jdbc/execute! (get-ds)
                                          [(str "SELECT id FROM media_files "
                                                "WHERE media_entry_id = ? ") media-entry-id])
                              first :id)]

@@ -1,7 +1,6 @@
 (ns madek.api.main
   (:gen-class)
   (:require
-   [clojure.java.jdbc :as jdbc]
    [clojure.pprint :refer [pprint]]
    [clojure.tools.cli :as cli]
    [logbug.catcher :as catcher]

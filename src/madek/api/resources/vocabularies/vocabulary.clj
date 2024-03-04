@@ -1,11 +1,24 @@
 (ns madek.api.resources.vocabularies.vocabulary
   (:require
-   [clojure.java.jdbc :as jdbc]
+   ;[clojure.java.jdbc :as jdbc]
    [madek.api.resources.locales :refer [add-field-for-default-locale]]
    [madek.api.resources.shared :as sd]
    [madek.api.resources.vocabularies.permissions :as permissions]
-   [madek.api.utils.rdbms :refer [get-ds]]
-   [madek.api.utils.sql :as sql]))
+   ;[madek.api.utils.rdbms :refer [get-ds]]
+   
+         ;; all needed imports
+               [honey.sql :refer [format] :rename {format sql-format}]
+               ;[leihs.core.db :as db]
+               [next.jdbc :as jdbc]
+               [honey.sql.helpers :as sql]
+               
+               [madek.api.db.core :refer [get-ds]]
+               
+         [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+   
+   ;[madek.api.utils.sql :as sql]
+
+   ))
 
 (defn transform_ml [vocab]
   (assoc vocab
@@ -37,7 +50,7 @@
   (-> (sql/select :*)
       (sql/from :vocabularies)
       (sql/where (where-clause id user-id))
-      (sql/format)))
+      (sql-format)))
 
 ; TODO for admin do not remove internal keys (admin_comment)
 ; TODO add flag for default locale
@@ -45,7 +58,7 @@
   (let [id (-> request :parameters :path :id)
         user-id (-> request :authenticated-entity :id)
         query (build-vocabulary-query id user-id)]
-    (if-let [vocabulary (first (jdbc/query (get-ds) query))]
+    (if-let [vocabulary (first (jdbc/execute! (get-ds) query))]
       ;{:body (add-fields-for-default-locale (remove-internal-keys vocabulary))}
       (sd/response_ok (transform_ml (sd/remove-internal-keys vocabulary)))
       (sd/response_failed "Vocabulary could not be found!" 404))))

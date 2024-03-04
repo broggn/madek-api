@@ -4,10 +4,21 @@
 
 (ns madek.api.utils.rdbms
   (:require
-   [clojure.java.jdbc :as jdbc]
+   [clojure.java.jdbc :as jdbco]
    [clojure.tools.logging :as logging]
    [logbug.catcher :as catcher]
    [pg-types.all]
+
+         ;; all needed imports
+               [honey.sql :refer [format] :rename {format sql-format}]
+               ;[leihs.core.db :as db]
+               [next.jdbc :as jdbc]
+               [honey.sql.helpers :as sql]
+
+               ;[madek.api.db.core :refer [get-ds]]
+
+         [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
    [ring.util.codec])
   (:import
    [com.mchange.v2.c3p0 ComboPooledDataSource DataSources]
@@ -21,7 +32,7 @@
     {:OK? true :message "RDBMS is not initialized!"}
     (catcher/snatch
      {:return-fn (fn [e] {:OK? false :error (.getMessage e)})}
-     (assert (->> (jdbc/query @ds
+     (assert (->> (jdbc/execute! @ds
                               ["SELECT true AS state FROM schema_migrations LIMIT 1"])
                   first :state))
      (let [c3p0ds (-> @ds :datasource)

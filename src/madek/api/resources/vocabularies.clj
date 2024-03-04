@@ -1,15 +1,26 @@
 (ns madek.api.resources.vocabularies
   (:require
+
    ;[clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-   [madek.api.db.core :refer [get-ds]]
+   ;[madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
    [madek.api.resources.vocabularies.index :refer [get-index]]
    ;[madek.api.utils.rdbms :as rdbms]
    [madek.api.resources.vocabularies.permissions :as permissions]
+
+         ;; all needed imports
+               [honey.sql :refer [format] :rename {format sql-format}]
+               ;[leihs.core.db :as db]
+               [next.jdbc :as jdbc]
+               [honey.sql.helpers :as sql]
+
+               [madek.api.db.core :refer [get-ds]]
+
+         [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
 
    ;; all needed imports
    [madek.api.resources.vocabularies.vocabulary :refer [get-vocabulary]]
