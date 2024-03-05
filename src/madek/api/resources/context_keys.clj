@@ -376,7 +376,7 @@
 ; TODO tests
 (def admin-routes
   ["/context-keys"
-   {:swagger {:tags ["admin/context-keys"] :security {:basic-auth []}}}
+   {:swagger {:tags ["admin/context-keys"] :security [{"auth" []}]}}
    ["/"
     {:post
      {
@@ -394,7 +394,7 @@
      ; context_key list / query
      :get
      {:summary (sd/sum_adm (t "Query context_keys."))
-      :swagger {:security [{"auth" []}]}
+      ;:swagger {:security [{"auth" []}]}
       :handler handle_adm-list-context_keys
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
@@ -413,7 +413,7 @@
    ["/:id"
     {:get
      {:summary (sd/sum_adm (t "Get context_key by id."))
-      :swagger {:security [{"auth" []}]}
+      ;:swagger {:security [{"auth" []}]}
       :handler handle_adm-get-context_key
       :middleware [wrap-authorize-admin!
                    (wwrap-find-context_key :id :id true)]
@@ -425,7 +425,7 @@
 
      :put
      {:summary (sd/sum_adm (t "Update context_keys with id."))
-      :swagger {:security [{"auth" []}]}
+      ;:swagger {:security [{"auth" []}]}
       :handler handle_update-context_keys
       :middleware [wrap-authorize-admin!
                    (wwrap-find-context_key :id :id true)]
@@ -438,7 +438,7 @@
 
      :delete
      {:summary (sd/sum_adm_todo (t "Delete context_key by id."))
-      :swagger {:security [{"auth" []}]}
+      ;:swagger {:security [{"auth" []}]}
       :coercion reitit.coercion.schema/coercion
       :handler handle_delete-context_key
       :middleware [wrap-authorize-admin!

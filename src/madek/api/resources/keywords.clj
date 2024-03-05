@@ -6,16 +6,16 @@
    [logbug.catcher :as catcher]
    [logbug.debug :as debug]
 
-;[madek.api.db.core :refer [get-ds]]
+   ;[madek.api.db.core :refer [get-ds]]
    [madek.api.resources.keywords.keyword :as kw]
    [madek.api.resources.shared :as sd]
 
-;; all needed imports
+   ;; all needed imports
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
 
    [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
 
-;[leihs.core.db :as db]
+   ;[leihs.core.db :as db]
    [madek.api.utils.rdbms :refer [get-ds]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
@@ -27,7 +27,7 @@
 ;### swagger io schema ####################################################################
 
 (def schema_create_keyword
-  {:meta_key_id s/Str
+  {:meta_key_id s/Uuid
    :term s/Str
    (s/optional-key :description) (s/maybe s/Str)
    (s/optional-key :position) (s/maybe s/Int)
@@ -45,7 +45,7 @@
 
 (def schema_export_keyword_usr
   {:id s/Uuid
-   :meta_key_id s/Str
+   :meta_key_id s/Uuid
    :term s/Str
    :description (s/maybe s/Str)
    :position (s/maybe s/Int)
@@ -55,7 +55,7 @@
 
 (def schema_export_keyword_adm
   {:id s/Uuid
-   :meta_key_id s/Str
+   :meta_key_id s/Uuid
    :term s/Str
    :description (s/maybe s/Str)
    :position (s/maybe s/Int)
@@ -68,7 +68,7 @@
 
 (def schema_query_keyword
   {(s/optional-key :id) s/Uuid
-   (s/optional-key :meta_key_id) s/Str
+   (s/optional-key :meta_key_id) s/Uuid
    (s/optional-key :term) s/Str
    (s/optional-key :description) s/Str
    (s/optional-key :rdf_class) s/Str
@@ -82,13 +82,13 @@
    ; [:id :meta_key_id :term :description :external_uris :rdf_class
    ;  :created_at])
    (dissoc :creator_id :created_at :updated_at)
-   (assoc ; support old (singular) version of field
+   (assoc                                                   ; support old (singular) version of field
     :external_uri (first (keyword :external_uris)))))
 
 (defn adm-export-keyword [keyword]
   (->
    keyword
-   (assoc ; support old (singular) version of field
+   (assoc                                                   ; support old (singular) version of field
     :external_uri (first (keyword :external_uris)))))
 
 ;### handlers get and query ####################################################################
@@ -197,12 +197,13 @@
 
 (defn wrap-find-keyword [handler]
   (fn [request] (sd/req-find-data request handler
-                                  :id
-                                  :keywords :id
-                                  :keyword true)))
+                  :id
+                  :keywords :id
+                  :keyword true)))
 
 (def query-routes
   ["/keywords"
+   {:swagger {:tags ["keywords"]}}
    ["/"
     {:get
      {:summary (sd/sum_pub "Query / list keywords.")
@@ -223,7 +224,9 @@
       :description "Get keyword for id. Returns 404, if no such keyword exists."}}]])
 
 (def admin-routes
-  [["/keywords/"
+  ["/keywords"
+   {:swagger {:tags ["admin/keywords"] :security [{"auth" []}]}}
+   ["/"
     {:get
      {:summary (sd/sum_adm "Query keywords")
       :handler handle_adm-query-keywords
