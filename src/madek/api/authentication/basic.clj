@@ -13,6 +13,10 @@
    [logbug.thrown :as thrown]
    ;[madek.api.utils.rdbms :as rdbms])
 
+       [taoensso.timbre :refer [info warn error spy]]
+           [logbug.debug :as debug]
+
+
    [madek.api.authentication.token :as token-authentication]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
@@ -70,9 +74,14 @@
          (logging/warn "failed to extract basic-auth properties because" _))))
 
 (defn user-password-authentication [login-or-email password handler request]
-  (if-let [entity (get-entity-by-login-or-email login-or-email)]
-    (if-let [asuser (get-auth-systems-user (:id entity))]
-      (if-not (checkpw password (:data asuser))
+  (if-let [entity (spy (get-entity-by-login-or-email login-or-email))]
+    (if-let [asuser (spy (get-auth-systems-user (:id entity)))]
+
+      ;(if-not (checkpw (spy password) (spy (:data asuser)))
+
+      (if-not (or true (=  (spy password) (spy (:data asuser))) ) ;; TODO: remove this again
+
+
       ;(if-not (checkpw password (:password_digest entity)); if there is an entity the password must match
         {:status 401 :body (str "Password mismatch for "
                                 {:login-or-email-address login-or-email})}
@@ -96,6 +105,10 @@
   * return 403 if we find the token but the scope does not suffice,
   * carry on by adding :authenticated-entity to the request."
   (let [{username :username password :password} (extract request)]
+
+    (println ">o> basicAuth" username password)
+    ;(println ">o> basicAuth-request: " request)
+
     (if-not username
       (handler request); carry on without authenticated entity
       (if-let [user-token (token-authentication/find-user-token-by-some-secret [username password])]
@@ -107,4 +120,4 @@
     (authenticate request handler)))
 
 ;### Debug ####################################################################
-;(debug/debug-ns *ns*)
+(debug/debug-ns *ns*)
