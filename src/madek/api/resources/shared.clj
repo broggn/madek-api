@@ -45,7 +45,8 @@
   (let [pval (-> query-params param mc/presence)]
     (if (nil? pval)
       query
-      (-> query (sql/where [:= param pval])))))
+      ;(-> query (sql/where [:= param pval])))))
+      (-> query (sql/where [:= param (to-uuid pval param)])))))
 
 (defn try-instant-on-presence [data keyword]
   (try
