@@ -43,7 +43,7 @@
   (->
    id
    id-where-clause
-   sql/format
+   sql-format
    (update-in [0] #(clojure.string/replace % "WHERE" ""))))
 
 ;### create person
@@ -59,7 +59,7 @@
    (sql/select :*)
    (sql/from :people)
    (sql/returning :*)
-   sql/format))
+   sql-format))
 
 (defn db-person-get [id]
   (jdbc/execute-one! (get-ds) (find-person-sql id)))
@@ -90,7 +90,7 @@
      (sd/build-query-param-like query-params :last_name)
      (sd/build-query-param query-params :subtype)
      (pagination/add-offset-for-honeysql query-params)
-     sql/format)))
+     sql-format)))
 
 (defn handle_query-people
   [request]
@@ -202,7 +202,7 @@
 
             sql-query (-> (sql/insert-into :people)
                           (sql/values [data_wid])
-                          sql/format)
+                          sql-format)
             db-result (jdbc/execute-one! (get-ds) sql-query)]
 
         (if-let [result (::njdbc/update-count db-result)]
@@ -227,7 +227,7 @@
 
           (let [sql-query (-> (sql/delete-from :people)
                               (sql/where (jdbc-id-where-clause id))
-                              sql/format)
+                              sql-format)
                 del-result (jdbc/execute! (get-ds) sql-query)]
 
             (if (= 1 (::jdbc/update-count del-result))
@@ -246,7 +246,7 @@
             sql-query (-> (sql/update :people)
                           (sql/set-fields body)
                           (sql/where (jdbc-id-where-clause id))
-                          sql/format)
+                          sql-format)
             upd-result (jdbc/execute! (get-ds) sql-query)]
 
             ;upd-result (jdbc/update! (get-ds) :people body (jdbc-id-where-clause id))]

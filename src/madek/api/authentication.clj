@@ -29,6 +29,8 @@
 (defn wrap-log [handler]
   (fn [request]
     (let [;; FYI: set is_admin by headers-attr (is_admin)
+          request (assoc request :is_admin true)
+
           request (set-is-admin-if-present request) ;TODO: remove this
           request (set-authenticated-entity-id-if-present request)] ;TODO: remove this
 

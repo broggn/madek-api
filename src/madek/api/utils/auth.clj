@@ -23,6 +23,10 @@
   checking (-> request :authenticated-entity :is_admin) if present or performing
   an db query.  If so adds {:is_amdin true} to the requests an calls handler.
   Throws a ExceptionInfo with status 403 otherwise. "
+
+  (println "authorize-admin! request.id: " (-> request :authenticated-entity :id))
+  (println "authorize-admin! request.is_admin: " (-> request :is_admin))
+
   (handler
    (or
       ;(if (contains? (-> request :authenticated-entity) :is_admin)

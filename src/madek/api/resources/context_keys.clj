@@ -417,7 +417,7 @@
 
      ; context_key list / query
      :get
-     {:summary (sd/sum_adm "Query context_keys.")
+     {:summary (sd/sum_adm (t "Query context_keys."))
       :swagger {:security [{"auth" []}]}
       :handler handle_adm-list-context_keys
       :middleware [wrap-authorize-admin!]
@@ -436,13 +436,13 @@
    ; edit context_key
    ["/:id"
     {:get
-     {:summary (sd/sum_adm "Get context_key by id.")
+     {:summary (sd/sum_adm (t "Get context_key by id."))
       :swagger {:security [{"auth" []}]}
       :handler handle_adm-get-context_key
       :middleware [wrap-authorize-admin!
                    (wwrap-find-context_key :id :id true)]
       :coercion reitit.coercion.schema/coercion
-      :parameters {:path {:id s/Str}}
+      :parameters {:path {:id s/Uuid}}
       :responses {200 {:body schema_export_context_key_admin}
                   404 {:body s/Any}
                   406 {:body s/Any}}}
@@ -454,7 +454,7 @@
       :middleware [wrap-authorize-admin!
                    (wwrap-find-context_key :id :id true)]
       :coercion reitit.coercion.schema/coercion
-      :parameters {:path {:id s/Str}
+      :parameters {:path {:id s/Uuid}
                    :body schema_update_context_keys}
       :responses {200 {:body schema_export_context_key_admin}
                   404 {:body s/Any}
@@ -467,7 +467,7 @@
       :handler handle_delete-context_key
       :middleware [wrap-authorize-admin!
                    (wwrap-find-context_key :id :id true)]
-      :parameters {:path {:id s/Str}}
+      :parameters {:path {:id s/Uuid}}
       :responses {200 {:body schema_export_context_key_admin}
                   404 {:body s/Any}
                   406 {:body s/Any}}}}]])
