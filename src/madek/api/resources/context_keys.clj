@@ -7,11 +7,20 @@
 
    [honey.sql.helpers :as sql]
 
+   [schema-tools.swagger.core :as swagger2]
+
+   [reitit.swagger :as swagger]
+
+
    [logbug.catcher :as catcher]
 
    [madek.api.db.core :refer [get-ds]]
 
    [madek.api.pagination :as pagination]
+
+   [taoensso.timbre :refer [info warn error spy]]
+   [logbug.debug :as debug]
+
 
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
@@ -25,6 +34,8 @@
 
    [schema.core :as s]
    [taoensso.timbre :refer [spy]]))
+
+(defn t [s] (str s ".. MANUALLY TESTED"))
 
 (defn context_key_transform_ml [context_key]
   (assoc context_key
@@ -60,8 +71,8 @@
   [req]
   (let [req-query (-> req :parameters :query)
         db-query (-> (sql/select :id :context_id :meta_key_id
-                                 :is_required :position :length_min :length_max
-                                 :labels :hints :descriptions :documentation_urls)
+                       :is_required :position :length_min :length_max
+                       :labels :hints :descriptions :documentation_urls)
                      (sql/from :context_keys)
                      (sd/build-query-param req-query :id)
                      (sd/build-query-param req-query :context_id)
@@ -116,9 +127,9 @@
                 (sql/returning :*)
                 sql-format)
 
-;;;;; =================================================================================================
+        ;;;;; =================================================================================================
 
-;hints_casted (to-hstore {:de "labelde", :en "labelen"})
+        ;hints_casted (to-hstore {:de "labelde", :en "labelen"})
         ;p (println "res-2" hints_casted)
         ;sql (-> (sql/insert-into :context_keys)
         ;
@@ -144,9 +155,9 @@
                                                          (clojure.string/join ", "
                                                            ;(map (fn [[k v]] (str k " => \"" v "\""))
 
-                                                                              (map (fn [[k v]] (str (name k) " => \"" v "\""))
+                                                           (map (fn [[k v]] (str (name k) " => \"" v "\""))
                                                              ;(map (fn [[k v]] (str (name k) " => '" v "'"))
-                                                                                   val))
+                                                             val))
                                                          :hstore]))]
                                   (assoc data key hstore-val))
                                 data))]
@@ -189,13 +200,13 @@
         query (-> (sql/insert-into :context_keys)
                   (sql/values [data]
                     ;(sql/returning :*)
-                              sql-format))
+                    sql-format))
 
-;query {:insert-into [:context_keys], :values [{:hints "de => 'abc'"}]}
+        ;query {:insert-into [:context_keys], :values [{:hints "de => 'abc'"}]}
         ;query {:insert-into [:context_keys], :values [{:hints "de => \"abc\""}]}
         ;query {:insert-into [:context_keys], :values [{:hints "\"de\" => \"abc\"" :context_id "agree-strikebreaker" :meta_key_id "madek_core:title"}]}
 
-;; this works
+        ;; this works
         ;query ["INSERT INTO context_keys (hints, context_id, meta_key_id) VALUES (
         ;'\"key1\" => \"value1\", \"key2\" => \"value2\"',
         ;'agree-strikebreaker',
@@ -294,9 +305,9 @@
 (defn wwrap-find-context_key [param colname send404]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler
-                                    param
-                                    :context_keys colname
-                                    :context_key send404))))
+                    param
+                    :context_keys colname
+                    :context_key send404))))
 
 (def schema_import_context_keys
   {;:id s/Str
@@ -365,9 +376,36 @@
 ; TODO tests
 (def admin-routes
   ["/context-keys"
+   {:swagger {:tags ["admin/context-keys"] :security {:basic-auth []}}}
    ["/"
     {:post
-     {:summary (sd/sum_adm "Create context_key")
+     {
+      :swagger {
+                :tags [:context-key]
+                :summary (sd/sum_adm "Create context_key")
+                :description "This is a sample tag description.2"
+                :security [{"auth" []}]
+                }
+
+
+      ;:components {:securitySchemes {"auth" {:type :apiKey
+      ;                                       :in :header
+      ;                                       :name "Example-Api-Key"}}}
+
+      ;:security {:admin []}
+
+      ;:summary (sd/sum_adm "Create context_key")
+
+      ;:tags [{:name "api" :description "the api"}]
+
+      ;;:swagger {:tags [:api "Example Tag2" :description "This is a sample tag description."]}
+      ;:swagger {:tags [:context-key]
+      ;          :description "This is a sample tag description.2"
+      ;          :summary "This is a sample tag description.1"
+      ;          ;:info {:title "my nice api" :version "0.0.1"}
+      ;          }
+      ;;:info {:title "my nice api" :version "0.0.1"}
+
       :handler handle_create-context_keys
       :middleware [wrap-authorize-admin!]
       :content-type "application/json"
@@ -380,6 +418,7 @@
      ; context_key list / query
      :get
      {:summary (sd/sum_adm "Query context_keys.")
+      :swagger {:security [{"auth" []}]}
       :handler handle_adm-list-context_keys
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
@@ -398,6 +437,7 @@
    ["/:id"
     {:get
      {:summary (sd/sum_adm "Get context_key by id.")
+      :swagger {:security [{"auth" []}]}
       :handler handle_adm-get-context_key
       :middleware [wrap-authorize-admin!
                    (wwrap-find-context_key :id :id true)]
@@ -409,6 +449,7 @@
 
      :put
      {:summary (sd/sum_adm "Update context_keys with id.")
+      :swagger {:security [{"auth" []}]}
       :handler handle_update-context_keys
       :middleware [wrap-authorize-admin!
                    (wwrap-find-context_key :id :id true)]
@@ -421,6 +462,7 @@
 
      :delete
      {:summary (sd/sum_adm_todo "Delete context_key by id.")
+      :swagger {:security [{"auth" []}]}
       :coercion reitit.coercion.schema/coercion
       :handler handle_delete-context_key
       :middleware [wrap-authorize-admin!
@@ -433,12 +475,14 @@
 ; TODO docu
 (def user-routes
   ["/context-keys"
+   {:swagger {:tags ["context-keys"]}}
    ["/"
     {:get
-     {:summary (sd/sum_pub "Query / List context_keys.")
+     {:summary (sd/sum_pub (t "Query / List context_keys."))
       :handler handle_usr-list-context_keys
       :coercion reitit.coercion.schema/coercion
-      :parameters {:query {(s/optional-key :id) s/Str
+      :parameters {:query {
+                           (spy (s/optional-key :id)) s/Uuid
                            (s/optional-key :context_id) s/Str
                            (s/optional-key :meta_key_id) s/Str
                            (s/optional-key :is_required) s/Bool}}
@@ -447,10 +491,23 @@
 
    ["/:id"
     {:get
-     {:summary (sd/sum_pub "Get context_key by id.")
+     {:summary (sd/sum_pub (t "Get context_key by id."))
       :handler handle_usr-get-context_key
       :middleware [(wwrap-find-context_key :id :id true)]
       :coercion reitit.coercion.schema/coercion
-      :parameters {:path {:id s/Str}}
+      :parameters {:path {:id s/Uuid}}
       :responses {200 {:body schema_export_context_key}
-                  404 {:body s/Any}}}}]])
+
+                  400 {
+                       :message "Bad request"
+                       :body {
+                              :schema {:id s/Str :Keyword s/Str}
+                              :errors {:id s/Str}
+                              :type s/Str
+                              :coercion s/Str
+                              :value {:id s/Str}
+                              :in [s/Str]
+                              }}
+
+                  404 {:message "Not found"
+                       :body s/Any}}}}]])
