@@ -10,6 +10,8 @@
    [madek.api.resources.keywords.keyword :as kw]
    [madek.api.resources.shared :as sd]
 
+   [madek.api.utils.helper :refer [t]]
+
    ;; all needed imports
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
 
@@ -27,7 +29,7 @@
 ;### swagger io schema ####################################################################
 
 (def schema_create_keyword
-  {:meta_key_id s/Uuid
+  {:meta_key_id s/Str
    :term s/Str
    (s/optional-key :description) (s/maybe s/Str)
    (s/optional-key :position) (s/maybe s/Int)
@@ -45,7 +47,7 @@
 
 (def schema_export_keyword_usr
   {:id s/Uuid
-   :meta_key_id s/Uuid
+   :meta_key_id s/Str
    :term s/Str
    :description (s/maybe s/Str)
    :position (s/maybe s/Int)
@@ -55,7 +57,7 @@
 
 (def schema_export_keyword_adm
   {:id s/Uuid
-   :meta_key_id s/Uuid
+   :meta_key_id s/Str
    :term s/Str
    :description (s/maybe s/Str)
    :position (s/maybe s/Int)
@@ -68,7 +70,7 @@
 
 (def schema_query_keyword
   {(s/optional-key :id) s/Uuid
-   (s/optional-key :meta_key_id) s/Uuid
+   (s/optional-key :meta_key_id) s/Str
    (s/optional-key :term) s/Str
    (s/optional-key :description) s/Str
    (s/optional-key :rdf_class) s/Str
@@ -136,6 +138,8 @@
             p (println ">o> ???? dwid3" (class (:external_uris dwid)))
             ;ins-result (jdbc/insert! (get-ds) :keywords dwid)]
 
+
+            ;; TODO / FIXME:  convert external_uris to hstore
             sql-query (-> (sql/insert-into :keywords)
                           (sql/values [dwid])
                           (sql/returning :*)
@@ -206,7 +210,7 @@
    {:swagger {:tags ["keywords"]}}
    ["/"
     {:get
-     {:summary (sd/sum_pub "Query / list keywords.")
+     {:summary (sd/sum_pub (t "Query / list keywords."))
       :handler handle_usr-query-keywords
       :coercion reitit.coercion.schema/coercion
       :parameters {:query schema_query_keyword}
@@ -214,7 +218,7 @@
 
    ["/:id"
     {:get
-     {:summary (sd/sum_pub "Get keyword for id.")
+     {:summary (sd/sum_pub (t "Get keyword for id."))
       :handler handle_usr-get-keyword
       :middleware [wrap-find-keyword]
       :coercion reitit.coercion.schema/coercion
@@ -228,7 +232,7 @@
    {:swagger {:tags ["admin/keywords"] :security [{"auth" []}]}}
    ["/"
     {:get
-     {:summary (sd/sum_adm "Query keywords")
+     {:summary (sd/sum_adm (t "Query keywords"))
       :handler handle_adm-query-keywords
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
@@ -246,7 +250,7 @@
                   406 {:body s/Any}}}}]
    ["/keywords/:id"
     {:get
-     {:summary (sd/sum_adm "Get keyword for id")
+     {:summary (sd/sum_adm (t "Get keyword for id"))
       :handler handle_adm-get-keyword
       :middleware [wrap-authorize-admin!
                    wrap-find-keyword]

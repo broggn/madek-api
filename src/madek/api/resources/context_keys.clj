@@ -21,6 +21,8 @@
    [taoensso.timbre :refer [info warn error spy]]
    [logbug.debug :as debug]
 
+   [madek.api.utils.helper :refer [t]]
+
 
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
@@ -35,7 +37,7 @@
    [schema.core :as s]
    [taoensso.timbre :refer [spy]]))
 
-(defn t [s] (str s ".. MANUALLY TESTED"))
+
 
 (defn context_key_transform_ml [context_key]
   (assoc context_key

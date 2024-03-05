@@ -3,7 +3,8 @@
             [pghstore-clj.core :refer [to-hstore]])
   (:import (java.util UUID)))
 
-;
+; [madek.api.utils.helper :refer [t]]
+(defn t [s] (str s ".. MANUALLY TESTED"))
 
 ; [madek.api.utils.helper :refer [to-uuid]]
 (defn to-uuid
