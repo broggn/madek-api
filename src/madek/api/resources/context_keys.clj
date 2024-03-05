@@ -380,32 +380,8 @@
    ["/"
     {:post
      {
-      :swagger {
-                :tags [:context-key]
-                :summary (sd/sum_adm "Create context_key")
-                :description "This is a sample tag description.2"
-                :security [{"auth" []}]
-                }
-
-
-      ;:components {:securitySchemes {"auth" {:type :apiKey
-      ;                                       :in :header
-      ;                                       :name "Example-Api-Key"}}}
-
-      ;:security {:admin []}
-
-      ;:summary (sd/sum_adm "Create context_key")
-
-      ;:tags [{:name "api" :description "the api"}]
-
-      ;;:swagger {:tags [:api "Example Tag2" :description "This is a sample tag description."]}
-      ;:swagger {:tags [:context-key]
-      ;          :description "This is a sample tag description.2"
-      ;          :summary "This is a sample tag description.1"
-      ;          ;:info {:title "my nice api" :version "0.0.1"}
-      ;          }
-      ;;:info {:title "my nice api" :version "0.0.1"}
-
+      :summary (sd/sum_adm (t "Post context_key by id."))
+      :swagger {:security [{"auth" []}]}
       :handler handle_create-context_keys
       :middleware [wrap-authorize-admin!]
       :content-type "application/json"
@@ -448,7 +424,7 @@
                   406 {:body s/Any}}}
 
      :put
-     {:summary (sd/sum_adm "Update context_keys with id.")
+     {:summary (sd/sum_adm (t "Update context_keys with id."))
       :swagger {:security [{"auth" []}]}
       :handler handle_update-context_keys
       :middleware [wrap-authorize-admin!
@@ -461,7 +437,7 @@
                   406 {:body s/Any}}}
 
      :delete
-     {:summary (sd/sum_adm_todo "Delete context_key by id.")
+     {:summary (sd/sum_adm_todo (t "Delete context_key by id."))
       :swagger {:security [{"auth" []}]}
       :coercion reitit.coercion.schema/coercion
       :handler handle_delete-context_key
