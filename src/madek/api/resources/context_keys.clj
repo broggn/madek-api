@@ -190,34 +190,25 @@
         ;data {:hints [:cast {:de "hstore"} :hstore]}
 
         data {:key1 "value1", :key2 "value2"}
-        data {:hints [:cast (map-to-hstore data) :hstore]}
+        ;data {:meta_key_id "abc:1" :term "sed-dev" :external_uris [:cast (map-to-hstore data) :hstore]}
+        ;data {:meta_key_id "abc:1" :term "sed-dev" :external_uris "{http://geonames.org/countries/DZ/}"}
+        ;data {:meta_key_id "abc:1" :term "sed-dev" :external_uris (vector "{http://geonames.org/countries/DZ/}")}
+        ;data {:meta_key_id "abc:1" :term "sed-dev" :external_uris [:cast "{http://geonames.org/countries/DZ/}" :char]}
+        data {:meta_key_id "vid:vid_schwerpunkt" :term "sed-dev3"   :external_uris [:raw  "'{http://geonames.org/countries/DZ/}'"]}
 
-        data {:hints [:raw "\"de\" => \"abc\""] :context_id "agree-strikebreaker" :meta_key_id "madek_core:title"}
-        data {:hints [:cast "\"de\" => \"abc\"" :hstore] :context_id "agree-strikebreaker" :meta_key_id "madek_core:title"}
-        ;data [:hints (str [:cast {:de "abc"} :hstore]) :context_id "agree-strikebreaker" :meta_key_id "madek_core:title"]
-        ;data [:hints [:raw "\"key1\" => \"value1\", \"key2\" => \"value2\""] :context_id "agree-strikebreaker" :meta_key_id "madek_core:title"]
-        ;data {:hints [:raw "\"key1\" => \"value1\", \"key2\" => \"value2\""] :context_id "agree-strikebreaker" :meta_key_id "madek_core:title"}
-        ;data {:hints "\"key1\" => \"value1\", \"key2\" => \"value2\"" :context_id "agree-strikebreaker" :meta_key_id "madek_core:title"}
 
-        query (-> (sql/insert-into :context_keys)
-                  (sql/values [data]
-                    ;(sql/returning :*)
-                    sql-format))
-
-        ;query {:insert-into [:context_keys], :values [{:hints "de => 'abc'"}]}
-        ;query {:insert-into [:context_keys], :values [{:hints "de => \"abc\""}]}
-        ;query {:insert-into [:context_keys], :values [{:hints "\"de\" => \"abc\"" :context_id "agree-strikebreaker" :meta_key_id "madek_core:title"}]}
-
-        ;; this works
-        ;query ["INSERT INTO context_keys (hints, context_id, meta_key_id) VALUES (
-        ;'\"key1\" => \"value1\", \"key2\" => \"value2\"',
-        ;'agree-strikebreaker',
-        ;'madek_core:title'
-        ;)"]
+        query (-> (sql/insert-into :keywords)
+                      ;(sql/values [(cast-to-hstore data)])
+                      (sql/values [data])
+                      (sql/returning :*)
+                      sql-format
+                      spy)
+        res (jdbc/execute-one! (get-ds) query)
 
         p (println "res-1" query)
-        res (jdbc/execute! (get-ds) query)
-        p (println "res-2" res)]))
+        p (println "res-2" res)])
+
+  )
 
 (defn handle_create-context_keys
   [req]

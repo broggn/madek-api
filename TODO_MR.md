@@ -20,10 +20,11 @@ ToAsk
 1. How are `auth-enttity/is_admin` use?
    1. https://github.com/Madek/madek-api-v2/blob/master/src/madek/api/authentication.clj#L10-L26
    2. https://github.com/Madek/madek-api-v2/blob/master/src/madek/api/utils/auth.clj#L10-L35
-2. How to define default-values/description for attribute?
+2. How to define **default-values/description for attribute?
    -  Swagger-Editor: https://editor.swagger.io/, see example [_tmp_doc/swagger-example.yml](_tmp_doc/swagger-example.yml)
       - Response header
       - Default-value & description
+3. Individual basic-auth for each endpoint or for whole site?
 
 
 FYI

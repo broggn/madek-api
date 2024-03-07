@@ -100,7 +100,7 @@
         db-result (jdbc/execute! (get-ds) sql-query)
         ;db-result (njdbc/execute! (get-ds) sql-query)
 
-        $result (map transform_export db-result)]
+        result (map transform_export db-result)]
     ;(logging/info "handle_query-people: \n" sql-query)
     (sd/response_ok {:people result})))
 
