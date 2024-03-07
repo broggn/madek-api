@@ -244,7 +244,7 @@
             id (-> req :parameters :path :id)
 
             sql-query (-> (sql/update :people)
-                          (sql/set-fields body)
+                          (sql/set body)
                           (sql/where (jdbc-id-where-clause id))
                           sql-format)
             upd-result (jdbc/execute! (get-ds) sql-query)]

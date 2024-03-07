@@ -60,16 +60,92 @@
         remaining (drop required-entries query-parts)]
     (concat merged remaining)))
 
+
+(defn format-uris [uris]
+  ;(clojure.string/join "" (str "{" uris "}")))
+
+  (println ">o> format-uris =>" format-uris)
+
+  (clojure.string/join "" (map #(str "{" % "}") uris)))
+
+
+(defn urls-to-custom-format [urls]
+  (let [
+        transformed-urls urls
+        combined-str (str "'{" (clojure.string/join "," transformed-urls) "}'")]
+    [:raw combined-str]))
+
 ; [madek.api.utils.helper :refer [convert-map]]
-(defn convert-map [entry]
-  (-> entry
-      (update :created_at #(if (contains? entry :created_at) (to-uuid %)))
-      ;(update :external_uris #(if (contains? entry :external_uris) ([:cast % :varchar])))
-      ;(update :start_date #(if (contains? entry :start_date) (format-date %)))
-      ;(update :end_date #(if (contains? entry :end_date) (format-date %)))
-      ;(update :inspection_start_date #(if (contains? entry :inspection_start_date) (format-date %)))
-      ;(update :updated_at #(if (contains? entry :updated_at) (format-date %)))
+(defn convert-map [map]
+  (-> map
+      ;(update :external_uris #(
+      ;                          if (contains? map :external_uris)
+      ;                          (if (nil? (:external_uris map))
+      ;                            ([:raw "'{}'"])
+      ;                            ([:raw (:external_uris map)])
+      ;                            )
+      ;                          ([:raw "'{}'"])
+      ;                                                            ))
+
+      ;(update :external_uris #(if (and (contains? map :external_uris) (nil? (:external_uris map)))
+      ;(update :external_uris #(if  (nil? %)
+      ;                               [:raw "'{}'"]
+      ;                          [:raw (str (set %))]
+      ;                               ))
+
+
+      (update :external_uris #(if  (nil? %)
+                                [:raw "'{}'"]
+                                ( urls-to-custom-format %)))
+
+      ;(update :external_uris (fn [uris] (if (nil? uris)
+      ;                                        [:raw "'{}'"]
+      ;                                        ;[:raw (str "'" (set uris) "'")])))
+      ;                                        [:raw (str  (set uris) )])))
+
+
+      ;(update :external_uris (fn [uris]
+      ;
+      ;                         [:raw (str (set (if (nil? uris)
+      ;                                          "'{}'"
+      ;                                          uris)))
+      ;                                          ;(format-uris uris))))
+      ;                         ]
+      ;                         ))
+
+
+
+      (update :creator_id #(if (contains? map :creator_id) (to-uuid % :creator_id)))
+
+      ;(update :external_uris #(if (contains? map :external_uris) ([:cast % :varchar])))
+      ;(update :start_date #(if (contains? map :start_date) (format-date %)))
+      ;(update :end_date #(if (contains? map :end_date) (format-date %)))
+      ;(update :inspection_start_date #(if (contains? map :inspection_start_date) (format-date %)))
+      ;(update :updated_at #(if (contains? map :updated_at) (format-date %)))
       ))
+
+
+(comment
+
+  ;[honey.sql :refer [format] :rename {format sql-format}]
+  ;[leihs.core.db :as db]
+  ;[next.jdbc :as jdbc]
+  ;[honey.sql.helpers :as sql]
+
+  (let [
+
+        map {:external_uris "{mein/link/78}"}
+        map {:external_uris "{mein/link/78}"}
+        map {:external_uris ["test/me/now/78"]}
+
+        res (convert-map map)
+        ]
+    res
+    )
+
+  )
+
+
 ; [madek.api.utils.helper :refer [cast-to-hstore]]
 (defn cast-to-hstore [data]
   (let [keys [:labels :descriptions :hints :documentation_urls]]
@@ -88,3 +164,6 @@
 
 (defn map-to-array [m]
   (map first (sort-by val m)))
+
+
+
