@@ -240,18 +240,18 @@
     (catcher/with-logging {}
       (let [id (-> req :parameters :path :id)
             data (-> req :parameters :body)
-
+            ;; FIXME
             ;upd-res (jdbc/update!
             ;          (get-ds) :keywords data
             ;          (sd/sql-update-clause "id" id))]
 
             sql-query (-> (sql/update :keywords)
-                          (sql/set data)
+                          (sql/set (convert-map data))
                           (sql/where [:= :id id])
                           sql-format)
-            upd-res (jdbc/execute! (get-ds) sql-query)]
+            upd-res (jdbc/execute-one! (get-ds) sql-query)]
 
-        (if (= 1 (first upd-res))
+        (if (= 1 (:next.jdbc/update-count upd-res))
           ;(sd/response_ok (adm-export-keyword (kw/db-keywords-get-one id)))
           (-> id kw/db-keywords-get-one
               adm-export-keyword
@@ -269,13 +269,13 @@
             ;          (get-ds) :keywords
             ;          (sd/sql-update-clause "id" id))]
 
-            sql-query (-> (sql/delete :keywords)
+            sql-query (-> (sql/delete-from :keywords)
                           (sql/where [:= :id id])
                           sql-format)
-            del-res (jdbc/execute! (get-ds) sql-query)]
+            del-res (jdbc/execute-one! (get-ds) sql-query)]
 
         ; logwrite
-        (if [(= 1 (first del-res))]
+        (if (= 1 (::jdbc/update-count del-res))
           (sd/response_ok (adm-export-keyword old-data))
           (sd/response_failed "Could not delete keyword." 406))))
     (catch Exception ex (sd/response_exception ex))))
@@ -324,7 +324,7 @@
       :description "Get keywords id list. TODO query parameters and paging. TODO get full data."}
 
      :post
-     {:summary (sd/sum_adm "Create keyword.   _>>>> here")
+     {:summary (sd/sum_adm (t "Create keyword.   _>>>> here"))
       :coercion reitit.coercion.schema/coercion
       :handler handle_create-keyword
       :middleware [wrap-authorize-admin!]
@@ -345,7 +345,7 @@
       :description "Get keyword for id. Returns 404, if no such keyword exists."}
 
      :put
-     {:summary (sd/sum_adm "Update keyword.")
+     {:summary (sd/sum_adm (t "Update keyword."))
       :handler handle_update-keyword
       :middleware [wrap-authorize-admin!
                    wrap-find-keyword]
@@ -357,7 +357,7 @@
                   406 {:body s/Any}}}
 
      :delete
-     {:summary (sd/sum_adm "Delete keyword.")
+     {:summary (sd/sum_adm (t "Delete keyword."))
       :handler handle_delete-keyword
       :middleware [wrap-authorize-admin!
                    wrap-find-keyword]
@@ -365,6 +365,9 @@
       :parameters {:path {:id s/Uuid}}
       :responses {200 {:body schema_export_keyword_adm}
                   404 {:body s/Any}
+                  ;414 {:body {
+                  ;            :message "No such entity in :keywords as :id with dda7c0b5-73e8-4f6d-bbaf-776bf0077389"
+                  ;            }}
                   406 {:body s/Any}}}}]])
 
 ;### Debug ####################################################################
