@@ -74,6 +74,10 @@
          (logging/warn "failed to extract basic-auth properties because" _))))
 
 (defn user-password-authentication [login-or-email password handler request]
+
+  ; TODO: remove this again
+  (assoc request [:authenticated-entity :id] #uuid "11571ab5-293c-40d8-bd01-89597fdf3daf")
+
   (if-let [entity (spy (get-entity-by-login-or-email login-or-email))]
     (if-let [asuser (spy (get-auth-systems-user (:id entity)))]
 

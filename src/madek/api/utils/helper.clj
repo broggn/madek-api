@@ -69,7 +69,8 @@
   (clojure.string/join "" (map #(str "{" % "}") uris)))
 
 
-(defn urls-to-custom-format [urls]
+; [madek.api.utils.helper :refer [urls-to-custom-format]]
+(defn convert-uris [urls]
   (let [
         transformed-urls urls
         combined-str (str "'{" (clojure.string/join "," transformed-urls) "}'")]
@@ -78,42 +79,9 @@
 ; [madek.api.utils.helper :refer [convert-map]]
 (defn convert-map [map]
   (-> map
-      ;(update :external_uris #(
-      ;                          if (contains? map :external_uris)
-      ;                          (if (nil? (:external_uris map))
-      ;                            ([:raw "'{}'"])
-      ;                            ([:raw (:external_uris map)])
-      ;                            )
-      ;                          ([:raw "'{}'"])
-      ;                                                            ))
-
-      ;(update :external_uris #(if (and (contains? map :external_uris) (nil? (:external_uris map)))
-      ;(update :external_uris #(if  (nil? %)
-      ;                               [:raw "'{}'"]
-      ;                          [:raw (str (set %))]
-      ;                               ))
-
-
       (update :external_uris #(if  (nil? %)
                                 [:raw "'{}'"]
-                                ( urls-to-custom-format %)))
-
-      ;(update :external_uris (fn [uris] (if (nil? uris)
-      ;                                        [:raw "'{}'"]
-      ;                                        ;[:raw (str "'" (set uris) "'")])))
-      ;                                        [:raw (str  (set uris) )])))
-
-
-      ;(update :external_uris (fn [uris]
-      ;
-      ;                         [:raw (str (set (if (nil? uris)
-      ;                                          "'{}'"
-      ;                                          uris)))
-      ;                                          ;(format-uris uris))))
-      ;                         ]
-      ;                         ))
-
-
+                                ( convert-uris %)))
 
       (update :creator_id #(if (contains? map :creator_id) (to-uuid % :creator_id)))
 

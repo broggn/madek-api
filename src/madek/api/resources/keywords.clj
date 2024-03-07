@@ -154,53 +154,25 @@
     (catcher/with-logging {}
       (let [uid (-> req :authenticated-entity :id)
 
-            ;; TODO: remove this
-            uid #uuid "11571ab5-293c-40d8-bd01-89597fdf3daf"
+            ;;; TODO: remove this
+            ;uid #uuid "11571ab5-293c-40d8-bd01-89597fdf3daf"
 
             data (-> req :parameters :body)
-
-            p (println ">o> ???? dwid2" (:external_uris data))
-            p (println ">o> ???? dwid3" (class (:external_uris data)))
-
             dwid (assoc data :creator_id uid)
-            p (println ">o> ???? dwid0" dwid)
-
-            ;converted_external_uris (str (array-to-map (:external_uris dwid)))
-            ;
-            ;;dwid (assoc data :external_uris (str (data :external_uris) ))
-            ;dwid (assoc data :external_uris converted_external_uris)
-
-            links (:external_uris data)
-
-            ;dwid (assoc data :external_uris (format-uris links))
-            ;dwid (assoc data :external_uris "'{test/me/again}'")
-
-            p (println ">o> ???? dwid1a" dwid)
-            p (println ">o> ???? dwid2" (:external_uris dwid))
-            p (println ">o> ???? dwid3" (class (:external_uris dwid)))
-
-            dwid (convert-map dwid)
-            p (println ">o> ???? dwid1b" dwid)
-
-            ;ins-result (jdbc/insert! (get-ds) :keywords dwid)]
-
 
             ;; TODO / FIXME:  convert external_uris to hstore
             sql-query (-> (sql/insert-into :keywords)
-                          (sql/values [dwid])
+                          (sql/values [(convert-map dwid)])
                           (sql/returning :*)
                           ;(sql/returning :meta_key_id :term)
                           sql-format
                           spy)
-
-
 
             ins-result (jdbc/execute-one! (get-ds) sql-query)
             p (println ">o> ins-result" ins-result)
             ]
 
         (if-let [result ins-result]
-          ;(sd/response_ok result)
           (sd/response_ok (adm-export-keyword result))
           (sd/response_failed "Could not create keyword" 406))))
     (catch Exception ex (sd/response_exception ex))))
