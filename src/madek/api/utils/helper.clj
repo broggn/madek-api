@@ -7,6 +7,16 @@
 (defn t [s] (str s ".. MANUALLY TESTED"))
 (defn d [s] (str s " / doc-example"))
 
+
+; [madek.api.utils.helper :refer [str-to-int]]
+(defn str-to-int
+  "Attempts to convert a string to an integer, returning a default value if conversion fails."
+  [str default-value]
+  (try
+    (Integer/parseInt str)
+    (catch NumberFormatException e
+      default-value)))
+
 ; [madek.api.utils.helper :refer [to-uuid]]
 (defn to-uuid
   ([value]

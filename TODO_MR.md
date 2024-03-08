@@ -25,6 +25,13 @@ ToAsk
       - Response header
       - Default-value & description
 3. Individual basic-auth for each endpoint or for whole site?
+4. Introduction of different LevelOfDetails (LoD) concerning GET-response
+   1. All attributes (incl. created/update) (default for admin endpoints )
+   2. Min. attributes (default)
+5. Introduction of pagination for GET-Requests
+   1. page / page-size
+   2. headers.x-count
+6. Set defaults for all endpoints
 
 
 FYI

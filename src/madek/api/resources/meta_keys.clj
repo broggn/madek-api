@@ -77,7 +77,7 @@
 (defn handle_adm-query-meta-keys [req]
   (let [db-result (mkindex/db-query-meta-keys req)
         result (map adm-export-meta-key-list db-result)]
-    (sd/response_ok {:meta-keys result})))
+    (sd/response_ok {:meta-keys result})))                  ;; TODO: add headers.x-total-count
 
 (defn handle_usr-query-meta-keys [req]
   (let [db-result (mkindex/db-query-meta-keys req)
@@ -246,8 +246,13 @@
    (s/optional-key :is_enabled_for_collections) s/Bool
    (s/optional-key :is_enabled_for_media_entries) s/Bool
    (s/optional-key :scope) (s/enum "view" "use")
-   (s/optional-key :page) s/Int
-   (s/optional-key :count) s/Int})
+
+   ;(s/required-key :page) s/Int
+   ;(s/required-key :count) s/Int
+
+   ;:page s/Int
+   ;:count s/Int
+   })
 
 (defn wwrap-find-meta_key [param colname send404]
   (fn [handler]
@@ -325,11 +330,35 @@
   ["/meta-keys"
    {:swagger {:tags ["meta-keys"]}}
    ["/"
-    {:get {:summary (sd/sum_usr_pub "Get all meta-key ids")
+    {:get {:summary (sd/sum_usr_pub (t "Get all meta-key ids"))
            :description "Get list of meta-key ids. Paging is used as you get a limit of 100 entries."
            :handler handle_usr-query-meta-keys
-           :swagger {:produces "application/json"}
+           ;:swagger {:produces "application/json"}
            :parameters {:query schema_query-meta-key}
+
+           :swagger {:produces "application/json"
+                     :parameters [{:name "page"
+                                   :in "query"
+                                   :description "Page number, defaults to 1"
+                                   :required true
+                                   :value 1
+                                   :default 1
+                                   :schema {:type "integer"
+                                            :format "int32"
+                                            :default 1}
+                                   }
+                                  {:name "count"
+                                   :in "query"
+                                   :description "Number of items per page, defaults to 100"
+                                   :required true
+                                   :value 100
+                                   :default 100
+                                   :schema {:type "integer"
+                                            :format "int32"
+                                            :default 100}
+                                   }
+                                  ]}
+
            :content-type "application/json"
            :coercion reitit.coercion.schema/coercion
 

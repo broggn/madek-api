@@ -11,6 +11,8 @@
    ;[madek.api.utils.rdbms :as rdbms]
    ;[madek.api.utils.sql :as sql]
 
+   [madek.api.utils.helper :refer [array-to-map convert-uris map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts str-to-int]]
+
    [madek.api.resources.shared :as sd]
    [madek.api.resources.shared :as shared]
    [madek.api.resources.vocabularies.permissions :as permissions]
@@ -46,14 +48,30 @@
 (defn- build-query [request]
   (let [qparams (-> request :parameters :query)
         scope (or (:scope qparams) "view")
-        user-id (-> request :authenticated-entity :id)]
+        user-id (-> request :authenticated-entity :id)
+
+        p (println ">o> qparams" qparams)
+
+        offset (str-to-int (qparams :page) 1)
+        p (println ">o> offset" offset)
+        p (println ">o> offset.class" (class offset))
+
+        size (str-to-int (qparams :count) 5)
+        p (println ">o> :size" size)
+        p (println ">o> :size.class" (class size))
+
+        ]
     (-> (base-query user-id scope)
         (sd/build-query-param qparams :vocabulary_id)
         (sd/build-query-param-like qparams :id :meta_keys.id)
         (sd/build-query-param qparams :meta_datum_object_type)
         (sd/build-query-param qparams :is_enabled_for_collections)
         (sd/build-query-param qparams :is_enabled_for_media_entries)
-        sql-format)))
+
+        (sql/order-by :meta_keys.id)
+        (sql/limit size offset)
+
+sql-format)))
 
 (defn db-query-meta-keys [request]
   (catcher/with-logging {}
