@@ -26,6 +26,8 @@
    [reitit.coercion.schema]
    [reitit.coercion.spec]
 
+   [madek.api.utils.helper :refer [t d]]
+
    [schema.core :as s]))
 
 (defn adm-export-meta-key [meta-key]
@@ -366,16 +368,37 @@
            :responses {200 {:body {:meta-keys [schema_export-meta-key-usr]}}}}}]
 
    ["/:id"
-    {:get {:summary (sd/sum_usr_pub "Get meta-key by id")
+    {:get {:summary (sd/sum_usr_pub (t "Get meta-key by id"))
            :description "Get meta-key by id. Returns 404, if no such meta-key exists."
-           :swagger {:produces "application/json"}
+           ;:swagger {:produces "application/json"}
            :content-type "application/json"
            :accept "application/json"
            :handler handle_usr-get-meta-key
            :middleware [(sd/wrap-check-valid-meta-key :id)
                         (wwrap-find-meta_key :id :id true)]
            :coercion reitit.coercion.schema/coercion
-           :parameters {:path {:id s/Str}}
+           ;:parameters {:path {:id s/Str}}
+
+
+           ;; todo: how to define validation???
+           :swagger {:produces "application/json"
+                     :parameters [{:name "id"
+                                   :in "query"
+                                   :description "e.g.: madek_core:subtitle"
+                                   :required true
+                                   ;:schema {:type "string"
+                                   ;         :format "string"
+                                   ;         :default ""
+                                   ;         :pattern #"^\s*\S.*$"
+                                   ;         }
+
+                                   :schema {:type "string"
+                                            :pattern "^\\s*\\S.*$"}
+
+                                   }
+                                  ]
+                     }
+
            :responses {200 {:body schema_export-meta-key-usr}
                        404 {:body {:message s/Str}}
                        422 {:body {:message s/Str}}}}}]])
