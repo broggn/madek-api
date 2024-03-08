@@ -6,11 +6,12 @@
    [logbug.catcher :as catcher]
    [logbug.debug :as debug]
 
+   [madek.api.utils.helper :refer [t d]]
+
    ;[madek.api.db.core :refer [get-ds]]
    [madek.api.resources.keywords.keyword :as kw]
    [madek.api.resources.shared :as sd]
 
-   [madek.api.utils.helper :refer [t]]
    [cheshire.core :as json]
    ;; all needed imports
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
@@ -288,16 +289,61 @@
                   :keywords :id
                   :keyword true)))
 
+(s/defschema ItemQueryParams
+  {:page (s/constrained s/Int #(>= % 1) "Must be a positive integer")
+   :size2 (s/constrained s/Int #(>= % 1) "Must be a positive integer")})
+
+;; FIXME: broken endpoint to test doc
 (def query-routes
   ["/keywords"
    {:swagger {:tags ["keywords"]}}
    ["/"
     {:get
-     {:summary (sd/sum_pub (t "Query / list keywords."))
+     {:summary (sd/sum_pub (d(t "Query / list keywords.")))
       :handler handle_usr-query-keywords
       :coercion reitit.coercion.schema/coercion
-      :parameters {:query schema_query_keyword}
-      :responses {200 {:body {:keywords [schema_export_keyword_usr]}}}}}]
+      ;:parameters {:query schema_query_keyword}
+
+      ;:parameters {:query ItemQueryParams}
+
+      :parameters {:query ItemQueryParams}
+
+      :swagger {:parameters [{:name "page1"
+                              :in "query"
+                              :description "Page number, defaults to 1"
+                              :required false
+                              :value 1
+                              :default 3
+                              :defaults 2
+                              ;:schema {:type "integer"
+                              ;         :format "int32"
+                              ;         :value 11
+                              ;         :defaults 22
+                              ;         :default 44}
+                              }
+                             {:name "size2"
+                              :in "query"
+                              :description "Number of items per page, defaults to 10"
+                              :required false
+                              :value 999
+                              :schema {:type "integer"
+                                       :format "int32"
+                                       :default 10}}]}
+
+
+
+      :responses {
+                  200 {:body {:keywords [schema_export_keyword_usr]}}
+
+                  202 {:description "Successful response, list of items."
+                       :schema {} ;; Define your response schema as needed
+                       :examples {"application/json" {:message "Here are your items."
+                                                      :page 1
+                                                      :size 2
+                                                      :items [{:id 1, :name "Item 1"}
+                                                              {:id 2, :name "Item 2"}]}}}}
+
+      }}]
 
    ["/:id"
     {:get
@@ -324,11 +370,12 @@
       :description "Get keywords id list. TODO query parameters and paging. TODO get full data."}
 
      :post
-     {:summary (sd/sum_adm (t "Create keyword.   _>>>> here"))
+     {:summary (sd/sum_adm (t "Create keyword."))
       :coercion reitit.coercion.schema/coercion
       :handler handle_create-keyword
       :middleware [wrap-authorize-admin!]
-      :parameters {:body schema_create_keyword}
+      :parameters {
+                           :body schema_create_keyword}
       ;:responses {200 {:body schema_export_keyword_adm2}
       :responses {200 {:body schema_export_keyword_adm}
                   406 {:body s/Any}}}}]
@@ -339,7 +386,10 @@
       :middleware [wrap-authorize-admin!
                    wrap-find-keyword]
       :coercion reitit.coercion.schema/coercion
+
       :parameters {:path {:id s/Uuid}}
+
+
       :responses {200 {:body schema_export_keyword_adm}
                   404 {:body s/Any}}
       :description "Get keyword for id. Returns 404, if no such keyword exists."}
