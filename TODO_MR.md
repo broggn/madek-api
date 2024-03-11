@@ -43,6 +43,7 @@ ToAsk
    1. page / page-size
    2. headers.x-count
 6. Set defaults for all endpoints
+7. Links? `application/json vs application/json-roa`
 
 
 FYI
@@ -135,15 +136,15 @@ Swagger-UI Validation
 
 ## Concrete parameters example
 ```clojure
-
-:swagger {:produces "application/json"
-          :parameters [{:name "id"
-                        :in "path"
-                        :description "e.g.: madek_core:subtitle"
-                        :type "string"
-                        :required true
-                        :pattern "^[a-z0-9\\-\\_\\:]+:[a-z0-9\\-\\_\\:]+$"
-                        }]}
+                {:name "count"
+                 :in "query"
+                 :description "Number of items per page, defaults to 100"
+                 :required true
+                 :value 100
+                 :default 100
+                 :type "number"
+                 :pattern "^[1-9][0-9]*$"
+                 }
 ```
 
 

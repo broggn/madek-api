@@ -26,7 +26,7 @@
    [reitit.coercion.schema]
    [reitit.coercion.spec]
 
-   [madek.api.utils.helper :refer [t d v fv]]
+   [madek.api.utils.helper :refer [t d v fv f]]
 
    [schema.core :as s]))
 
@@ -264,19 +264,52 @@
                     :meta_keys colname
                     :meta_key send404))))
 
+
+(defn generate-swagger-pagination-params []
+  {:produces "application/json"
+   :parameters [{:name "page"
+                 :in "query"
+                 :description "Page number, defaults to 1"
+                 :required true
+                 :value 1
+                 :default 1
+                 :type "number"
+                 :pattern "^[1-9][0-9]*$"
+                 }
+                {:name "count"
+                 :in "query"
+                 :description "Number of items per page, defaults to 100"
+                 :required true
+                 :value 100
+                 :default 100
+                 :type "number"
+                 :pattern "^[1-9][0-9]*$"
+                 }
+                ]})
+
 (def admin-routes
   ["/meta-keys"
    {:swagger {:tags ["admin/meta-keys"]}}
    ["/"
-    {:get {:summary (sd/sum_adm "Get all meta-key ids")
+    {:get {:summary (sd/sum_adm (f (t "Get all meta-key ids")))
            :description "Get list of meta-key ids. Paging is used as you get a limit of 100 entries."
            :handler handle_adm-query-meta-keys
            :middleware [wrap-authorize-admin!]
-           :swagger {:produces "application/json"}
+           ;:swagger {:produces "application/json"}
+
+           :swagger (generate-swagger-pagination-params)
+
+           ; FIXME: returns vocabulary.id instead of meta-keys.id ??
+
+
            :parameters {:query schema_query-meta-key}
            :content-type "application/json"
            :coercion reitit.coercion.schema/coercion
-           :responses {200 {:body {:meta-keys [schema_export-meta-key-adm]}}}}
+           :responses {
+                       200 {:description "Meta-Keys-Object that contians list of meta-key-entries OR empty list"
+                            :body {:meta-keys [schema_export-meta-key-adm]}}
+
+                       }}
 
      :post {:summary (sd/sum_adm "Create meta-key.")
             :handler handle_create_meta-key
@@ -333,33 +366,14 @@
   ["/meta-keys"
    {:swagger {:tags ["meta-keys"]}}
    ["/"
-    {:get {:summary (sd/sum_usr_pub (t "Get all meta-key ids"))
+    {:get {:summary (sd/sum_usr_pub (f (t "Get all meta-key ids")))
            :description "Get list of meta-key ids. Paging is used as you get a limit of 100 entries."
            :handler handle_usr-query-meta-keys
            :parameters {:query schema_query-meta-key}
+           :swagger (generate-swagger-pagination-params)
 
-           :swagger {:produces "application/json"
-                     :parameters [{:name "page"
-                                   :in "query"
-                                   :description "Page number, defaults to 1"
-                                   :required true
-                                   :value 1
-                                   :default 1
-                                   :schema {:type "integer"
-                                            :format "int32"
-                                            :default 1}
-                                   }
-                                  {:name "count"
-                                   :in "query"
-                                   :description "Number of items per page, defaults to 100"
-                                   :required true
-                                   :value 100
-                                   :default 100
-                                   :schema {:type "integer"
-                                            :format "int32"
-                                            :default 100}
-                                   }
-                                  ]}
+
+           ; FIXME: returns vocabulary.id instead of meta-keys.id ??
 
            :content-type "application/json"
            :coercion reitit.coercion.schema/coercion
