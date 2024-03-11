@@ -226,7 +226,6 @@
    :documentation_urls (s/maybe sd/schema_ml_list)
 
    ;:admin_comment (s/maybe s/Str)
-
    (s/optional-key :io_mappings) s/Any
 
    (s/optional-key :enabled_for_public_use) s/Bool
@@ -337,7 +336,6 @@
     {:get {:summary (sd/sum_usr_pub (t "Get all meta-key ids"))
            :description "Get list of meta-key ids. Paging is used as you get a limit of 100 entries."
            :handler handle_usr-query-meta-keys
-           ;:swagger {:produces "application/json"}
            :parameters {:query schema_query-meta-key}
 
            :swagger {:produces "application/json"
@@ -367,7 +365,12 @@
            :coercion reitit.coercion.schema/coercion
 
            ; TODO or better own link
-           :responses {200 {:body {:meta-keys [schema_export-meta-key-usr]}}}}}]
+           :responses {
+                       200 {
+                            :description "Meta-Keys-Object that contians list of meta-key-entries OR empty list"
+                            :body {:meta-keys [schema_export-meta-key-usr]}
+                            }
+                       }}}]
 
    ["/:id"
     {:get {:summary (sd/sum_usr_pub (v (t "Get meta-key by id")))

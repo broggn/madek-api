@@ -14,13 +14,24 @@ Known issue
       "/api/collection/#{collection_id}"
       ```  
 
+Needed changes
+--
+1. GET parameters
+   1. Fetching attributes by `(-> request :path-params)` instead of `(-> request :parameters :path)`
+   2. Use `path` instead of `query`   
+      ```clojure
+                 :swagger {:produces "application/json"
+                     :parameters [{:name "id"
+                                   :in "path"    
+                                   ;:in "query"    ;; broken
+      ```
 
 ToAsk
 --
 1. How are `auth-enttity/is_admin` use?
    1. https://github.com/Madek/madek-api-v2/blob/master/src/madek/api/authentication.clj#L10-L26
    2. https://github.com/Madek/madek-api-v2/blob/master/src/madek/api/utils/auth.clj#L10-L35
-2. How to define **default-values/description for attribute?
+2. ~~How to define **default-values/description for attribute?~~
    -  Swagger-Editor: https://editor.swagger.io/, see example [_tmp_doc/swagger-example.yml](_tmp_doc/swagger-example.yml)
       - Response header
       - Default-value & description
@@ -38,8 +49,10 @@ FYI
 --
 1. Added a headers-parsing function for headers
    1. headers.id & headers.is_admin to be 
-   2. headers.id & headers.is_admin to be
-2. swagger-ui bug _> https://github.com/swagger-api/swagger-ui/issues/8007 
+2. swagger-ui bug _> https://github.com/swagger-api/swagger-ui/issues/8007
+3. [Multiple response-examples per status](https://stackoverflow.com/questions/36576447/swagger-specify-two-responses-with-same-code-based-on-optional-parameter) 
+   > OpenAPI 2.0
+   > OAS2 does not support multiple response schemas per status code. You can only have a single schema, for example, a free-form object (type: object without properties).
 
 
 
@@ -88,18 +101,15 @@ Swagger-UI Validation
     :pattern "^[a-z0-9\\-\\_\\:]+:[a-z0-9\\-\\_\\:]+$"                          
 
     
-    ; Tried to use
+    ; Has no effect
     :x-schema {:pattern #"[a-z0-9\\-\\_\\:]+:[a-z0-9\\-\\_\\:]+"}
     :x-error-message "Invalid ID format. The ID must match the pattern 'some_pattern'."
-:error-message "jfkdsl"
-
-    
-
+    :error-message "jfkdsl"
 ```
 
 
 
-## Concrete response
+## Concrete response #1
 ```clojure
 
 :responses {200 {:body schema_export-meta-key-usr}
@@ -108,7 +118,18 @@ Swagger-UI Validation
                  :schema s/Str
                  :examples {"application/json" {:message "No such entity in :meta_keys as :id with not-existing:key"}}}
 
-            422 {:body {:message s/Str}}}}}]])
+            422 {:body {:message s/Str}}}
+```
+
+## Concrete response #2
+```clojure
+
+:responses {
+            200 {
+                 :description "Meta-Keys-Object that contians list of meta-key-entries OR empty list"
+                 :body {:meta-keys [schema_export-meta-key-usr]}
+                 }
+            }
 ```
 
 
@@ -124,4 +145,6 @@ Swagger-UI Validation
                         :pattern "^[a-z0-9\\-\\_\\:]+:[a-z0-9\\-\\_\\:]+$"
                         }]}
 ```
+
+
 

@@ -547,13 +547,13 @@
     (fn [request]
 
       (let [meta-key-id (-> request :path-params param)
-            p (println ">o> abc1.requ" request)
-            p (println ">o> abc1.param2" (-> request :path-params))
-            p (println ">o> abc1.param" (-> request :parameters))
-            p (println ">o> abc2.query" (-> request :query))
+            p (println ">o> abc1.request" request)
+            p (println ">o> abc1.:path-params" (-> request :path-params))
+            p (println ">o> abc1.:parameters" (-> request :parameters))
+            p (println ">o> abc2.:query" (-> request :query))
 
             p (println ">o> wrap-check-valid-meta-key" meta-key-id)
-            p (println ">o> wrap-check-valid-meta-key" (class meta-key-id))
+            p (println ">o> wrap-check-valid-meta-key.class" (class meta-key-id))
 
             check  (re-find #"^[a-z0-9\-\_\:]+:[a-z0-9\-\_\:]+$" meta-key-id)
             p (println ">o> check" check)
