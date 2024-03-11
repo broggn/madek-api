@@ -48,7 +48,27 @@
        value)
      (catch Exception e
        (logging/warn ">>> ERROR2 in to-uuid[id], id=" value ", key=" key " exception=" (.getMessage e))
-       value))))
+       value)))
+
+  ([value key table]
+   (def keys-to-cast-to-uuid [:user_id :id])
+
+   (if (= (name table) "meta_keys")
+     value
+     (to-uuid value key)))
+
+
+
+
+   ;(try
+   ;  (if (:and (contains? keys-to-cast-to-uuid key) (instance? String value))
+   ;    (UUID/fromString value)
+   ;    value)
+   ;  (catch Exception e
+   ;    (logging/warn ">>> ERROR2 in to-uuid[id], id=" value ", key=" key " exception=" (.getMessage e))
+   ;    value))
+)
+
 
 (comment
   (let [;p (println "\nquery ok1" (to-uuid "123e4567-e89b-12d3-a456-426614174000" :user_id))
@@ -87,10 +107,17 @@
 
 
 ; [madek.api.utils.helper :refer [urls-to-custom-format]]
-(defn convert-uris [urls]
+(defn convert-to-raw-set [urls]
   (let [
         transformed-urls urls
         combined-str (str "'{" (clojure.string/join "," transformed-urls) "}'")]
+    [:raw combined-str]))
+
+
+(defn convert-to-raw-array [urls]
+  (let [
+        transformed-urls urls
+        combined-str (str "' [" (clojure.string/join "," transformed-urls) "]'")]
     [:raw combined-str]))
 
 ; [madek.api.utils.helper :refer [convert-map]]
@@ -98,7 +125,7 @@
   (-> map
       (update :external_uris #(if  (nil? %)
                                 [:raw "'{}'"]
-                                ( convert-uris %)))
+                                ( convert-to-raw-set %)))         ;;rename to convert-to-raw-set
 
       (update :creator_id #(if (contains? map :creator_id) (to-uuid % :creator_id)))
 
@@ -108,6 +135,43 @@
       ;(update :inspection_start_date #(if (contains? map :inspection_start_date) (format-date %)))
       ;(update :updated_at #(if (contains? map :updated_at) (format-date %)))
       ))
+
+; [madek.api.utils.helper :refer [convert-map-if-exist]]
+;(defn convert-map-if-exist [map]
+;  (-> map
+;      map (if (contains? map :external_uris) (update :external_uris #(if (nil? %)
+;                                [:raw "'{}'"]
+;                                (convert-uris %)))
+;          map
+;          )  ;;rename to convert-to-raw-set
+;      ;
+;      (update :allowed_people_subtypes #(if (nil? %)
+;                                          [:raw "'[]'"]
+;                                          (convert-to-raw-array %)))
+;
+;      (update :creator_id #(if (contains? map :creator_id)
+;                             (to-uuid % :creator_id)
+;                             %))
+;
+;
+;      )
+;    )
+
+
+(defn modify-if-exists [m k f]
+  (if (contains? m k)
+    (update m k f)
+    m))
+
+(defn convert-map-if-exist [m]
+  (-> m
+      (modify-if-exists :external_uris #(if (nil? %) [:raw "'{}'"] (convert-to-raw-set %)))
+      (modify-if-exists :creator_id #(if (contains? m :creator_id) (to-uuid % :creator_id)))
+      (modify-if-exists :allowed_people_subtypes #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))))
+      ;(modify-if-exists :allowed_people_subtypes #(if (nil? %) [:raw "'[]'"] (convert-to-raw-array %)))))
+
+
+
 
 
 (comment

@@ -129,7 +129,7 @@
    ;(println ">o> ??? sql-query-find-eq table-name1" table-name "col-name" col-name "row-data" row-data)
    (println ">o> ??? sql-query-find-eq table-name1" table-name)
    (spy (-> (build-query-base table-name :*)
-            (sql/where [:= col-name (to-uuid row-data col-name)])
+            (sql/where [:= col-name (to-uuid row-data col-name table-name)])
             sql-format
             spy)))
 

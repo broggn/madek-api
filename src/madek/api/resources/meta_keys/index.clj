@@ -11,7 +11,7 @@
    ;[madek.api.utils.rdbms :as rdbms]
    ;[madek.api.utils.sql :as sql]
 
-   [madek.api.utils.helper :refer [array-to-map convert-uris map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts str-to-int]]
+   [madek.api.utils.helper :refer [array-to-map convert-to-raw-set map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts str-to-int]]
 
    [madek.api.resources.shared :as sd]
    [madek.api.resources.shared :as shared]

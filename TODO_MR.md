@@ -149,3 +149,20 @@ Swagger-UI Validation
 
 
 
+            :description "Get list of meta-key ids. Paging is used as you get a limit of 100 entries.
+
+
+  <div style=\"color: green\">
+            - Get list of meta-key ids. Paging is used as you get a limit of 100 entries.
+            - Get list of meta-key ids. Paging is used as you get a limit of 100 entries
+
+            ### Get list of meta-key ids. Paging is used as you get a limit of 100 entries.
+
+                      ```clojure
+                      (defn example []
+                      (println \"Hello, world!\"))
+                     ```
+
+                     </div>
+
+            "

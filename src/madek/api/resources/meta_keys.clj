@@ -10,10 +10,15 @@
    [madek.api.resources.meta-keys.meta-key :as mk]
    [madek.api.resources.shared :as sd]
 
+   ;[madek.api.utils.helper :refer [array-to-map convert-uris map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
    ;; all needed imports
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
+
+   [logbug.debug :as debug]
+
 
    [madek.api.utils.rdbms :as rdbms]
 
@@ -26,7 +31,7 @@
    [reitit.coercion.schema]
    [reitit.coercion.spec]
 
-   [madek.api.utils.helper :refer [t d v fv f]]
+   [madek.api.utils.helper :refer [t d v fv f cast-to-hstore convert-map convert-map-if-exist]]
 
    [schema.core :as s]))
 
@@ -103,15 +108,88 @@
 (defn handle_create_meta-key [req]
   (let [data (-> req :parameters :body)
 
+        te_p (println ">o> handle_create_meta-key!!!! data=" data)
+
         sql-query (-> (sql/insert-into :meta_keys)
-                      (sql/values [data])
+                      (sql/values [(convert-map-if-exist (cast-to-hstore data))])
                       (sql/returning :*)
                       sql-format)
+
+        te_pr (println ">o> handle_create_meta-key!!!! sql-query=" sql-query)
+
         db-result (jdbc/execute-one! (get-ds) sql-query)]
 
     ;db-result (jdbc/insert! (get-ds) :meta_keys data)]
 
     (sd/response_ok db-result)))
+
+
+
+;(ns leihs.my.back.html
+;    (:refer-clojure :exclude [keyword str])
+;    (:require
+;      [hiccup.page :refer [html5]]
+;      [honey.sql :refer [format] :rename {format sql-format}]
+;      [honey.sql.helpers :as sql]
+;      [leihs.core.http-cache-buster2 :as cache-buster]
+;      [leihs.core.json :refer [to-json]]
+;      [leihs.core.remote-navbar.shared :refer [navbar-props]]
+;      [leihs.core.shared :refer [head]]
+;      [leihs.core.url.core :as url]
+;      [leihs.my.authorization :as auth]
+;      [leihs.core.db :as db]
+;      [next.jdbc :as jdbc]))
+
+(comment
+
+  (let [
+        data {
+              :meta_datum_object_type [:cast "MetaDatum::TextDate" :text]
+              :is_extensible_list true
+              :is_enabled_for_collections true
+              :vocabulary_id "copyright"
+              :is_enabled_for_media_entries true
+              :id "copyright:test_me_now"
+              }
+
+        data {
+              :descriptions {:de "string" :en "string"}
+              :meta_datum_object_type "MetaDatum::TextDate"
+              :is_extensible_list true
+              :is_enabled_for_collections true
+              :allowed_rdf_class "Keyword"
+              :documentation_urls {:de "string" :en "string"}
+              :vocabulary_id "copyright"
+              :is_enabled_for_media_entries true
+              :id "copyright:test_me_now10"
+              :position 0
+              :admin_comment "string"
+              :labels {:de "string" :en "string"}
+              :hints {:de "string" :en "string"}
+              :keywords_alphabetical_order true
+              :text_type "line"                              ;; OR block
+              :allowed_people_subtypes  ["People"]
+              }
+        ;; TODO: get rid of cast-fnc
+        data (convert-map-if-exist (cast-to-hstore data))
+
+        p (println ">o> data=" data)
+
+        sql-query (-> (sql/insert-into :meta_keys)
+                      (sql/values [data])
+                      (sql/returning :*)
+                      sql-format)
+
+        p (println ">o> handle_create_meta-key!!!! sql-query=" sql-query)
+
+        db-result (jdbc/execute-one! (get-ds) sql-query)]
+
+        p (println "\nquery" sql-query)
+        p (println "\nquery2" db-result)
+
+       )
+  )
+
 
 (defn handle_update_meta-key [req]
   (let [;old-data (-> req :meta_key)
@@ -123,6 +201,8 @@
                       (sql/set dwid)
                       (sql/where [:= :id id])
                       sql-format)
+
+        te_p (println ">o> sql-query=" sql-query)
         db-result (jdbc/execute! (get-ds) sql-query)]
 
     (logging/info "handle_update_meta-key:"
@@ -145,13 +225,26 @@
 
         ;db-result (jdbc/delete! (get-ds) :meta_keys ["id = ?" (:id meta-key)])]
 
+        p (println ">o> handle_delete_meta-key meta-key1=" req)
+        p (println ">o> handle_delete_meta-key meta-key2=" meta-key)
+
         sql-query (-> (sql/delete-from :meta_keys)
                       (sql/where [:= :id (:id meta-key)])
+                      (sql/returning :*)
                       sql-format)
-        db-result (jdbc/execute-one! (get-ds) sql-query)]
 
-    (if (= 1 (::jdbc/update-count db-result))
-      (sd/response_ok meta-key)
+        p (println ">o> handle_delete_meta-key sql-query3=" sql-query)
+
+
+        db-result (jdbc/execute-one! (get-ds) sql-query)
+
+        p (println ">o> handle_delete_meta-key db-result4=" db-result)
+
+        ]
+
+    ;(if (= 1 (::jdbc/update-count db-result))
+    (if db-result
+      (sd/response_ok db-result)
       (sd/response_failed "Could not delete meta-key." 406))))
 
 (def schema_create-meta-key
@@ -289,7 +382,7 @@
 
 (def admin-routes
   ["/meta-keys"
-   {:swagger {:tags ["admin/meta-keys"]}}
+   {:swagger {:tags ["admin/meta-keys"] :security [{"auth" []}]}}
    ["/"
     {:get {:summary (sd/sum_adm (f (t "Get all meta-key ids")))
            :description "Get list of meta-key ids. Paging is used as you get a limit of 100 entries."
@@ -314,15 +407,46 @@
      :post {:summary (sd/sum_adm "Create meta-key.")
             :handler handle_create_meta-key
             :middleware [wrap-authorize-admin!]
-            :swagger {:produces "application/json" :consumes "application/json"}
-            :parameters {:body schema_create-meta-key}
+            ;:swagger {:produces "application/json" :consumes "application/json"
+            ;
+            ;          :title "title3"
+            ;          :text "text3"
+            ;          :summary "summary3"
+            ;          }
+
+          ;
+          ;  :description "Get list of meta-key ids. Paging is used as you get a limit of 100 entries.
+          ;<code>\n{\n  \"descriptions\": {\"de\": \"string\", \"en\": \"string\"},\n \"meta_datum_object_type\": \"MetaDatum::TextDate\",\n  \"is_extensible_list\": true,\n \"is_enabled_for_collections\": true,\n  \"allowed_rdf_class\": \"Keyword\",\n            \"documentation_urls\": {\"de\": \"string\", \"en\": \"string\"},\n  \"vocabulary_id\": \"copyright\",\n \"is_enabled_for_media_entries\": true,\n  \"id\": \"copyright:test_me_now10\",\n  \"position\": 0,\n\"admin_comment\": \"string\",\n  \"labels\": {\"de\": \"string\", \"en\": \"string\"},\n \"hints\": {\"de\": \"string\", \"en\": \"string\"},\n  \"keywords_alphabetical_order\": true,\n \"text_type\": \"line\",\n  \"allowed_people_subtypes\": [\"People\"]\n}\n</code>
+          ;  "
+
+
+            :description (slurp "./md/meta-key-post.md")
+
+            :parameters {
+                         ;:title "title"
+                         ;:text "text"
+                         ;:summary "summary"
+                         :body schema_create-meta-key}
+            ;:parameters {:body schema_create-meta-key
+            ;             :examples {"application/json" {:message "??No such entity in :meta_keys as :id with not-existing:key"}}
+            ;             }
+
+            ;:parameters {:description "No entry found for the given id"
+            ; :schema {:body schema_create-meta-key}
+            ; :examples {"application/json" {:message "??No such entity in :meta_keys as :id with not-existing:key"}}}
+
+
             :content-type "application/json"
             :coercion reitit.coercion.schema/coercion
             :responses {200 {:body s/Any}                   ; TODO response coersion
                         406 {:body s/Any}}}}]
 
+
+
+
+
    ["/:id"
-    {:get {:summary (sd/sum_adm "Get meta-key by id")
+    {:get {:summary (sd/sum_adm (t "Get meta-key by id"))
            :description "Get meta-key by id. Returns 404, if no such meta-key exists."
            ;:swagger {:produces "application/json"}
            :content-type "application/json"
@@ -353,13 +477,28 @@
 
      :put {:summary (sd/sum_adm "Update meta-key.")
            :handler handle_update_meta-key
-           :swagger {:produces "application/json" :consumes "application/json"}
+           ;:swagger {:produces "application/json" :consumes "application/json"}
+
+           :description (slurp "./md/meta-key-put.md")
+
            :middleware [wrap-authorize-admin!
-                        (sd/wrap-check-valid-meta-key :id)
+                        (sd/wrap-check-valid-meta-key-new :id)
                         (wwrap-find-meta_key :id :id true)]
            :coercion reitit.coercion.schema/coercion
-           :parameters {:path {:id s/Str}
+
+
+                        :swagger {:produces "application/json"
+                                  :parameters [{:name "id"
+                                                :in "path"
+                                                :description "e.g.: copyright:test_me_now22"
+                                                :type "string"
+                                                :required true
+                                                       }]
+                                  }
+           :parameters {
+                        ;:path {:id s/Str}
                         :body schema_update-meta-key}
+
            :responses {200 {:body s/Any}                    ; TODO response coercion
                        404 {:body {:message s/Str}}
                        422 {:body {:message s/Str}}}}
@@ -432,4 +571,4 @@
 
                        }}}]])
 ;### Debug ####################################################################
-;(debug/debug-ns *ns*)
+(debug/debug-ns *ns*)
