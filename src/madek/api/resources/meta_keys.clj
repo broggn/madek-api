@@ -324,18 +324,32 @@
    ["/:id"
     {:get {:summary (sd/sum_adm "Get meta-key by id")
            :description "Get meta-key by id. Returns 404, if no such meta-key exists."
-           :swagger {:produces "application/json"}
+           ;:swagger {:produces "application/json"}
            :content-type "application/json"
            :accept "application/json"
            :middleware [wrap-authorize-admin!
-                        (sd/wrap-check-valid-meta-key :id)
+                        (sd/wrap-check-valid-meta-key-new :id)
                         (wwrap-find-meta_key :id :id true)]
            :handler handle_adm-get-meta-key
            :coercion reitit.coercion.schema/coercion
-           :parameters {:path {:id s/Str}}
+           ;:parameters {:path {:id s/Str}}
+
+           :swagger {:produces "application/json"
+                     :parameters [{:name "id"
+                                   :in "path"
+                                   :description "e.g.: madek_core:subtitle"
+                                   :type "string"
+                                   :required true
+                                   :pattern "^[a-z0-9\\-\\_\\:]+:[a-z0-9\\-\\_\\:]+$"
+                                   }]}
+
            :responses {200 {:body schema_export-meta-key-adm}
                        404 {:body {:message s/Str}}
-                       422 {:body {:message s/Str}}}}
+                       422 {
+                            :description "Wrong format"
+                            :schema s/Str
+                            :examples {"application/json" {:message "Wrong meta_key_id format! See documentation. (fdas)"}}}
+                       }}
 
      :put {:summary (sd/sum_adm "Update meta-key.")
            :handler handle_update_meta-key
@@ -392,7 +406,6 @@
            :content-type "application/json"
            :accept "application/json"
            :handler handle_usr-get-meta-key
-           ;
            :middleware [(sd/wrap-check-valid-meta-key-new :id)
                         (wwrap-find-meta_key :id :id true)]
            :coercion reitit.coercion.schema/coercion
@@ -412,6 +425,11 @@
                             :schema s/Str
                             :examples {"application/json" {:message "No such entity in :meta_keys as :id with not-existing:key"}}}
 
-                       422 {:body {:message s/Str}}}}}]])
+                       422 {
+                            :description "Wrong format"
+                            :schema s/Str
+                            :examples {"application/json" {:message "Wrong meta_key_id format! See documentation. (fdas)"}}}
+
+                       }}}]])
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)
