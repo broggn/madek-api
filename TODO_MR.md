@@ -38,6 +38,90 @@ FYI
 --
 1. Added a headers-parsing function for headers
    1. headers.id & headers.is_admin to be 
-   2. headers.id & headers.is_admin to be 
+   2. headers.id & headers.is_admin to be
+2. swagger-ui bug _> https://github.com/swagger-api/swagger-ui/issues/8007 
 
+
+
+Swagger-UI Validation
+--
+```clojure
+  :swagger {:produces "application/json"
+            :parameters [{:name "id"
+                          :in "path"
+                          :description "e.g.: madek_core:subtitle"
+                          :type "string"
+                          :required true
+                          :pattern "^16.*$"
+                          }]
+            }
+```
+
+```clojure
+  :swagger {:produces "application/json"
+            :parameters [{:name "id"
+                          :in "path"
+                          :description "e.g.: madek_core:subtitle"
+                          :type "string"
+                          :required true
+                          :pattern "^16.*$"
+
+                          :nullable false ; has no effect
+                          :allowEmptyValue false  ; has no effect
+                          }]
+            }
+```
+
+## Customized validation-message
+> 
+```clojure
+     :swagger {:produces "application/json"
+               :parameters [{:name "id"
+                             :in "path"
+                             :description "e.g.: madek_core:subtitle"
+                             :type "string"
+                             :required true
+                             :pattern "^[a-z0-9\\-\\_\\:]+:[a-z0-9\\-\\_\\:]+$"
+
+    ; working example
+    :name "id"
+    :pattern "^[a-z0-9\\-\\_\\:]+:[a-z0-9\\-\\_\\:]+$"                          
+
+    
+    ; Tried to use
+    :x-schema {:pattern #"[a-z0-9\\-\\_\\:]+:[a-z0-9\\-\\_\\:]+"}
+    :x-error-message "Invalid ID format. The ID must match the pattern 'some_pattern'."
+:error-message "jfkdsl"
+
+    
+
+```
+
+
+
+## Concrete response
+```clojure
+
+:responses {200 {:body schema_export-meta-key-usr}
+
+            404 {:description "No entry found for the given id"
+                 :schema s/Str
+                 :examples {"application/json" {:message "No such entity in :meta_keys as :id with not-existing:key"}}}
+
+            422 {:body {:message s/Str}}}}}]])
+```
+
+
+## Concrete parameters example
+```clojure
+
+:swagger {:produces "application/json"
+          :parameters [{:name "id"
+                        :in "path"
+                        :description "e.g.: madek_core:subtitle"
+                        :type "string"
+                        :required true
+                        :pattern "^[a-z0-9\\-\\_\\:]+:[a-z0-9\\-\\_\\:]+$"
+                        }]}
+```
 

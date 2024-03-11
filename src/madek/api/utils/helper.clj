@@ -6,6 +6,8 @@
 ; [madek.api.utils.helper :refer [t d]]
 (defn t [s] (str s ".. MANUALLY TESTED"))
 (defn d [s] (str s " / doc-example"))
+(defn v [s] (str s " / working validation"))
+(defn fv [s] (str s " / validation FAILS"))
 
 
 ; [madek.api.utils.helper :refer [str-to-int]]

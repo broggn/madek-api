@@ -17,7 +17,7 @@
             [madek.api.semver :as semver]
             [madek.api.utils.helper :refer [to-uuid]]
 
-            ;[madek.api.utils.rdbms :refer [get-ds]]
+   ;[madek.api.utils.rdbms :refer [get-ds]]
 
             [next.jdbc :as jdbc]
 
@@ -46,7 +46,7 @@
     (if (nil? pval)
       query
       (-> query (sql/where [:= param pval])))))
-      ;(-> query (sql/where [:= param (to-uuid pval param)])))))
+;(-> query (sql/where [:= param (to-uuid pval param)])))))
 
 (defn try-instant-on-presence [data keyword]
   (try
@@ -71,16 +71,16 @@
 (defn try-parse-date-time [dt_string]
   (try
     (logging/info "try-parse-date-time "
-                  dt_string)
+      dt_string)
     (let [zoneid (java.time.ZoneId/systemDefault)
 
           parsed2 (jt/local-date-time (jt/offset-date-time dt_string) zoneid)
           pcas (.toString parsed2)]
       (logging/info "try-parse-date-time "
-                    dt_string
-                    "\n zoneid " zoneid
-                    "\n parsed " parsed2
-                    "\n result:  " pcas)
+        dt_string
+        "\n zoneid " zoneid
+        "\n parsed " parsed2
+        "\n result:  " pcas)
       pcas)
 
     (catch Exception ex
@@ -167,15 +167,15 @@
 (defn query-eq-find-all
   ([table-name col-name row-data]
    (catcher/snatch {}
-                   (spy (jdbc/execute!
-                         (get-ds)
-                         (sql-query-find-eq table-name col-name row-data)))))
+     (spy (jdbc/execute!
+            (get-ds)
+            (sql-query-find-eq table-name col-name row-data)))))
 
   ([table-name col-name row-data col-name2 row-data2]
    (catcher/snatch {}
-                   (spy (jdbc/execute!
-                         (get-ds)
-                         (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))))
+     (spy (jdbc/execute!
+            (get-ds)
+            (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))))
 
 (defn query-eq-find-one
   ([table-name col-name row-data]
@@ -185,9 +185,9 @@
 
 #_(defn query-eq2-find-all [table-name col-name row-data col-name2 row-data2]
     (catcher/snatch {}
-                    (jdbc/query
-                     (get-ds)
-                     (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))
+      (jdbc/query
+        (get-ds)
+        (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))
 
 #_(defn query-eq2-find-one [table-name col-name row-data col-name2 row-data2]
     (first (query-eq-find-all table-name col-name row-data col-name2 row-data2)))
@@ -272,6 +272,19 @@
         (response_not_found (str "No such entity in " db_table " as " db_col_name " with " search))
         (handler request)))))
 
+(defn req-find-data-new
+  "Extracts requests path-param, searches on db_table in col_name for its value.
+   It does send404 if set true and no such entity is found.
+   If it exists it is associated with the request as reqkey"
+  [request handler path-param db_table db_col_name reqkey send404]
+  (let [search (-> request :path-params path-param)]
+    ;(logging/info "req-find-data: " search " " db_table " " db_col_name)
+    (if-let [result-db (query-eq-find-one db_table db_col_name search)]
+      (handler (assoc request reqkey result-db))
+      (if (= true send404)
+        (response_not_found (str "No such entity in " db_table " as " db_col_name " with " search))
+        (handler request)))))
+
 (defn req-find-data-search2
   "Searches on db_table in col_name/2 for values search and search2.
    It does send404 if set true and no such entity is found.
@@ -307,14 +320,14 @@
 (defn is-admin [user-id]
   (let [none (->
               (jdbc/execute!
-               (get-ds)
-               (spy (-> (sql/select :*)
-                        (sql/from :admins)
-                        (sql/where [:= :user_id (to-uuid user-id)])
-                        sql-format))
+                (get-ds)
+                (spy (-> (sql/select :*)
+                         (sql/from :admins)
+                         (sql/where [:= :user_id (to-uuid user-id)])
+                         sql-format))
 
                 ;["SELECT * FROM admins WHERE user_id = ? " user-id]
-               )empty?)
+                ) empty?)
         result (not none)]
     ;(logging/info "is-admin: " user-id " : " result)
     (spy result)))
@@ -342,12 +355,12 @@
         table-name "users"
 
         res (spy (jdbc/execute-one! (get-ds)
-                                    (spy (-> (sql/select :*)
-                                 ;(sql/from [:raw table-name])
-                                 ;(sql/from table-name)
-                                 ;(sql/from [[:inline table-name]])
-                                             (sql/from (keyword table-name))
-                                             sql-format))))
+                   (spy (-> (sql/select :*)
+                            ;(sql/from [:raw table-name])
+                            ;(sql/from table-name)
+                            ;(sql/from [[:inline table-name]])
+                            (sql/from (keyword table-name))
+                            sql-format))))
 
         p (println "\nres=" res)]))
 
@@ -357,7 +370,7 @@
    If creating collection-media-entry-arc, the collection permission is checked."
   ([request]
    (or (get-media-resource request :collection_id "collections" "Collection")
-       (get-media-resource request :media_entry_id "media_entries" "MediaEntry")))
+     (get-media-resource request :media_entry_id "media_entries" "MediaEntry")))
 
   ([request id-key table-name type]
 
@@ -367,16 +380,16 @@
      (when-let [id (-> request :parameters :path id-key)]
        ;(logging/info "get-media-resource" "\nid\n" id)
        (when-let [resource (spy (jdbc/execute-one! (get-ds)
-                                                   (spy (-> (sql/select :*)
-                                                            (sql/from (keyword table-name))
-                                                            (sql/where [:= :id (to-uuid id)])
-                                                            sql-format))))]
+                                  (spy (-> (sql/select :*)
+                                           (sql/from (keyword table-name))
+                                           (sql/where [:= :id (to-uuid id)])
+                                           sql-format))))]
          (assoc resource :type type :table-name table-name)))
 
      (catch Exception e
        (logging/error "ERROR: get-media-resource: " (ex-data e))
        (merge (ex-data e)
-              {:statuc 406, :body {:message (.getMessage e)}})))))
+         {:statuc 406, :body {:message (.getMessage e)}})))))
 
 (defn- ring-add-media-resource [request handler]
   (if-let [media-resource (get-media-resource request)]
@@ -398,24 +411,24 @@
       ;                  [(str "SELECT * FROM meta_data "
       ;                        "WHERE id = ? ") id])
       ;first)
-     (jdbc/execute-one! (get-ds)
-                        (-> (sql/select :*)
-                            (sql/from :meta_data)
-                            (sql/where [:= :id (to-uuid id)])
-                            sql-format))
+      (jdbc/execute-one! (get-ds)
+        (-> (sql/select :*)
+            (sql/from :meta_data)
+            (sql/where [:= :id (to-uuid id)])
+            sql-format))
 
-     (throw (IllegalStateException. (str "We expected to find a MetaDatum for "
-                                         id " but did not."))))))
+      (throw (IllegalStateException. (str "We expected to find a MetaDatum for "
+                                          id " but did not."))))))
 
 (defn- query-media-resource-for-meta-datum [meta-datum]
   (or (when-let [id (:media_entry_id meta-datum)]
         (get-media-resource {:parameters {:path {:media_entry_id id}}}
-                            :media_entry_id "media_entries" "MediaEntry"))
-      (when-let [id (:collection_id meta-datum)]
-        (get-media-resource {:parameters {:path {:collection_id id}}}
-                            :collection_id "collections" "Collection"))
-      (throw (IllegalStateException. (str "Getting the resource for "
-                                          meta-datum "
+          :media_entry_id "media_entries" "MediaEntry"))
+    (when-let [id (:collection_id meta-datum)]
+      (get-media-resource {:parameters {:path {:collection_id id}}}
+        :collection_id "collections" "Collection"))
+    (throw (IllegalStateException. (str "Getting the resource for "
+                                        meta-datum "
                                           is not implemented yet.")))))
 
 (defn- ring-add-meta-datum-with-media-resource [request handler]
@@ -481,8 +494,8 @@
   ;((assoc-in request [:query-params2] (-> request :parameters :query))
   (handler (assoc request :query-params
                   (->> request :query-params
-                       (map (fn [[k v]] [k (try-as-json v)]))
-                       (into {})))))
+                    (map (fn [[k v]] [k (try-as-json v)]))
+                    (into {})))))
 
 ; end json query param helpers
 
@@ -521,6 +534,32 @@
     (fn [request]
       (let [meta-key-id (-> request :parameters :path param)]
         (if (re-find #"^[a-z0-9\-\_\:]+:[a-z0-9\-\_\:]+$" meta-key-id)
+          (handler request)
+          (response_failed (str "Wrong meta_key_id format! See documentation."
+                                " (" meta-key-id ")") 422))))))
+
+
+
+
+
+(defn wrap-check-valid-meta-key-new [param]
+  (fn [handler]
+    (fn [request]
+
+      (let [meta-key-id (-> request :path-params param)
+            p (println ">o> abc1.requ" request)
+            p (println ">o> abc1.param2" (-> request :path-params))
+            p (println ">o> abc1.param" (-> request :parameters))
+            p (println ">o> abc2.query" (-> request :query))
+
+            p (println ">o> wrap-check-valid-meta-key" meta-key-id)
+            p (println ">o> wrap-check-valid-meta-key" (class meta-key-id))
+
+            check  (re-find #"^[a-z0-9\-\_\:]+:[a-z0-9\-\_\:]+$" meta-key-id)
+            p (println ">o> check" check)
+
+            ]
+        (if (:and (not (nil? meta-key-id)) (re-find #"^[a-z0-9\-\_\:]+:[a-z0-9\-\_\:]+$" meta-key-id))
           (handler request)
           (response_failed (str "Wrong meta_key_id format! See documentation."
                                 " (" meta-key-id ")") 422))))))

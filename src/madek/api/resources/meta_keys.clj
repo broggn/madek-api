@@ -2,7 +2,7 @@
   (:require
    ;[clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
-            ;; all needed imports
+   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [madek.api.db.core :refer [get-ds]]
@@ -10,14 +10,14 @@
    [madek.api.resources.meta-keys.meta-key :as mk]
    [madek.api.resources.shared :as sd]
 
-;; all needed imports
+   ;; all needed imports
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
 
    [madek.api.utils.rdbms :as rdbms]
 
-;[leihs.core.db :as db]
+   ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
 
    ;[leihs.core.db :as db]
@@ -26,7 +26,7 @@
    [reitit.coercion.schema]
    [reitit.coercion.spec]
 
-   [madek.api.utils.helper :refer [t d]]
+   [madek.api.utils.helper :refer [t d v fv]]
 
    [schema.core :as s]))
 
@@ -89,13 +89,15 @@
 (defn handle_adm-get-meta-key [req]
   (let [mk (-> req :meta_key)
         result (mk/include-io-mappings
-                (adm-export-meta-key mk) (:id mk))]
+                 (adm-export-meta-key mk) (:id mk))]
     (sd/response_ok result)))
 
 (defn handle_usr-get-meta-key [req]
   (let [mk (-> req :meta_key)
+        p (println ">o> handle_usr-get-meta-key!!!! mk=" mk)
+        p (println ">o> handle_usr-get-meta-key!!!! mk.class=" (class mk))
         result (mk/include-io-mappings
-                (user-export-meta-key mk) (:id mk))]
+                 (user-export-meta-key mk) (:id mk))]
     (sd/response_ok result)))
 
 (defn handle_create_meta-key [req]
@@ -107,7 +109,7 @@
                       sql-format)
         db-result (jdbc/execute-one! (get-ds) sql-query)]
 
-        ;db-result (jdbc/insert! (get-ds) :meta_keys data)]
+    ;db-result (jdbc/insert! (get-ds) :meta_keys data)]
 
     (sd/response_ok db-result)))
 
@@ -124,8 +126,8 @@
         db-result (jdbc/execute! (get-ds) sql-query)]
 
     (logging/info "handle_update_meta-key:"
-                  "\nid: " id
-                  "\ndwid\n" dwid)
+      "\nid: " id
+      "\ndwid\n" dwid)
     ;(if-let [db-result (jdbc/update! (get-ds)
     ;                                 :meta_keys dwid ["id = ?" id])]
 
@@ -133,8 +135,8 @@
 
       (let [new-data (sd/query-eq-find-one :meta_keys :id id)]
         (logging/info "handle_update_meta-key:"
-                      "\ndb-result:\n" db-result
-                      "\nnew-data:\n" new-data)
+          "\ndb-result:\n" db-result
+          "\nnew-data:\n" new-data)
         (sd/response_ok new-data))
       (sd/response_failed "Could not update meta_key." 406))))
 
@@ -156,11 +158,11 @@
   {:id s/Str
    :is_extensible_list s/Bool
    :meta_datum_object_type (s/enum "MetaDatum::Text"
-                                   "MetaDatum::TextDate"
-                                   "MetaDatum::JSON"
-                                   "MetaDatum::Keywords"
-                                   "MetaDatum::People"
-                                   "MetaDatum::Roles")
+                             "MetaDatum::TextDate"
+                             "MetaDatum::JSON"
+                             "MetaDatum::Keywords"
+                             "MetaDatum::People"
+                             "MetaDatum::Roles")
    (s/optional-key :keywords_alphabetical_order) s/Bool
    (s/optional-key :position) s/Int
    :is_enabled_for_media_entries s/Bool
@@ -194,7 +196,7 @@
    ;:vocabulary_id s/Str
 
    (s/optional-key :allowed_people_subtypes) [(s/enum "People" "PeopleGroup")] ; TODO check more people subtypes?!?
-   (s/optional-key :text_type) s/Str ; TODO enum
+   (s/optional-key :text_type) s/Str                        ; TODO enum
    (s/optional-key :allowed_rdf_class) (s/maybe s/Str)
 
    (s/optional-key :labels) (s/maybe sd/schema_ml_list)
@@ -244,7 +246,7 @@
 (def schema_query-meta-key
   {(s/optional-key :id) s/Str
    (s/optional-key :vocabulary_id) s/Str
-   (s/optional-key :meta_datum_object_type) s/Str ; TODO enum
+   (s/optional-key :meta_datum_object_type) s/Str           ; TODO enum
    (s/optional-key :is_enabled_for_collections) s/Bool
    (s/optional-key :is_enabled_for_media_entries) s/Bool
    (s/optional-key :scope) (s/enum "view" "use")
@@ -258,10 +260,10 @@
 
 (defn wwrap-find-meta_key [param colname send404]
   (fn [handler]
-    (fn [request] (sd/req-find-data request handler
-                                    param
-                                    :meta_keys colname
-                                    :meta_key send404))))
+    (fn [request] (sd/req-find-data-new request handler
+                    param
+                    :meta_keys colname
+                    :meta_key send404))))
 
 (def admin-routes
   ["/meta-keys"
@@ -284,7 +286,7 @@
             :parameters {:body schema_create-meta-key}
             :content-type "application/json"
             :coercion reitit.coercion.schema/coercion
-            :responses {200 {:body s/Any} ; TODO response coersion
+            :responses {200 {:body s/Any}                   ; TODO response coersion
                         406 {:body s/Any}}}}]
 
    ["/:id"
@@ -312,7 +314,7 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Str}
                         :body schema_update-meta-key}
-           :responses {200 {:body s/Any} ; TODO response coercion
+           :responses {200 {:body s/Any}                    ; TODO response coercion
                        404 {:body {:message s/Str}}
                        422 {:body {:message s/Str}}}}
 
@@ -364,43 +366,35 @@
            :content-type "application/json"
            :coercion reitit.coercion.schema/coercion
 
-               ; TODO or better own link
+           ; TODO or better own link
            :responses {200 {:body {:meta-keys [schema_export-meta-key-usr]}}}}}]
 
    ["/:id"
-    {:get {:summary (sd/sum_usr_pub (t "Get meta-key by id"))
+    {:get {:summary (sd/sum_usr_pub (v (t "Get meta-key by id")))
            :description "Get meta-key by id. Returns 404, if no such meta-key exists."
-           ;:swagger {:produces "application/json"}
            :content-type "application/json"
            :accept "application/json"
            :handler handle_usr-get-meta-key
-           :middleware [(sd/wrap-check-valid-meta-key :id)
+           ;
+           :middleware [(sd/wrap-check-valid-meta-key-new :id)
                         (wwrap-find-meta_key :id :id true)]
            :coercion reitit.coercion.schema/coercion
-           ;:parameters {:path {:id s/Str}}
 
-
-           ;; todo: how to define validation???
            :swagger {:produces "application/json"
                      :parameters [{:name "id"
-                                   :in "query"
+                                   :in "path"
                                    :description "e.g.: madek_core:subtitle"
+                                   :type "string"
                                    :required true
-                                   ;:schema {:type "string"
-                                   ;         :format "string"
-                                   ;         :default ""
-                                   ;         :pattern #"^\s*\S.*$"
-                                   ;         }
-
-                                   :schema {:type "string"
-                                            :pattern "^\\s*\\S.*$"}
-
-                                   }
-                                  ]
-                     }
+                                   :pattern "^[a-z0-9\\-\\_\\:]+:[a-z0-9\\-\\_\\:]+$"
+                                   }]}
 
            :responses {200 {:body schema_export-meta-key-usr}
-                       404 {:body {:message s/Str}}
+
+                       404 {:description "No entry found for the given id"
+                            :schema s/Str
+                            :examples {"application/json" {:message "No such entity in :meta_keys as :id with not-existing:key"}}}
+
                        422 {:body {:message s/Str}}}}}]])
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)
