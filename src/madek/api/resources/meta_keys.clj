@@ -397,6 +397,7 @@
                                         :meta_keys colname
                                         :meta_key send404))))
 
+;; TODO: move to shared
 (defn generate-swagger-pagination-params []
   {:produces "application/json"
    :parameters [{:name "page"

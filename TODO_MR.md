@@ -50,6 +50,30 @@ Needed changes
       ; .. but in this case you have to fetch id like this:
       id (-> req :path-params :id)         ; instead of:  id (-> req :parameters :path :id)
       ```
+   3. Use `query`    
+      ```clojure
+
+      :parameters [{:name "page"
+            :in "query"
+            :description "Page number, defaults to 1"
+            :required true
+            :value 1
+            :default 1
+            :type "number"
+            :pattern "^[1-9][0-9]*$"}
+            {:name "count"
+            :in "query"
+            :description "Number of items per page, defaults to 100"
+            :required true
+            :value 100
+            :default 100
+            :type "number"
+            :pattern "^[1-9][0-9]*$"}]})
+      
+      
+      ; .. but in this case you have to fetch id like this:
+      id (-> req :query-params :id)         ; instead of:  id (-> req :parameters :path :id)
+      ```
 
 ToAsk
 --

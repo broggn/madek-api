@@ -9,6 +9,7 @@
    [logbug.debug :as debug]
    [madek.api.db.core :refer [get-ds]]
    ;[madek.api.utils.rdbms :as rdbms]
+   [madek.api.utils.helper :refer [str-to-int]]
    ;[madek.api.utils.sql :as sql]
 
    [madek.api.resources.shared :as sd]
@@ -19,7 +20,7 @@
 
    [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
 
-         ;[leihs.core.db :as db]
+   ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]))
 
 (defn- where-clause
@@ -32,17 +33,17 @@
       [:or
        [:= perm-kw true]
        [:in :vocabularies.id vocabulary-ids]])))
-      ;[:= :vocabularies.enabled_for_public_view true]
-      ;[:or
-      ;  [:= :vocabularies.enabled_for_public_view true]
-      ;  [:in :vocabularies.id vocabulary-ids]])))
+;[:= :vocabularies.enabled_for_public_view true]
+;[:or
+;  [:= :vocabularies.enabled_for_public_view true]
+;  [:in :vocabularies.id vocabulary-ids]])))
 
 (defn- base-query
   [user-id scope]
-  (-> (sql/select :*); :meta_keys.id :meta_keys.vocabulary_id)
+  (-> (sql/select :*)                                       ; :meta_keys.id :meta_keys.vocabulary_id)
       (sql/from :meta_keys)
       (sql/join :vocabularies
-                [:= :meta_keys.vocabulary_id :vocabularies.id])
+        [:= :meta_keys.vocabulary_id :vocabularies.id])
       (sql/where (where-clause user-id scope))))
 
 (defn- build-query [request]
@@ -68,7 +69,9 @@
         (sd/build-query-param qparams :is_enabled_for_media_entries)
 
         (sql/order-by :meta_keys.id)
-        (sql/limit size offset)
+
+        (sql/offset offset)
+        (sql/limit size)                                    ;; TODO: FIXME / TEST-IT
 
         sql-format)))
 

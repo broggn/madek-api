@@ -11,22 +11,19 @@
    [logbug.catcher :as catcher]
    [madek.api.db.core :refer [get-ds]]
 
-         ;[madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
    [madek.api.resources.vocabularies.index :refer [get-index]]
-               ;[madek.api.utils.rdbms :as rdbms]
    [madek.api.resources.vocabularies.permissions :as permissions]
 
-               ;; all needed imports
+   ;; all needed imports
    [madek.api.resources.vocabularies.vocabulary :refer [get-vocabulary]]
 
-         ;[leihs.core.db :as db]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
 
    [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-   ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
-   [next.jdbc :as jdbc]
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist f replace-java-hashmaps t v]]
+
 
    [reitit.coercion.schema]
 
@@ -44,7 +41,7 @@
     (catcher/with-logging {}
       (let [data (-> req :parameters :body)
 
-;ins-res (jdbc/insert! (rdbms/get-ds) :vocabularies data)]
+            ;ins-res (jdbc/insert! (rdbms/get-ds) :vocabularies data)]
 
             sql-query (-> (sql/insert-into :vocabularies)
                           (sql/values [data])
@@ -104,7 +101,7 @@
             (if-let [result (::jdbc/update-count upd-res)]
               (let [new-data (sd/query-eq-find-one :vocabularies :id id)]
                 (logging/info "handle_update-vocab"
-                              "\nid: " id "\nnew-data:\n" new-data)
+                  "\nid: " id "\nnew-data:\n" new-data)
                 (sd/response_ok (transform_ml new-data)))
               (sd/response_failed "Could not update vocabulary." 406)))
           (sd/response_not_found "No such vocabulary."))))
@@ -205,20 +202,42 @@
    :users [schema_export-user-perms]
    :groups [schema_export-group-perms]})
 
+
+;; TODO: move to shared
+(defn generate-swagger-pagination-params []
+  {:produces "application/json"
+   :parameters [{:name "page"
+                 :in "query"
+                 :description "Page number, defaults to 1"
+                 :required true
+                 :value 1
+                 :default 1
+                 :type "number"
+                 :pattern "^[1-9][0-9]*$"}
+                {:name "count"
+                 :in "query"
+                 :description "Number of items per page, defaults to 100"
+                 :required true
+                 :value 100
+                 :default 100
+                 :type "number"
+                 :pattern "^[1-9][0-9]*$"}]})
+
+
 ; TODO vocab permission
 (def admin-routes
   ["/vocabularies"
+   {:swagger {:tags ["admin/vocabularies"] :security [{"auth" []}]}}
    ["/"
-    {:get {:summary "Get list of vocabularies ids."
+    {:get {:summary (t "Get list of vocabularies ids.")
            :description "Get list of vocabularies ids."
            :handler get-index
            :middleware [wrap-authorize-admin!]
            :content-type "application/json"
+           :swagger (generate-swagger-pagination-params)
            :coercion reitit.coercion.schema/coercion
-           :parameters {:query {(s/optional-key :page) s/Int
-                                (s/optional-key :count) s/Int}}
            :responses {200 {:body {:vocabularies [schema_export-vocabulary]}}}
-           :swagger {:produces "application/json"}}
+           }
 
      :post {:summary (sd/sum_adm "Create vocabulary.")
             :handler handle_create-vocab
@@ -268,6 +287,7 @@
               :swagger {:produces "application/json"}}}]
 
    ["/:id/perms"
+    ;{:swagger {:tags ["admin/vocabulary/perms"] :security [{"auth" []}]}}
     ["/"
      {:get
       {:summary (sd/sum_adm "List vocabulary permissions")
@@ -418,6 +438,8 @@
 
 (def user-routes
   ["/vocabularies"
+   {:swagger {:tags ["admin/people"]}}
+
    ["/" {:get {:summary "Get list of vocabularies ids."
                :description "Get list of vocabularies ids."
                :handler get-index

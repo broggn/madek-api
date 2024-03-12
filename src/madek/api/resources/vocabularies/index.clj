@@ -6,6 +6,7 @@
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
    [madek.api.resources.vocabularies.permissions :as permissions]
+   [madek.api.utils.helper :refer [str-to-int]]
    [next.jdbc :as jdbc]))
 
 (defn- where-clause
@@ -18,15 +19,24 @@
        [:in :vocabularies.id vocabulary-ids]])))
 
 (defn- base-query
-  [user-id]
-  (-> (sql/select :*);:id)
+  [user-id size offset]
+  (-> (sql/select :*)                                       ;:id)
       (sql/from :vocabularies)
       (sql/where (where-clause user-id))
+      (sql/offset offset)
+      (sql/limit size)
       sql-format))
 
 (defn- query-index-resources [request]
   (let [user-id (-> request :authenticated-entity :id)
-        query (base-query user-id)]
+        qparams (-> request :query-params)
+        page (get qparams "page")
+        count (get qparams "count")
+
+        offset (str-to-int page 1)
+        size (str-to-int count 5)
+        query (base-query user-id size offset)
+        ]
     ;(logging/info "query-index-resources: " query)
     (jdbc/execute! (get-ds) query)))
 
@@ -39,8 +49,8 @@
   (catcher/with-logging {}
     (let [db-result (query-index-resources request)
           result (->> db-result
-                      (map transform_ml)
-                      (map sd/remove-internal-keys))]
+                   (map transform_ml)
+                   (map sd/remove-internal-keys))]
       (sd/response_ok {:vocabularies result}))))
 
 ;### Debug ####################################################################

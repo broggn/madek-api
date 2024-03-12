@@ -15,11 +15,28 @@
 ; [madek.api.utils.helper :refer [str-to-int]]
 (defn str-to-int
   "Attempts to convert a string to an integer, returning a default value if conversion fails."
-  [str default-value]
+  [value default-value]
+  (println ">o> value=" value ", default-value=" default-value)
   (try
-    (Integer/parseInt str)
+    (Integer/parseInt (str value))
     (catch NumberFormatException e
-      default-value)))
+      default-value)
+    ))
+
+
+(comment
+  (let [
+        p (println ">o> int" (class 1))
+
+        res (str-to-int "123" 0)
+        res (str-to-int 456 0)
+        res (str-to-int "x456" 0)
+        res (str-to-int {} 0)
+        res (str-to-int [] 0)
+        ]
+    res
+    )
+  )
 
 ; [madek.api.utils.helper :refer [to-uuid]]
 (defn to-uuid
@@ -34,8 +51,8 @@
        value)))
 
   ([value key]
-  ; ;(def keys-to-cast-to-uuid [:media_entry_id :media_file_id :preview_id :media_resource_id :media_file])
-  ; ;(def keys-to-cast-to-uuid [])
+   ; ;(def keys-to-cast-to-uuid [:media_entry_id :media_file_id :preview_id :media_resource_id :media_file])
+   ; ;(def keys-to-cast-to-uuid [])
    (def keys-to-cast-to-uuid [:user_id :id])
 
    ;(println (str "??? INFO / CAST TO UUID, id=" id ", key=" key ", keys\"=" keys-to-cast-to-uuid))
@@ -55,21 +72,21 @@
      value
      (to-uuid value key)))
 
-;(try
-   ;  (if (:and (contains? keys-to-cast-to-uuid key) (instance? String value))
-   ;    (UUID/fromString value)
-   ;    value)
-   ;  (catch Exception e
-   ;    (logging/warn ">>> ERROR2 in to-uuid[id], id=" value ", key=" key " exception=" (.getMessage e))
-   ;    value))
+  ;(try
+  ;  (if (:and (contains? keys-to-cast-to-uuid key) (instance? String value))
+  ;    (UUID/fromString value)
+  ;    value)
+  ;  (catch Exception e
+  ;    (logging/warn ">>> ERROR2 in to-uuid[id], id=" value ", key=" key " exception=" (.getMessage e))
+  ;    value))
   )
 (comment
   (let [;p (println "\nquery ok1" (to-uuid "123e4567-e89b-12d3-a456-426614174000" :user_id))
         ;p (println "\nquery ok1" (class (to-uuid "123e4567-e89b-12d3-a456-426614174000" :user_id)))
         ;
 
-        k "123e4567-e89b-12d3-a456-426614174000" ;ok
-        k "123e" ;error - return val
+        k "123e4567-e89b-12d3-a456-426614174000"            ;ok
+        k "123e"                                            ;error - return val
         ;k 123                                               ;ok - return val
 
         p (println "\nquery result=" (to-uuid k))
@@ -113,7 +130,7 @@
   (-> map
       (update :external_uris #(if (nil? %)
                                 [:raw "'{}'"]
-                                (convert-to-raw-set %))) ;;rename to convert-to-raw-set
+                                (convert-to-raw-set %)))    ;;rename to convert-to-raw-set
 
       (update :creator_id #(if (contains? map :creator_id) (to-uuid % :creator_id)))
 
@@ -155,7 +172,7 @@
       (modify-if-exists :external_uris #(if (nil? %) [:raw "'{}'"] (convert-to-raw-set %)))
       (modify-if-exists :creator_id #(if (contains? m :creator_id) (to-uuid % :creator_id)))
       (modify-if-exists :allowed_people_subtypes #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))))
-      ;(modify-if-exists :allowed_people_subtypes #(if (nil? %) [:raw "'[]'"] (convert-to-raw-array %)))))
+;(modify-if-exists :allowed_people_subtypes #(if (nil? %) [:raw "'[]'"] (convert-to-raw-array %)))))
 
 (comment
 
@@ -180,12 +197,13 @@
                       transformed-value (to-hstore field-value)] ; Assume to-hstore is defined elsewhere
                   (assoc acc key transformed-value))
                 acc))
-            data
-            keys)))
+      data
+      keys)))
 
 (defn array-to-map [arr]
-  (zipmap arr (range (count arr)))) (defn array-to-map [arr]
-                                      (zipmap arr (range (count arr))))
+  (zipmap arr (range (count arr))))
+(defn array-to-map [arr]
+  (zipmap arr (range (count arr))))
 
 (defn map-to-array [m]
   (map first (sort-by val m)))
@@ -203,7 +221,7 @@
 (defn replace-java-hashmaps [m]
   (reduce-kv (fn [acc k v]
                (assoc acc k (replace-java-hashmap v)))
-             {}
-             m))
+    {}
+    m))
 
 
