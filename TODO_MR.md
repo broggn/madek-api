@@ -75,6 +75,16 @@ Needed changes
       id (-> req :query-params :id)         ; instead of:  id (-> req :parameters :path :id)
       ```
 
+Better way to convert data
+--
+```clojure
+(defn transform_ml [data]
+   (assoc data
+   :labels (sd/transform_ml (:labels data))
+   :descriptions (sd/transform_ml (:descriptions data))))
+```
+
+
 ToAsk
 --
 1. How are `auth-enttity/is_admin` use?

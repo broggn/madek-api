@@ -31,6 +31,7 @@
 
 ; TODO logwrite
 
+;; TODO: move to shared/helpers
 (defn transform_ml [data]
   (assoc data
          :labels (sd/transform_ml (:labels data))
@@ -44,12 +45,17 @@
             ;ins-res (jdbc/insert! (rdbms/get-ds) :vocabularies data)]
 
             sql-query (-> (sql/insert-into :vocabularies)
-                          (sql/values [data])
+                          ;(sql/values [data])
+
+                          (sql/values [(convert-map-if-exist (cast-to-hstore data))])
+                          (sql/returning :*)
+
                           sql-format)
             ins-res (jdbc/execute-one! (get-ds) sql-query)]
 
-        (if-let [result (::jdbc/update-count ins-res)]
-          (sd/response_ok (transform_ml result))
+        ;(if-let [result (::jdbc/update-count ins-res)]
+        (if ins-res
+          (sd/response_ok (transform_ml ins-res))
           (sd/response_failed "Could not create vocabulary." 406))))
     (catch Exception ex (sd/response_exception ex))))
 
@@ -239,15 +245,26 @@
            :responses {200 {:body {:vocabularies [schema_export-vocabulary]}}}
            }
 
-     :post {:summary (sd/sum_adm "Create vocabulary.")
+     :post {:summary (sd/sum_adm (t "Create vocabulary."))
             :handler handle_create-vocab
             :middleware [wrap-authorize-admin!]
+
+            :description (slurp "./md/vocabularies-post.md")
+
             :content-type "application/json"
             :accept "application/json"
             :coercion reitit.coercion.schema/coercion
             :parameters {:body schema_import-vocabulary}
             :responses {200 {:body schema_export-vocabulary}
-                        406 {:body s/Any}}
+
+                        406 {:description "Creation failed."
+                             :schema s/Str
+                             :examples {"application/json" {:message "Could not create vocabulary."}}}
+
+                        500 {:description "Duplicate key"
+                             :schema s/Str
+                             :examples {"application/json" {:message "ERROR: duplicate key value violates unique constraint 'vocabularies_pkey' Detail: Key (id)=(toni_dokumentation2) already exists."}}}
+                        }
             :swagger {:consumes "application/json" :produces "application/json"}}}]
 
    ["/:id"
