@@ -312,15 +312,13 @@
 
 
 (defn handle_delete_meta-key [req]
-  (let [meta-key (-> req :meta_key)
+  (let [
+        id (-> req :path-params :id)
+        p (println ">o> id=" id)
 
-        ;db-result (jdbc/delete! (get-ds) :meta_keys ["id = ?" (:id meta-key)])]
-
-        p (println ">o> handle_delete_meta-key meta-key1=" req)
-        p (println ">o> handle_delete_meta-key meta-key2=" meta-key)
 
         sql-query (-> (sql/delete-from :meta_keys)
-                      (sql/where [:= :id (:id meta-key)])
+                      (sql/where [:= :id id])
                       (sql/returning :*)
                       sql-format)
 
@@ -544,10 +542,8 @@
                             :examples {"application/json" {:message "Wrong meta_key_id format! See documentation. (fdas)"}}}
                        }}
 
-     :put {:summary (sd/sum_adm "Update meta-key.")
+     :put {:summary (sd/sum_adm (t "Update meta-key."))
            :handler handle_update_meta-key
-           ;:swagger {:produces "application/json" :consumes "application/json"}
-
            :content-type "application/json"
            :accept "application/json"
 
@@ -570,33 +566,39 @@
                      }
            :parameters {:body schema_update-meta-key}
 
-           :responses {
-
-                       ;200 {:body s/Any}                    ; TODO response coercion
-                       200 {:body schema_export-meta-key-adm} ; TODO response coercion
-                       ;404 {:body {:message s/Str}}
-
+           :responses {200 {:body schema_export-meta-key-adm}
                        406 {
                             :description "Update failed"
                             :schema s/Str
                             :examples {"application/json" {:message "Could not update meta_key."}}}
-
-                       ;422 {:body {:message s/Str}}
                        }}
 
 
 
 
 
-     :delete {:summary (sd/sum_adm "Delete meta-key.")
+     :delete {:summary (sd/sum_adm (t "Delete meta-key."))
               :handler handle_delete_meta-key
-              :swagger {:produces "application/json" :consumes "application/json"}
-              :middleware [(sd/wrap-check-valid-meta-key :id)
+              :middleware [(sd/wrap-check-valid-meta-key-new :id)
                            (wwrap-find-meta_key :id :id true)]
               :coercion reitit.coercion.schema/coercion
-              :parameters {:path {:id s/Str}}
+              :swagger {:produces "application/json"
+                        :consumes "application/json"
+                        :parameters [{:name "id"
+                                      :in "path"
+                                      :description "e.g.: copyright:test_me_now22"
+                                      :type "string"
+                                      :required true
+                                      }]
+                        }
+
+
               :responses {200 {:body schema_export-meta-key-adm}
-                          404 {:body {:message s/Str}}
+                          406 {
+                               :description "Entry not found"
+                               :schema s/Str
+                               :examples {"application/json" {:message "No such entity in :meta_keys as :id with copyright:test_me_now22"}}}
+                          ;:examples {"application/json" {:message "Could not delete meta-key."}}}
                           422 {:body {:message s/Str}}}}}]])
 
 ; TODO tests
