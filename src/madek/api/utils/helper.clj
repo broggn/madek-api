@@ -214,5 +214,20 @@
 (defn map-to-array [m]
   (map first (sort-by val m)))
 
+;; =================================================================
+
+;; convert java.*.HashMap to ClolureMap
+(defn replace-java-hashmap [v]
+  (if (instance? java.util.HashMap v)
+    (into {} (for [[k v] v]
+               [(keyword k) v]))
+    v))
+
+; [madek.api.utils.helper :refer [replace-java-hashmaps]]
+(defn replace-java-hashmaps [m]
+  (reduce-kv (fn [acc k v]
+               (assoc acc k (replace-java-hashmap v)))
+    {}
+    m))
 
 

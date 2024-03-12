@@ -12,7 +12,28 @@ Known issue
       "/api/meta-keys/#{meta_key_id}"
       "/api/media-entry/#{media_entry_id}"
       "/api/collection/#{collection_id}"
-      ```  
+      ```
+2. meta-keys
+   1. `ERROR:  new row for relation "meta_keys" violates check constraint "meta_key_id_chars" 
+3. Response coercion-issue / java.util.HashMap to clojure-map
+   ```json
+   // response error
+   "errors": {
+   "labels": "(not (map? a-java.util.HashMap))",
+   "documentation_urls": "(not (map? a-java.util.HashMap))",
+   "descriptions": "(not (map? a-java.util.HashMap))",
+   "hints": "(not (map? a-java.util.HashMap))"
+   },
+   "type": "reitit.coercion/response-coercion",
+   "coercion": "schema",
+   ```
+   - Solution
+   ```clojure
+   ;; convertion from java.hashmap to clj-map
+   ; [clojure.java.data :as data]
+   db-result (assoc db-result :documentation_urls (data/java-map (:documentation_urls db-result)))
+   ```
+   
 
 Needed changes
 --

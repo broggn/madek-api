@@ -5,6 +5,7 @@
    ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
+   [cheshire.core :as json]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.meta-keys.index :as mkindex]
    [madek.api.resources.meta-keys.meta-key :as mk]
@@ -31,9 +32,13 @@
    [reitit.coercion.schema]
    [reitit.coercion.spec]
 
-   [madek.api.utils.helper :refer [t d v fv f cast-to-hstore convert-map convert-map-if-exist]]
+   [madek.api.utils.helper :refer [t d v fv f cast-to-hstore convert-map replace-java-hashmaps convert-map-if-exist]]
 
-   [schema.core :as s]))
+   [schema.core :as s])
+
+  ;(:import (java.util.HashMap))
+
+  )
 
 (defn adm-export-meta-key [meta-key]
   (-> meta-key
@@ -105,40 +110,65 @@
                  (user-export-meta-key mk) (:id mk))]
     (sd/response_ok result)))
 
+
+(comment
+  (let [
+        map {:hints (java.util.HashMap. {"de" "string1" "en" "string"})
+             :labels (java.util.HashMap. {"de" "string2" "en" "string"})
+             :is_enabled_for_collections true
+             :allowed_rdf_class :Keyword
+             :documentation_urls (java.util.HashMap. {"de" "string3" "en" "string"})
+             :is_enabled_for_media_entries true
+             :keywords_alphabetical_order true
+             :id "copyright:test_me_now1003"
+             :meta_datum_object_type :MetaDatum/TextDate
+             :vocabulary_id :copyright
+             :admin_comment "string"
+             :position 0
+             :is_extensible_list true
+             :descriptions (java.util.HashMap. {"de" "string4" "en" "string"})
+             :allowed_people_subtypes ["People"]
+             :text_type :line}
+
+        ;map {:hints  (java.util.HashMap. {"de" "string1" "en" "string"})}
+
+        clj-map map
+        p (println ">o> clj-map1" clj-map)
+
+        clj-map (replace-java-hashmaps map)
+
+        p (println ">o> clj-map1" clj-map)
+        p (println ">o> clj-map1" (class (:hints clj-map)))
+        ]
+
+    clj-map
+    )
+  )
+
+
 (defn handle_create_meta-key [req]
   (let [data (-> req :parameters :body)
 
-        te_p (println ">o> handle_create_meta-key!!!! data=" data)
+        p (println ">o> handle_create_meta-key!!!! data=" data)
 
         sql-query (-> (sql/insert-into :meta_keys)
                       (sql/values [(convert-map-if-exist (cast-to-hstore data))])
                       (sql/returning :*)
                       sql-format)
+        p (println ">o> handle_create_meta-key!!!! sql-query=" sql-query)
 
-        te_pr (println ">o> handle_create_meta-key!!!! sql-query=" sql-query)
+        db-result (jdbc/execute-one! (get-ds) sql-query)
+        p (println ">o> db-result1" db-result)
 
-        db-result (jdbc/execute-one! (get-ds) sql-query)]
+        db-result (replace-java-hashmaps db-result)
 
-    ;db-result (jdbc/insert! (get-ds) :meta_keys data)]
+        p (println ">o> db-result1x" db-result)
+        p (println ">o> db-result1y" (class (:hints db-result)))
+        p (println ">o> db-result2z" (json/generate-string db-result))
+        ]
 
     (sd/response_ok db-result)))
 
-
-
-;(ns leihs.my.back.html
-;    (:refer-clojure :exclude [keyword str])
-;    (:require
-;      [hiccup.page :refer [html5]]
-;      [honey.sql :refer [format] :rename {format sql-format}]
-;      [honey.sql.helpers :as sql]
-;      [leihs.core.http-cache-buster2 :as cache-buster]
-;      [leihs.core.json :refer [to-json]]
-;      [leihs.core.remote-navbar.shared :refer [navbar-props]]
-;      [leihs.core.shared :refer [head]]
-;      [leihs.core.url.core :as url]
-;      [leihs.my.authorization :as auth]
-;      [leihs.core.db :as db]
-;      [next.jdbc :as jdbc]))
 
 (comment
 
@@ -167,8 +197,8 @@
               :labels {:de "string" :en "string"}
               :hints {:de "string" :en "string"}
               :keywords_alphabetical_order true
-              :text_type "line"                              ;; OR block
-              :allowed_people_subtypes  ["People"]
+              :text_type "line"                             ;; OR block
+              :allowed_people_subtypes ["People"]
               }
         ;; TODO: get rid of cast-fnc
         data (convert-map-if-exist (cast-to-hstore data))
@@ -184,10 +214,10 @@
 
         db-result (jdbc/execute-one! (get-ds) sql-query)]
 
-        p (println "\nquery" sql-query)
-        p (println "\nquery2" db-result)
+    p (println "\nquery" sql-query)
+    p (println "\nquery2" db-result)
 
-       )
+    )
   )
 
 
@@ -388,12 +418,9 @@
            :description "Get list of meta-key ids. Paging is used as you get a limit of 100 entries."
            :handler handle_adm-query-meta-keys
            :middleware [wrap-authorize-admin!]
-           ;:swagger {:produces "application/json"}
-
            :swagger (generate-swagger-pagination-params)
 
            ; FIXME: returns vocabulary.id instead of meta-keys.id ??
-
 
            :parameters {:query schema_query-meta-key}
            :content-type "application/json"
@@ -404,51 +431,33 @@
 
                        }}
 
-     :post {:summary (sd/sum_adm "Create meta-key.")
+     :post {:summary (sd/sum_adm (t "Create meta-key."))
             :handler handle_create_meta-key
             :middleware [wrap-authorize-admin!]
-            ;:swagger {:produces "application/json" :consumes "application/json"
-            ;
-            ;          :title "title3"
-            ;          :text "text3"
-            ;          :summary "summary3"
-            ;          }
-
-          ;
-          ;  :description "Get list of meta-key ids. Paging is used as you get a limit of 100 entries.
-          ;<code>\n{\n  \"descriptions\": {\"de\": \"string\", \"en\": \"string\"},\n \"meta_datum_object_type\": \"MetaDatum::TextDate\",\n  \"is_extensible_list\": true,\n \"is_enabled_for_collections\": true,\n  \"allowed_rdf_class\": \"Keyword\",\n            \"documentation_urls\": {\"de\": \"string\", \"en\": \"string\"},\n  \"vocabulary_id\": \"copyright\",\n \"is_enabled_for_media_entries\": true,\n  \"id\": \"copyright:test_me_now10\",\n  \"position\": 0,\n\"admin_comment\": \"string\",\n  \"labels\": {\"de\": \"string\", \"en\": \"string\"},\n \"hints\": {\"de\": \"string\", \"en\": \"string\"},\n  \"keywords_alphabetical_order\": true,\n \"text_type\": \"line\",\n  \"allowed_people_subtypes\": [\"People\"]\n}\n</code>
-          ;  "
-
 
             :description (slurp "./md/meta-key-post.md")
 
-            :parameters {
-                         ;:title "title"
-                         ;:text "text"
-                         ;:summary "summary"
-                         :body schema_create-meta-key}
-            ;:parameters {:body schema_create-meta-key
-            ;             :examples {"application/json" {:message "??No such entity in :meta_keys as :id with not-existing:key"}}
-            ;             }
-
-            ;:parameters {:description "No entry found for the given id"
-            ; :schema {:body schema_create-meta-key}
-            ; :examples {"application/json" {:message "??No such entity in :meta_keys as :id with not-existing:key"}}}
-
+            :parameters {:body schema_create-meta-key}
 
             :content-type "application/json"
             :coercion reitit.coercion.schema/coercion
-            :responses {200 {:body s/Any}                   ; TODO response coersion
+            :responses {
+                        200 {:body schema_create-meta-key}
+
+                        404 {:description "Duplicate key error"
+                             :schema s/Str
+                             :examples {"application/json" {:msg "ERROR: duplicate key value violates unique constraint \\\"meta_keys_pkey\\\"\\n  Detail: Key (id)=(copyright:test_me_now31) already exists."}}}
+
+                        500 {:description "Internal Server Error"
+                             :schema s/Str
+                             :examples {"application/json" {:msg "ERROR: new row for relation \"meta_keys\" violates check constraint \"meta_key_id_chars\"\n  Detail: Failing row contains (copyright-test_me_now10, t, MetaDatum::TextDate, t, 0, t, t, copyright, string, {People}, line, Keyword, \"de\"=>\"string\", \"en\"=>\"string\", \"de\"=>\"string\", \"en\"=>\"string\", \"de\"=>\"string\", \"en\"=>\"string\", \"de\"=>\"string\", \"en\"=>\"string\")."}}}
+
                         406 {:body s/Any}}}}]
-
-
-
 
 
    ["/:id"
     {:get {:summary (sd/sum_adm (t "Get meta-key by id"))
            :description "Get meta-key by id. Returns 404, if no such meta-key exists."
-           ;:swagger {:produces "application/json"}
            :content-type "application/json"
            :accept "application/json"
            :middleware [wrap-authorize-admin!
@@ -456,7 +465,6 @@
                         (wwrap-find-meta_key :id :id true)]
            :handler handle_adm-get-meta-key
            :coercion reitit.coercion.schema/coercion
-           ;:parameters {:path {:id s/Str}}
 
            :swagger {:produces "application/json"
                      :parameters [{:name "id"
@@ -487,14 +495,14 @@
            :coercion reitit.coercion.schema/coercion
 
 
-                        :swagger {:produces "application/json"
-                                  :parameters [{:name "id"
-                                                :in "path"
-                                                :description "e.g.: copyright:test_me_now22"
-                                                :type "string"
-                                                :required true
-                                                       }]
-                                  }
+           :swagger {:produces "application/json"
+                     :parameters [{:name "id"
+                                   :in "path"
+                                   :description "e.g.: copyright:test_me_now22"
+                                   :type "string"
+                                   :required true
+                                   }]
+                     }
            :parameters {
                         ;:path {:id s/Str}
                         :body schema_update-meta-key}
