@@ -1,27 +1,26 @@
 (ns madek.api.resources.keywords
   (:require
+   [cheshire.core :as json]
    [honey.sql :refer [format] :rename {format sql-format}]
    ;[clojure.java.jdbc :as jdbc]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
+
    [logbug.debug :as debug]
 
-   [madek.api.utils.helper :refer [t d]]
-
+   ;[leihs.core.db :as db]
+   ;[madek.api.utils.rdbms :refer [get-ds]]
+   [madek.api.db.core :refer [get-ds]]
    ;[madek.api.db.core :refer [get-ds]]
    [madek.api.resources.keywords.keyword :as kw]
-   [madek.api.resources.shared :as sd]
 
-   [cheshire.core :as json]
+   [madek.api.resources.shared :as sd]
    ;; all needed imports
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
 
    [madek.api.utils.helper :refer [array-to-map map-to-array format-uris convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
 
-
-   ;[leihs.core.db :as db]
-   ;[madek.api.utils.rdbms :refer [get-ds]]
-   [madek.api.db.core :refer [get-ds]]
+   [madek.api.utils.helper :refer [t d]]
 
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
@@ -48,10 +47,7 @@
    ;(s/optional-key :position) (s/maybe s/Int)
    ;(s/optional-key :external_uris) [s/Str]
    ;(s/optional-key :rdf_class) s/Str
-   }
-
-  )
-
+   })
 (def schema_update_keyword
   {;id
    ;(s/optional-key :meta_key_id) s/Str
@@ -85,8 +81,7 @@
    :updated_at s/Any})
 
 (def schema_export_keyword_adm2
-  {
-   ;:id s/Uuid
+  {;:id s/Uuid
    :meta_key_id s/Str
    :term s/Str
    ;:description (s/maybe s/Str)
@@ -115,13 +110,13 @@
    ; [:id :meta_key_id :term :description :external_uris :rdf_class
    ;  :created_at])
    (dissoc :creator_id :created_at :updated_at)
-   (assoc                                                   ; support old (singular) version of field
+   (assoc ; support old (singular) version of field
     :external_uri (first (keyword :external_uris)))))
 
 (defn adm-export-keyword [keyword]
   (->
    keyword
-   (assoc                                                   ; support old (singular) version of field
+   (assoc ; support old (singular) version of field
     :external_uri (first (keyword :external_uris)))))
 
 ;### handlers get and query ####################################################################
@@ -170,15 +165,12 @@
                           spy)
 
             ins-result (jdbc/execute-one! (get-ds) sql-query)
-            p (println ">o> ins-result" ins-result)
-            ]
+            p (println ">o> ins-result" ins-result)]
 
         (if-let [result ins-result]
           (sd/response_ok (adm-export-keyword result))
           (sd/response_failed "Could not create keyword" 406))))
     (catch Exception ex (sd/response_exception ex))))
-
-
 
 ;(ns leihs.my.back.html
 ;    (:refer-clojure :exclude [keyword str])
@@ -195,28 +187,22 @@
 ;      [leihs.core.db :as db]
 ;      [next.jdbc :as jdbc]))
 
-
-
 (defn urls-to-custom-format [urls]
-  (let [
-        transformed-urls urls
+  (let [transformed-urls urls
         combined-str (str "'{" (clojure.string/join "," transformed-urls) "}'")]
     [:raw combined-str]))
 
-
 (comment
 
-  (let [
-        uris ["http://www.ige.ch", "http://www.example.com"]
+  (let [uris ["http://www.ige.ch", "http://www.example.com"]
         ;uris ["http://www.examp2le.com"]
-
 
         dwid {:meta_key_id "copyright:license"
               :term "aaa99-8s22292"
 
               ;:external_uris [:raw "'{test/me/now/78}'"]    ;;works
               ;:external_uris [:raw "'{test/me/now/78,test/me/now/99}'"]    ;;works
-              :external_uris (urls-to-custom-format uris)   ;;works
+              :external_uris (urls-to-custom-format uris) ;;works
               }
 
         sql-query (-> (sql/insert-into :keywords)
@@ -228,13 +214,9 @@
         ins-result (jdbc/execute-one! (get-ds) sql-query)
         p (println ">o> ins-result" ins-result)
 
-        res (adm-export-keyword ins-result)
+        res (adm-export-keyword ins-result)]
 
-        ]
-    res
-    )
-  )
-
+    res))
 
 (defn handle_update-keyword [req]
   (try
@@ -285,9 +267,9 @@
 
 (defn wrap-find-keyword [handler]
   (fn [request] (sd/req-find-data request handler
-                  :id
-                  :keywords :id
-                  :keyword true)))
+                                  :id
+                                  :keywords :id
+                                  :keyword true)))
 
 (s/defschema ItemQueryParams
   {:page (s/constrained s/Int #(>= % 1) "Must be a positive integer")
@@ -299,7 +281,7 @@
    {:swagger {:tags ["keywords"]}}
    ["/"
     {:get
-     {:summary (sd/sum_pub (d(t "Query / list keywords.")))
+     {:summary (sd/sum_pub (d (t "Query / list keywords.")))
       :handler handle_usr-query-keywords
       :coercion reitit.coercion.schema/coercion
       ;:parameters {:query schema_query_keyword}
@@ -330,10 +312,7 @@
                                        :format "int32"
                                        :default 10}}]}
 
-
-
-      :responses {
-                  200 {:body {:keywords [schema_export_keyword_usr]}}
+      :responses {200 {:body {:keywords [schema_export_keyword_usr]}}
 
                   202 {:description "Successful response, list of items."
                        :schema {} ;; Define your response schema as needed
@@ -341,9 +320,7 @@
                                                       :page 1
                                                       :size 2
                                                       :items [{:id 1, :name "Item 1"}
-                                                              {:id 2, :name "Item 2"}]}}}}
-
-      }}]
+                                                              {:id 2, :name "Item 2"}]}}}}}}]
 
    ["/:id"
     {:get
@@ -374,8 +351,7 @@
       :coercion reitit.coercion.schema/coercion
       :handler handle_create-keyword
       :middleware [wrap-authorize-admin!]
-      :parameters {
-                           :body schema_create_keyword}
+      :parameters {:body schema_create_keyword}
       ;:responses {200 {:body schema_export_keyword_adm2}
       :responses {200 {:body schema_export_keyword_adm}
                   406 {:body s/Any}}}}]
@@ -388,7 +364,6 @@
       :coercion reitit.coercion.schema/coercion
 
       :parameters {:path {:id s/Uuid}}
-
 
       :responses {200 {:body schema_export_keyword_adm}
                   404 {:body s/Any}}

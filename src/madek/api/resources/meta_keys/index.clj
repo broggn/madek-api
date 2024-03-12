@@ -11,11 +11,11 @@
    ;[madek.api.utils.rdbms :as rdbms]
    ;[madek.api.utils.sql :as sql]
 
-   [madek.api.utils.helper :refer [array-to-map convert-to-raw-set map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts str-to-int]]
-
    [madek.api.resources.shared :as sd]
+
    [madek.api.resources.shared :as shared]
    [madek.api.resources.vocabularies.permissions :as permissions]
+   [madek.api.utils.helper :refer [array-to-map convert-to-raw-set map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts str-to-int]]
 
    [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
 
@@ -58,9 +58,8 @@
 
         size (str-to-int (qparams :count) 5)
         p (println ">o> :size" size)
-        p (println ">o> :size.class" (class size))
+        p (println ">o> :size.class" (class size))]
 
-        ]
     (-> (base-query user-id scope)
         (sd/build-query-param qparams :vocabulary_id)
         (sd/build-query-param-like qparams :id :meta_keys.id)
@@ -71,7 +70,7 @@
         (sql/order-by :meta_keys.id)
         (sql/limit size offset)
 
-sql-format)))
+        sql-format)))
 
 (defn db-query-meta-keys [request]
   (catcher/with-logging {}

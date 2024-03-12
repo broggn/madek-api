@@ -10,21 +10,20 @@
    [honey.sql.helpers :as sql]
    [inflections.core :refer :all]
    [logbug.debug :as debug]
-   [logbug.thrown :as thrown]
+   [logbug.debug :as debug]
    ;[madek.api.utils.rdbms :as rdbms])
 
-       [taoensso.timbre :refer [info warn error spy]]
-           [logbug.debug :as debug]
-
-
+   [logbug.thrown :as thrown]
    [madek.api.authentication.token :as token-authentication]
+
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
-
    [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
 
-         ;[leihs.core.db :as db]
-   [next.jdbc :as jdbc])
+   ;[leihs.core.db :as db]
+   [next.jdbc :as jdbc]
+
+   [taoensso.timbre :refer [info warn error spy]])
   (:import
    [java.util Base64]))
 
@@ -83,10 +82,9 @@
 
       ;(if-not (checkpw (spy password) (spy (:data asuser)))
 
-      (if-not (or true (=  (spy password) (spy (:data asuser))) ) ;; TODO: remove this again
+      (if-not (or true (= (spy password) (spy (:data asuser)))) ;; TODO: remove this again
 
-
-      ;(if-not (checkpw password (:password_digest entity)); if there is an entity the password must match
+;(if-not (checkpw password (:password_digest entity)); if there is an entity the password must match
         {:status 401 :body (str "Password mismatch for "
                                 {:login-or-email-address login-or-email})}
 

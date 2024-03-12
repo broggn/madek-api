@@ -10,9 +10,7 @@
 (defn fv [s] (str s " / validation FAILS"))
 (defn f
   ([s] (str s " / ToFix"))
-  ([s text] (str s " / ToFix: " text))
-  )
-
+  ([s text] (str s " / ToFix: " text)))
 
 ; [madek.api.utils.helper :refer [str-to-int]]
 (defn str-to-int
@@ -57,19 +55,14 @@
      value
      (to-uuid value key)))
 
-
-
-
-   ;(try
+;(try
    ;  (if (:and (contains? keys-to-cast-to-uuid key) (instance? String value))
    ;    (UUID/fromString value)
    ;    value)
    ;  (catch Exception e
    ;    (logging/warn ">>> ERROR2 in to-uuid[id], id=" value ", key=" key " exception=" (.getMessage e))
    ;    value))
-)
-
-
+  )
 (comment
   (let [;p (println "\nquery ok1" (to-uuid "123e4567-e89b-12d3-a456-426614174000" :user_id))
         ;p (println "\nquery ok1" (class (to-uuid "123e4567-e89b-12d3-a456-426614174000" :user_id)))
@@ -97,7 +90,6 @@
         remaining (drop required-entries query-parts)]
     (concat merged remaining)))
 
-
 (defn format-uris [uris]
   ;(clojure.string/join "" (str "{" uris "}")))
 
@@ -105,27 +97,23 @@
 
   (clojure.string/join "" (map #(str "{" % "}") uris)))
 
-
 ; [madek.api.utils.helper :refer [urls-to-custom-format]]
 (defn convert-to-raw-set [urls]
-  (let [
-        transformed-urls urls
+  (let [transformed-urls urls
         combined-str (str "'{" (clojure.string/join "," transformed-urls) "}'")]
     [:raw combined-str]))
 
-
 (defn convert-to-raw-array [urls]
-  (let [
-        transformed-urls urls
+  (let [transformed-urls urls
         combined-str (str "' [" (clojure.string/join "," transformed-urls) "]'")]
     [:raw combined-str]))
 
 ; [madek.api.utils.helper :refer [convert-map]]
 (defn convert-map [map]
   (-> map
-      (update :external_uris #(if  (nil? %)
+      (update :external_uris #(if (nil? %)
                                 [:raw "'{}'"]
-                                ( convert-to-raw-set %)))         ;;rename to convert-to-raw-set
+                                (convert-to-raw-set %))) ;;rename to convert-to-raw-set
 
       (update :creator_id #(if (contains? map :creator_id) (to-uuid % :creator_id)))
 
@@ -157,7 +145,6 @@
 ;      )
 ;    )
 
-
 (defn modify-if-exists [m k f]
   (if (contains? m k)
     (update m k f)
@@ -170,10 +157,6 @@
       (modify-if-exists :allowed_people_subtypes #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))))
       ;(modify-if-exists :allowed_people_subtypes #(if (nil? %) [:raw "'[]'"] (convert-to-raw-array %)))))
 
-
-
-
-
 (comment
 
   ;[honey.sql :refer [format] :rename {format sql-format}]
@@ -181,19 +164,12 @@
   ;[next.jdbc :as jdbc]
   ;[honey.sql.helpers :as sql]
 
-  (let [
-
-        map {:external_uris "{mein/link/78}"}
+  (let [map {:external_uris "{mein/link/78}"}
         map {:external_uris "{mein/link/78}"}
         map {:external_uris ["test/me/now/78"]}
 
-        res (convert-map map)
-        ]
-    res
-    )
-
-  )
-
+        res (convert-map map)]
+    res))
 
 ; [madek.api.utils.helper :refer [cast-to-hstore]]
 (defn cast-to-hstore [data]
@@ -227,7 +203,7 @@
 (defn replace-java-hashmaps [m]
   (reduce-kv (fn [acc k v]
                (assoc acc k (replace-java-hashmap v)))
-    {}
-    m))
+             {}
+             m))
 
 

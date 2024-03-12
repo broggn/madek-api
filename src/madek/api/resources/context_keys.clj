@@ -7,37 +7,33 @@
 
    [honey.sql.helpers :as sql]
 
-   [schema-tools.swagger.core :as swagger2]
-
-   [reitit.swagger :as swagger]
-
-
    [logbug.catcher :as catcher]
+
+   [logbug.debug :as debug]
 
    [madek.api.db.core :refer [get-ds]]
 
    [madek.api.pagination :as pagination]
 
-   [taoensso.timbre :refer [info warn error spy]]
-   [logbug.debug :as debug]
-
-   [madek.api.utils.helper :refer [t]]
-
-
    [madek.api.resources.shared :as sd]
+
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.helper :refer [cast-to-hstore]]
+
    [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
 
+   [madek.api.utils.helper :refer [t]]
    ;; all needed imports
    [next.jdbc :as jdbc]
    [pghstore-clj.core]
    [reitit.coercion.schema]
 
+   [reitit.swagger :as swagger]
+   [schema-tools.swagger.core :as swagger2]
    [schema.core :as s]
+
+   [taoensso.timbre :refer [info warn error spy]]
    [taoensso.timbre :refer [spy]]))
-
-
 
 (defn context_key_transform_ml [context_key]
   (assoc context_key
@@ -73,8 +69,8 @@
   [req]
   (let [req-query (-> req :parameters :query)
         db-query (-> (sql/select :id :context_id :meta_key_id
-                       :is_required :position :length_min :length_max
-                       :labels :hints :descriptions :documentation_urls)
+                                 :is_required :position :length_min :length_max
+                                 :labels :hints :descriptions :documentation_urls)
                      (sql/from :context_keys)
                      (sd/build-query-param req-query :id)
                      (sd/build-query-param req-query :context_id)
@@ -157,9 +153,9 @@
                                                          (clojure.string/join ", "
                                                            ;(map (fn [[k v]] (str k " => \"" v "\""))
 
-                                                           (map (fn [[k v]] (str (name k) " => \"" v "\""))
+                                                                              (map (fn [[k v]] (str (name k) " => \"" v "\""))
                                                              ;(map (fn [[k v]] (str (name k) " => '" v "'"))
-                                                             val))
+                                                                                   val))
                                                          :hstore]))]
                                   (assoc data key hstore-val))
                                 data))]
@@ -194,21 +190,18 @@
         ;data {:meta_key_id "abc:1" :term "sed-dev" :external_uris "{http://geonames.org/countries/DZ/}"}
         ;data {:meta_key_id "abc:1" :term "sed-dev" :external_uris (vector "{http://geonames.org/countries/DZ/}")}
         ;data {:meta_key_id "abc:1" :term "sed-dev" :external_uris [:cast "{http://geonames.org/countries/DZ/}" :char]}
-        data {:meta_key_id "vid:vid_schwerpunkt" :term "sed-dev3"   :external_uris [:raw  "'{http://geonames.org/countries/DZ/}'"]}
-
+        data {:meta_key_id "vid:vid_schwerpunkt" :term "sed-dev3" :external_uris [:raw "'{http://geonames.org/countries/DZ/}'"]}
 
         query (-> (sql/insert-into :keywords)
                       ;(sql/values [(cast-to-hstore data)])
-                      (sql/values [data])
-                      (sql/returning :*)
-                      sql-format
-                      spy)
+                  (sql/values [data])
+                  (sql/returning :*)
+                  sql-format
+                  spy)
         res (jdbc/execute-one! (get-ds) query)
 
         p (println "res-1" query)
-        p (println "res-2" res)])
-
-  )
+        p (println "res-2" res)]))
 
 (defn handle_create-context_keys
   [req]
@@ -298,9 +291,9 @@
 (defn wwrap-find-context_key [param colname send404]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler
-                    param
-                    :context_keys colname
-                    :context_key send404))))
+                                    param
+                                    :context_keys colname
+                                    :context_key send404))))
 
 (def schema_import_context_keys
   {;:id s/Str
@@ -372,8 +365,7 @@
    {:swagger {:tags ["admin/context-keys"] :security [{"auth" []}]}}
    ["/"
     {:post
-     {
-      :summary (sd/sum_adm (t "Post context_key by id."))
+     {:summary (sd/sum_adm (t "Post context_key by id."))
       :swagger {:security [{"auth" []}]}
       :handler handle_create-context_keys
       :middleware [wrap-authorize-admin!]
@@ -450,8 +442,7 @@
      {:summary (sd/sum_pub (t "Query / List context_keys."))
       :handler handle_usr-list-context_keys
       :coercion reitit.coercion.schema/coercion
-      :parameters {:query {
-                           (spy (s/optional-key :id)) s/Uuid
+      :parameters {:query {(spy (s/optional-key :id)) s/Uuid
                            (s/optional-key :context_id) s/Str
                            (s/optional-key :meta_key_id) s/Str
                            (s/optional-key :is_required) s/Bool}}
@@ -467,16 +458,13 @@
       :parameters {:path {:id s/Uuid}}
       :responses {200 {:body schema_export_context_key}
 
-                  400 {
-                       :message "Bad request"
-                       :body {
-                              :schema {:id s/Str :Keyword s/Str}
+                  400 {:message "Bad request"
+                       :body {:schema {:id s/Str :Keyword s/Str}
                               :errors {:id s/Str}
                               :type s/Str
                               :coercion s/Str
                               :value {:id s/Str}
-                              :in [s/Str]
-                              }}
+                              :in [s/Str]}}
 
                   404 {:message "Not found"
                        :body s/Any}}}}]])
