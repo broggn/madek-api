@@ -103,6 +103,9 @@ ToAsk
    2. headers.x-count
 6. Set defaults for all endpoints
 7. Links? `application/json vs application/json-roa`
+8. Global page/size settings
+9. Status for foreign-key-exception?   409 Conflict
+   - http://localhost:3104/api-docs/index.html#/admin%2Fvocabularies/delete_api_admin_vocabularies__id_
 
 
 FYI

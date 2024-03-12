@@ -20,9 +20,9 @@
 
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
 
-   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+   [madek.api.utils.helper :refer [cast-to-hstore]]
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
    [next.jdbc :as jdbc]
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist f replace-java-hashmaps t v]]
 
 
    [reitit.coercion.schema]
@@ -268,7 +268,7 @@
             :swagger {:consumes "application/json" :produces "application/json"}}}]
 
    ["/:id"
-    {:get {:summary (sd/sum_adm "Get vocabulary by id.")
+    {:get {:summary (sd/sum_adm (t "Get vocabulary by id."))
            :description "Get a vocabulary by id. Returns 404, if no such vocabulary exists."
            :handler get-vocabulary
            :middleware [wrap-authorize-admin!]
@@ -278,7 +278,12 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Str}}
            :responses {200 {:body schema_export-vocabulary}
-                       404 {:body s/Any}}}
+
+                       404 {:description "Creation failed."
+                            :schema s/Str
+                            :examples {"application/json" {:message "Vocabulary could not be found!"}}}
+                       }}
+
 
      :put {:summary (sd/sum_adm_todo "Update vocabulary.")
            :handler handle_update-vocab
@@ -292,7 +297,7 @@
                        404 {:body s/Any}}
            :swagger {:consumes "application/json" :produces "application/json"}}
 
-     :delete {:summary (sd/sum_adm_todo "Delete vocabulary.")
+     :delete {:summary (sd/sum_adm_todo (f (t "Delete vocabulary.") "http-status-409?"))
               :handler handle_delete-vocab
               :middleware [wrap-authorize-admin!]
               :content-type "application/json"
@@ -300,7 +305,15 @@
               :coercion reitit.coercion.schema/coercion
               :parameters {:path {:id s/Str}}
               :responses {200 {:body schema_export-vocabulary}
-                          404 {:body s/Any}}
+
+                          404 {:description "Delete failed."
+                               :schema s/Str
+                               :examples {"application/json" {:message "No such vocabulary."}}}
+
+                          500 {:description "Error: Internal Server Error"
+                               :schema s/Str
+                               :examples {"application/json" {:msg "ERROR: update or delete on table \"meta_keys\" violates foreign key constraint \"fk_rails_ee76aad01f\" on table \"meta_data\"\n  Detail: Key (id)=(zhdk_bereich:project_title_english) is still referenced from table \"meta_data\"."}}}
+                          }
               :swagger {:produces "application/json"}}}]
 
    ["/:id/perms"
