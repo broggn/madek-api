@@ -37,7 +37,7 @@ Known issue
 
 Needed changes
 --
-1. GET parameters
+1. GET/PUT query-parameters
    1. Fetching attributes by `(-> request :path-params)` instead of `(-> request :parameters :path)`
    2. Use `path` instead of `query`   
       ```clojure
@@ -45,6 +45,10 @@ Needed changes
                      :parameters [{:name "id"
                                    :in "path"    
                                    ;:in "query"    ;; broken
+      
+      
+      ; .. but in this case you have to fetch id like this:
+      id (-> req :path-params :id)         ; instead of:  id (-> req :parameters :path :id)
       ```
 
 ToAsk

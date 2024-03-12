@@ -1,39 +1,29 @@
 (ns madek.api.resources.meta-keys
   (:require
    ;[clojure.java.jdbc :as jdbc]
-   [clojure.tools.logging :as logging]
+   [cheshire.core :as json]
    ;; all needed imports
+   [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [cheshire.core :as json]
+   [logbug.debug :as debug]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.meta-keys.index :as mkindex]
    [madek.api.resources.meta-keys.meta-key :as mk]
-   [madek.api.resources.shared :as sd]
 
-   ;[madek.api.utils.helper :refer [array-to-map convert-uris map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+   [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
+
 
    ;; all needed imports
    [madek.api.resources.shared :as sd]
+   [madek.api.resources.shared :as sd]
+
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist f replace-java-hashmaps t v]]
 
-
-   [logbug.debug :as debug]
-
-
-   [madek.api.utils.rdbms :as rdbms]
-
-   ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
-
-   ;[leihs.core.db :as db]
-   [next.jdbc :as jdbc]
-   [reitit.coercion.schema]
    [reitit.coercion.schema]
    [reitit.coercion.spec]
-
-   [madek.api.utils.helper :refer [t d v fv f cast-to-hstore convert-map replace-java-hashmaps convert-map-if-exist]]
-
    [schema.core :as s])
 
   ;(:import (java.util.HashMap))
@@ -224,16 +214,36 @@
 (defn handle_update_meta-key [req]
   (let [;old-data (-> req :meta_key)
         data (-> req :parameters :body)
-        id (-> req :parameters :path :id)
+        id (-> req :path-params :id)
         dwid (assoc data :id id)
 
+        p (println ">o> dwid1=" dwid)
+
+
+        p (println ">o> dwid1.id=" id)
+
+
+        dwid (convert-map-if-exist (cast-to-hstore dwid))
+        p (println ">o> dwid1.converted=" dwid)
+
         sql-query (-> (sql/update :meta_keys)
+
                       (sql/set dwid)
+
+                      (sql/returning :*)
+
                       (sql/where [:= :id id])
                       sql-format)
 
-        te_p (println ">o> sql-query=" sql-query)
-        db-result (jdbc/execute! (get-ds) sql-query)]
+        p (println ">o> dwid2=" dwid)
+        p (println ">o> sql-query=" sql-query)
+
+        db-result (jdbc/execute-one! (get-ds) sql-query)
+        db-result (replace-java-hashmaps db-result)
+
+        p (println ">o> db-result=" db-result)
+
+        ]
 
     (logging/info "handle_update_meta-key:"
       "\nid: " id
@@ -243,12 +253,63 @@
 
     (if db-result
 
-      (let [new-data (sd/query-eq-find-one :meta_keys :id id)]
+      ;(let [new-data (sd/query-eq-find-one :meta_keys :id id)]
+      (do
         (logging/info "handle_update_meta-key:"
-          "\ndb-result:\n" db-result
-          "\nnew-data:\n" new-data)
-        (sd/response_ok new-data))
-      (sd/response_failed "Could not update meta_key." 406))))
+          ;"\ndb-result:\n" db-result
+          "\nnew-data:\n" db-result)
+        (sd/response_ok db-result))
+      (sd/response_failed "Could not update meta_key." 406))
+
+    ))
+
+
+
+
+
+
+(comment
+
+  (let [
+
+        id "copyright:test_me_now"
+
+        data {:hints {:de "string-11", :en "string-11"}, :labels {:de "string-11", :en "string-11"}, :is_enabled_for_collections true,
+              :allowed_rdf_class "Keyword", :documentation_urls {:de "string-11", :en "string-11"}, :is_enabled_for_media_entries true,
+              :keywords_alphabetical_order true,
+              ;:id id,
+              :admin_comment "string-11", :position 0, :is_extensible_list true,
+              :descriptions {:de "string-11", :en "string-11"}, :allowed_people_subtypes ["People"], :text_type "line"}
+
+        data (convert-map-if-exist (cast-to-hstore data))
+        p (println ">o> dwid1.converted=" data)
+
+        sql-query (-> (sql/update :meta_keys)
+
+                      (sql/set data)
+
+                      (sql/returning :*)
+
+                      (sql/where [:= :id id])
+                      sql-format)
+
+        p (println ">o> dwid2=" data)
+        p (println ">o> sql-query=" sql-query)
+
+        res (jdbc/execute-one! (get-ds) sql-query)
+
+        ]
+    res
+    )
+
+  )
+
+
+
+
+
+
+
 
 (defn handle_delete_meta-key [req]
   (let [meta-key (-> req :meta_key)
@@ -487,6 +548,9 @@
            :handler handle_update_meta-key
            ;:swagger {:produces "application/json" :consumes "application/json"}
 
+           :content-type "application/json"
+           :accept "application/json"
+
            :description (slurp "./md/meta-key-put.md")
 
            :middleware [wrap-authorize-admin!
@@ -496,6 +560,7 @@
 
 
            :swagger {:produces "application/json"
+                     :consumes "application/json"
                      :parameters [{:name "id"
                                    :in "path"
                                    :description "e.g.: copyright:test_me_now22"
@@ -503,13 +568,25 @@
                                    :required true
                                    }]
                      }
-           :parameters {
-                        ;:path {:id s/Str}
-                        :body schema_update-meta-key}
+           :parameters {:body schema_update-meta-key}
 
-           :responses {200 {:body s/Any}                    ; TODO response coercion
-                       404 {:body {:message s/Str}}
-                       422 {:body {:message s/Str}}}}
+           :responses {
+
+                       ;200 {:body s/Any}                    ; TODO response coercion
+                       200 {:body schema_export-meta-key-adm} ; TODO response coercion
+                       ;404 {:body {:message s/Str}}
+
+                       406 {
+                            :description "Update failed"
+                            :schema s/Str
+                            :examples {"application/json" {:message "Could not update meta_key."}}}
+
+                       ;422 {:body {:message s/Str}}
+                       }}
+
+
+
+
 
      :delete {:summary (sd/sum_adm "Delete meta-key.")
               :handler handle_delete_meta-key
