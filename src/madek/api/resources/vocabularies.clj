@@ -592,20 +592,34 @@
 
 
       :delete
-      {:summary (sd/sum_adm_todo "Delete vocabulary group permissions")
+      {:summary (sd/sum_adm_todo (t "Delete vocabulary group permissions"))
        :handler permissions/handle_delete-vocab-group-perms
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
+
+
+       ;; TODO: remove this
+       :description (str "TODO: REMOVE THIS | id: columns , id: ecb0de43-ccd2-463a-85a6-826c6ff99cdf")
+
        :accept "application/json"
        :coercion reitit.coercion.schema/coercion
        :parameters {:path {:id s/Str
                            :group_id s/Uuid}}
        :responses {200 {:body schema_export-group-perms}
-                   404 {:body s/Any}}}}]]])
+
+                   404 {:description "Not Found."
+                        :schema s/Str
+                        ;:examples {"application/json" {:message "Vocabulary entry not found"}}}
+                        :examples {"application/json" {:message "No such vocabulary group permission."}}}
+
+                   406 {:description "Not Acceptable."
+                        :schema s/Str
+                        :examples {"application/json" {:message "Could not delete vocabulary group permission"}}}
+                   }}}]]])
 
 (def user-routes
   ["/vocabularies"
-   {:swagger {:tags ["admin/people"]}}
+   {:swagger {:tags ["vocabulary"]}}
 
    ["/" {:get {:summary "Get list of vocabularies ids."
                :description "Get list of vocabularies ids."

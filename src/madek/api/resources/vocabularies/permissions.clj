@@ -200,7 +200,9 @@
 
                       ;(sql/values [(spy (cast-to-hstore data))])
 
-                      sql-format spy)
+                      (sql/returning :*)
+
+                      sql-format)
             ins-result (jdbc/execute-one! (get-ds) query)
             p (println ">o> ??????????? ins-result" ins-result)]
         (if-let [result ins-result]
@@ -242,17 +244,14 @@
                             :vocabulary_group_permissions
                             :vocabulary_id vid
                             :group_id gid)]
-          (let [del-clause (sd/sql-update-clause
-                             "vocabulary_id" vid
-                             "group_id" gid)
-                query (-> (sql/delete-from :vocabulary_group_permissions)
-                          ;(sql/where del-clause)
+          (let [query (-> (sql/delete-from :vocabulary_group_permissions)
                           (sql/where [:= :vocabulary_id vid] [:= :group_id gid])
+                          (sql/returning :*)
                           sql-format)
                 del-result (jdbc/execute-one! (get-ds) query)]
-            ;(if (= 1 (first del-result))
-            (if (= 1 (::jdbc/update-count del-result))
-              (sd/response_ok old-data)
+
+            (if del-result
+              (sd/response_ok del-result)
               (sd/response_failed "Could not delete vocabulary group permission" 406)))
           (sd/response_not_found "No such vocabulary group permission."))))
     (catch Exception ex (sd/response_exception ex))))
