@@ -121,12 +121,10 @@
      (if (nil? pval)
        query
        (-> query (sql/where [:like db-param qval]))
-       ;(-> query (h2helpers/where [:like param qval]))
        ))))
 
 (defn- sql-query-find-eq
   ([table-name col-name row-data]
-   ;(println ">o> ??? sql-query-find-eq table-name1" table-name "col-name" col-name "row-data" row-data)
    (println ">o> ??? sql-query-find-eq table-name1" table-name)
    (spy (-> (build-query-base table-name :*)
             (sql/where [:= col-name (to-uuid row-data col-name table-name)])
@@ -134,7 +132,6 @@
             spy)))
 
   ([table-name col-name row-data col-name2 row-data2]
-   ;(println ">o> ??? table-name2" table-name "col-name" col-name "row-data" row-data "col-name2" col-name2 "row-data2" row-data2)
    (println ">o> ??? table-name2" table-name "col-name")
    (spy (-> (build-query-base table-name :*)
             (sql/where [:= col-name (to-uuid row-data col-name)])

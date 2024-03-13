@@ -407,7 +407,7 @@
 
     ["/user/:user_id"
      {:get
-      {:summary (sd/sum_adm_todo "Get vocabulary user permissions")
+      {:summary (sd/sum_adm_todo (t "Get vocabulary user permissions"))
        :handler permissions/handle_get-vocab-user-perms
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
@@ -416,7 +416,10 @@
        :parameters {:path {:id s/Str
                            :user_id s/Uuid}}
        :responses {200 {:body schema_export-user-perms}
-                   404 {:body s/Any}}}
+                   404 {:description "Not found."
+                        :schema s/Str
+                        :examples {"application/json" {:message "No such vocabulary user permission."}}}
+                   }}
       :post
       {:summary (sd/sum_adm "Create vocabulary user permissions")
        :handler permissions/handle_create-vocab-user-perms

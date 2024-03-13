@@ -43,27 +43,21 @@
   ([value]
    (try
      (let [result (if (instance? String value) (UUID/fromString value) value)]
-       ; success path, result is available for further processing if needed
        result)
      (catch Exception e
-       ; catch block, log the error and return id as the error handling result
-       (logging/warn ">>> ERROR in to-uuid[id], id=" value ", exception=" (.getMessage e))
+       (logging/warn ">>> DEV-ERROR in to-uuid[value], value=" value ", exception=" (.getMessage e))
        value)))
 
   ([value key]
-   ; ;(def keys-to-cast-to-uuid [:media_entry_id :media_file_id :preview_id :media_resource_id :media_file])
-   ; ;(def keys-to-cast-to-uuid [])
-   (def keys-to-cast-to-uuid [:user_id :id])
-
-   ;(println (str "??? INFO / CAST TO UUID, id=" id ", key=" key ", keys\"=" keys-to-cast-to-uuid))
-
+   (def keys-to-cast-to-uuid #{:user_id :id})
    (try
-     (if (:and (contains? keys-to-cast-to-uuid key) (instance? String value))
+     (if (and (contains? keys-to-cast-to-uuid key) (instance? String value))
        (UUID/fromString value)
        value)
      (catch Exception e
-       (logging/warn ">>> ERROR2 in to-uuid[id], id=" value ", key=" key " exception=" (.getMessage e))
-       value)))
+       (logging/warn ">>> DEV-ERROR in to-uuid[value key], value=" value ", key=" key " exception=" (.getMessage e))
+       value))
+   )
 
   ([value key table]
    (def blacklisted-tables #{"meta_keys" "vocabularies"})
