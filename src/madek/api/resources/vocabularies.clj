@@ -535,17 +535,35 @@
                    }}
 
       :post
-      {:summary (sd/sum_adm_todo "Create vocabulary group permissions")
+      {:summary (sd/sum_adm_todo (t "Create vocabulary group permissions"))
        :handler permissions/handle_create-vocab-group-perms
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
+
+       ;; TODO: remove this
+       :description (str "TODO: REMOVE THIS | id: columns , id: ecb0de43-ccd2-463a-85a6-826c6ff99cdf")
+
        :accept "application/json"
        :coercion reitit.coercion.schema/coercion
        :parameters {:path {:id s/Str
                            :group_id s/Uuid}
                     :body schema_perms-update-user-or-group}
        :responses {200 {:body schema_export-group-perms}
-                   404 {:body s/Any}}}
+
+                   404 {:description "Not Found."
+                        :schema s/Str
+                        :examples {"application/json" {:message "Vocabulary entry not found"}}}
+
+                   406 {:description "Not Acceptable."
+                        :schema s/Str
+                        :examples {"application/json" {:message "Could not delete vocabulary group permission"}}}
+
+                   409 {:description "Conflict."
+                        :schema s/Str
+                        :examples {"application/json" {:message "Entry already exists"}}}
+                   }}
+
+
 
       :put
       {:summary (sd/sum_adm_todo "Update vocabulary group permissions")

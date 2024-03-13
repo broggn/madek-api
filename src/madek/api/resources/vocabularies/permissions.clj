@@ -206,7 +206,7 @@
         (if-let [result ins-result]
           (sd/response_ok result)
           (sd/response_failed "Could not create vocabulary group permission" 406))))
-    (catch Exception ex (sd/response_exception ex))))
+    (catch Exception ex (sd/parsed_response_exception ex))))
 
 (defn handle_update-vocab-group-perms [req]
   (try
