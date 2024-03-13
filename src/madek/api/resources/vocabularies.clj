@@ -7,9 +7,10 @@
    ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [honey.sql.helpers :as sql]
+   [clojure.string :as str]
    [logbug.catcher :as catcher]
    [madek.api.db.core :refer [get-ds]]
+
 
    [madek.api.resources.shared :as sd]
    [madek.api.resources.vocabularies.index :refer [get-index]]
@@ -154,19 +155,19 @@
 
 (defn handle_delete-vocab [req]
   (try
-    (catch Exception ex (sd/response_exception ex)))
-  (catcher/with-logging {}
-    (let [id (-> req :parameters :path :id)]
-      (if-let [old-data (sd/query-eq-find-one :vocabularies :id id)]
-        (let [sql-query (-> (sql/delete-from :vocabularies)
-                            (sql/where [:= :id id])
-                            sql-format)
-              db-result (jdbc/execute-one! (get-ds) sql-query)]
-          ;; rest of your code
-          (if (= 1 (::jdbc/update-count db-result))
-            (sd/response_ok (transform_ml old-data))
-            (sd/response_failed "Could not delete vocabulary." 406)))
-        (sd/response_not_found "No such vocabulary.")))))
+    (catcher/with-logging {}
+      (let [id (-> req :parameters :path :id)]
+        (if-let [old-data (sd/query-eq-find-one :vocabularies :id id)]
+          (let [sql-query (-> (sql/delete-from :vocabularies)
+                              (sql/where [:= :id id])
+                              sql-format)
+                db-result (jdbc/execute-one! (get-ds) sql-query)]
+            ;; rest of your code
+            (if (= 1 (::jdbc/update-count db-result))
+              (sd/response_ok (transform_ml old-data))
+              (sd/response_failed "Could not delete vocabulary." 406)))
+          (sd/response_not_found "No such vocabulary."))))
+    (catch Exception ex (sd/parsed_response_exception ex))))
 
 (def schema_export-vocabulary
   {:id s/Str
@@ -333,18 +334,24 @@
               :handler handle_delete-vocab
               :middleware [wrap-authorize-admin!]
               :content-type "application/json"
+
+              ;; TODO: remove this
+              :description (str "TODO: REMOVE THIS | user_id: columns")
+
               :accept "application/json"
               :coercion reitit.coercion.schema/coercion
               :parameters {:path {:id s/Str}}
               :responses {200 {:body schema_export-vocabulary}
 
+                          403 {:description "Forbidden."
+                               :schema s/Str
+                               :examples {"application/json" {:message "References still exist"}}}
+
                           404 {:description "Not found."
                                :schema s/Str
                                :examples {"application/json" {:message "No such vocabulary."}}}
+                          500 {:body s/Any}
 
-                          500 {:description "Error: Internal Server Error"
-                               :schema s/Str
-                               :examples {"application/json" {:msg "ERROR: update or delete on table \"meta_keys\" violates foreign key constraint \"fk_rails_ee76aad01f\" on table \"meta_data\"\n  Detail: Key (id)=(zhdk_bereich:project_title_english) is still referenced from table \"meta_data\"."}}}
                           }
               :swagger {:produces "application/json"}}}]
 
@@ -422,7 +429,7 @@
                         :examples {"application/json" {:message "No such vocabulary user permission."}}}
                    }}
       :post
-      {:summary (sd/sum_adm "Create vocabulary user permissions ??")
+      {:summary (sd/sum_adm (t "Create vocabulary user permissions"))
        :handler permissions/handle_create-vocab-user-perms
 
        ;; TODO: remove this

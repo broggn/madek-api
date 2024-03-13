@@ -116,13 +116,14 @@
           (sd/response_ok result)
           (sd/response_failed "Could not create vocabulary user permission" 406))))
 
-    (catch Exception ex
-      (cond
-        (str/includes? (ex-message ex) "already exists") (sd/response_failed (str "Entry already exists") 409)
-        (str/includes? (ex-message ex) "is not present in table \"users\"") (sd/response_failed (str "User entry not found") 404)
-        (str/includes? (ex-message ex) "is not present in table \"vocabularies\"") (sd/response_failed (str "Vocabulary entry not found") 404)
-        :else (sd/response_exception ex)))
-    ))
+    (catch Exception ex (sd/parsed_response_exception ex)
+      ;(cond
+      ;  (str/includes? (ex-message ex) "is still referenced from table") (sd/response_failed (str "References still exist") 403) ;;move
+      ;  (str/includes? (ex-message ex) "already exists") (sd/response_failed (str "Entry already exists") 409)
+      ;  (str/includes? (ex-message ex) "is not present in table \"users\"") (sd/response_failed (str "User entry not found") 404)
+      ;  (str/includes? (ex-message ex) "is not present in table \"vocabularies\"") (sd/response_failed (str "Vocabulary entry not found") 404)
+      ;  :else (sd/response_exception ex))
+      )))
 
 (defn handle_update-vocab-user-perms [req]
   (try
