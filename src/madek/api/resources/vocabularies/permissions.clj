@@ -167,7 +167,7 @@
     (catch Exception ex (sd/response_exception ex))))
 
 (defn handle_list-vocab-group-perms [req]
-  (let [id (-> req :parameters :path :id)
+  (let [id (-> req :path-params :id)
         result (sd/query-eq-find-all
                  :vocabulary_group_permissions
                  :vocabulary_id id)]

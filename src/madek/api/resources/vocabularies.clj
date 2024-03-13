@@ -359,7 +359,7 @@
     ;{:swagger {:tags ["admin/vocabulary/perms"] :security [{"auth" []}]}}
     ["/"
      {:get
-      {:summary (sd/sum_adm ( t  "List vocabulary permissions"))
+      {:summary (sd/sum_adm (t "List vocabulary permissions"))
        :handler permissions/handle_list-vocab-perms
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
@@ -397,7 +397,7 @@
        :swagger {:produces "application/json"
                  :parameters [{:name "id"
                                :in "path"
-                               :description "e.g.: zhdk_bereich"
+                               :description "e.g.: columns"
                                :type "string"
                                :required true
                                :pattern "^[a-z0-9\\-\\_\\:]+$"}]}
@@ -460,19 +460,26 @@
 
     ["/groups"
      {:get
-      {:summary (sd/sum_adm_todo "List vocabulary group permissions")
+      {:summary (sd/sum_adm_todo (t "List vocabulary group permissions"))
        :handler permissions/handle_list-vocab-group-perms
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
+
+       :swagger {:produces "application/json"
+                 :parameters [{:name "id"
+                               :in "path"
+                               :description "e.g.: columns"
+                               :type "string"
+                               :required true
+                               :pattern "^[a-z0-9\\-\\_\\:]+$"}]}
+
        :accept "application/json"
        :coercion reitit.coercion.schema/coercion
-       :parameters {:path {:id s/Str}}
-       :responses {200 {:body [schema_export-group-perms]}
-                   404 {:body s/Any}}}}]
+       :responses {200 {:body [schema_export-group-perms]}}}}]
 
     ["/group/:group_id"
      {:get
-      {:summary (sd/sum_adm_todo "Get vocabulary group permissions")
+      {:summary (sd/sum_adm_todo (t "Get vocabulary group permissions"))
        :handler permissions/handle_get-vocab-group-perms
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
@@ -481,7 +488,10 @@
        :parameters {:path {:id s/Str
                            :group_id s/Uuid}}
        :responses {200 {:body schema_export-group-perms}
-                   404 {:body s/Any}}}
+                   404 {:description "Not found."
+                        :schema s/Str
+                        :examples {"application/json" {:message "No such vocabulary group permission."}}}
+                   }}
 
       :post
       {:summary (sd/sum_adm_todo "Create vocabulary group permissions")
