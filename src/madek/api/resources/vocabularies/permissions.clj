@@ -117,13 +117,13 @@
           (sd/response_failed "Could not create vocabulary user permission" 406))))
 
     (catch Exception ex (sd/parsed_response_exception ex)
-      ;(cond
-      ;  (str/includes? (ex-message ex) "is still referenced from table") (sd/response_failed (str "References still exist") 403) ;;move
-      ;  (str/includes? (ex-message ex) "already exists") (sd/response_failed (str "Entry already exists") 409)
-      ;  (str/includes? (ex-message ex) "is not present in table \"users\"") (sd/response_failed (str "User entry not found") 404)
-      ;  (str/includes? (ex-message ex) "is not present in table \"vocabularies\"") (sd/response_failed (str "Vocabulary entry not found") 404)
-      ;  :else (sd/response_exception ex))
-      )))
+                        ;(cond
+                        ;  (str/includes? (ex-message ex) "is still referenced from table") (sd/response_failed (str "References still exist") 403) ;;move
+                        ;  (str/includes? (ex-message ex) "already exists") (sd/response_failed (str "Entry already exists") 409)
+                        ;  (str/includes? (ex-message ex) "is not present in table \"users\"") (sd/response_failed (str "User entry not found") 404)
+                        ;  (str/includes? (ex-message ex) "is not present in table \"vocabularies\"") (sd/response_failed (str "Vocabulary entry not found") 404)
+                        ;  :else (sd/response_exception ex))
+                        )))
 
 (defn handle_update-vocab-user-perms [req]
   (try
@@ -131,24 +131,18 @@
       (let [vid (-> req :parameters :path :id)
             uid (to-uuid (-> req :parameters :path :user_id))
             upd-data (-> req :parameters :body)
-            upd-clause (sd/sql-update-clause "vocabulary_id" vid "user_id" uid)
             query (-> (sql/update :vocabulary_user_permissions)
-
-                      ;(sql/set [(spy upd-data)])
                       (sql/set (spy upd-data))
-
-                      ;(sql/where (spy upd-clause))
-
                       (sql/where [:and [:= :vocabulary_id vid] [:= :user_id uid]])
-
+                      (sql/returning :*)
                       sql-format
                       spy)
-            upd-result (jdbc/execute-one! (get-ds) query)]
-        (if (= 1 (::jdbc/update-count (spy upd-result)))
-          (sd/response_ok (sd/query-eq-find-one
-                            :vocabulary_user_permissions
-                            :vocabulary_id vid
-                            :user_id uid))
+            upd-result (jdbc/execute-one! (get-ds) query)
+            p (println ">o> ??? upd-result" upd-result)
+            ]
+
+        (if upd-result
+          (sd/response_ok upd-result)
           (sd/response_failed "Could not update vocabulary user permission" 406))))
     (catch Exception ex (sd/response_exception ex))))
 

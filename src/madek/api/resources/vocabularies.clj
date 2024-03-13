@@ -453,17 +453,28 @@
                    }}
 
       :put
-      {:summary (sd/sum_adm "Update vocabulary user permissions")
+      {:summary (sd/sum_adm (t "Update vocabulary user permissions"))
        :handler permissions/handle_update-vocab-user-perms
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
+
+       ;; TODO: remove this
+       :description (str "TODO: REMOVE THIS | user_id: columns , id: d48e4387-b80d-45de-9077-5d88c331fa6a")
+
        :accept "application/json"
        :coercion reitit.coercion.schema/coercion
        :parameters {:path {:id s/Str
                            :user_id s/Uuid}
                     :body schema_perms-update-user-or-group}
        :responses {200 {:body schema_export-user-perms}
-                   404 {:body s/Any}}}
+
+                   406 {:description "Not Acceptable."
+                        :schema s/Str
+                        :examples {"application/json" {:message "Could not update vocabulary user permission"}}}
+                   }}
+
+
+
 
       :delete
       {:summary (sd/sum_adm "Delete vocabulary user permissions")
