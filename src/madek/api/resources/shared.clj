@@ -177,11 +177,24 @@
                          (get-ds)
                          (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))))
 
+(defn query-eq-find-all-one
+  ([table-name col-name row-data]
+   (catcher/snatch {}
+                   (spy (jdbc/execute-one!
+                         (get-ds)
+                         (sql-query-find-eq table-name col-name row-data)))))
+
+  ([table-name col-name row-data col-name2 row-data2]
+   (catcher/snatch {}
+                   (spy (jdbc/execute-one!
+                         (get-ds)
+                         (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))))
+
 (defn query-eq-find-one
   ([table-name col-name row-data]
-   (spy (first (spy (query-eq-find-all table-name col-name row-data)))))
+   (spy  (spy (query-eq-find-all-one table-name col-name row-data))))
   ([table-name col-name row-data col-name2 row-data2]
-   (spy (first (spy (query-eq-find-all table-name col-name row-data col-name2 row-data2))))))
+   (spy  (spy (query-eq-find-all-one table-name col-name row-data col-name2 row-data2)))))
 
 #_(defn query-eq2-find-all [table-name col-name row-data col-name2 row-data2]
     (catcher/snatch {}

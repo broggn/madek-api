@@ -329,7 +329,7 @@
            :responses {
                        200 {:body schema_export-vocabulary}
                        400 {:body s/Any}
-                       404 {:description "Delete failed."
+                       404 {:description "Not found."
                             :schema s/Str
                             :examples {"application/json" {:message "No such vocabulary."}}}
 
@@ -345,7 +345,7 @@
               :parameters {:path {:id s/Str}}
               :responses {200 {:body schema_export-vocabulary}
 
-                          404 {:description "Delete failed."
+                          404 {:description "Not found."
                                :schema s/Str
                                :examples {"application/json" {:message "No such vocabulary."}}}
 
@@ -359,7 +359,7 @@
     ;{:swagger {:tags ["admin/vocabulary/perms"] :security [{"auth" []}]}}
     ["/"
      {:get
-      {:summary (sd/sum_adm "List vocabulary permissions")
+      {:summary (sd/sum_adm ( t  "List vocabulary permissions"))
        :handler permissions/handle_list-vocab-perms
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
@@ -367,7 +367,12 @@
        :coercion reitit.coercion.schema/coercion
        :parameters {:path {:id s/Str}}
        :responses {200 {:body schema_export-perms_all}
-                   404 {:body s/Any}}}
+
+                   404 {:description "Not found."
+                        :schema s/Str
+                        :examples {"application/json" {:message "No such vocabulary."}}}
+                   }}
+
       :put
       {:summary (sd/sum_adm "Update vocabulary resource permissions")
        :handler handle_update-vocab
@@ -382,13 +387,21 @@
 
     ["/users"
      {:get
-      {:summary (sd/sum_adm_todo "List vocabulary user permissions")
+      {:summary (sd/sum_adm_todo (t "List vocabulary user permissions"))
        :handler permissions/handle_list-vocab-user-perms
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
        :accept "application/json"
        :coercion reitit.coercion.schema/coercion
-       :parameters {:path {:id s/Str}}
+
+       :swagger {:produces "application/json"
+                 :parameters [{:name "id"
+                               :in "path"
+                               :description "e.g.: zhdk_bereich"
+                               :type "string"
+                               :required true
+                               :pattern "^[a-z0-9\\-\\_\\:]+$"}]}
+
        :responses {200 {:body [schema_export-user-perms]}
                    404 {:body s/Any}}}}]
 
