@@ -99,19 +99,13 @@
   (try
     (catcher/with-logging {}
       (let [data (-> req :parameters :body)
-            ;id (-> req :parameters :path :id)
             id (-> req :path-params :id)
-
-            p (println ">o> 1:parameters" (-> req :parameters))
-            p (println ">o> 2:query-params" (-> req :query-params))
-            p (println ">o> 3:path-params" (-> req :path-params))
 
             dwid (assoc data :id id)
             dwid (convert-map-if-exist (cast-to-hstore dwid))
 
             old-data (sd/query-eq-find-one :vocabularies :id id)
             p (println ">o> old-data" old-data)
-
             ]
 
         (if old-data
@@ -132,7 +126,6 @@
                 (logging/info "handle_update-vocab" "\nid: " id "\nnew-data:\n" upd-res)
                 (sd/response_ok upd-res))
               (sd/response_failed "Could not update vocabulary." 406))
-
             )
           (sd/response_not_found "No such vocabulary."))))
     (catch Exception ex (sd/response_exception ex))))
@@ -374,16 +367,25 @@
                    }}
 
       :put
-      {:summary (sd/sum_adm "Update vocabulary resource permissions")
+      {:summary (sd/sum_adm (t "Update vocabulary resource permissions"))
        :handler handle_update-vocab
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
        :accept "application/json"
        :coercion reitit.coercion.schema/coercion
+
+       ;; FIXME: input-validation is missing
        :parameters {:path {:id s/Str}
                     :body schema_perms-update}
+
        :responses {200 {:body schema_export-vocabulary}
-                   404 {:body s/Any}}}}]
+                   404 {:description "Not found."
+                        :schema s/Str
+                        :examples {"application/json" {:message "No such vocabulary."}}}
+                   406 {:description "Not Acceptable."
+                        :schema s/Str
+                        :examples {"application/json" {:message "Could not update vocabulary."}}}
+                   }}}]
 
     ["/users"
      {:get
