@@ -218,23 +218,17 @@
                             :vocabulary_id vid
                             :group_id gid)]
           (let [upd-data (-> req :parameters :body)
-                upd-clause (sd/sql-update-clause
-                             "vocabulary_id" vid
-                             "group_id" gid)
-
                 query (-> (sql/update :vocabulary_group_permissions)
                           (sql/set (spy upd-data))
-                          ;(sql/where upd-clause)
                           (sql/where [:= :vocabulary_id vid] [:= :group_id gid])
-                          sql-format
-                          spy)
+                          (sql/returning :*)
+                          sql-format)
 
-                upd-result (jdbc/execute-one! (get-ds) (spy query))]
-            (if (= 1 (::jdbc/update-count (spy upd-result)))
-              (sd/response_ok (sd/query-eq-find-one
-                                :vocabulary_group_permissions
-                                :vocabulary_id vid
-                                :group_id gid))
+                upd-result (jdbc/execute-one! (get-ds) (spy query))
+                ]
+
+            (if upd-result
+              (sd/response_ok upd-result)
               (sd/response_failed "Could not update vocabulary group permission" 406)))
           (sd/response_not_found "No such vocabulary group permission"))))
     (catch Exception ex (sd/response_exception ex))))
