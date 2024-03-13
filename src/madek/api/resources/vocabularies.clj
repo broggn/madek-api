@@ -349,7 +349,6 @@
               :swagger {:produces "application/json"}}}]
 
    ["/:id/perms"
-    ;{:swagger {:tags ["admin/vocabulary/perms"] :security [{"auth" []}]}}
     ["/"
      {:get
       {:summary (sd/sum_adm (t "List vocabulary permissions"))
@@ -423,8 +422,12 @@
                         :examples {"application/json" {:message "No such vocabulary user permission."}}}
                    }}
       :post
-      {:summary (sd/sum_adm "Create vocabulary user permissions")
+      {:summary (sd/sum_adm "Create vocabulary user permissions ??")
        :handler permissions/handle_create-vocab-user-perms
+
+       ;; TODO: remove this
+       :description (str "TODO: REMOVE THIS | user_id: columns , id: d48e4387-b80d-45de-9077-5d88c331fa6a")
+
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
        :accept "application/json"
@@ -432,8 +435,15 @@
        :parameters {:path {:id s/Str
                            :user_id s/Uuid}
                     :body schema_perms-update-user-or-group}
+
        :responses {200 {:body schema_export-user-perms}
-                   404 {:body s/Any}}}
+                   404 {:description "Not found."
+                        :schema s/Str
+                        :examples {"application/json" {:message "{Vocabulary|User} entry not found"}}}
+                   409 {:description "Conflict."
+                        :schema s/Str
+                        :examples {"application/json" {:message "Entry already exists"}}}
+                   }}
 
       :put
       {:summary (sd/sum_adm "Update vocabulary user permissions")
