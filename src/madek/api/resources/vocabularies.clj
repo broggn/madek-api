@@ -260,8 +260,8 @@
            :content-type "application/json"
            :swagger (generate-swagger-pagination-params)
            :coercion reitit.coercion.schema/coercion
-           :responses {200 {:body {:vocabularies [schema_export-vocabulary]}}}
-           }
+           :responses {200 {:body {:vocabularies [schema_export-vocabulary]}}
+                       }}
 
      :post {:summary (sd/sum_adm (t "Create vocabulary."))
             :handler handle_create-vocab
@@ -287,16 +287,18 @@
 
    ["/:id"
     {:get {:summary (sd/sum_adm (t "Get vocabulary by id."))
-           :description "Get a vocabulary by id. Returns 404, if no such vocabulary exists."
            :handler get-vocabulary
            :middleware [wrap-authorize-admin!]
            :swagger {:produces "application/json"}
            :content-type "application/json"
 
+           ;:description "Get a vocabulary by id. Returns 404, if no such vocabulary exists."
+           ;; TODO: remove this
+           :description (str "TODO: REMOVE THIS | id: media_content")
+
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Str}}
            :responses {200 {:body schema_export-vocabulary}
-
                        404 {:description "Creation failed."
                             :schema s/Str
                             :examples {"application/json" {:message "Vocabulary could not be found!"}}}
@@ -601,6 +603,8 @@
        ;; TODO: remove this
        :description (str "TODO: REMOVE THIS | id: columns , id: ecb0de43-ccd2-463a-85a6-826c6ff99cdf")
 
+
+
        :accept "application/json"
        :coercion reitit.coercion.schema/coercion
        :parameters {:path {:id s/Str
@@ -621,24 +625,33 @@
   ["/vocabularies"
    {:swagger {:tags ["vocabulary"]}}
 
-   ["/" {:get {:summary "Get list of vocabularies ids."
+   ["/" {:get {:summary (t "Get list of vocabularies ids.")
                :description "Get list of vocabularies ids."
                :handler get-index
                :content-type "application/json"
                :coercion reitit.coercion.schema/coercion
-               :parameters {:query {(s/optional-key :page) s/Int}}
-               :responses {200 {:body {:vocabularies [schema_export-vocabulary]}}}
-               :swagger {:produces "application/json"}}}]
+               :swagger (generate-swagger-pagination-params)
+               :responses {200 {:body {:vocabularies [schema_export-vocabulary]}}
 
-   ["/:id" {:get {:summary "Get vocabulary by id."
-                  :description "Get a vocabulary by id. Returns 404, if no such vocabulary exists."
+                           }
+               }}]
+
+   ["/:id" {:get {:summary (t "Get vocabulary by id.")
+                  ;:description "Get a vocabulary by id. Returns 404, if no such vocabulary exists."
                   :swagger {:produces "application/json"}
                   :content-type "application/json"
+
+                  ;; TODO: remove this
+                  :description (str "TODO: REMOVE THIS | id: media_content")
+
                   :handler get-vocabulary
                   :coercion reitit.coercion.schema/coercion
                   :parameters {:path {:id s/Str}}
                   :responses {200 {:body schema_export-vocabulary}
-                              404 {:body s/Any}}}}]])
+                              404 {:description "Creation failed."
+                                   :schema s/Str
+                                   :examples {"application/json" {:message "Vocabulary could not be found!"}}}
+                              }}}]])
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

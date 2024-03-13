@@ -30,12 +30,20 @@
 (defn- query-index-resources [request]
   (let [user-id (-> request :authenticated-entity :id)
         qparams (-> request :query-params)
+
+        p (println ">o> qparams1" qparams)
+        p (println ">o> qparams2" (-> request :path-params))
+
         page (get qparams "page")
         count (get qparams "count")
 
         offset (str-to-int page 1)
         size (str-to-int count 5)
+
+        p (println ">o> offset" offset ", size" size)
+
         query (base-query user-id size offset)
+        p (println ">o> query" query)
         ]
     ;(logging/info "query-index-resources: " query)
     (jdbc/execute! (get-ds) query)))
@@ -48,6 +56,9 @@
 (defn get-index [request]
   (catcher/with-logging {}
     (let [db-result (query-index-resources request)
+
+          p (println ">o> db-result" db-result)
+
           result (->> db-result
                    (map transform_ml)
                    (map sd/remove-internal-keys))]

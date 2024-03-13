@@ -210,7 +210,7 @@
 
 ;(def uuid-matcher #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}" )
 
-(def internal-keys [:admin_comment])
+(def internal-keys [:admin_comment :enabled_for_public_view :enabled_for_public_use])
 
 (defn remove-internal-keys
   ([resource]
