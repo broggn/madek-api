@@ -66,20 +66,17 @@
        value)))
 
   ([value key table]
-   (def keys-to-cast-to-uuid [:user_id :id])
+   (def blacklisted-tables #{"meta_keys" "vocabularies"})
 
-   (if (= (name table) "meta_keys")
+   (println ">o> keys-to-cast-to-uuid / earlyExitByTableName" table)
+   (println ">o> blacklistedTables=" blacklisted-tables)
+
+   (if (contains? blacklisted-tables (name table))
      value
      (to-uuid value key)))
-
-  ;(try
-  ;  (if (:and (contains? keys-to-cast-to-uuid key) (instance? String value))
-  ;    (UUID/fromString value)
-  ;    value)
-  ;  (catch Exception e
-  ;    (logging/warn ">>> ERROR2 in to-uuid[id], id=" value ", key=" key " exception=" (.getMessage e))
-  ;    value))
   )
+
+
 (comment
   (let [;p (println "\nquery ok1" (to-uuid "123e4567-e89b-12d3-a456-426614174000" :user_id))
         ;p (println "\nquery ok1" (class (to-uuid "123e4567-e89b-12d3-a456-426614174000" :user_id)))

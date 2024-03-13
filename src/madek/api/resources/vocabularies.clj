@@ -24,6 +24,8 @@
    [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
    [next.jdbc :as jdbc]
 
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist f replace-java-hashmaps t v]]
+
 
    [reitit.coercion.schema]
 
@@ -51,7 +53,9 @@
                           (sql/returning :*)
 
                           sql-format)
-            ins-res (jdbc/execute-one! (get-ds) sql-query)]
+            ins-res (jdbc/execute-one! (get-ds) sql-query)
+
+            ]
 
         ;(if-let [result (::jdbc/update-count ins-res)]
         (if ins-res
@@ -95,21 +99,41 @@
   (try
     (catcher/with-logging {}
       (let [data (-> req :parameters :body)
-            id (-> req :parameters :path :id)
+            ;id (-> req :parameters :path :id)
+            id (-> req :path-params :id)
+
+            p (println ">o> 1:parameters" (-> req :parameters))
+            p (println ">o> 2:query-params" (-> req :query-params))
+            p (println ">o> 3:path-params" (-> req :path-params))
+
             dwid (assoc data :id id)
-            old-data (sd/query-eq-find-one :vocabularies :id id)]
+            dwid (convert-map-if-exist (cast-to-hstore dwid))
+
+            old-data (sd/query-eq-find-one :vocabularies :id id)
+            p (println ">o> old-data" old-data)
+
+            ]
+
         (if old-data
           (let [sql-query (-> (sql/update :vocabularies)
-                              (sql/set dwid)
+                              (sql/set dwid)                ;; TODO: convert
                               (sql/where [:= :id id])
+                              (sql/returning :id :position :labels :descriptions :admin_comment)
                               sql-format)
-                upd-res (jdbc/execute! (get-ds) sql-query)]
-            (if-let [result (::jdbc/update-count upd-res)]
-              (let [new-data (sd/query-eq-find-one :vocabularies :id id)]
-                (logging/info "handle_update-vocab"
-                  "\nid: " id "\nnew-data:\n" new-data)
-                (sd/response_ok (transform_ml new-data)))
-              (sd/response_failed "Could not update vocabulary." 406)))
+                upd-res (jdbc/execute-one! (get-ds) sql-query)
+                p (println ">o> upd-res1" upd-res)
+                ;upd-res (replace-java-hashmaps upd-res)
+                upd-res (transform_ml upd-res)
+                p (println ">o> upd-res2" upd-res)
+                ]
+
+            (if upd-res
+              (do
+                (logging/info "handle_update-vocab" "\nid: " id "\nnew-data:\n" upd-res)
+                (sd/response_ok upd-res))
+              (sd/response_failed "Could not update vocabulary." 406))
+
+            )
           (sd/response_not_found "No such vocabulary."))))
     (catch Exception ex (sd/response_exception ex))))
 
@@ -153,8 +177,8 @@
 
 (def schema_export-vocabulary
   {:id s/Str
-   :enabled_for_public_view s/Bool
-   :enabled_for_public_use s/Bool
+   ;:enabled_for_public_view s/Bool
+   ;:enabled_for_public_use s/Bool
    :position s/Int
    :labels (s/maybe sd/schema_ml_list)
    :descriptions (s/maybe sd/schema_ml_list)
@@ -285,17 +309,32 @@
                        }}
 
 
-     :put {:summary (sd/sum_adm_todo "Update vocabulary.")
+     :put {:summary (sd/sum_adm_todo (f (t "Update vocabulary.")))
            :handler handle_update-vocab
            :middleware [wrap-authorize-admin!]
            :content-type "application/json"
            :accept "application/json"
            :coercion reitit.coercion.schema/coercion
-           :parameters {:path {:id s/Str}
-                        :body schema_update-vocabulary}
-           :responses {200 {:body schema_export-vocabulary}
-                       404 {:body s/Any}}
-           :swagger {:consumes "application/json" :produces "application/json"}}
+
+           :description (slurp "./md/vocabularies-put.md")
+
+           :swagger {:produces "application/json"
+                     :consumes "application/json"
+                     :parameters [{:name "id"
+                                   :in "path"
+                                   :type "string"
+                                   :required true}]}
+
+           :parameters {:body schema_update-vocabulary}
+           :responses {
+                       200 {:body schema_export-vocabulary}
+                       400 {:body s/Any}
+                       404 {:description "Delete failed."
+                            :schema s/Str
+                            :examples {"application/json" {:message "No such vocabulary."}}}
+
+                       }
+           }
 
      :delete {:summary (sd/sum_adm_todo (f (t "Delete vocabulary.") "http-status-409?"))
               :handler handle_delete-vocab

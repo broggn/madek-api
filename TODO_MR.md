@@ -83,6 +83,11 @@ Better way to convert data
    :labels (sd/transform_ml (:labels data))
    :descriptions (sd/transform_ml (:descriptions data))))
 ```
+Best practice
+```clojure
+    ;upd-res (replace-java-hashmaps upd-res)
+    upd-res (transform_ml upd-res)  ;; use this
+```
 
 
 ToAsk
