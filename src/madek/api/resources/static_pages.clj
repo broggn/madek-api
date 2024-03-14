@@ -30,9 +30,6 @@
 
 (defn handle_get-static_page
   [req]
-
-  (println ">o> handle_get-static_page")
-
   (let [static_page (-> req :static_page)
         static_page (sd/transform_ml_map static_page)
         ]
@@ -42,15 +39,6 @@
   (try
     (catcher/with-logging {}
       (let [data (-> req :parameters :body)
-            ;contents-json (sd/try-as-json (:contents data))
-            ;contents-json (:contents data)
-
-            ;p (println ">o> contents-json" contents-json)
-            ;p (println ">o> contents-json.class" (class contents-json))
-            ;
-            ;ins-data (assoc data :contents contents-json)
-            ;ins-data (cast-to-hstore ins-data)
-
             ins-data (cast-to-hstore data)
 
             sql-query (-> (sql/insert-into :static_pages)
@@ -59,11 +47,7 @@
                           sql-format)
 
             ins-res (jdbc/execute-one! (get-ds) sql-query)
-            p (println ">o> ins-res1=" ins-res)
-
             ins-res (sd/transform_ml_map ins-res)
-            p (println ">o> ins-res2=" ins-res)
-
             ]
 
         (logging/info "handle_create-static-page:"
@@ -80,34 +64,15 @@
     (catcher/with-logging {}
       (let [data (-> req :parameters :body)
             id (-> req :parameters :path :id)
-            ;contents-json (sd/try-as-json (:contents data))
-            ;dwid (assoc data :id id :contents contents-json)
-            ;upd-query (sd/sql-update-clause "id" (str id))
-
-            ;upd-result (jdbc/update! (rdbms/get-ds)
-            ;                         :static_pages
-            ;                         dwid upd-query)]
-
-
-            p (println ">o> data=" data)
-
             dwid (cast-to-hstore data)
-            p (println ">o> dwid=" dwid)
 
             sql-query (-> (sql/update :static_pages)
                           (sql/set dwid)
-
-                          ;(sql/where upd-query)
                           (sql/where [:= :id id])
-
                           (sql/returning :*)
                           sql-format)
 
-
-            p (println ">o> sql-query=" sql-query)
-
             upd-result (jdbc/execute-one! (get-ds) sql-query)
-            p (println ">o> upd-result=" upd-result)
             upd-result (sd/transform_ml_map upd-result)
             ]
 
@@ -116,9 +81,7 @@
           "\nnew-data:\n" dwid
           "\nupd-result:" upd-result)
 
-        ;(if (= 1 (::jdbc/update-count upd-result))
         (if upd-result
-          ;(sd/response_ok (sd/query-eq-find-one :static_pages :id id))
           (sd/response_ok upd-result)
           (sd/response_failed "Could not update static_page." 406))))
     (catch Exception e (sd/parsed_response_exception e))))
@@ -206,12 +169,12 @@
                              :examples {"application/json" {:message "Entry already exists"}}}
 
                         }}
-     ; static_page list / query
+
      :get {:summary (sd/sum_adm (t "List static_pages."))
            :handler handle_list-static_pages
            :coercion reitit.coercion.schema/coercion
            :parameters {:query {(s/optional-key :full_data) s/Bool}}}}]
-   ; edit static_page
+
    ["/:id"
     {:get {:summary (sd/sum_adm (t "Get static_pages by id."))
            :handler handle_get-static_page
@@ -240,7 +203,7 @@
                             :schema s/Str
                             :examples {"application/json" {:message "No such entity in :static_pages as :id with <id>"}}}
 
-                            }}
+                       }}
 
      :delete {:summary (sd/sum_adm (t "Delete static_page by id."))
               :coercion reitit.coercion.schema/coercion
