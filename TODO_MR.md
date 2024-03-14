@@ -112,6 +112,7 @@ ToAsk
 9. Status for foreign-key-exception?   409 Conflict
    - http://localhost:3104/api-docs/index.html#/admin%2Fvocabularies/delete_api_admin_vocabularies__id_
 10. List-Response: `[] vs delegations : []`
+11. Should we log updated-values in general as well(old vs new)?
 
 FYI
 --

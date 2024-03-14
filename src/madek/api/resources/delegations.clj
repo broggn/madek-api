@@ -65,12 +65,17 @@
         upd-query (sd/sql-update-clause "id" (str id))
         ; or TODO data with id
 
-        sql-query (-> (sql/update :delegations) (sql/set dwid) (sql/where [:= :id id]) sql-format)]
+        sql-query (-> (sql/update :delegations)
+                      (sql/set dwid)
+                      (sql/where [:= :id id])
+                      sql-format)]
 
     ; create delegation entry
     (logging/info "handle_update-delegations: " "\nid\n" id "\ndwid\n" dwid
       "\nold-data\n" old-data
       "\nupd-query\n" upd-query)
+
+
     (if-let [ins-res (first (jdbc/execute! (get-ds) sql-query))]
       (let [new-data (sd/query-eq-find-one :delegations :id id)]
         (logging/info "handle_update-delegations:" "\nnew-data\n" new-data)
@@ -189,15 +194,20 @@
                             :examples {"application/json" {:message "No such entity in :delegations as :id with <id>"}}}
                        }}
 
-     :put {:summary (sd/sum_adm "Update delegations with id.")
-           ; TODO labels and descriptions
+     :put {:summary (sd/sum_adm (t "Update delegations with id."))
            :handler handle_update-delegations
            :middleware [(wwrap-find-delegation :id :id true)]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Uuid}
                         :body schema_update_delegations}
-           :responses {200 {:body s/Any}                    ;schema_export_delegations}
-                       406 {:body s/Any}}}
+           :responses {200 {:body schema_export_delegations}
+                       404 {:description "Not Found."
+                            :schema s/Str
+                            :examples {"application/json" {:message "No such entity in :delegations as :id with <id>"}}}
+                       406 {:description "Not Acceptable."
+                            :schema s/Str
+                            :examples {"application/json" {:message "Could not update delegation."}}}
+                       }}
 
      :delete {:summary (sd/sum_adm_todo (t "Delete delegation by id."))
               :coercion reitit.coercion.schema/coercion
