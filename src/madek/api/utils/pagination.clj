@@ -19,11 +19,52 @@
 (defn compute-offset [params]
   (* (page-count params) (page-number params)))
 
-(defn sql-offset-and-limit [query params]
-  (let [off (compute-offset params)]
+
+
+
+
+
+
+
+
+
+(defn sql-offset-and-limit [query params] "Caution: zero-based page numbers"
+  (let [
+        ;p (println ">o> query=>" query)
+        ;p (println ">o> params=>" params)
+        off (compute-offset params)
+        p (println ">o> params.page=>" (:page params))
+        ;p (println ">o> off=>" off)
+
+        limit (page-count params)
+        p (println ">o> params.count=>" (:count params))
+        ;p (println ">o> limit=>" limit)
+        p (println ">o> PAGINATION-DETAIL: offset=" off ", limit=" limit)
+        ]
     (-> query
         (sql/offset off)
-        (sql/limit (page-count params)))))
+        (sql/limit limit))
+
+    ;{:offset off :limit limit}
+    ))
+
+
+(comment
+
+  (let [
+
+        page 1
+        page 0
+        count 2
+        params {:page page :count count}
+
+        res (sql-offset-and-limit nil params)
+
+        ]
+    res
+    )
+
+  )
 
 (defn next-page-query-query-params [query-params]
   (let [query-params (keywordize-keys query-params)

@@ -33,6 +33,11 @@ Known issue
    ; [clojure.java.data :as data]
    db-result (assoc db-result :documentation_urls (data/java-map (:documentation_urls db-result)))
    ```
+4. Use zero-based-pagination
+   ```clojure
+   ; [madek.api.utils.pagination :as pagination]
+   (pagination/sql-offset-and-limit params)
+   ```
    
 
 Needed changes
@@ -113,6 +118,8 @@ ToAsk
    - http://localhost:3104/api-docs/index.html#/admin%2Fvocabularies/delete_api_admin_vocabularies__id_
 10. List-Response: `[] vs delegations : []`
 11. Should we log updated-values in general as well(old vs new)?
+12. Why using :patch instead of :put? `m.a.r.users.main`
+
 
 FYI
 --
@@ -234,3 +241,42 @@ Swagger-UI Validation
                      </div>
 
             "
+
+
+Pagination
+> Implement zero-based-indexing
+--
+```clojure
+
+   ; [madek.api.utils.pagination :as pagination]
+   (pagination/sql-offset-and-limit params)
+
+
+   :swagger {:produces "application/json"
+             :parameters [{:name "email"
+                           :in "query"
+                           :description "Filter admin by email, e.g.: mr-test@zhdk.ch"
+                           :type "string"
+                           :pattern "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$"}
+                          {:name "page"
+                           :in "query"
+                           :description "Page number, defaults to 0 (zero-based-index)"
+                           :required true
+                           :default 0
+                           :minimum 0
+                           ;:type "number"
+                           :type "integer"
+                           :pattern "^([1-9][0-9]*|0)$"
+                           }
+                          {:name "count"
+                           :in "query"
+                           :description "Number of items per page (1-100), defaults to 100"
+                           :required true
+                           :minimum 1
+                           :maximum 100
+                           :value 100
+                           :default 100
+                           :type "number"
+                           }]
+```
+
