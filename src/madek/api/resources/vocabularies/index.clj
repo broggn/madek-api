@@ -20,7 +20,7 @@
 
 (defn- base-query
   [user-id size offset]
-  (-> (sql/select :*)                                       ;:id)
+  (-> (sql/select :*) ;:id)
       (sql/from :vocabularies)
       (sql/where (where-clause user-id))
       (sql/offset offset)
@@ -43,8 +43,7 @@
         p (println ">o> offset" offset ", size" size)
 
         query (base-query user-id size offset)
-        p (println ">o> query" query)
-        ]
+        p (println ">o> query" query)]
     ;(logging/info "query-index-resources: " query)
     (jdbc/execute! (get-ds) query)))
 
@@ -60,8 +59,8 @@
           p (println ">o> db-result" db-result)
 
           result (->> db-result
-                   (map transform_ml)
-                   (map sd/remove-internal-keys))]
+                      (map transform_ml)
+                      (map sd/remove-internal-keys))]
       (sd/response_ok {:vocabularies result}))))
 
 ;### Debug ####################################################################

@@ -20,23 +20,17 @@
   (try
     (Integer/parseInt (str value))
     (catch NumberFormatException e
-      default-value)
-    ))
-
+      default-value)))
 
 (comment
-  (let [
-        p (println ">o> int" (class 1))
+  (let [p (println ">o> int" (class 1))
 
         res (str-to-int "123" 0)
         res (str-to-int 456 0)
         res (str-to-int "x456" 0)
         res (str-to-int {} 0)
-        res (str-to-int [] 0)
-        ]
-    res
-    )
-  )
+        res (str-to-int [] 0)]
+    res))
 
 ; [madek.api.utils.helper :refer [to-uuid]]
 (defn to-uuid
@@ -56,8 +50,7 @@
        value)
      (catch Exception e
        (logging/warn ">>> DEV-ERROR in to-uuid[value key], value=" value ", key=" key " exception=" (.getMessage e))
-       value))
-   )
+       value)))
 
   ([value key table]
    (def blacklisted-tables #{"meta_keys" "vocabularies"})
@@ -67,17 +60,15 @@
 
    (if (contains? blacklisted-tables (name table))
      value
-     (to-uuid value key)))
-  )
-
+     (to-uuid value key))))
 
 (comment
   (let [;p (println "\nquery ok1" (to-uuid "123e4567-e89b-12d3-a456-426614174000" :user_id))
         ;p (println "\nquery ok1" (class (to-uuid "123e4567-e89b-12d3-a456-426614174000" :user_id)))
         ;
 
-        k "123e4567-e89b-12d3-a456-426614174000"            ;ok
-        k "123e"                                            ;error - return val
+        k "123e4567-e89b-12d3-a456-426614174000" ;ok
+        k "123e" ;error - return val
         ;k 123                                               ;ok - return val
 
         p (println "\nquery result=" (to-uuid k))
@@ -121,7 +112,7 @@
   (-> map
       (update :external_uris #(if (nil? %)
                                 [:raw "'{}'"]
-                                (convert-to-raw-set %)))    ;;rename to convert-to-raw-set
+                                (convert-to-raw-set %))) ;;rename to convert-to-raw-set
 
       (update :creator_id #(if (contains? map :creator_id) (to-uuid % :creator_id)))
 
@@ -188,8 +179,8 @@
                       transformed-value (to-hstore field-value)] ; Assume to-hstore is defined elsewhere
                   (assoc acc key transformed-value))
                 acc))
-      data
-      keys)))
+            data
+            keys)))
 
 (defn array-to-map [arr]
   (zipmap arr (range (count arr))))
@@ -212,8 +203,8 @@
 (defn replace-java-hashmaps [m]
   (reduce-kv (fn [acc k v]
                (assoc acc k (replace-java-hashmap v)))
-    {}
-    m))
+             {}
+             m))
 
 
 
