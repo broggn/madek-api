@@ -599,4 +599,11 @@
     (str/includes? (ex-message ex) "is not present in table \"vocabularies\"") (response_failed (str "Vocabulary entry not found") 404)
     :else (response_exception ex)))
 
+
+(defn transform_ml_map [data]
+  (cond-> data
+    (:labels data) (assoc :labels (transform_ml (:labels data)))
+    (:descriptions data) (assoc :descriptions (transform_ml (:descriptions data)))
+    (:contents data) (assoc :contents (transform_ml (:contents data)))))
+
 (debug/debug-ns *ns*)

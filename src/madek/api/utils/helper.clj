@@ -181,7 +181,7 @@
 
 ; [madek.api.utils.helper :refer [cast-to-hstore]]
 (defn cast-to-hstore [data]
-  (let [keys [:labels :descriptions :hints :documentation_urls]]
+  (let [keys [:labels :descriptions :contents :hints :documentation_urls]]
     (reduce (fn [acc key]
               (if (contains? acc key)
                 (let [field-value (get acc key)

@@ -122,6 +122,7 @@
 ; user self edit favorites 
 (def query-routes
   ["/delegation/users"
+   {:swagger {:tags ["delegation/users"]   }}
    {:get
     {:summary (sd/sum_adm "Query delegation users.")
      :handler handle_list-delegations_users-by-user
@@ -133,6 +134,7 @@
 
 (def user-routes
   ["/delegation/:delegation_id/user"
+   {:swagger {:tags ["delegation/users"]   }}
    {:post {:summary (sd/sum_cnv "Create delegations_user for authed user and media-entry.")
            :handler handle_create-delegations_user
            :middleware [(wwrap-find-delegation :delegation_id)
@@ -166,6 +168,7 @@
 
 (def admin-routes
   [["/delegation/users"
+    {:swagger {:tags ["admin/delegation/users"] :security [{"auth" []}]}}
     {:get
      {:summary (sd/sum_adm "Query delegations_users.")
       :handler handle_list-delegations_users

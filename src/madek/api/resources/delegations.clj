@@ -129,6 +129,7 @@
 (def ring-routes
 
   ["/delegations"
+   {:swagger {:tags ["delegation"] :security [{"auth" []}]}}
    ["/"
     {:post {:summary (sd/sum_adm_todo "Create delegations.")
             ; TODO labels and descriptions

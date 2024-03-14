@@ -35,10 +35,10 @@
 ; TODO logwrite
 
 ;; TODO: move to shared/helpers
-(defn transform_ml [data]
-  (assoc data
-         :labels (sd/transform_ml (:labels data))
-         :descriptions (sd/transform_ml (:descriptions data))))
+;(defn transform_ml [data]
+;  (assoc data
+;         :labels (sd/transform_ml (:labels data))
+;         :descriptions (sd/transform_ml (:descriptions data))))
 
 (defn handle_create-vocab [req]
   (try
@@ -60,7 +60,7 @@
 
         ;(if-let [result (::jdbc/update-count ins-res)]
         (if ins-res
-          (sd/response_ok (transform_ml ins-res))
+          (sd/response_ok (sd/transform_ml_map ins-res))
           (sd/response_failed "Could not create vocabulary." 406))))
     (catch Exception ex (sd/response_exception ex))))
 
@@ -118,7 +118,7 @@
                 upd-res (jdbc/execute-one! (get-ds) sql-query)
                 p (println ">o> upd-res1" upd-res)
                 ;upd-res (replace-java-hashmaps upd-res)
-                upd-res (transform_ml upd-res)
+                upd-res (sd/transform_ml_map upd-res)
                 p (println ">o> upd-res2" upd-res)
                 ]
 
@@ -164,7 +164,7 @@
                 db-result (jdbc/execute-one! (get-ds) sql-query)]
             ;; rest of your code
             (if (= 1 (::jdbc/update-count db-result))
-              (sd/response_ok (transform_ml old-data))
+              (sd/response_ok (sd/transform_ml_map old-data))
               (sd/response_failed "Could not delete vocabulary." 406)))
           (sd/response_not_found "No such vocabulary."))))
     (catch Exception ex (sd/parsed_response_exception ex))))
