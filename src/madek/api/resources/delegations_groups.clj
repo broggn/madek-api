@@ -139,7 +139,7 @@
 
 (def admin-routes
   [["/delegation/groups"
-    {:swagger {:tags ["admin/delegation/groups"] :security [{"auth" []}]}}
+    {:swagger {:tags ["admin/delegation/groups1"] :security [{"auth" []}]}}
 
     {:get
      {:summary (sd/sum_adm "Query delegations_groups.")

@@ -377,6 +377,7 @@
     ; TODO beware to let not update perm fields in media-entry or collection patch/update
 
    ["/resources"
+    {:swagger {:tags ["admin/resources/permission??"] :security [{"auth" []}]}}
     {:get
      {:summary "Query media-entry permissions."
       :swagger {:produces "application/json"}
@@ -476,6 +477,7 @@
            :responses {200 {:body schema_export-media-entry-user-permission}}}}]
 
    ["/groups"
+    {:swagger {:tags ["admin/delegation/groups2"] :security [{"auth" []}]}}
     {:get
      {:summary "Query media-entry group permissions."
       :swagger {:produces "application/json"}
@@ -488,6 +490,7 @@
       :responses {200 {:body [schema_export-media-entry-group-permission]}}}}]
 
    ["/group/:group_id"
+    {:swagger {:tags ["admin/delegation/group"] :security [{"auth" []}]}}
     {:get {:summary "Get media-entry group permissions."
            :swagger {:produces "application/json"}
            :content-type "application/json"
