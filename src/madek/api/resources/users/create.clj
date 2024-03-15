@@ -10,6 +10,9 @@
 
    [clojure.data.json :as json]
 
+   [madek.api.utils.validation :refer [email-validation json-and-json-str-validation]]
+
+
    [madek.api.resources.users.common :refer [find-user-by-uid]]
    [madek.api.resources.users.get :as get-user]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
@@ -22,7 +25,7 @@
    ;[madek.api.resources.users.get :refer [schema]]
    [madek.api.resources.users.get :as users-get]
 
-   [schema.core  :as s]
+   [schema.core :as s]
 
    ;[schema.core :as s]
    [taoensso.timbre :refer [debug error info spy warn]]))
@@ -155,103 +158,29 @@
 
 
 
-;; Define a regular expression for email validation
-(def email-regex #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
-
 ;(s/defschema schema
 (def schema
   {:person_id s/Uuid
    (s/optional-key :accepted_usage_terms_id) (s/maybe s/Uuid)
-   ;:email (s/cond-pre s/Str (s/with-fn-validation valid-email? s/Str))
-   ;(:email (s/with-fn-validation valid-email?)) s/Str
-
-   ;(s/required-key :email) (s/with-fn-validation valid-email? s/Str)
-   ;(s/required-key :email) (s/with-fn-validation valid-email? s/Str)
-
-   ;(s/optional-key :email) (s/with-fn-validation valid-email? s/Str)
-   ;(s/optional-key :email) (s/with-fn-validation valid-email? s/Str)
-   ;(s/optional-key :email) (s/with-fn-validation valid-email? s/Regex)
-   ;(s/optional-key :email) (s/with-fn-validation valid-email?)
-
-   ;(s/optional-key :email) Email
-
-   ;:email s/Str
-
-
-   :email (s/constrained s/Str #(re-matches email-regex %)
-           "Invalid email address")
-
-
-
-   ;:email (s/with-fn-validation valid-email? s/Str)
-   ;:email (s/with-fn-validation email s/Regex)
-   ;:email (s/with-fn-validation email)
-
-   ;(s/optional-key :email) email-schema
-
-
-
-;:email (s/with-fn-validation validemail? s/Str)
-   ;:email (s/with-fn-validation valid-email? s/Regex)
-   ;:email (s/with-fn-validation valid-email? s/Str)
-
-   ;(s/optional-key :email) email-schema
-
-
-;:email (s/with-fn-validation validemail?)
-
-   ;(s/optional-key :email) (s/Regex #"^[\w\.-]+@([\w-]+\.)+[\w-]{2,4}$")
-
-   ;(s/optional-key :email) Email
+   (s/optional-key :email) email-validation
    (s/optional-key :first_name) s/Str
    (s/optional-key :institution) s/Str
    (s/optional-key :institutional_id) s/Str
    (s/optional-key :last_name) s/Str
    (s/optional-key :login) s/Str
    (s/optional-key :notes) (s/maybe s/Str)
-   (s/optional-key :settings) s/Any
+
+   ;:settings (s/with-fn-validation valid-json? s/Str) ;; Validate settings as JSON
+   ;(s/optional-key :settings) (s/with-fn-validation valid-json? s/Str) ;; Validate settings as JSON
+
+   ;(s/optional-key :settings) json-validation
+   (s/optional-key :settings) json-and-json-str-validation
+
+
+   ;(s/optional-key :settings) s/Any
+
    })
 
-(defn validate-schema! [handler]
-  (fn [req]
-    (let [
-          p (println ">o> PROCESS BODY VALIDATION")
-          body (-> req :parameters :body)
-          p (println ">o> 0 body=" body)
-
-          ;query-params (-> req :parameters :query-params)
-          ;p (println ">o> 0 query-params" query-params)
-
-          ]
-
-      (try
-
-        (do
-          (println ">o> before-val")
-          ;(s/validate users-get/schema body)
-          (s/validate schema body)
-
-          p (println ">o> schema" schema)
-          p (println ">o> body" body)
-          p (println ">o> process validation, result: " (s/validate schema body))
-
-          (println ">o> after-val"))
-
-
-        (catch Exception ex
-
-          (println ">o> e1" (ex-message ex))
-          (println ">o> e2" (ex-cause ex))
-          (println ">o> e3" (ex-data ex))
-
-          (throw (ex-info "Invalid request body." {:status 402}))
-
-          )
-        )
-
-      )
-    )
-  )
 
 (def route
   {:accept "application/json"
@@ -262,9 +191,7 @@
    :description (slurp "./md/admin-users-post.md")
 
    :handler handle-create-user
-   :middleware [
-                ;validate-schema!
-                wrap-authorize-admin!]
+   :middleware [wrap-authorize-admin!]
    :parameters {:body schema}
    :responses {
 
