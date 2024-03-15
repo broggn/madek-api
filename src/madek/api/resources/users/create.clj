@@ -45,6 +45,7 @@
           p (println ">o> data.sett" (:settings data))
           p (println ">o> data.sett.cl" (class (:settings data)))
 
+          ;; TODO: issue with settings ("{}" vs {} vs [] vs "[]") / normalization?
           data (convert-map-if-exist data)
 
           p (println ">o> data" data)
@@ -56,16 +57,16 @@
           ;             sql-format
           ;             ((partial jdbc/execute-one! ds) {:return-keys true}))
 
-          ;query (-> (sql/insert-into :users)
-          ;          (sql/values [data])
-          ;          (sql/returning :*)
-          ;          sql-format
-          ;          ;((partial jdbc/execute-one! ds) {:return-keys true})
-          ;          )
-          ;
-          ;result (jdbc/execute-one! ds query)
-          result nil
-          result []
+          query (-> (sql/insert-into :users)
+                    (sql/values [data])
+                    (sql/returning :*)
+                    sql-format
+                    ;((partial jdbc/execute-one! ds) {:return-keys true})
+                    )
+
+          result (jdbc/execute-one! ds query)
+          ;result nil
+          ;result []
 
           p (println ">o> result" result)
 
@@ -89,76 +90,6 @@
       (sd/parsed_response_exception e))))
 
 
-
-;(s/defn valid-email?
-;  [email]
-;   (println ">o> PROCESS VALIDATION!!!!!!" email)
-;
-;  (re-matches #"^[\w\.-]+@([\w-]+\.)+[\w-]{2,4}$" email))
-
-;(defn valid-email?
-;  [email]
-;   (println ">o> PROCESS VALIDATION!!!!!!" email)
-;
-;  (re-matches #"^[\w\.-]+@([\w-]+\.)+[\w-]{2,4}$" email))
-;
-;(defn validemail?
-;  [email _]
-;   (println ">o> PROCESS VALIDATION!!!!!!" email)
-;
-;  (re-matches #"^[\w\.-]+@([\w-]+\.)+[\w-]{2,4}$" email))
-;
-;;; Define a custom validation function for JSON
-;(s/defn valid-json?
-;  [json-str]
-;  (try
-;    (json/read-str json-str)
-;    (catch Exception e
-;      false)))
-
-
-;(s/defn valid-email? :- s/Bool
-;  [email :- s/Str]
-;
-;  (println "VALIDATE EMAIL!!!!!!!!!!!!!" email)
-;
-;  (re-matches #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" email))
-;
-;
-;;(def Email
-;;  (and s/Str valid-email?))
-;;
-;;(def Email
-;;  (s/with-fn-validation s/Str validemail?))
-;
-;
-;;; Define a predicate function for email validation
-;(defn validemail? [email]
-;  (re-matches #".+@.+\..+" email))
-;
-;(def email-schema
-;  (s/pred validemail? "Invalid email format"))
-
-
-;(s/defn valid-email?
-;  [email]
-;  (re-matches #"^[\w\.-]+@([\w-]+\.)+[\w-]{2,4}$" email))
-;
-;(def email (s/pred #(re-matches #"^[\w\.-]+@([\w-]+\.)+[\w-]{2,4}$" %)))
-
-
-(defn valid-email? [email]
-  (re-matches #".+@.+\..+" email))
-
-(def email-schema
-  (s/pred valid-email? "Invalid email format"))
-
-
-
-
-
-
-;(s/defschema schema
 (def schema
   {:person_id s/Uuid
    (s/optional-key :accepted_usage_terms_id) (s/maybe s/Uuid)
@@ -169,16 +100,7 @@
    (s/optional-key :last_name) s/Str
    (s/optional-key :login) s/Str
    (s/optional-key :notes) (s/maybe s/Str)
-
-   ;:settings (s/with-fn-validation valid-json? s/Str) ;; Validate settings as JSON
-   ;(s/optional-key :settings) (s/with-fn-validation valid-json? s/Str) ;; Validate settings as JSON
-
-   ;(s/optional-key :settings) json-validation
    (s/optional-key :settings) json-and-json-str-validation
-
-
-   ;(s/optional-key :settings) s/Any
-
    })
 
 
@@ -203,6 +125,10 @@
                400 {:description "Bad Request"
                     :body s/Any
                     }
+
+               404 {:description "Not Found."
+                    :schema s/Str
+                    :examples {"application/json" {:message "People entry not found"}}}
 
                409 {:description "Conflict."
                     :schema s/Str

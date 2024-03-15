@@ -614,6 +614,7 @@
     (str/includes? (ex-message ex) "already exists") (response_failed (str "Entry already exists") 409)
     (str/includes? (ex-message ex) "is not present in table \"users\"") (response_failed (str "User entry not found") 404)
     (str/includes? (ex-message ex) "is not present in table \"vocabularies\"") (response_failed (str "Vocabulary entry not found") 404)
+    (str/includes? (ex-message ex) "is not present in table \"people\"") (response_failed (str "People entry not found") 404)
     :else (response_exception ex)))
 
 (defn transform_ml_map [data]

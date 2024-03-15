@@ -1,5 +1,9 @@
 (ns madek.api.utils.validation
-  (:require [schema.core :as s]))
+
+  (:require [schema.core :as s]
+
+            [clojure.data.json :as json]
+            ))
 
 
 ;; Define a regular expression for email validation
