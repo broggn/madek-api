@@ -7,6 +7,9 @@
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
    [madek.api.resources.users.common :refer [wrap-find-user]]
+
+   [clojure.data.json :as json]
+
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.logging :as logging]
    [next.jdbc :as jdbc]
@@ -14,10 +17,24 @@
    [schema.core :as s]
    [taoensso.timbre :refer [debug error info spy warn]]))
 
+(s/defn valid-email?
+  [email]
+  (re-matches #"^[\w\.-]+@([\w-]+\.)+[\w-]{2,4}$" email))
+
+;; Define a custom validation function for JSON
+(s/defn valid-json?
+  [json-str]
+  (try
+    (json/read-str json-str)
+    (catch Exception e
+      false)))
+
 (def schema
   {:accepted_usage_terms_id (s/maybe s/Uuid)
    :created_at s/Any
-   :email (s/maybe s/Str)
+
+   :email (s/with-fn-validation valid-email? s/Str)
+
    :first_name (s/maybe s/Str)
    :id s/Uuid
    :institution (s/maybe s/Str)
@@ -28,7 +45,9 @@
    :login (s/maybe s/Str)
    :notes (s/maybe s/Str)
    :person_id s/Uuid
-   :settings s/Any
+
+   :settings (s/with-fn-validation valid-json? s/Str) ;; Validate settings as JSON
+
    :updated_at s/Any})
 
 (defn handler

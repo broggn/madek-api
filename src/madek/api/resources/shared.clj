@@ -222,7 +222,26 @@
   ([msg status] {:status status :body msg}))
 
 (defn response_failed
-  ([msg status] {:status status :body {:message msg}}))
+  ([] {:status 409 :body {:message "Failure occurred"}})
+  ([msg status] {:status status :body {:message msg}})
+  )
+
+
+(defn response_bad_request
+
+  ([msg]
+   {
+    :status 400
+    :body {:message (str "Bad Request: " msg)}
+    ;:headers {"content-type" "application/json; charset=utf-8"}
+
+    })
+
+  ([msg details]
+   {:status 400
+    :body {:message (str "Bad Request: " msg) :details details}
+    ;:headers {"content-type" "application/json; charset=utf-8"}
+    }))
 
 (defn response_not_found [msg]
   {:status 404 :body {:message msg}})

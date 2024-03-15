@@ -38,6 +38,7 @@ Known issue
    ; [madek.api.utils.pagination :as pagination]
    (pagination/sql-offset-and-limit params)
    ```
+5. Avoid multiple calls like insert->id->fetch, update->id->fetch
    
 
 Needed changes
@@ -93,6 +94,13 @@ Best practice
     ;upd-res (replace-java-hashmaps upd-res)
     upd-res (transform_ml upd-res)  ;; use this
 ```
+Better way to log
+--
+```clojure
+   ; [taoensso.timbre :refer [debug error info spy warn]]))
+   (error "handle-create-user failed" {:request req})
+```
+
 
 
 ToAsk

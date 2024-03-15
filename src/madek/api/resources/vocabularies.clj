@@ -535,7 +535,8 @@
 
                    409 {:description "Conflict."
                         :schema s/Str
-                        :examples {"application/json" {:message "Entry already exists"}}}}}
+                        :examples {"application/json" {:message "Entry already exists"}}}
+                   }}
 
       :put
       {:summary (sd/sum_adm_todo (t "Update vocabulary group permissions"))
