@@ -10,7 +10,7 @@
 
    [clojure.data.json :as json]
 
-   [madek.api.utils.validation :refer [email-validation json-and-json-str-validation]]
+   [madek.api.utils.validation :refer [email-validation json-and-json-str-validation json-and-json-str-validation vector-or-hashmap-validation]]
 
 
    [madek.api.resources.users.common :refer [find-user-by-uid]]
@@ -45,7 +45,9 @@
           p (println ">o> data.sett" (:settings data))
           p (println ">o> data.sett.cl" (class (:settings data)))
 
-          ;; TODO: issue with settings ("{}" vs {} vs [] vs "[]") / normalization?
+          ;; TODO:
+          ;; allowed: [] OR {}
+          ;; previous: issue with settings ("{}" vs {} vs [] vs "[]") / normalization?
           data (convert-map-if-exist data)
 
           p (println ">o> data" data)
@@ -100,10 +102,14 @@
    (s/optional-key :last_name) s/Str
    (s/optional-key :login) s/Str
    (s/optional-key :notes) (s/maybe s/Str)
-   (s/optional-key :settings) json-and-json-str-validation
+
+   ;(s/optional-key :settings) json-and-json-str-validation
+   (s/optional-key :settings) vector-or-hashmap-validation
+
    })
 
 
+;; post /users
 (def route
   {:accept "application/json"
    :coercion reitit.coercion.schema/coercion
@@ -116,7 +122,6 @@
    :middleware [wrap-authorize-admin!]
    :parameters {:body schema}
    :responses {
-
                201 {:description "Created."
                     :body s/Any
                     ;:body get-user/schema

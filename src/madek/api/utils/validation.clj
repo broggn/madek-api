@@ -16,7 +16,20 @@
     "Invalid email address")
   )
 
+(s/defn valid-vector-or-hashmap?
+  ([json-str]
+   (or (instance? clojure.lang.PersistentVector json-str) (instance? clojure.lang.PersistentHashMap json-str))
+   ))
 
+(s/defn valid-hashmap?
+  ([json-str]
+    (instance? clojure.lang.PersistentHashMap json-str)
+   ))
+
+(s/defn valid-vector?
+  ([json-str]
+   (instance? clojure.lang.PersistentVector json-str)
+   ))
 
 
 
@@ -47,10 +60,20 @@
 
 
 (def json-and-json-str-validation
-  (s/constrained s/Any valid-json-native? "Invalid JSON format")
+  (s/constrained s/Any valid-json-native? "Invalid JSON or JSON-STRING format")
   )
 
 (def json-str-validation
   (s/constrained s/Any valid-json? "Invalid JSON-STRING format")
+  )
+
+(def vector-or-hashmap-validation
+  (s/constrained s/Any valid-vector-or-hashmap? "Invalid JSON format")
+  )
+(def json-hashmap-validation
+  (s/constrained s/Any valid-hashmap? "Invalid JSON format")
+  )
+(def json-vector-validation
+  (s/constrained s/Any valid-vector? "Invalid JSON format")
   )
 
