@@ -363,10 +363,10 @@
                                :responses {
                                            200 {:description "OK - Returns a list of group users OR an empty list."
                                                 :schema {:body {:users [group-users/schema_export-group-user-simple]}}}
-                               }
+                               }}
 
                          ; TODO works with tests, but not with the swagger ui
-                         :put {:summary "Update group users by group-id and list of users."
+                         :put {:summary (f (t "Update group users by group-id and list of users.") "tests-needed")
                                :description "Update group users by group-id and list of users."
                                :swagger {:consumes "application/json" :produces "application/json"}
                                :content-type "application/json"
@@ -377,7 +377,9 @@
                                             :body group-users/schema_update-group-user-list}
 
                                ;:body {:users [s/Any]}}
-                               :responses {200 {:body s/Any} ;groups/schema_export-group}
+                               :responses {
+                                           200 {:body s/Any} ;groups/schema_export-group}
+                                           ;200 {:body groups/schema_export-group} ;groups/schema_export-group}
                                            404 {:body s/Str}}}}]
 
    ["/:group-id/users/:user-id" {:get {:summary "Get group user by group-id and user-id"
