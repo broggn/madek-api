@@ -18,7 +18,12 @@
 
 (s/defn valid-vector-or-hashmap?
   ([json-str]
-   (or (instance? clojure.lang.PersistentVector json-str) (instance? clojure.lang.PersistentHashMap json-str))
+   (println ">o> json-str=" json-str)
+   (println ">o> json-str.class=" (class json-str))
+
+   ;(or (instance? clojure.lang.PersistentVector json-str) (instance? clojure.lang.PersistentHashMap json-str))
+   ;; TODO: after db-fetch PersistentArrayMap is returned (GET)
+   (or (instance? clojure.lang.PersistentVector json-str) (instance? clojure.lang.PersistentHashMap json-str)(instance? clojure.lang.PersistentArrayMap json-str))
    ))
 
 (s/defn valid-hashmap?

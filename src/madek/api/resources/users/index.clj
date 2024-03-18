@@ -41,7 +41,13 @@
 
         res (->> query
               (jdbc/execute! tx)
-              (assoc {} :users))]
+              (assoc {} :users))
+
+
+        te_pr (println ">o> 1res" res)
+        res (sd/transform_ml_map res)
+        te_pr (println ">o> 2res" res)
+        ]
 
     (sd/response_ok res)
     )

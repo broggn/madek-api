@@ -11,7 +11,7 @@
    [clojure.data.json :as json]
 
    [madek.api.utils.validation :refer [email-validation json-and-json-str-validation json-and-json-str-validation vector-or-hashmap-validation]]
-
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
 
    [madek.api.resources.users.common :refer [find-user-by-uid]]
    [madek.api.resources.users.get :as get-user]
@@ -139,7 +139,7 @@
                     :schema s/Str
                     :examples {"application/json" {:message "Entry already exists"}}}
                }
-   :summary (sd/sum_adm "Create user.")
+   :summary (sd/sum_adm (f (t "Create user.")))
    :swagger {:consumes "application/json"
              :produces "application/json"}})
 
