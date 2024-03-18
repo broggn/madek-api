@@ -25,21 +25,22 @@
      ;:users.id :users.email :users.institutional_id :users.login
      ;:users.created_at :users.updated_at
      ;:users.person_id
-               )))
+     )))
 
 (defn sql-merge-user-where-id
   ([id] (sql-merge-user-where-id {} id))
   ([sql-map id]
-   (if (re-matches
-        #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-        id)
+   (if (instance? java.util.UUID id)
+     ;(if (re-matches
+     ;   #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+     ;   id)
      (sql/where sql-map [:or
-                         [:= :users.id (to-uuid id)]
-                         [:= :users.institutional_id id]
-                         [:= :users.email id]])
+                         [:= :users.id id]
+                         [:= :users.institutional_id (str id)]
+                         [:= :users.email (str id)]])
      (sql/where sql-map [:or
-                         [:= :users.institutional_id id]
-                         [:= :users.email id]]))))
+                         [:= :users.institutional_id (str id)]
+                         [:= :users.email (str id)]]))))
 
 (defn find-user-sql [some-id]
   (-> (sql-select)
@@ -49,19 +50,21 @@
 
 (defn find-user [some-id]
   (->> some-id find-user-sql
-       (jdbc/execute-one! (get-ds))))
+    (jdbc/execute-one! (get-ds))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn group-user-query [group-id user-id]
-  (-> ;(users/sql-select)
+  (->                                                       ;(users/sql-select)
    (sql/select {} :users.id :users.institutional_id :users.email :users.person_id)
    (sql/from :users)
    (sql/join :groups_users [:= :users.id :groups_users.user_id])
    (sql/join :groups [:= :groups.id :groups_users.group_id])
    (sql-merge-user-where-id user-id)
    (groups/sql-merge-where-id group-id)
-   sql-format))
+   sql-format
+   spy
+   ))
 
 (defn find-group-user [group-id user-id]
   (->> (group-user-query group-id user-id)
@@ -70,7 +73,7 @@
 (defn get-group-user [group-id user-id]
   (if-let [user (find-group-user group-id user-id)]
     (sd/response_ok user)
-    (sd/response_failed "No such group user," 404)))
+    (sd/response_failed "No such group or user." 404)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;TODO test paging
@@ -86,7 +89,7 @@
 
 (defn group-users [group-id request]
   (jdbc/execute! (get-ds)
-                 (group-users-query group-id request)))
+    (group-users-query group-id request)))
 
 (defn get-group-users [group-id request]
   (sd/response_ok {:users (group-users group-id request)}))
@@ -119,7 +122,7 @@
                         sql-format))]
         (sd/response_ok {:users (group-users group-id nil)}))
       (sd/response_not_found "No such group"))
-    (sd/response_not_found "No such group user.")))
+    (sd/response_not_found "No such group or user.")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -190,20 +193,20 @@
         (do
           (println ">o> (first del-users)")
           (jdbc/execute!
-          tx
-          del-query)))
+            tx
+            del-query)))
       (when (first ins-users)
         (do
           (println ">o> (first ins-users)")
           (jdbc/execute!
-          tx
-          ins-query))
+            tx
+            ins-query))
         )
 
       ;{:status 200}
       (println ">o> final result??")
       (spy (sd/response_ok {:users (jdbc/execute! tx
-                                (group-users-query group-id nil)
+                                     (group-users-query group-id nil)
                                      jdbc/unqualified-snake-kebab-opts
                                      )})))))
 

@@ -239,7 +239,7 @@
     {:swagger {:tags ["groups"]                             ;;:security [{"auth" []}]
                }}
 
-    ["/" {:get {:summary "Get all group ids"
+    ["/" {:get {:summary (t "Get all group ids")
                 :description "Get list of group ids. Paging is used as you get a limit of 100 entries."
                 :handler index
                 :middleware [wrap-authorize-admin!]
@@ -249,14 +249,14 @@
                 ;:accept "application/json"
                 :coercion reitit.coercion.schema/coercion
                 :responses {200 {:body {:groups [schema_export-group]}}}}}]
-    ["/:id" {:get {:summary "Get group by id"
+    ["/:id" {:get {:summary (t "Get group by id")
                    :description "Get group by id. Returns 404, if no such group exists."
                    :swagger {:produces "application/json"}
                    :content-type "application/json"
                    :handler handle_get-group
                    :middleware [wrap-authorize-admin!]
                    :coercion reitit.coercion.schema/coercion
-                   :parameters {:path {:id s/Str}}
+                   :parameters {:path {:id s/Uuid}}
                    :responses {200 {:body schema_export-group}
                                404 {:body s/Any}}}}]]])
 
@@ -382,37 +382,56 @@
                                            ;200 {:body groups/schema_export-group} ;groups/schema_export-group}
                                            404 {:body s/Str}}}}]
 
-   ["/:group-id/users/:user-id" {:get {:summary "Get group user by group-id and user-id"
-                                       :description "Get group user by group-id and user-id."
+   ["/:group-id/users/:user-id" {:get {:summary (t "Get group user by group-id and user-id")
+                                       :description "Get group user by group-id and user-id. gid: 4059e7eb-cf2d-4434-b14e-9a8b4119cfbe uid: 74feaf67-6706-469a-92a5-eff9aef9f897 "
                                        :swagger {:produces "application/json"}
                                        :content-type "application/json"
                                        :handler group-users/handle_get-group-user
                                        :middleware [wrap-authorize-admin!]
                                        :coercion reitit.coercion.schema/coercion
-                                       :parameters {:path {:group-id s/Str :user-id s/Str}}
+                                       :parameters {:path {:group-id s/Uuid :user-id s/Uuid}}
                                        :responses {200 {:body group-users/schema_export-group-user-simple}
-                                                   404 {:body s/Any}}} ; TODO error handling
 
-                                 :put {:summary "Get group user by group-id and user-id"
+                                                   404 {:description "Creation failed."
+                                                        :schema s/Str
+                                                        :examples {"application/json" {:message "No such group or user."}}}
+                                                   }
+
+                                       } ; TODO error handling
+
+                                 :put {:summary (t "Get group user by group-id and user-id")
                                        :description "Get group user by group-id and user-id."
                                        :swagger {:produces "application/json"}
                                        :content-type "application/json"
                                        :handler group-users/handle_add-group-user
                                        :middleware [wrap-authorize-admin!]
                                        :coercion reitit.coercion.schema/coercion
-                                       :parameters {:path {:group-id s/Str :user-id s/Str}}
+                                       :parameters {:path {:group-id s/Uuid :user-id s/Uuid}}
                                        :responses {200 {:body {:users [group-users/schema_export-group-user-simple]}}
-                                                   404 {:body s/Any}}} ; TODO error handling
 
-                                 :delete {:summary "Deletes a group-user by group-id and user-id"
+                                                   ;404 {:body s/Any}
+
+                                                   404 {:description "Creation failed."
+                                                        :schema s/Str
+                                                        :examples {"application/json" {:message "No such group or user."}}}
+
+                                                   }} ; TODO error handling
+
+                                 :delete {:summary (t "Deletes a group-user by group-id and user-id")
                                           :description "Delete a group-user by group-id and user-id."
                                           ;:swagger {:produces "application/json"}
                                           ;:content-type "application/json"
                                           :handler group-users/handle_delete-group-user
                                           :middleware [wrap-authorize-admin!]
                                           :coercion reitit.coercion.schema/coercion
-                                          :parameters {:path {:group-id s/Str :user-id s/Str}}
+                                          :parameters {:path {:group-id s/Uuid :user-id s/Uuid}}
                                           :responses {200 {:body {:users [group-users/schema_export-group-user-simple]}}
+
+                                                      404 {:description "Not Found."
+                                                           :schema s/Str
+                                                           :examples {"application/json" {:message "No such group or user."}}}
+
+
                                                       406 {:body s/Str}}}}] ; TODO error handling
    ])
 ;### Debug ####################################################################

@@ -290,7 +290,8 @@
            :responses {200 {:body schema_export-vocabulary}
                        404 {:description "Creation failed."
                             :schema s/Str
-                            :examples {"application/json" {:message "Vocabulary could not be found!"}}}}}
+                            :examples {"application/json" {:message "Vocabulary could not be found!"}}}
+                       }}
 
      :put {:summary (sd/sum_adm_todo (f (t "Update vocabulary.")))
            :handler handle_update-vocab
