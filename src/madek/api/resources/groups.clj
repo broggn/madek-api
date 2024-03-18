@@ -265,7 +265,7 @@
   ["/groups"
    {:swagger {:tags ["admin/groups"] :security [{"auth" []}]}}
 
-   ["/" {:get {:summary (f (t "Get all group ids ???????????????????") "no-input-validation")
+   ["/" {:get {:summary (f (t "Get all group ids") "no-input-validation")
                :description "Get list of group ids. Paging is used as you get a limit of 100 entries."
                :handler index
                :middleware [wrap-authorize-admin!]

@@ -137,6 +137,7 @@
 (def admin-routes
 
   ["/usage-terms"
+   {:swagger {:tags ["admin/usage-terms"] :security [{"auth" []}]}}
    ["/"
     {:post {:summary (sd/sum_adm "Create usage_terms.")
             :handler handle_create-usage_terms
@@ -188,6 +189,8 @@
 ; TODO usage_terms get the most recent one ?!?
 (def user-routes
   ["/usage-terms"
+   {:swagger {:tags ["usage-terms"]
+              }}
    ["/"
     {:get {:summary (sd/sum_pub "List usage_terms.")
            :handler handle_list-usage_term

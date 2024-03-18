@@ -10,6 +10,7 @@
 
 (def user-routes
   ["/people"
+   {:swagger {:tags ["people"] }}
    ["/"
     {;:get index/route
      }]
@@ -18,6 +19,7 @@
 
 (def admin-routes
   ["/people"
+   {:swagger {:tags ["admin/people"] :security [{"auth" []}]}}
    ["/"
     {:get index/route
      :post create-person/route}]

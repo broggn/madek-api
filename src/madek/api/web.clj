@@ -115,7 +115,22 @@
      :skip-auth true}]])
 
 (def swagger-routes
-  [""
+  [
+   ""
+   {:swagger {
+              :info {:title "Madek API v2"
+                     :description (slurp "md/api-description.md")
+                     :version "2.0.0"
+                     :contact {:name "fjdkls"
+                               }}
+              :securityDefinitions {:apiAuth {:type "apiKey"
+                                              :name "Authorization"
+                                              :in "header"
+                                              }
+                                    :basicAuth {
+                                                :type "basic"
+                                                }
+                                    }}}
    {:no-doc true
     :skip-auth true}
    ["/swagger.json" {:get (swagger/create-swagger-handler)}]
