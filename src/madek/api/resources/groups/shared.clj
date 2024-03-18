@@ -5,20 +5,31 @@
    [honey.sql.helpers :as sql]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.utils.helper :refer [to-uuid]]
-   [next.jdbc :as jdbc]))
+   [next.jdbc :as jdbc]
+
+   [taoensso.timbre :refer [debug error info spy warn]]
+
+)
+
+  ;(import [java.util.UUID])
+  )
 
 (defn sql-merge-where-id
   ([group-id] (println ">> 1") (sql-merge-where-id {} group-id))
 
   ([sql-map group-id]
    (println ">> 2" sql-map group-id)
-   (if (re-matches
-        #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-        group-id)
+   (println ">> 2a" (instance? java.util.UUID group-id))
+   (println ">> 2b")
+   ;(if (re-matches
+   ;     #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+   ;     group-id)
+   (if (instance? java.util.UUID group-id)
      (sql/where sql-map [:or
-                         [:= :groups.id (to-uuid group-id)]
-                         [:= :groups.institutional_id group-id]])
-     (sql/where sql-map [:= :groups.institutional_id group-id]))))
+                         ;[:= :groups.id (to-uuid group-id)]
+                         [:= :groups.id group-id]
+                         [:= :groups.institutional_id (str group-id)]])
+     (sql/where sql-map [:= :groups.institutional_id (str group-id)]))))
 
 (defn jdbc-update-group-id-where-clause [id]
   (println ">> 3")
@@ -35,7 +46,9 @@
   (-> (sql-merge-where-id id)
       (sql/select :*)
       (sql/from :groups)
-      sql-format))
+      sql-format
+      spy
+      ))
 
 ; TODO: remove this
 ;(def builder-fn-options

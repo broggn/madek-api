@@ -39,6 +39,7 @@ Known issue
    (pagination/sql-offset-and-limit params)
    ```
 5. Avoid multiple calls like insert->id->fetch, update->id->fetch
+6. m.a.r.groups _>  ;; FIXME: because of groups::person_id-not-exists
    
 
 Needed changes
@@ -100,6 +101,22 @@ Better way to log
    ; [taoensso.timbre :refer [debug error info spy warn]]))
    (error "handle-create-user failed" {:request req})
 ```
+
+
+Better way to parse exception to create generic error-responses
+--
+```clojure
+  (try
+
+     ...
+
+     (catch Exception e
+        (error "handle-create-group failed" {:request request})
+        (sd/parsed_response_exception e)))
+```
+
+
+
 
 
 
