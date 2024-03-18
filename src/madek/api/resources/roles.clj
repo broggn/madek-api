@@ -3,6 +3,9 @@
    [clojure.tools.logging :as logging]
    [logbug.debug :as debug]
 
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist f replace-java-hashmaps t v]]
+
+
    [madek.api.resources.roles.role :as role]
    [madek.api.resources.shared :as sd]
    [reitit.coercion.schema]
@@ -38,7 +41,7 @@
 (def user-routes
   ["/roles"
    {:swagger {:tags ["roles"] }}
-   ["/" {:get {:summary "Get list of roles."
+   ["/" {:get {:summary (t "Get list of roles.")
                :description "Get list of roles."
                :handler role/get-index
                :swagger {:produces "application/json"}
@@ -49,7 +52,7 @@
          :responses {200 {:body {:roles [schema_export-role]}}}}]
 
    ["/:id"
-    {:get {:summary "Get role by id"
+    {:get {:summary (t "Get role by id")
            :description "Get a role by id. Returns 404, if no such role exists."
            :swagger {:produces "application/json"}
            :content-type "application/json"
