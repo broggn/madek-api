@@ -1,3 +1,6 @@
+[Swagger Specification 2.0](https://swagger.io/docs/specification/2-0/basic-structure/)
+[Swagger Editor](https://editor.swagger.io/)
+
 ## TODO's
 1. Schema validation of payload/query-attributes by reitit     
    - Validation should work for swagger-ui/curl     
