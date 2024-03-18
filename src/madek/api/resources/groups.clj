@@ -48,7 +48,7 @@
 ;### delete group ##############################################################
 
 (defn delete-group [id]
-  (let [sec (groups/jdbc-update-group-id-where-clause id)
+  (let [
         sec (groups/jdbc-update-group-id-where-clause id)
         fir (-> (sql/delete-from :groups)
                 (sql/where (:where sec))
@@ -59,13 +59,14 @@
         p (println ">o> update-count=" update-count)]
 
     (if (= 1 update-count)
-      {:status 204}
+      {:status 204 :content-type "application/json"}        ;TODO / FIXME: repsonse is of type octet-stream
       {:status 404})))
 
 ;### patch group ##############################################################
 (defn db_update-group [group-id body]
   (println ">o> abc" group-id)
   (println ">o> abc2" body)
+
 
   (let [sett (-> body convert-sequential-values-to-sql-arrays)
         p (println ">o> sett" sett)
@@ -76,20 +77,27 @@
         fir (-> (sql/update :groups)
                 (sql/set (-> body convert-sequential-values-to-sql-arrays))
                 (sql/where where-clause)
+                (sql/returning :*)
                 sql-format)
         p (println ">o> sql-fir" fir)
 
-        res (jdbc/execute! (get-ds) fir)
-        p (println ">o> res=" res)
+        result (jdbc/execute-one! (get-ds) fir)
+        p (println ">o> res=" result)
+        ]
+    result)
 
-        update-count (get (first res) :next.jdbc/update-count)
-        p (println ">o> update-count=" update-count)]
-    update-count))
+  )
 
 (defn patch-group [{body :body {group-id :group-id} :params}]
-  (if (= 1 (db_update-group group-id body))
-    {:body (groups/find-group group-id)}
-    {:status 404}))
+  (try
+    (if-let [result (db_update-group group-id body)]
+      {:body result}
+      {:status 404})
+
+    (catch Exception e
+      (error "handle-patch-group failed, group-id=" group-id)
+      (sd/parsed_response_exception e)))
+  )
 
 ;### index ####################################################################
 ; TODO test query and paging
@@ -307,21 +315,32 @@
                               ;404 {:body s/Any}
                               }}
 
-            :delete {:summary "Deletes a group by id"
+            :delete {:summary (f (t "Deletes a group by id"))
                      :description "Delete a group by id"
                      :handler handle_delete-group
                      :middleware [wrap-authorize-admin!]
                      :coercion reitit.coercion.schema/coercion
                      :parameters {:path {:id s/Uuid}}
                      :responses {403 {:body s/Any}
-                                 204 {:body s/Any}}}
 
-            :put {:summary "Get group by id"
-                  :description "Get group by id. Returns 404, if no such group exists."
+                                 ;; TODO: response is of type octet-stream
+                                 204 {:description "No Content. The resource was deleted successfully."
+                                      :schema nil
+                                      :examples {"application/json" nil}
+                                      }
+
+                                 }
+                     }
+
+            :put {:summary (t "Get group by id")
+                  ;:description "Get group by id. Returns 404, if no such group exists."
                   :swagger {:produces "application/json"}
                   :content-type "application/json"
                   :accept "application/json"
                   :handler handle_update-group
+
+                  :description (slurp "./md/admin-groups-put.md")
+
                   :middleware [wrap-authorize-admin!]
                   :coercion reitit.coercion.schema/coercion
                   :parameters {:path {:id s/Uuid}
@@ -330,19 +349,21 @@
                               404 {:body s/Any}}}}]         ; TODO error handling
 
    ; groups-users/ring-routes
-   ["/:group-id/users/" {:get {:summary "Get group users by id"
-                               :description "Get group users by id."
+   ["/:group-id/users/" {:get {:summary (t "Get group users by id")
+                               :description "Get group users by id. (zero-based paging)"
                                :swagger {:produces "application/json"}
                                :content-type "application/json"
 
                                :handler group-users/handle_get-group-users
                                :middleware [wrap-authorize-admin!]
                                :coercion reitit.coercion.schema/coercion
-                               :parameters {:path {:group-id s/Str}
+                               :parameters {:path {:group-id s/Uuid}
                                             :query {(s/optional-key :page) s/Int
                                                     (s/optional-key :count) s/Int}}
-                               :responses {200 {:body {:users [group-users/schema_export-group-user-simple]}} ; TODO schema
-                                           404 {:body s/Str}}}
+                               :responses {
+                                           200 {:description "OK - Returns a list of group users OR an empty list."
+                                                :schema {:body {:users [group-users/schema_export-group-user-simple]}}}
+                               }
 
                          ; TODO works with tests, but not with the swagger ui
                          :put {:summary "Update group users by group-id and list of users."
@@ -352,7 +373,7 @@
                                :accept "application/json"
                                :handler group-users/handle_update-group-users
                                :coercion reitit.coercion.schema/coercion
-                               :parameters {:path {:group-id s/Str}
+                               :parameters {:path {:group-id s/Uuid}
                                             :body group-users/schema_update-group-user-list}
 
                                ;:body {:users [s/Any]}}
