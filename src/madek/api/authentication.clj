@@ -32,7 +32,13 @@
           request (assoc request :is_admin true)
 
           request (set-is-admin-if-present request) ;TODO: remove this
-          request (set-authenticated-entity-id-if-present request)] ;TODO: remove this
+          request (set-authenticated-entity-id-if-present request)
+
+          ;; TODO: remove this
+          request (assoc-in request [:authenticated-entity :id]  #uuid  "47da46e9-8a5f-4eac-a7c0-056706a70fc0")
+          ] ;TODO: remove this
+
+
 
       (info "wrap auth "
             " - method: " (:request-method request)

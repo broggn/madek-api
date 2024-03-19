@@ -610,6 +610,8 @@
 
 (defn parsed_response_exception [ex]
   (cond
+    (str/includes? (ex-message ex) "violates foreign key constraint") (response_failed (str "Violation of constraint") 403)
+    (str/includes? (ex-message ex) "violates not-null constraint") (response_failed (str "Violation of constraint") 403)
     (str/includes? (ex-message ex) "is still referenced from table") (response_failed (str "References still exist") 403)
     (str/includes? (ex-message ex) "already exists") (response_failed (str "Entry already exists") 409)
     (str/includes? (ex-message ex) "is not present in table \"users\"") (response_failed (str "User entry not found") 404)

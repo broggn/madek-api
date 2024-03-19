@@ -23,12 +23,12 @@
 
    ;(or (instance? clojure.lang.PersistentVector json-str) (instance? clojure.lang.PersistentHashMap json-str))
    ;; TODO: after db-fetch PersistentArrayMap is returned (GET)
-   (or (instance? clojure.lang.PersistentVector json-str) (instance? clojure.lang.PersistentHashMap json-str)(instance? clojure.lang.PersistentArrayMap json-str))
+   (or (instance? clojure.lang.PersistentVector json-str) (instance? clojure.lang.PersistentHashMap json-str) (instance? clojure.lang.PersistentArrayMap json-str))
    ))
 
 (s/defn valid-hashmap?
   ([json-str]
-    (instance? clojure.lang.PersistentHashMap json-str)
+   (instance? clojure.lang.PersistentHashMap json-str)
    ))
 
 (s/defn valid-vector?
@@ -61,6 +61,97 @@
 
 (defn valid-json-native? [json]
   (valid-json? json false)
+  )
+
+(defn valid-positive-number? [int max]
+
+  (println ">o> valid-positive-number?" int max)
+
+  false
+  )
+
+(defn number-within-range? [number min-value max-value]
+  (and (<= min-value number)
+    (<= number max-value)))
+
+(defn parse-str-to-int [s]
+  (try
+    (Integer/parseInt (str s))
+    (catch NumberFormatException e
+      (println "NumberFormatException: Failed to parse string to int:" s)
+      nil)
+    (catch Exception e
+      nil)
+    ))
+
+(defn valid-positive-number-max-100? [value]
+  (let [value (parse-str-to-int value)
+        res (and (int? value) (number-within-range? value 0 100))
+        ]
+    res
+    )
+  )
+
+(defn valid-positive-number-max-100? [value]
+  (let [value (parse-str-to-int value)
+        res (and (int? value) (number-within-range? value 0 100))
+        ]
+    res
+    )
+  )
+
+(defn valid-positive-number-min-to-max? [value min max]
+  (let [value (parse-str-to-int value)
+        res (and (int? value) (number-within-range? value min max))
+        p (println ">o> 4 res" res)
+        ]
+    res
+    )
+  )
+
+(comment
+
+  (let [
+
+        val 1
+
+        val 200
+        val "10"
+        val "s"
+        val "-1"
+        val -1
+        val 0
+        ;val -2
+        res (valid-positive-number-max-100? val)
+        ]
+    res
+    )
+
+  )
+
+
+(defn positive-number-with-max-validation [max]
+  (println ">o> positive-number-with-max-validation" max)
+  (s/constrained s/Any
+    ;(-> valid-positive-number? max)
+    (fn [x] (valid-positive-number? x max))
+    "Invalid JSON or JSON-STRING format")
+  )
+
+(def positive-number-with-max-100-validation
+  (s/constrained s/Int valid-positive-number-max-100? "Invalid Number, max 100")
+  )
+
+(def positive-number-0-to-100-validation
+  (s/constrained s/Int (fn [x] (valid-positive-number-min-to-max? x 0 100)) "Invalid Number, 0-100")
+  )
+
+(def positive-number-1-to-100-validation
+  (s/constrained s/Int (fn [x] (valid-positive-number-min-to-max? x 1 100)) "Invalid Number, 1-100")
+  )
+
+(def positive-number-1-to-1000-validation
+  (s/constrained s/Int (fn [x] (valid-positive-number-min-to-max? x 1 1000)) "Invalid Number, 1-1000")
   )
 
 

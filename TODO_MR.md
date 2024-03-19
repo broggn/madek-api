@@ -305,3 +305,18 @@ Pagination
                            }]
 ```
 
+
+
+Update example - hstore
+--
+```clojrue
+      (let [data (-> req :parameters :body)
+            id (-> req :parameters :path :id)
+            dwid (assoc data :id id)
+            update-stmt (-> (sql/update :roles)
+                            (sql/set (cast-to-hstore dwid))
+                            (sql/where [:= :id id])
+                            (sql/returning :*)
+                            sql-format)
+            upd-result (jdbc/execute-one! (get-ds) update-stmt)]
+```

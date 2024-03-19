@@ -73,19 +73,22 @@
       (let [data (-> req :parameters :body)
             auth-id (-> req :authenticated-entity :id)
             ins-data (assoc data :creator_id auth-id)
-            ;ins-res (jdbc/insert! (rdbms/get-ds) :roles ins-data)] ;TODO
-
             insert-stmt (-> (sql/insert-into :roles)
-                            (sql/values [ins-data])
-                            (sql-format))
-            ins-res (jdbc/execute-one! (get-ds) [insert-stmt])]
+                            (sql/values [(cast-to-hstore ins-data)])
+                            (sql/returning :*)
+                            sql-format)
+            ins-res (jdbc/execute-one! (get-ds) insert-stmt)
+            ins-res (transform-ml-role ins-res)
+            ]
 
         (logging/info "handle_create-role: " "\new-data:\n" data "\nresult:\n" ins-res)
 
-        (if-let [result (::jdbc/update-count ins-res)]
-          (sd/response_ok (transform-ml-role result))
-          (sd/response_failed "Could not create role." 406))))
-    (catch Exception ex (sd/response_exception ex))))
+        (if ins-res
+          (sd/response_ok ins-res)
+          (sd/response_failed "Could not create role." 406)))
+      )
+    (catch Exception ex
+      (sd/parsed_response_exception ex))))
 
 (defn handle_update-role
   [req]
@@ -94,22 +97,16 @@
       (let [data (-> req :parameters :body)
             id (-> req :parameters :path :id)
             dwid (assoc data :id id)
-            upd-query (sd/sql-update-clause "id" (str id))
-
-;upd-result (jdbc/update! (rdbms/get-ds) :roles dwid upd-query)] ; TODO
-
             update-stmt (-> (sql/update :roles)
-
-                        ;(sql/set-fields dwid)
-                            (sql/set dwid)
-
+                            (sql/set (cast-to-hstore dwid))
                             (sql/where [:= :id id])
-                            (sql-format))
-            upd-result (jdbc/execute-one! (get-ds) [update-stmt])]
+                            (sql/returning :*)
+                            sql-format)
+            upd-result (jdbc/execute-one! (get-ds) update-stmt)]
 
         (logging/info "handle_update-role: " id "\nnew-data\n" dwid "\nupd-result\n" upd-result)
 
-        (if (= 1 (::jdbc/update-count upd-result))
+        (if upd-result
           (sd/response_ok (transform-ml-role
                            (sd/query-eq-find-one :roles :id id)))
           (sd/response_failed "Could not update role." 406))))
@@ -122,18 +119,17 @@
       (let [id (-> req :parameters :path :id)]
         (if-let [role (sd/query-eq-find-one :roles :id id)]
 
-          (let [del-query (sd/sql-update-clause "id" id)
-
-;del-result (jdbc/delete! (rdbms/get-ds) :roles del-query)] ;TODO
-
-                delete-stmt (-> (sql/delete-from :roles)
+          (let [delete-stmt (-> (sql/delete-from :roles)
                                 (sql/where [:= :id id])
+                                (sql/returning :* )
                                 (sql-format))
-                del-result (jdbc/execute-one! (get-ds) [delete-stmt])]
+                del-result (jdbc/execute-one! (get-ds) delete-stmt)
+                del-result (transform-ml-role del-result)
+                ]
 
             (logging/info "handle_delete-role: " id " result: " del-result)
-            (if (= 1 (::jdbc/update-count del-result))
-              (sd/response_ok (transform-ml-role role))
+            (if del-result
+              (sd/response_ok del-result)
               (sd/response_failed "Could not delete role." 406)))
 
           (sd/response_failed "No such role." 404))))
