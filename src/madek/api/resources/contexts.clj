@@ -7,6 +7,9 @@
    [logbug.catcher :as catcher]
    [logbug.debug :as debug]
 
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
+
+
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
 
@@ -100,7 +103,7 @@
                      :set dwid
                      :where [:= :id id]}
             sql (-> sql-map sql-format)
-            upd-result (jdbc/execute! (get-ds) [sql (vals dwid)])]
+            upd-result (jdbc/execute! (get-ds) [sql (vals dwid)])] ;; FIXME
 
         (sd/logwrite req (str "handle_update-contexts: " id "\nnew-data:\n" dwid "\nupd-result\n" upd-result))
 
@@ -123,7 +126,7 @@
             sql-map {:delete :contexts
                      :where [:= :id id]}
             sql (-> sql-map sql-format)
-            del-result (jdbc/execute! (get-ds) [sql [id]])]
+            del-result (jdbc/execute! (get-ds) [sql [id]])] ;; FIXME
 
         (sd/logwrite req (str "handle_delete-context: " id " result: " del-result))
 
@@ -180,7 +183,7 @@
             :responses {200 {:body schema_export_contexts_adm}
                         406 {:body s/Any}}}
     ; context list / query
-     :get {:summary (sd/sum_adm "List contexts.")
+     :get {:summary (sd/sum_adm (t "List contexts."))
            :handler handle_adm-list-contexts
            :middleware [wrap-authorize-admin!]
            :coercion reitit.coercion.schema/coercion
@@ -189,7 +192,7 @@
                        406 {:body s/Any}}}}]
     ; edit context
    ["/:id"
-    {:get {:summary (sd/sum_adm "Get contexts by id.")
+    {:get {:summary (sd/sum_adm (t "Get contexts by id."))
            :handler handle_adm-get-context
            :middleware [wrap-authorize-admin!
                         (wwrap-find-context :id :id true)]
@@ -197,6 +200,7 @@
            :parameters {:path {:id s/Str}}
            :responses {200 {:body schema_export_contexts_adm}
                        404 {:body s/Any}}}
+
 
      :put {:summary (sd/sum_adm "Update contexts with id.")
            :handler handle_update-contexts
@@ -228,7 +232,7 @@
    {:swagger {:tags ["contexts"] }}
 
    ["/"
-    {:get {:summary (sd/sum_usr "List contexts.")
+    {:get {:summary (sd/sum_usr (t "List contexts."))
            :handler handle_usr-list-contexts
            :coercion reitit.coercion.schema/coercion
            ;:parameters {:query {(s/optional-key :full-data) s/Bool}}
@@ -236,7 +240,7 @@
                        406 {:body s/Any}}}}]
     ; edit context
    ["/:id"
-    {:get {:summary (sd/sum_usr "Get contexts by id.")
+    {:get {:summary (sd/sum_usr (t "Get contexts by id."))
            :handler handle_usr-get-context
            :middleware [(wwrap-find-context :id :id true)]
            :coercion reitit.coercion.schema/coercion
