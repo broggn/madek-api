@@ -92,6 +92,22 @@
     )
   )
 
+(defn valid-greater-equal-zero? [value]
+  (let [value (parse-str-to-int value)
+        res (and (not (nil? value)) (>= value 0))
+        ]
+    res
+    )
+  )
+
+(defn valid-greater-zero? [value]
+  (let [value (parse-str-to-int value)
+        res (and (not (nil? value)) (> value 0))
+        ]
+    res
+    )
+  )
+
 (defn valid-positive-number-max-100? [value]
   (let [value (parse-str-to-int value)
         res (and (int? value) (number-within-range? value 0 100))
@@ -110,11 +126,8 @@
   )
 
 (comment
-
   (let [
-
         val 1
-
         val 200
         val "10"
         val "s"
@@ -126,7 +139,6 @@
         ]
     res
     )
-
   )
 
 
@@ -144,6 +156,15 @@
 
 (def positive-number-0-to-100-validation
   (s/constrained s/Int (fn [x] (valid-positive-number-min-to-max? x 0 100)) "Invalid Number, 0-100")
+  )
+
+; [madek.api.utils.validation :refer [greater-zero-validation greater-equal-zero-validation]]
+(def greater-zero-validation
+  (s/constrained s/Int valid-greater-zero? "Invalid Number, required: value > 0")
+  )
+
+(def greater-equal-zero-validation
+  (s/constrained s/Int valid-greater-equal-zero? "Invalid Number, required: value >= 0")
   )
 
 (def positive-number-1-to-100-validation

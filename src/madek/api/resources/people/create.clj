@@ -3,9 +3,16 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.debug :as debug]
+   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.people.common :refer [find-person-by-uid]]
    [madek.api.resources.people.get :as get-person]
    [madek.api.resources.shared :as sd]
+
+   [madek.api.utils.helper :refer [array-to-map t convert-map-if-exist map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
+   [madek.api.resources.people.common :as common]
+
+
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
@@ -15,14 +22,94 @@
 (defn handle-create-person
   [{{data :body} :parameters ds :tx :as req}]
   (try
-    (let [{id :id} (-> (sql/insert-into :people)
-                       (sql/values [data])
+    (let [
+          ;; old version
+          {id :id} (-> (sql/insert-into :people)
+                       (sql/values [(convert-map-if-exist data)])
                        sql-format
-                       ((partial jdbc/execute-one! ds) {:return-keys true}))]
+                       ((partial jdbc/execute-one! ds) {:return-keys true}))
+
+          ;; TODO / FIXME new version (broken)
+          ;query (-> (sql/insert-into :people)
+          ;          (sql/values [(convert-map-if-exist data)])
+          ;          (sql/returning common/people-select-keys)
+          ;          sql-format)
+          ;result (jdbc/execute-one! ds query)
+          ]
       (sd/response_ok (spy (find-person-by-uid id ds)) 201))
+    ;(sd/response_ok result 201))
     (catch Exception e
       (error "handle-create-person failed" {:request req})
-      (sd/response_exception e))))
+      (sd/parsed_response_exception e))))
+
+
+
+
+
+(comment
+  (let [
+        key "string8"
+
+        data {
+              :institution key
+              :institutional_id key
+
+              :subtype "PeopleInstitutionalGroup"
+              :external_uris ["string"]
+              :pseudonym "string"
+              :admin_comment "string"
+              :last_name "string"
+              :first_name "string"
+              :description "string"
+              }
+
+        query (-> (sql/insert-into :people)
+                  (sql/values [(convert-map-if-exist data)])
+
+                  ;; broken
+                  ;(apply (sql/returning) [:people.created_at
+                  ;(into (sql/returning) [:people.created_at
+                  ;                :people.description
+                  ;                :people.external_uris
+                  ;                :people.id
+                  ;                :people.first_name
+                  ;                :people.institution
+                  ;                :people.institutional_id
+                  ;                :people.last_name
+                  ;                :people.admin_comment
+                  ;                :people.pseudonym
+                  ;                :people.subtype
+                  ;                :people.updated_at])
+
+                  ;; works
+                  (sql/returning :people.created_at
+                    :people.description
+                    :people.external_uris
+                    :people.id
+                    :people.first_name
+                    :people.institution
+                    :people.institutional_id
+                    :people.last_name
+                    :people.admin_comment
+                    :people.pseudonym
+                    :people.subtype
+                    :people.updated_at)
+
+                  sql-format
+                  spy)
+
+        p (println ">o> query" query)
+
+        result (jdbc/execute-one! (get-ds) query)
+
+
+
+        p (println "result" result)
+
+        ]
+    result
+    )
+  )
 
 (def schema
   {:subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
@@ -39,12 +126,19 @@
   {:accept "application/json"
    :coercion reitit.coercion.schema/coercion
    :content-type "application/json"
-   :description "Create a person.\n The \nThe [subtype] has to be one of [Person, ...]. \nAt least one of [first_name, last_name, description] must have a value."
+   :description "Create a person.\nThe [subtype] has to be one of [\"Person\" \"PeopleGroup\" \"PeopleInstitutionalGroup\"]. \nAt least one of [first_name, last_name, description] must have a value."
    :handler handle-create-person
    :middleware [wrap-authorize-admin!]
    :parameters {:body schema}
-   :responses {201 {:body get-person/schema}}
-   :summary "Create a person"
+   :responses {201 {:body get-person/schema}
+
+
+               409 {:description "Conflict."
+                    :schema s/Str
+                    :examples {"application/json" {:message "Violation of constraint"}}}
+
+               }
+   :summary (t "Create a person")
    :swagger {:produces "application/json"
              :consumes "application/json"}})
 

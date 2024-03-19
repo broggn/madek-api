@@ -256,11 +256,11 @@
           (sd/response_failed "Could not update person" 406))))
     (catch Exception ex (sd/response_exception ex))))
 
+;; TODO: not in use?
 (def admin-routes
   ["/people"
-   {:swagger {:tags ["admin/people"] :security [{"auth" []}]}}
    ["/" {:get
-         {:summary "Get all people ids"
+         {:summary "Get all people ids???"
           :description "Query list of people only for ids or full-data. Optional Paging."
           :handler handle_query-people
           :middleware [wrap-authorize-admin!]

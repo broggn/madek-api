@@ -431,7 +431,8 @@
                         :examples {"application/json" {:message "{Vocabulary|User} entry not found"}}}
                    409 {:description "Conflict."
                         :schema s/Str
-                        :examples {"application/json" {:message "Entry already exists"}}}}}
+                        :examples {"application/json" {:message "Entry already exists"}}}
+                   }}
 
       :put
       {:summary (sd/sum_adm (t "Update vocabulary user permissions"))

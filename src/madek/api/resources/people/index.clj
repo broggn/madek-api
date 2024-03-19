@@ -4,10 +4,17 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.debug :as debug]
+
+   [madek.api.utils.validation :refer [greater-zero-validation greater-equal-zero-validation]]
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
+
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.people.common :as common]
    [madek.api.resources.people.get :as get-person]
    [madek.api.resources.shared :as sd]
+
+
+
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.pagination :as pagination]
    [next.jdbc :as jdbc]
@@ -44,8 +51,8 @@
 (defn build-query [query-params]
   (-> common/base-query
       (sql/order-by [:people.last_name :asc]
-                    [:people.first_name :asc]
-                    [:people.id :asc])
+        [:people.first_name :asc]
+        [:people.id :asc])
       (pagination/sql-offset-and-limit query-params)
       (filter-query query-params)))
 
@@ -66,13 +73,15 @@
     {:status 200, :body {:people people}}))
 
 (def query-schema
-  {(s/optional-key :count) s/Int
+  {
    (s/optional-key :institution) s/Str
-   (s/optional-key :page) s/Int
-   (s/optional-key :subtype) s/Str})
+   (s/optional-key :subtype) s/Str
+   (s/required-key :page) greater-equal-zero-validation
+   (s/required-key :count) greater-zero-validation
+   })
 
 (def route
-  {:summary (sd/sum_adm "Get list of people ids.")
+  {:summary (sd/sum_adm (t "Get list of people ids."))
    :description "Get list of people ids."
    :swagger {:produces "application/json"}
    :parameters {:query query-schema}

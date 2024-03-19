@@ -4,6 +4,11 @@
    [logbug.debug :as debug]
    [madek.api.resources.people.common :refer [person-query]]
    [madek.api.resources.shared :as sd]
+
+   [madek.api.db.core :refer [get-ds]]
+
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
+
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
@@ -37,13 +42,18 @@
     (sd/response_failed "No such person found" 404)))
 
 (def route
-  {:summary (sd/sum_adm "Get person by uid")
+  {:summary (sd/sum_adm (t "Get person by uid"))
    :description "Get a person by uid (either uuid or pair of json encoded [institution, institutional_id]). Returns 404, if no such people exists."
    :handler handler
    :middleware []
    :swagger {:produces "application/json"}
    :coercion reitit.coercion.schema/coercion
    :content-type "application/json"
-   :parameters {:path {:id s/Str}}
+   :parameters {:path {:id s/Uuid}}
    :responses {200 {:body schema}
-               404 {:body s/Any}}})
+
+               404 {:description "Not found."
+                    :schema s/Str
+                    :examples {"application/json" {:message "No such person found."}}}
+
+               }})

@@ -8,6 +8,10 @@
    [madek.api.resources.people.create :as create]
    [madek.api.resources.people.get :as get-person]
    [madek.api.resources.shared :as sd]
+
+   [madek.api.utils.helper :refer [array-to-map t convert-map-if-exist map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
+
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
    [next.jdbc :as jdbc]
@@ -33,23 +37,31 @@
   (if-let [person (find-person-by-uid person-id ds)]
     (if (update-person person-id data ds)
       {:status 200 :body (find-person-by-uid person-id ds)}
-      (throw (ex-info "Update of person failed" {:status 500})))
+      (throw (ex-info "Update of person failed" {:status 409})))
     {:status 404 :body {:message "Person not found."}}))
 
 (def route
-  {:summary (sd/sum_adm "Update person with id")
+  {:summary (sd/sum_adm (t "Update person with id"))
    :description "Patch a person with id. Returns 404, if no such person exists."
    :swagger {:consumes "application/json"
              :produces "application/json"}
    :coercion reitit.coercion.schema/coercion
    :content-type "application/json"
    :accept "application/json"
-   :parameters {:path {:id s/Str}
+   :parameters {:path {:id s/Uuid}
                 :body (-> create/schema
                           (dissoc :subtype)
                           (assoc (s/optional-key :subtype) (:subtype create/schema)))}
    :handler update-person-handler
    :middleware [wrap-authorize-admin!]
    :responses {200 {:body get-person/schema}
-               404 {:body s/Any}}})
+
+               404 {:description "Not found."
+                    :schema s/Str
+                    :examples {"application/json" {:message "Person not found."}}}
+               409 {:description "Conflict."
+                    :schema s/Str
+                    :examples {"application/json" {:message "Update of person failed"}}}
+               }
+   })
 
