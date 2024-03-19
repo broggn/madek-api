@@ -4,6 +4,10 @@
    [logbug.catcher :as catcher]
    [madek.api.resources.media-resources.permissions :as mr-permissions]
 
+
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
+
+
    [madek.api.resources.shared :as sd]
    [madek.api.resources.vocabularies.permissions :as voc-perms]
    [reitit.coercion.schema]
@@ -361,7 +365,7 @@
 
    ["/"
     {:get
-     {:summary (sd/sum_usr_pub "List media-entry permissions.")
+     {:summary (sd/sum_usr_pub (t "List media-entry permissions."))
       :swagger {:produces "application/json"}
       :content-type "application/json"
       :handler handle_list-perms

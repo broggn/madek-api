@@ -9,6 +9,8 @@
             [madek.api.db.core :refer [get-ds]]
             [madek.api.resources.collections.index :refer [get-index]]
 
+            [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
+
             [madek.api.resources.shared :as sd]
             [madek.api.utils.rdbms :as rdbms]
                         ;[leihs.core.db :as db]
@@ -201,7 +203,7 @@
    {:swagger {:tags ["collection"] }}
    ["collections"
     {:get
-     {:summary (sd/sum_usr "Query/List collections.")
+     {:summary (sd/sum_usr (t "Query/List collections."))
       :handler handle_get-index
       :swagger {:produces "application/json"}
       :parameters {:query schema_collection-query}
@@ -221,7 +223,7 @@
                   406 {:body s/Any}}}}]
 
    ["collection/:collection_id"
-    {:get {:summary (sd/sum_usr_pub "Get collection for id.")
+    {:get {:summary (sd/sum_usr_pub (t "Get collection for id."))
            :handler handle_get-collection
            :middleware [sd/ring-wrap-add-media-resource
                         sd/ring-wrap-authorization-view]
