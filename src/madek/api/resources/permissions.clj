@@ -357,6 +357,8 @@
 
 (def media-entry-routes
   ["/media-entry/:media_entry_id/perms"
+   {:swagger {:tags ["media-entry/perms"] }}
+
    ["/"
     {:get
      {:summary (sd/sum_usr_pub "List media-entry permissions.")
@@ -542,6 +544,8 @@
 
 (def collection-routes
   ["/collection/:collection_id/perms"
+   {:swagger {:tags ["collection/perms"] }}
+
    ["/"
     {:get
      {:summary "Query collection permissions."

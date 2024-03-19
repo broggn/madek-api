@@ -177,6 +177,7 @@
 
 (def admin-routes
   ["/edit_sessions"
+   {:swagger {:tags ["admin/edit_sessions"] }}
    ["/"
     {:get {:summary (sd/sum_adm "List edit_sessions.")
            :handler handle_adm_list-edit-sessions
@@ -199,6 +200,7 @@
 
 (def query-routes
   ["/edit_sessions"
+   {:swagger {:tags ["edit_sessions"] }}
    ["/"
     {:get {:summary (sd/sum_usr "List authed users edit_sessions.")
            :handler handle_usr_list-edit-sessions

@@ -12,7 +12,10 @@
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
 
-                        ;[leihs.core.db :as db]
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
+
+
+   ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
 
                 ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
@@ -26,15 +29,24 @@
 (defn handle_list-io_interface
   [req]
   (let [p (println ">o> ??? handle_list-io_interface")
+        p (println ">o> quer" (-> req :parameters :query))
         full_data (true? (-> req :parameters :query :full_data))
+            p (println ">o> full_data" full_data)
         qd (if (true? full_data) :* :io_interfaces.id)
-        db-result (sd/query-find-all :io_interfaces qd)]
+        db-result (sd/query-find-all :io_interfaces qd)
+
+
+
+        ]
     ;(logging/info "handle_list-io_interface" "\nqd\n" qd "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
 (defn handle_get-io_interface
   [req]
-  (let [io_interface (-> req :io_interface)]
+  (let [io_interface (-> req :io_interface)
+
+        p (println ">o> io_interface" io_interface)
+        ]
     ;(logging/info "handle_get-io_interface" io_interface)
     (sd/response_ok io_interface)))
 
@@ -42,11 +54,7 @@
   [req]
   (try
     (catcher/with-logging {}
-      (let [p (println ">o> ??? handle_create-io_interfaces")
-        ;    data (-> req :parameters :body)
-        ;    ins-res (jdbc/insert! (get-ds) :io_interfaces data)]
-        ;
-        ;(let [
+      (let [p (println ">o> ???1 handle_create-io_interfaces")
             data (-> req :parameters :body)
             sql-query (-> (sql/insert-into :io_interfaces)
                           (sql/values [data])
@@ -56,7 +64,6 @@
 
         (logging/info "handle_create-io_interfaces: " "\ndata:\n" data "\nresult:\n" ins-res)
 
-        ;(if-let [result (::jdbc/update-count ins-res)]
         (if-let [result ins-res]
           (sd/response_ok result)
           (sd/response_failed "Could not create io_interface." 406))))
@@ -126,6 +133,13 @@
   {;(s/optional-key :id) s/Str
    (s/optional-key :description) s/Str})
 
+
+(def schema_export_io_interfaces_opt
+  {:id s/Str
+   (s/optional-key :description) (s/maybe s/Str)
+   (s/optional-key :created_at) s/Any
+   (s/optional-key :updated_at) s/Any})
+
 (def schema_export_io_interfaces
   {:id s/Str
    :description (s/maybe s/Str)
@@ -136,9 +150,10 @@
 ; TODO docu
 (def admin-routes
   ["/io_interfaces"
+   {:swagger {:tags ["admin/io_interfaces"]  :security [{"auth" []}]}}
    ["/"
     {:post
-     {:summary (sd/sum_adm "Create io_interfaces.")
+     {:summary (sd/sum_adm (t "Create io_interfaces."))
       :handler handle_create-io_interfaces
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
@@ -148,17 +163,17 @@
 
     ; io_interface list / query
      :get
-     {:summary (sd/sum_adm "List io_interfaces.")
+     {:summary (sd/sum_adm (t "List io_interfaces."))
       :handler handle_list-io_interface
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
       :parameters {:query {(s/optional-key :full_data) s/Bool}}
-      :responses {200 {:body [schema_export_io_interfaces]}}}}]
+      :responses {200 {:body [schema_export_io_interfaces_opt]}}}}]
 
     ; edit io_interface
    ["/:id"
     {:get
-     {:summary (sd/sum_adm "Get io_interfaces by id.")
+     {:summary (sd/sum_adm (t "Get io_interfaces by id."))
       :handler handle_get-io_interface
       :middleware [wrap-authorize-admin!
                    wrap-find-io_interface]
@@ -168,7 +183,7 @@
                   404 {:body s/Any}}}
 
      :put
-     {:summary (sd/sum_adm "Update io_interfaces with id.")
+     {:summary (sd/sum_adm (t "Update io_interfaces with id."))
       :handler handle_update-io_interfaces
       :middleware [wrap-authorize-admin!
                    wrap-find-io_interface]
@@ -180,7 +195,7 @@
                   406 {:body s/Any}}}
 
      :delete
-     {:summary (sd/sum_adm "Delete io_interface by id.")
+     {:summary (sd/sum_adm (t "Delete io_interface by id."))
       :coercion reitit.coercion.schema/coercion
       :handler handle_delete-io_interface
       :middleware [wrap-authorize-admin!

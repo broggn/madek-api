@@ -169,6 +169,8 @@
 (def admin-routes
 
   ["/contexts"
+   {:swagger {:tags ["admin/contexts"] }}
+
    ["/"
     {:post {:summary (sd/sum_adm_todo "Create contexts.")
             :handler handle_create-contexts
@@ -223,6 +225,8 @@
 (def user-routes
 
   ["/contexts"
+   {:swagger {:tags ["contexts"] }}
+
    ["/"
     {:get {:summary (sd/sum_usr "List contexts.")
            :handler handle_usr-list-contexts

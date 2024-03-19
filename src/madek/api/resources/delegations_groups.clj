@@ -141,7 +141,7 @@
   [["/delegation/groups"
     {:swagger {:tags ["admin/delegation/groups1"] :security [{"auth" []}]}}
 
-    {:get
+    {:get§
      {:summary (sd/sum_adm "Query delegations_groups.")
       :handler handle_list-delegations_groups
       :coercion reitit.coercion.schema/coercion

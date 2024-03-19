@@ -135,6 +135,7 @@
 ; TODO howto access control or full_texts is public meta data
 (def query-routes
   [["/full_texts"
+    {:swagger {:tags ["full_texts"] }}
     {:get {:summary (sd/sum_usr "Query or list full_texts.")
            :handler handle_list-full_texts
            :coercion reitit.coercion.schema/coercion
@@ -157,6 +158,8 @@
 
 (def edit-routes
   [["/full_text"
+    {:swagger {:tags ["full_text ???"]  }}
+
     {:post {:summary (sd/sum_adm "Create full_texts entry")
             :swagger {:consumes "application/json" :produces "application/json"}
             :handler handle_create-full_texts
