@@ -12,9 +12,12 @@
 
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+   [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids  t f to-uuid merge-query-parts]]
 
-   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+   [taoensso.timbre :refer [info warn error spy]]
+
+
+  ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
    ;[madek.api.utils.sql :as sqlo]
 
 ;[leihs.core.db :as db]
@@ -24,9 +27,16 @@
    [schema.core :as s]))
 
 (defn build-query [query-params]
-  (let [col-sel (if (true? (-> query-params :full_data))
+  (let [
+        p (println ">o> :full_data? val=" (-> query-params :full_data))
+        p (println ">o> :full_data? val.class=" (class (-> query-params :full_data)))
+        p (println ">o> :full_data? true?=" (true? (-> query-params :full_data)))
+        col-sel (if (true? (-> query-params :full_data))
                   (sql/select :*)
-                  (sql/select :id, :media_entry_id, :collection_id, :created_at))]
+                  (sql/select :id))
+
+        p (println ">o> col-sel?? = " col-sel)
+        ]
     (-> col-sel
         (sql/from :edit_sessions)
         (sd/build-query-param query-params :id)
@@ -34,7 +44,8 @@
         (sd/build-query-param query-params :collection_id)
         (sd/build-query-param query-params :media_entry_id)
         (pagination/add-offset-for-honeysql query-params)
-        sql-format)))
+        sql-format
+        spy)))
 
 (defn handle_adm_list-edit-sessions
   [req]
@@ -46,9 +57,12 @@
 (defn handle_usr_list-edit-sessions
   [req]
   (let [req-query (-> req :parameters :query)
+        ;full_data (true? (-> req :parameters :query :full_data))
         user-id (-> req :authenticated-entity :id)
+        p (println ">o> user-id" user-id)
         usr-query (assoc req-query :user_id user-id)
         db-query (build-query usr-query)
+        p (println ">o> db-query" db-query)
         db-result (jdbc/execute! (get-ds) db-query)]
     ;(logging/info "handle_usr_list-edit-sessions" "\ndb-query\n" db-query "\nresult\n" db-result)
     (sd/response_ok db-result)))
@@ -139,16 +153,21 @@
           ;      del-result (jdbc/delete! (rdbms/get-ds) :edit_sessions del-clause)]
 
           (let [;del-clause (sd/sql-update-clause "id" id)
-                sql-query (-> (sql/delete-from :edit_sessions) (sql/where [:= :id (to-uuid id)]) sql-format)
-                del-result (jdbc/execute! (get-ds) [sql-query])]
+                sql-query (-> (sql/delete-from :edit_sessions)
+                              ;(sql/where [:= :id (to-uuid id)])
+                              (sql/where [:= :id id])
+                              (sql/returning :*)
+                              sql-format)
+                del-result (jdbc/execute-one! (get-ds) sql-query)]
 
             (sd/logwrite req (str "handle_adm_delete-edit-sessions:" "\ndelete data: " del-data "\nresult: " del-result))
 
-            (if (= 1 (first del-result))
-              (sd/response_ok del-data)
+            ;(if (= 1 (first del-result))
+            (if del-result
+              (sd/response_ok del-result)
               (sd/response_failed (str "Failed delete edit_session: " id) 406)))
           (sd/response_failed (str "No such edit_session : " id) 404))))
-    (catch Exception ex (sd/response_exception ex))))
+    (catch Exception ex (sd/parsed_response_exception ex))))
 
 (def schema_usr_query_edit_session
   {(s/optional-key :full_data) s/Bool
@@ -179,22 +198,22 @@
   ["/edit_sessions"
    {:swagger {:tags ["admin/edit_sessions"] }}
    ["/"
-    {:get {:summary (sd/sum_adm "List edit_sessions.")
+    {:get {:summary (sd/sum_adm (t "List edit_sessions."))
            :handler handle_adm_list-edit-sessions
            :middleware [wrap-authorize-admin!]
            :coercion reitit.coercion.schema/coercion
            :parameters {:query schema_adm_query_edit_session}}}]
    ["/:id"
-    {:get {:summary (sd/sum_adm "Get edit_session.")
+    {:get {:summary (sd/sum_adm (t "Get edit_session."))
            :handler handle_adm_get-edit-session
            :middleware [wrap-authorize-admin!]
            :coercion reitit.coercion.schema/coercion
-           :parameters {:path {:id s/Str}}}
-     :delete {:summary (sd/sum_adm "Delete edit_session.")
+           :parameters {:path {:id s/Uuid}}}
+     :delete {:summary (sd/sum_adm (t "Delete edit_session."))
               :handler handle_adm_delete-edit-sessions
               :middleware [wrap-authorize-admin!]
               :coercion reitit.coercion.schema/coercion
-              :parameters {:path {:id s/Str}}
+              :parameters {:path {:id s/Uuid}}
               :responses {200 {:body schema_export_edit_session}
                           404 {:body s/Any}}}}]])
 
@@ -202,14 +221,14 @@
   ["/edit_sessions"
    {:swagger {:tags ["edit_sessions"] }}
    ["/"
-    {:get {:summary (sd/sum_usr "List authed users edit_sessions.")
+    {:get {:summary (sd/sum_usr (t "List authed users edit_sessions."))
            :handler handle_usr_list-edit-sessions
            :middleware [authorization/wrap-authorized-user]
            :coercion reitit.coercion.schema/coercion
            :parameters {:query schema_usr_query_edit_session}}}]
 
    ["/:id"
-    {:get {:summary (sd/sum_usr "Get edit_session.")
+    {:get {:summary (sd/sum_usr (t "Get edit_session."))
            :handler handle_usr_get-edit-session
            :middleware [authorization/wrap-authorized-user]
            :coercion reitit.coercion.schema/coercion
