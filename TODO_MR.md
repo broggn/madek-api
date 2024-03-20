@@ -39,7 +39,8 @@ Known issue
    (pagination/sql-offset-and-limit params)
    ```
 5. Avoid multiple calls like insert->id->fetch, update->id->fetch
-6. m.a.r.groups _>  ;; FIXME: because of groups::person_id-not-exists
+6. PUT/PATCH: Avoid logging of old/new data
+7. m.a.r.groups _>  ;; FIXME: because of groups::person_id-not-exists
    
 
 Needed changes
@@ -91,10 +92,12 @@ Better way to convert data
    :descriptions (sd/transform_ml (:descriptions data))))
 ```
 Best practice
+--
 ```clojure
     ;upd-res (replace-java-hashmaps upd-res)
     upd-res (transform_ml upd-res)  ;; use this
 ```
+
 Better way to log
 --
 ```clojure
@@ -139,10 +142,12 @@ ToAsk
 6. Set defaults for all endpoints
 7. Links? `application/json vs application/json-roa`
 8. Global page/size settings
+   1. Page: 0-n
+   2. Size: 1-100
 9. Status for foreign-key-exception?   409 Conflict
    - http://localhost:3104/api-docs/index.html#/admin%2Fvocabularies/delete_api_admin_vocabularies__id_
-10. List-Response: `[] vs delegations : []`
-11. Should we log updated-values in general as well(old vs new)?
+10. 'List-Response' vs 'Object containing List': `[] vs delegations : []`
+11. Should we log updated-values in general as well(old vs new)? **NO**
 12. Why using :patch instead of :put? `m.a.r.users.main`
 
 
