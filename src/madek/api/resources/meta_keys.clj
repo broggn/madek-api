@@ -435,47 +435,47 @@
            :responses {200 {:description "Meta-Keys-Object that contians list of meta-key-entries OR empty list"
                             :body {:meta-keys [schema_export-meta-key-adm]}}}}
 
-     ["/test-me"
-      ;{:swagger {:tags ["test"] :security [{"auth" []}]}}
-      ;; TEST
-      {:post {:summary (sd/sum_adm (f (t "Get all meta-key ids")))
-           :description "Get list of meta-key ids. Paging is used as you get a limit of 100 entries."
-           :handler handle_adm-query-meta-keys
-           :middleware [wrap-authorize-admin!]
-           :swagger (generate-swagger-pagination-params)
+     ;["/test-me"
+     ; ;{:swagger {:tags ["test"] :security [{"auth" []}]}}
+     ; ;; TEST
+     ; {:post {:summary (sd/sum_adm (f (t "Get all meta-key ids")))
+     ;      :description "Get list of meta-key ids. Paging is used as you get a limit of 100 entries."
+     ;      :handler handle_adm-query-meta-keys
+     ;      :middleware [wrap-authorize-admin!]
+     ;      :swagger (generate-swagger-pagination-params)
+     ;
+     ;      ; FIXME: returns vocabulary.id instead of meta-keys.id ??
+     ;
+     ;      :parameters {:query schema_query-meta-key
+     ;                   :body schema_create-meta-key
+     ;                   }
+     ;
+     ;      :content-type "application/json"
+     ;      :coercion reitit.coercion.schema/coercion
+     ;      :responses {200 {:description "Meta-Keys-Object that contians list of meta-key-entries OR empty list"
+     ;                       :body {:meta-keys [schema_export-meta-key-adm]}}}}}
 
-           ; FIXME: returns vocabulary.id instead of meta-keys.id ??
+     :post {:summary (sd/sum_adm (t "Create meta-key."))
+            :handler handle_create_meta-key
+            :middleware [wrap-authorize-admin!]
 
-           :parameters {:query schema_query-meta-key
-                        :body schema_create-meta-key
-                        }
+            :description (slurp "./md/meta-key-post.md")
 
-           :content-type "application/json"
-           :coercion reitit.coercion.schema/coercion
-           :responses {200 {:description "Meta-Keys-Object that contians list of meta-key-entries OR empty list"
-                            :body {:meta-keys [schema_export-meta-key-adm]}}}}}
+            :parameters {:body schema_create-meta-key}
 
-     ;:post {:summary (sd/sum_adm (t "Create meta-key."))
-     ;       :handler handle_create_meta-key
-     ;       :middleware [wrap-authorize-admin!]
-     ;
-     ;       :description (slurp "./md/meta-key-post.md")
-     ;
-     ;       :parameters {:body schema_create-meta-key}
-     ;
-     ;       :content-type "application/json"
-     ;       :coercion reitit.coercion.schema/coercion
-     ;       :responses {200 {:body schema_create-meta-key}
-     ;
-     ;                   404 {:description "Duplicate key error"
-     ;                        :schema s/Str
-     ;                        :examples {"application/json" {:msg "ERROR: duplicate key value violates unique constraint \\\"meta_keys_pkey\\\"\\n  Detail: Key (id)=(copyright:test_me_now31) already exists."}}}
-     ;
-     ;                   500 {:description "Internal Server Error"
-     ;                        :schema s/Str
-     ;                        :examples {"application/json" {:msg "ERROR: new row for relation \"meta_keys\" violates check constraint \"meta_key_id_chars\"\n  Detail: Failing row contains (copyright-test_me_now10, t, MetaDatum::TextDate, t, 0, t, t, copyright, string, {People}, line, Keyword, \"de\"=>\"string\", \"en\"=>\"string\", \"de\"=>\"string\", \"en\"=>\"string\", \"de\"=>\"string\", \"en\"=>\"string\", \"de\"=>\"string\", \"en\"=>\"string\")."}}}
-     ;
-     ;                   406 {:body s/Any}}}
+            :content-type "application/json"
+            :coercion reitit.coercion.schema/coercion
+            :responses {200 {:body schema_create-meta-key}
+
+                        404 {:description "Duplicate key error"
+                             :schema s/Str
+                             :examples {"application/json" {:msg "ERROR: duplicate key value violates unique constraint \\\"meta_keys_pkey\\\"\\n  Detail: Key (id)=(copyright:test_me_now31) already exists."}}}
+
+                        500 {:description "Internal Server Error"
+                             :schema s/Str
+                             :examples {"application/json" {:msg "ERROR: new row for relation \"meta_keys\" violates check constraint \"meta_key_id_chars\"\n  Detail: Failing row contains (copyright-test_me_now10, t, MetaDatum::TextDate, t, 0, t, t, copyright, string, {People}, line, Keyword, \"de\"=>\"string\", \"en\"=>\"string\", \"de\"=>\"string\", \"en\"=>\"string\", \"de\"=>\"string\", \"en\"=>\"string\", \"de\"=>\"string\", \"en\"=>\"string\")."}}}
+
+                        406 {:body s/Any}}}
 
 
        }]

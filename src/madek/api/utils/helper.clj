@@ -43,7 +43,7 @@
        value)))
 
   ([value key]
-   (def keys-to-cast-to-uuid #{:user_id :id})
+   (def keys-to-cast-to-uuid #{:user_id :id :person_id :accepted_usage_terms_id})
    (try
      (if (and (contains? keys-to-cast-to-uuid key) (instance? String value))
        (UUID/fromString value)
@@ -135,9 +135,15 @@
 ; [madek.api.utils.helper :refer [convert-map-if-exist]]
 (defn convert-map-if-exist [m]
   (-> m
+      (modify-if-exists :id #(if (contains? m :id) (to-uuid % :id)))
       (modify-if-exists :settings #(if (nil? %) [:raw "'{}'"] (convert-to-raw-set %)))
       (modify-if-exists :external_uris #(if (nil? %) [:raw "'{}'"] (convert-to-raw-set %)))
-      (modify-if-exists :creator_id #(if (contains? m :creator_id) (to-uuid % :creator_id)))
+
+      (modify-if-exists :creator_id #(if (contains? m :creator_id) (to-uuid %)))
+      (modify-if-exists :person_id #(if (contains? m :person_id) (to-uuid %)))
+      (modify-if-exists :user_id #(if (contains? m :user_id) (to-uuid %)))
+      (modify-if-exists :accepted_usage_terms_id #(if (contains? m :accepted_usage_terms_id) (to-uuid %)))
+
       (modify-if-exists :allowed_people_subtypes #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))))
 ;(modify-if-exists :allowed_people_subtypes #(if (nil? %) [:raw "'[]'"] (convert-to-raw-array %)))))
 
