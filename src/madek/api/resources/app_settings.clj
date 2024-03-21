@@ -9,6 +9,9 @@
    [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
+
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
+
    [schema.core :as s]
    [taoensso.timbre :refer [debug error info spy warn]]))
 
@@ -94,7 +97,7 @@
    (s/optional-key :provenance_notices) (s/maybe sd/schema_ml_list)
    (s/optional-key :section_meta_key_id) (s/maybe s/Str)
    (s/optional-key :site_titles) sd/schema_ml_list
-   (s/optional-key :sitemap) (s/maybe s/Any) ;jsonb
+   (s/optional-key :sitemap) (s/maybe s/Any)                ;jsonb
    (s/optional-key :splashscreen_slideshow_set_id) (s/maybe s/Uuid)
    (s/optional-key :support_urls) sd/schema_ml_list
    (s/optional-key :teaser_set_id) (s/maybe s/Uuid)
@@ -137,7 +140,7 @@
    (s/optional-key :provenance_notices) (s/maybe sd/schema_ml_list)
    (s/optional-key :section_meta_key_id) (s/maybe s/Str)
    (s/optional-key :site_titles) (s/maybe sd/schema_ml_list)
-   (s/optional-key :sitemap) (s/maybe s/Any) ;jsonb
+   (s/optional-key :sitemap) (s/maybe s/Any)                ;jsonb
    (s/optional-key :splashscreen_slideshow_set_id) (s/maybe s/Uuid)
    (s/optional-key :support_urls) (s/maybe sd/schema_ml_list)
    (s/optional-key :teaser_set_id) (s/maybe s/Uuid)
@@ -151,33 +154,37 @@
 
 (def admin-routes
   [["/app-settings"
-    {:get {:summary (sd/sum_adm "Get App Settings.")
-           :handler handle_get-app-settings
-           :middleware [wrap-authorize-admin!]
-           :swagger {:produces "application/json"}
-           :content-type "application/json"
-           :coercion reitit.coercion.schema/coercion
-           :responses {200 {:body s/Any}}}
+    {:swagger {:tags ["admin/app-settings"] :security [{"auth" []}]}}
+    ["/"
+     {:get {:summary (sd/sum_adm (t "Get App Settings."))
+            :handler handle_get-app-settings
+            :middleware [wrap-authorize-admin!]
+            :swagger {:produces "application/json"}
+            :content-type "application/json"
+            :coercion reitit.coercion.schema/coercion
+            :responses {200 {:body s/Any}}}
 
-     :put {:summary (sd/sum_adm "Update App Settings.")
-           :handler handle_update-app-settings
-           :middleware [wrap-authorize-admin!]
-           :swagger {:produces "application/json"
-                     :consumes "application/json"}
-           :content-type "application/json"
-           :coercion reitit.coercion.schema/coercion
-           :parameters {:body schema_update-app-settings}
-           :responses {200 {:body schema_export-app-settings}
-                       406 {:body s/Any}}}}]])
+      :put {:summary (sd/sum_adm "Update App Settings.")
+            :handler handle_update-app-settings
+            :middleware [wrap-authorize-admin!]
+            :swagger {:produces "application/json"
+                      :consumes "application/json"}
+            :content-type "application/json"
+            :coercion reitit.coercion.schema/coercion
+            :parameters {:body schema_update-app-settings}
+            :responses {200 {:body schema_export-app-settings}
+                        406 {:body s/Any}}}}]]])
 
 (def user-routes
   [["/app-settings"
-    {:get {:summary (sd/sum_pub "Get App Settings.")
-           :handler handle_get-app-settings
-           :swagger {:produces "application/json"}
-           :content-type "application/json"
-           :coercion reitit.coercion.schema/coercion
-           :responses {200 {:body schema_export-app-settings}}}}]])
+    {:swagger {:tags ["app-settings"]}}
+    ["/"
+     {:get {:summary (sd/sum_pub "Get App Settings.")
+            :handler handle_get-app-settings
+            :swagger {:produces "application/json"}
+            :content-type "application/json"
+            :coercion reitit.coercion.schema/coercion
+            :responses {200 {:body schema_export-app-settings}}}}]]])
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)
