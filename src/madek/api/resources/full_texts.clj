@@ -14,6 +14,9 @@
             [madek.api.pagination :as pagination]
             [madek.api.resources.shared :as sd]
 
+            [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids t f to-uuid merge-query-parts]]
+
+
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
 
 ;[leihs.core.db :as db]
@@ -62,15 +65,16 @@
                       (-> req :parameters :path :media_entry_id))
             ins-data (assoc rdata :media_resource_id mr-id)
 
-            ;ins-res (jdbc/insert! (rdbms/get-ds) :full_texts ins-data)]
-
-            sql-query (-> (sql/insert-into :full_texts) (sql/values [ins-data]) sql-format)
-            ins-res (first (jdbc/execute! (get-ds) [sql-query]))]
+            sql-query (-> (sql/insert-into :full_texts)
+                          (sql/values [ins-data])
+                          (sql/returning :*)
+                          sql-format)
+            ins-res (jdbc/execute-one! (get-ds) sql-query)]
 
         (logging/info "handle_create-full_texts: " "\nnew-data:\n" ins-data "\nresult:\n" ins-res)
 
-        (if-let [result (first ins-res)]
-          (sd/response_ok result)
+        (if ins-res
+          (sd/response_ok ins-res)
           (sd/response_failed "Could not create full_text." 406))))
     (catch Exception e (sd/response_exception e))))
 
@@ -84,21 +88,18 @@
                       (-> req :parameters :path :collection_id)
                       (-> req :parameters :path :media_entry_id))
             dwid (assoc data :media_resource_id mr-id)
-        ;old-data (-> req :full_text)
-            upd-query (sd/sql-update-clause "media_resource_id" (str mr-id))
-
-            ;upd-result (jdbc/update! (rdbms/get-ds) :full_texts dwid upd-query)]
 
             sql-query (-> (sql/update :full_texts)
                           (sql/set dwid)
-                          (sql/where [:= :media_resource_id mr-id]) sql-format)
-            ;upd-result (jdbc/update! (rdbms/get-ds) :full_texts dwid upd-query)]
-            upd-result (first (jdbc/execute! (get-ds) [sql-query]))]
+                          (sql/where [:= :media_resource_id mr-id])
+                          (sql/returning :*)
+                          sql-format)
+            upd-result  (jdbc/execute-one! (get-ds) sql-query)]
 
         (logging/info "handle_update-full_texts: " mr-id "\new-data:\n" dwid "\nresult:\n" upd-result)
 
-        (if (= 1 (first upd-result))
-          (sd/response_ok (sd/query-eq-find-one :full_texts :media_resource_id mr-id))
+        (if upd-result
+          (sd/response_ok upd-result)
           (sd/response_failed "Could not update full_text." 406))))
     (catch Exception e (sd/response_exception e))))
 
@@ -109,19 +110,16 @@
       (let [full-text (-> req :full_text)
             mr-id (:media_resource_id full-text)
 
-;del-result (jdbc/delete! (rdbms/get-ds)
-            ;                         :full_texts
-            ;                         ["media_resource_id = ?" mr-id])]
-
             sql-query (-> (sql/delete-from :full_texts)
                           (sql/where [:= :media_resource_id mr-id])
+                          (sql/returning :*)
                           sql-format)
-            del-result (first (jdbc/execute! (get-ds) [sql-query]))]
+            del-result (jdbc/execute-one! (get-ds) sql-query)]
 
         (logging/info "handle_delete-full_texts: " mr-id " result: " del-result)
 
-        (if (= 1 (first del-result))
-          (sd/response_ok full-text)
+        (if del-result
+          (sd/response_ok del-result)
           (logging/error "Could not delete full_text " mr-id))))
     (catch Exception e (sd/response_exception e))))
 
@@ -136,20 +134,24 @@
 (def query-routes
   [["/full_texts"
     {:swagger {:tags ["full_texts"] }}
-    {:get {:summary (sd/sum_usr "Query or list full_texts.")
+
+    ["/"
+
+    {:get {:summary (sd/sum_usr (t "Query or list full_texts."))
            :handler handle_list-full_texts
            :coercion reitit.coercion.schema/coercion
            :parameters {:query {(s/optional-key :full_data) s/Bool
                                 (s/optional-key :media_resource_id) s/Uuid
                                 (s/optional-key :text) s/Str
-                                (s/optional-key :page) s/Str
-                                (s/optional-key :count) s/Str}}}}]
+                                (s/optional-key :page) s/Int
+                                (s/optional-key :count) s/Int}}}}]
+
    ["/full_texts/:media_resource_id"
-    {:get {:summary (sd/sum_usr "Get full_text.")
+    {:get {:summary (sd/sum_usr (t "Get full_text."))
            :handler handle_get-full_text
            :coercion reitit.coercion.schema/coercion
-           :parameters {:path {:media_resource_id s/Str}}
-           :middleware [(wrap-find-full_text :media_resource_id true)]}}]])
+           :parameters {:path {:media_resource_id s/Uuid}}
+           :middleware [(wrap-find-full_text :media_resource_id true)]}}]]])
 
 ; TODO tests
 ; TODO Frage: siehe web-app: ??
@@ -158,27 +160,30 @@
 
 (def edit-routes
   [["/full_text"
-    {:swagger {:tags ["full_text ???"]  }}
+    {:swagger {:tags ["admin/full_text"] :security [{"auth" []}]}}
 
-    {:post {:summary (sd/sum_adm "Create full_texts entry")
+    ["/"
+
+
+     {:post {:summary (sd/sum_adm (t "Create full_texts entry????"))
             :swagger {:consumes "application/json" :produces "application/json"}
             :handler handle_create-full_texts
             :coercion reitit.coercion.schema/coercion
             :parameters {:body {:text s/Str
-                                :media_resource_id s/Str}}
+                                :media_resource_id s/Uuid}}
             :middleware [wrap-authorize-admin!]}}]
 
    ["/full_text/:media_resource_id"
-    {:post {:summary (sd/sum_adm "Create full_texts entry")
+    {:post {:summary (sd/sum_adm (t "Create full_texts entry"))
             :swagger {:consumes "application/json" :produces "application/json"}
             :handler handle_create-full_texts
             :coercion reitit.coercion.schema/coercion
-            :parameters {:path {:media_resource_id s/Str}
+            :parameters {:path {:media_resource_id s/Uuid}
                          :body {:text s/Str}}
             :middleware [wrap-authorize-admin!]}
      :put {:summary (sd/sum_adm "Update full_text.")
            :coercion reitit.coercion.schema/coercion
-           :parameters {:path {:media_resource_id s/Str}
+           :parameters {:path {:media_resource_id s/Uuid}
                         :body {:text s/Str}}
            :middleware [wrap-authorize-admin!
                         (wrap-find-full_text :media_resource_id true)]
@@ -186,14 +191,19 @@
 
      :delete {:summary (sd/sum_adm "Delete full_text.")
               :coercion reitit.coercion.schema/coercion
-              :parameters {:path {:media_resource_id s/Str}}
+              :parameters {:path {:media_resource_id s/Uuid}}
               :middleware [wrap-authorize-admin!
                            (wrap-find-full_text :media_resource_id true)]
-              :handler handle_delete-full_texts}}]])
+              :handler handle_delete-full_texts}}]]])
 
 ; TODO full_texts: test wrap auth for collection
 (def collection-routes
   [["/collection/:collection_id/full_text"
+
+    {:swagger {:tags ["collection/full_text"]}}
+
+    ["/"
+
     {:get {:summary (sd/sum_usr_pub "Get full_text.")
            :handler handle_get-full_text
            :coercion reitit.coercion.schema/coercion
@@ -227,11 +237,16 @@
               :middleware [sd/ring-wrap-add-media-resource
                            sd/ring-wrap-authorization-edit-metadata
                            (wrap-find-full_text :collection_id true)]
-              :handler handle_delete-full_texts}}]])
+              :handler handle_delete-full_texts}}]]])
 
 ; TODO full_texts: test wrap auth for media entry
 (def entry-routes
   [["/media-entry/:media_entry_id/full_text"
+
+    {:swagger {:tags ["media-entry/full_text"]}}
+
+    ["/"
+
     {:get {:summary (sd/sum_usr_pub "Get full_text.")
            :handler handle_get-full_text
            :coercion reitit.coercion.schema/coercion
@@ -265,4 +280,4 @@
               :middleware [sd/ring-wrap-add-media-resource
                            sd/ring-wrap-authorization-edit-metadata
                            (wrap-find-full_text :media_entry_id true)]
-              :handler handle_delete-full_texts}}]])
+              :handler handle_delete-full_texts}}]]])
