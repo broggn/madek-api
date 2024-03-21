@@ -131,7 +131,7 @@
       ;:responses {200 {:body {:admins [s/Any]}}}}}]
 
    ; edit admin
-   ["/admins/:id"
+   ["/:id"
     {:get
      {:summary (sd/sum_adm (t "Get admin by id."))
       :handler handle_get-admin
@@ -154,7 +154,7 @@
                   406 {:body s/Any}}}}]
 
    ; access via user
-   ["/admins/:user_id/user"
+   ["/:user_id/user"
     {:post
      {:summary (sd/sum_adm (t "Create admin for user with id."))
       :handler handle_create-admin
