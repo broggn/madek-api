@@ -43,7 +43,8 @@
         query (cond-> base-query
                 delegation_id (sql/where [:= :delegation_id delegation_id])
                 user_id (sql/where [:= :user_id user_id]))
-        db-result (jdbc/execute! (get-ds) (sql-format query))]
+        db-result (jdbc/execute! (get-ds) (sql-format query))
+        ]
 
 
     ;(->> db-result (map :id) set)

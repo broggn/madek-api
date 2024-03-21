@@ -9,6 +9,9 @@
    [madek.api.resources.shared :as sd]
    ;[leihs.core.db :as db]
    ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+
+   [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids t f to-uuid merge-query-parts]]
+
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]))
@@ -21,7 +24,24 @@
 (defn handle_list-delegations_groups
   [req]
   (let [;full-data (true? (-> req :parameters :query :full-data))
-        db-result (sd/query-find-all :delegations_groups :*)]
+
+        delegation_id (-> req :parameters :query :delegation_id)
+        group_id (-> req :parameters :query :group_id)
+
+        col-sel (if (true? (-> req :parameters :query :full-data))
+                  (sql/select :*)
+                  (sql/select :group_id))
+
+
+        base-query (-> col-sel (sql/from :delegations_groups))
+        query (cond-> base-query
+                delegation_id (sql/where [:= :delegation_id delegation_id])
+                group_id (sql/where [:= :group_id group_id]))
+        db-result (jdbc/execute! (get-ds) (sql-format query))
+
+
+        ;db-result (sd/query-find-all :delegations_groups col-sel)
+        ]
     ;(->> db-result (map :id) set)
     (logging/info "handle_list-delegations_group" "\nresult\n" db-result)
     (sd/response_ok db-result)))
@@ -64,29 +84,30 @@
   (let [delegations_group (-> req res-req-name)
         group-id (:group_id delegations_group)
         delegation-id (res-col-name delegations_group)
-        ;]
-
         sql-query (-> (sql/delete-from :delegations_groups)
                       (sql/where [:= :group_id group-id] [:= :delegation_id delegation-id])
-                      sql-format)]
-    (if (= 1 (first (jdbc/execute! (get-ds) sql-query)))
+                      (sql/returning :*)
+                      sql-format)
 
-      ;(if (= 1 (first (jdbc/delete! (rdbms/get-ds) res-table-name ["group_id = ? AND delegation_id = ?" group-id delegation-id])))
+        result (jdbc/execute-one! (get-ds) sql-query)
+        ]
 
+    ;(if (= 1 (first (jdbc/execute! (get-ds) sql-query)))
+    (if result
       (sd/response_ok delegations_group)
       (logging/error "Failed delete delegations_group "
-                     "group-id: " group-id "delegation-id: " delegation-id))))
+        "group-id: " group-id "delegation-id: " delegation-id))))
 
 (defn wwrap-find-delegations_group [send404]
   (fn [handler]
     (fn [request]
       (sd/req-find-data2
-       request handler
-       :group_id :delegation_id
-       :delegations_groups
-       :group_id :delegation_id
-       res-req-name
-       send404))))
+        request handler
+        :group_id :delegation_id
+        :delegations_groups
+        :group_id :delegation_id
+        res-req-name
+        send404))))
 
 ; rubbish find by users groups
 (defn wwrap-find-delegations_group-by-auth [send404]
@@ -96,24 +117,24 @@
             del-id (-> request :parameters :path :delegation_id str)]
         (logging/info "uid\n" group-id "del-id\n" del-id)
         (sd/req-find-data-search2
-         request handler
-         group-id del-id
-         :delegations_groups
-         :group_id :delegation_id
-         res-req-name
-         send404)))))
+          request handler
+          group-id del-id
+          :delegations_groups
+          :group_id :delegation_id
+          res-req-name
+          send404)))))
 
 (defn wwrap-find-group [param]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler param
-                                    :groups :id
-                                    :group true))))
+                    :groups :id
+                    :group true))))
 
 (defn wwrap-find-delegation [param]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler param
-                                    :delegations :id
-                                    :delegation true))))
+                    :delegations :id
+                    :delegation true))))
 
 (def schema_delegations_groups_export
   {:group_id s/Uuid
@@ -139,40 +160,40 @@
 
 (def admin-routes
   [["/delegation/groups"
-    {:swagger {:tags ["admin/delegation/groups1"] :security [{"auth" []}]}}
+    {:swagger {:tags ["admin/delegation/groups"] :security [{"auth" []}]}}
 
     ["/"
-    {:get
-     {:summary (sd/sum_adm "Query delegations_groups.")
-      :handler handle_list-delegations_groups
-      :coercion reitit.coercion.schema/coercion
-      :parameters {:query {(s/optional-key :group_id) s/Uuid
-                           (s/optional-key :delegation_id) s/Uuid
-                           (s/optional-key :full-data) s/Bool}}}}]
+     {:get
+      {:summary (sd/sum_adm (t "Query delegations_groups."))
+       :handler handle_list-delegations_groups
+       :coercion reitit.coercion.schema/coercion
+       :parameters {:query {(s/optional-key :group_id) s/Uuid
+                            (s/optional-key :delegation_id) s/Uuid
+                            (s/optional-key :full-data) s/Bool}}}}]
 
-   ["/delegation/groups/:delegation_id/:group_id"
-    {:post
-     {:summary (sd/sum_adm "Create delegations_group for group and delegation.")
-      :handler handle_create-delegations_group
-      :middleware [(wwrap-find-group :group_id)
-                   (wwrap-find-delegation :delegation_id)
-                   (wwrap-find-delegations_group false)]
-      :coercion reitit.coercion.schema/coercion
-      :parameters {:path {:group_id s/Uuid
-                          :delegation_id s/Uuid}}}
+    ["/delegation/groups/:delegation_id/:group_id"
+     {:post
+      {:summary (sd/sum_adm (t "Create delegations_group for group and delegation."))
+       :handler handle_create-delegations_group
+       :middleware [(wwrap-find-group :group_id)
+                    (wwrap-find-delegation :delegation_id)
+                    (wwrap-find-delegations_group false)]
+       :coercion reitit.coercion.schema/coercion
+       :parameters {:path {:group_id s/Uuid
+                           :delegation_id s/Uuid}}}
 
-     :get
-     {:summary (sd/sum_adm "Get delegations_group for group and delegation.")
-      :handler handle_get-delegations_group
-      :middleware [(wwrap-find-delegations_group true)]
-      :coercion reitit.coercion.schema/coercion
-      :parameters {:path {:group_id s/Uuid
-                          :delegation_id s/Uuid}}}
+      :get
+      {:summary (sd/sum_adm (t "Get delegations_group for group and delegation."))
+       :handler handle_get-delegations_group
+       :middleware [(wwrap-find-delegations_group true)]
+       :coercion reitit.coercion.schema/coercion
+       :parameters {:path {:group_id s/Uuid
+                           :delegation_id s/Uuid}}}
 
-     :delete
-     {:summary (sd/sum_adm "Delete delegations_group for group and delegation.")
-      :coercion reitit.coercion.schema/coercion
-      :handler handle_delete-delegations_group
-      :middleware [(wwrap-find-delegations_group true)]
-      :parameters {:path {:group_id s/Uuid
-                          :delegation_id s/Uuid}}}}]]])
+      :delete
+      {:summary (sd/sum_adm (t "Delete delegations_group for group and delegation."))
+       :coercion reitit.coercion.schema/coercion
+       :handler handle_delete-delegations_group
+       :middleware [(wwrap-find-delegations_group true)]
+       :parameters {:path {:group_id s/Uuid
+                           :delegation_id s/Uuid}}}}]]])
