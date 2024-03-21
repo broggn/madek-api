@@ -13,41 +13,16 @@
                        " or User with token.\""))
     response))
 
-;TODO: remove this
-(defn set-is-admin-if-present [request]
-  (if (nil? (get-in request [:headers "is_admin"]))
-    request
-    (assoc request :is_admin true)))
-
-;TODO: remove this
-(defn set-authenticated-entity-id-if-present [request]
-  (let [header-id (get-in request [:headers "id"])]
-    (if (nil? header-id)
-      request
-      (assoc-in request [:authenticated-entity :id] header-id))))
-
 (defn wrap-log [handler]
   (fn [request]
-    (let [;; FYI: set is_admin by headers-attr (is_admin)
-          request (assoc request :is_admin true)
-
-          request (set-is-admin-if-present request) ;TODO: remove this
-          request (set-authenticated-entity-id-if-present request)
-
-          ;; TODO: remove this
-          request (assoc-in request [:authenticated-entity :id]  #uuid  "47da46e9-8a5f-4eac-a7c0-056706a70fc0")
-          ] ;TODO: remove this
-
-
-
-      (info "wrap auth "
-            " - method: " (:request-method request)
-            " - path: " (request/path-info request)
-            " - auth-method: " (-> request :authentication-method)
-            " - type: " (-> request :authenticated-entity :type)
-            " - is_admin: " (:is_admin request)
-            " - auth-entity: " (-> request :authenticated-entity :id))
-      (handler request))))
+    (info "wrap auth "
+          " - method: " (:request-method request)
+          " - path: " (request/path-info request)
+          " - auth-method: " (-> request :authentication-method)
+          " - type: " (-> request :authenticated-entity :type)
+          " - is_admin: " (:is_admin request)
+          " - auth-entity: " (-> request :authenticated-entity :id))
+    (handler request)))
 
 (defn wrap [handler]
   (fn [request]
