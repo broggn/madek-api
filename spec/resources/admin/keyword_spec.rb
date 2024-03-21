@@ -24,6 +24,13 @@ context 'admin keywords' do
         expect(plain_faraday_json_client.get(query_url).status).to be == 403
       end
       it 'get responds with 403' do
+
+        puts "keyword_url: #{keyword_url}"
+        puts "plain_faraday_json_client: #{plain_faraday_json_client.get(keyword_url).status}"
+        puts "plain_faraday_json_client: #{plain_faraday_json_client.get(keyword_url).body}"
+
+        # sleep 5
+
         expect(plain_faraday_json_client.get(keyword_url).status).to be == 403
       end
       it 'post responds with 403' do

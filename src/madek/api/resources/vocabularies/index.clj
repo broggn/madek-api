@@ -4,6 +4,12 @@
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [madek.api.db.core :refer [get-ds]]
+   [clojure.string :as str]
+
+
+   [logbug.debug :as debug]
+
+
    [madek.api.resources.shared :as sd]
    [madek.api.resources.vocabularies.permissions :as permissions]
    [madek.api.utils.helper :refer [str-to-int]]
@@ -19,13 +25,35 @@
        [:in :vocabularies.id vocabulary-ids]])))
 
 (defn- base-query
-  [user-id size offset]
-  (-> (sql/select :*) ;:id)
-      (sql/from :vocabularies)
-      (sql/where (where-clause user-id))
-      (sql/offset offset)
-      (sql/limit size)
-      sql-format))
+  ([user-id size offset]
+   (-> (sql/select :*)                                      ;:id)
+       (sql/from :vocabularies)
+       (sql/where (where-clause user-id))
+       (sql/offset offset)
+       (sql/limit size)
+       sql-format))
+
+  ([user-id size offset request]
+
+   (let [
+         is_admin (-> request :is_admin)
+         is_admin_endpoint (str/includes? (-> request :uri) "/admin/")
+
+         select (if is_admin_endpoint
+                  (sql/select :*)
+                  (sql/select :admin_comment :position :labels :descriptions))
+         ]
+
+     (-> select
+         (sql/from :vocabularies)
+         (sql/where (where-clause user-id))
+         (sql/offset offset)
+         (sql/limit size)
+         sql-format)))
+
+  )
+
+
 
 (defn- query-index-resources [request]
   (let [user-id (-> request :authenticated-entity :id)
@@ -42,7 +70,7 @@
 
         p (println ">o> offset" offset ", size" size)
 
-        query (base-query user-id size offset)
+        query (base-query user-id size offset request)
         p (println ">o> query" query)]
     ;(logging/info "query-index-resources: " query)
     (jdbc/execute! (get-ds) query)))
@@ -54,14 +82,40 @@
 
 (defn get-index [request]
   (catcher/with-logging {}
-    (let [db-result (query-index-resources request)
+    (let [
+
+          db-result (query-index-resources request)
+
+          is_admin (-> request :is_admin)
+
+          is_admin_endpoint (str/includes? (-> request :uri) "/admin/")
+
+          uri (-> request :uri)
+
+
+
+          p (println ">o> isAdmin?" (-> request :is_admin))
 
           p (println ">o> db-result" db-result)
+          p (println ">o> uri" uri)
+          p (println ">o> is_admin_endpoint" is_admin_endpoint)
 
-          result (->> db-result
-                      (map transform_ml)
-                      (map sd/remove-internal-keys))]
-      (sd/response_ok {:vocabularies result}))))
+          ;;;; TODO: BROKEN
+          ;result (->> db-result
+          ;         sd/transform_ml)
+
+          ; iterate over result and process sd/transform_ml for each element
+           result (map transform_ml db-result)
+
+
+          p (println ">o> result" result)
+
+          ]
+      (sd/response_ok {:vocabularies result})
+
+      ))
+
+  )
 
 ;### Debug ####################################################################
-;(debug/debug-ns *ns*)
+(debug/debug-ns *ns*)

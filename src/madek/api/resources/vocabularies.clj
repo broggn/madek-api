@@ -8,8 +8,16 @@
    ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
+
+   [pghstore-clj.core :refer [to-hstore]]
+
    [logbug.catcher :as catcher]
    [madek.api.db.core :refer [get-ds]]
+
+
+
+   ;[madek.api.resources.vocabularies.vocabulary :refer [transform_ml]]
+
 
    [madek.api.resources.shared :as sd]
    [madek.api.resources.vocabularies.index :refer [get-index]]
@@ -32,65 +40,24 @@
 
 ; TODO logwrite
 
-;; TODO: move to shared/helpers
-;(defn transform_ml [data]
-;  (assoc data
-;         :labels (sd/transform_ml (:labels data))
-;         :descriptions (sd/transform_ml (:descriptions data))))
-
 (defn handle_create-vocab [req]
   (try
     (catcher/with-logging {}
       (let [data (-> req :parameters :body)
-
-            ;ins-res (jdbc/insert! (rdbms/get-ds) :vocabularies data)]
-
             sql-query (-> (sql/insert-into :vocabularies)
-                          ;(sql/values [data])
-
                           (sql/values [(convert-map-if-exist (cast-to-hstore data))])
                           (sql/returning :*)
-
                           sql-format)
-            ins-res (jdbc/execute-one! (get-ds) sql-query)]
 
-;(if-let [result (::jdbc/update-count ins-res)]
+            ins-res (jdbc/execute-one! (get-ds) sql-query)
+            ins-res (sd/transform_ml_map ins-res)
+            p (println ">o> ins-res=" ins-res)
+            ]
+
         (if ins-res
-          (sd/response_ok (sd/transform_ml_map ins-res))
+          (sd/response_ok ins-res)
           (sd/response_failed "Could not create vocabulary." 406))))
     (catch Exception ex (sd/response_exception ex))))
-
-;(defn handle_update-vocab [req]
-;  (try
-;    (catcher/with-logging {}
-;      (let [data (-> req :parameters :body)
-;            id (-> req :parameters :path :id)
-;            dwid (assoc data :id id)
-;            old-data (sd/query-eq-find-one :vocabularies :id id)
-;            ]
-;
-;        (if old-data
-;
-;          ;(if-let [upd-res (jdbc/update! (rdbms/get-ds) :vocabularies dwid ["id = ?" id])]
-;
-;
-;          (let [
-;                sql-query (-> (sql/update :vocabularies)
-;                              (sql/set-fields dwid)
-;                              (sql/where [:= :id id])
-;                              sql-format)
-;                upd-res (jdbc/execute! (get-ds) sql-query)])
-;
-;          (if-let [result (::jdbc/update-count upd-res)]
-;
-;
-;            (let [new-data (sd/query-eq-find-one :vocabularies :id id)]
-;              (logging/info "handle_update-vocab"
-;                "\nid: " id "\nnew-data:\n" new-data)
-;              (sd/response_ok (transform_ml new-data)))
-;            (sd/response_failed "Could not update vocabulary." 406))
-;          (sd/response_not_found "No such vocabulary."))))
-;    (catch Exception ex (sd/response_exception ex))))
 
 (defn handle_update-vocab [req]
   (try
@@ -106,7 +73,7 @@
 
         (if old-data
           (let [sql-query (-> (sql/update :vocabularies)
-                              (sql/set dwid) ;; TODO: convert
+                              (sql/set dwid)                ;; TODO: convert
                               (sql/where [:= :id id])
                               (sql/returning :id :position :labels :descriptions :admin_comment)
                               sql-format)
@@ -124,27 +91,6 @@
           (sd/response_not_found "No such vocabulary."))))
     (catch Exception ex (sd/response_exception ex))))
 
-;(defn handle_delete-vocab [req]
-;  (try
-;    (catcher/with-logging {}
-;      (let [id (-> req :parameters :path :id)]
-;        (if-let [old-data (sd/query-eq-find-one :vocabularies :id id)]
-;
-;          ;(let [db-result (jdbc/delete! (rdbms/get-ds) :vocabularies ["id = ?" id])]
-;
-;          (let [sql-query (-> (sql/delete-from :vocabularies)
-;                              (sql/where [:= :id id])
-;                              sql-format)
-;                db-result (jdbc/execute-one! (get-ds) sql-query)]
-;            ;; rest of your code
-;            (if (= 1 (::jdbc/update-count db-result))
-;              (sd/response_ok (transform_ml old-data))
-;              (sd/response_failed "Could not delete vocabulary." 406)))
-;          )
-;
-;
-;        (sd/response_not_found "No such vocabulary."))))
-;  (catch Exception ex (sd/response_exception ex)))
 
 (defn handle_delete-vocab [req]
   (try
@@ -164,13 +110,21 @@
 
 (def schema_export-vocabulary
   {:id s/Str
-   ;:enabled_for_public_view s/Bool
-   ;:enabled_for_public_use s/Bool
    :position s/Int
    :labels (s/maybe sd/schema_ml_list)
    :descriptions (s/maybe sd/schema_ml_list)
+   (s/optional-key :admin_comment) (s/maybe s/Str)
+   })
 
-   (s/optional-key :admin_comment) (s/maybe s/Str)})
+(def schema_export-vocabulary-admin
+  {:id s/Str
+   :enabled_for_public_view s/Bool
+   :enabled_for_public_use s/Bool
+   :position s/Int
+   :labels (s/maybe sd/schema_ml_list)
+   :descriptions (s/maybe sd/schema_ml_list)
+   (s/optional-key :admin_comment) (s/maybe s/Str)
+   })
 
 (def schema_import-vocabulary
   {:id s/Str
@@ -224,20 +178,25 @@
   {:produces "application/json"
    :parameters [{:name "page"
                  :in "query"
-                 :description "Page number, defaults to 1"
+                 :description "Page number, defaults to 0"
                  :required true
-                 :value 1
-                 :default 1
-                 :type "number"
-                 :pattern "^[1-9][0-9]*$"}
+                 :value 0
+                 :default 0
+                 :type "integer"
+                 :minimum 0
+                 ;:pattern "^[1-9][0-9]*$"
+                 }
                 {:name "count"
                  :in "query"
                  :description "Number of items per page, defaults to 100"
                  :required true
                  :value 100
                  :default 100
-                 :type "number"
-                 :pattern "^[1-9][0-9]*$"}]})
+                 :type "integer"
+                 :minimum 1
+                 ;:pattern "^[1-9][0-9]*$"
+                 }]
+   })
 
 ; TODO vocab permission
 (def admin-routes
@@ -251,7 +210,7 @@
            :content-type "application/json"
            :swagger (generate-swagger-pagination-params)
            :coercion reitit.coercion.schema/coercion
-           :responses {200 {:body {:vocabularies [schema_export-vocabulary]}}}}
+           :responses {200 {:body {:vocabularies [schema_export-vocabulary-admin]}}}}
 
      :post {:summary (sd/sum_adm (t "Create vocabulary."))
             :handler handle_create-vocab
@@ -263,7 +222,8 @@
             :accept "application/json"
             :coercion reitit.coercion.schema/coercion
             :parameters {:body schema_import-vocabulary}
-            :responses {200 {:body schema_export-vocabulary}
+            :responses {200 {:body schema_export-vocabulary-admin}
+            ;:responses {200 {:body schema_export-vocabulary}
 
                         406 {:description "Creation failed."
                              :schema s/Str
@@ -287,7 +247,7 @@
 
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Str}}
-           :responses {200 {:body schema_export-vocabulary}
+           :responses {200 {:body schema_export-vocabulary-admin}
                        404 {:description "Creation failed."
                             :schema s/Str
                             :examples {"application/json" {:message "Vocabulary could not be found!"}}}
@@ -570,7 +530,7 @@
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
 
-;; TODO: remove this
+       ;; TODO: remove this
        :description (str "TODO: REMOVE THIS | id: columns , id: ecb0de43-ccd2-463a-85a6-826c6ff99cdf")
 
        :accept "application/json"

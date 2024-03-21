@@ -119,6 +119,8 @@ context 'admin vocabularies' do
 
           it 'has the proper data' do
             data = response.body
+            
+            puts "data: #{data}"
             expect(
               data.except("created_at", "updated_at", "admin_comment")
             ).to eq(
