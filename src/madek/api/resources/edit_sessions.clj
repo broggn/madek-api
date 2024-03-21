@@ -196,7 +196,7 @@
 
 (def admin-routes
   ["/edit_sessions"
-   {:swagger {:tags ["admin/edit_sessions"] }}
+   {:swagger {:tags ["admin/edit_sessions"] :security [{"auth" []}] }}
    ["/"
     {:get {:summary (sd/sum_adm (t "List edit_sessions."))
            :handler handle_adm_list-edit-sessions

@@ -41,6 +41,12 @@ Known issue
 5. Avoid multiple calls like insert->id->fetch, update->id->fetch
 6. PUT/PATCH: Avoid logging of old/new data
 7. m.a.r.groups _>  ;; FIXME: because of groups::person_id-not-exists
+8. Naming-convention-issue: :full-data vs :full_data
+9. Not implemented filters: /api/admin/delegation/users/
+10. Endpoints not in use (search for 'not in use')
+    1. people
+    2. groups
+
    
 
 Needed changes
@@ -152,6 +158,7 @@ ToAsk
 13. Which logger to use?
     1. [madek.api.resources.shared :as sd] / (sd/logwrite req
     2. taoensso.timbre :refer [debug info warn error spy]])) / (error ..)
+14. Naming-convention-issue: :full-data vs :full_data 
 
 
 

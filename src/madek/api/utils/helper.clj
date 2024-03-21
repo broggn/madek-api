@@ -43,7 +43,8 @@
        value)))
 
   ([value key]
-   (def keys-to-cast-to-uuid #{:user_id :id :person_id :accepted_usage_terms_id})
+   (def keys-to-cast-to-uuid #{:user_id :id :person_id :accepted_usage_terms_id :delegation_id})
+   (println ">o> to-uuid[key value]: " value key)
    (try
      (if (and (contains? keys-to-cast-to-uuid key) (instance? String value))
        (UUID/fromString value)
@@ -53,6 +54,7 @@
        value)))
 
   ([value key table]
+   (println ">o> to-uuid[key value table]: " value key table)
    (def blacklisted-tables #{"meta_keys" "vocabularies"})
 
    (println ">o> keys-to-cast-to-uuid / earlyExitByTableName" table)
