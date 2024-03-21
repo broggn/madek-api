@@ -51,18 +51,29 @@
       (sql-format)))
 
 ; TODO add flag for default locale
-(defn get-vocabulary [request]
+(defn get-vocabulary [request]                              ;; HERE
   (let [id (-> request :parameters :path :id)
         user-id (-> request :authenticated-entity :id)
         query (build-vocabulary-query id user-id)
         is_admin_endpoint (str/includes? (-> request :uri) "/admin/")
         db-result (jdbc/execute-one! (get-ds) query)
-        result (if is_admin_endpoint
-                 (-> db-result
-                     transform_ml)
-                 (-> db-result
-                     transform_ml
-                     sd/remove-internal-keys))
+        p (println ">o> result" db-result)
+
+        ;result (if (and (not (nil? db-result)) (is_admin_endpoint))
+        ;         (-> db-result
+        ;             transform_ml)
+        ;         (-> db-result
+        ;             transform_ml
+        ;             sd/remove-internal-keys))
+
+        result (if (not (nil? db-result))
+                 (if is_admin_endpoint
+                   (-> db-result
+                       transform_ml)
+                   (-> db-result
+                       transform_ml
+                       sd/remove-internal-keys)))
+
 
         p (println ">o> result" result)
         ]
