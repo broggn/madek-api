@@ -126,39 +126,42 @@ Better way to parse exception to create generic error-responses
 
 
 
-
-
-
-ToAsk
+ToAsk - DEPR
 --
-1. How are `auth-enttity/is_admin` use?
+1. ~~How are `auth-enttity/is_admin` used?~~
    1. https://github.com/Madek/madek-api-v2/blob/master/src/madek/api/authentication.clj#L10-L26
    2. https://github.com/Madek/madek-api-v2/blob/master/src/madek/api/utils/auth.clj#L10-L35
 2. ~~How to define **default-values/description for attribute?~~
    -  Swagger-Editor: https://editor.swagger.io/, see example [_tmp_doc/swagger-example.yml](_tmp_doc/swagger-example.yml)
       - Response header
       - Default-value & description
-3. Individual basic-auth for each endpoint or for whole site?
 4. Introduction of different LevelOfDetails (LoD) concerning GET-response
    1. All attributes (incl. created/update) (default for admin endpoints )
    2. Min. attributes (default)
-5. Introduction of pagination for GET-Requests
+
+
+---
+
+
+ToAsk
+--
+1. Introduction of pagination for GET-Requests
    1. page / page-size
    2. headers.x-count
-6. Set defaults for all endpoints
-7. Links? `application/json vs application/json-roa`
-8. Global page/size settings
+2. Set defaults for all endpoints
+3. Links? `application/json vs application/json-roa`
+4. Global page/size settings
    1. Page: 0-n
    2. Size: 1-100
-9. Status for foreign-key-exception?   409 Conflict
+5. Status for foreign-key-exception?   409 Conflict
    - http://localhost:3104/api-docs/index.html#/admin%2Fvocabularies/delete_api_admin_vocabularies__id_
-10. 'List-Response' vs 'Object containing List': `[] vs delegations : []`
-11. Should we log updated-values in general as well(old vs new)? **NO**
-12. Why using :patch instead of :put? `m.a.r.users.main`
-13. Which logger to use?
+6. 'List-Response' vs 'Object containing List': `[] vs delegations : []`
+7. Should we log updated-values in general as well(old vs new)? **NO**
+8. Why using :patch instead of :put? `m.a.r.users.main`
+9. Which logger to use?
     1. [madek.api.resources.shared :as sd] / (sd/logwrite req
     2. taoensso.timbre :refer [debug info warn error spy]])) / (error ..)
-14. Naming-convention-issue: :full-data vs :full_data 
+10. Naming-convention-issue: :full-data vs :full_data (LevelOfDetail)
 
 
 
