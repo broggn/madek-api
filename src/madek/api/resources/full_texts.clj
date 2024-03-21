@@ -181,7 +181,7 @@
             :parameters {:path {:media_resource_id s/Uuid}
                          :body {:text s/Str}}
             :middleware [wrap-authorize-admin!]}
-     :put {:summary (sd/sum_adm "Update full_text.")
+     :put {:summary (sd/sum_adm (t "Update full_text."))
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_resource_id s/Uuid}
                         :body {:text s/Str}}
@@ -189,7 +189,7 @@
                         (wrap-find-full_text :media_resource_id true)]
            :handler handle_update-full_texts}
 
-     :delete {:summary (sd/sum_adm "Delete full_text.")
+     :delete {:summary (sd/sum_adm (t "Delete full_text."))
               :coercion reitit.coercion.schema/coercion
               :parameters {:path {:media_resource_id s/Uuid}}
               :middleware [wrap-authorize-admin!
