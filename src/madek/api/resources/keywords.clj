@@ -355,7 +355,7 @@
       ;:responses {200 {:body schema_export_keyword_adm2}
       :responses {200 {:body schema_export_keyword_adm}
                   406 {:body s/Any}}}}]
-   ["/keywords/:id"
+   ["/:id"
     {:get
      {:summary (sd/sum_adm (t "Get keyword for id"))
       :handler handle_adm-get-keyword
