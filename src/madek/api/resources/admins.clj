@@ -5,12 +5,15 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
 
-;; all needed imports
+   ;; all needed imports
    [logbug.catcher :as catcher]
    ;[leihs.core.db :as db]
    [madek.api.db.core :refer [get-ds]]
 
    [madek.api.resources.shared :as sd]
+
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
+
 
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [next.jdbc :as jdbc]
@@ -71,31 +74,17 @@
 (defn handle_delete-admin
   [req]
   (catcher/with-logging {}
-
-    ;(let [admin (-> req :admin)
-    ;      admin-id (-> req :admin :id)
-    ;      del-result (jdbc/delete! (get-ds) :admins ["id = ?" admin-id])]
-
-    ;(let [admin (-> req :admin)
-    ;      admin-id (:id admin)
-    ;      sql-map {:delete :admins
-    ;               :where [:= :id admin-id]}
-    ;      sql (spy (-> sql-map sql-format))
-    ;      del-result (spy (jdbc/execute! (get-ds) [sql admin-id]))]
-
     (let [admin (-> req :admin)
           admin-id (:id admin)
           sql (-> (sql/delete-from :admins)
                   (sql/where [:= :id admin-id])
+                  (sql/returning :* )
                   sql-format
                   spy)
-          ;del-result (jdbc/execute! (get-ds) [sql])]
           del-result (spy (jdbc/execute-one! (get-ds) sql))]
 
-      (sd/logwrite req (str "handle_delete-admin: " " data:\n" admin "\nresult: " del-result))
-      ;(if (= 1 (first del-result))
-      (if (= 1 (::jdbc/update-count del-result))
-        (sd/response_ok admin)
+      (if del-result
+        (sd/response_ok del-result)
         (sd/response_failed "Could not delete admin." 406)))))
 
 ;### wrappers #################################################################
@@ -103,39 +92,48 @@
 (defn wwrap-find-admin [param colname send404]
   (fn [handler]
     (fn [request] (sd/req-find-data
-                   request handler param
-                   :admins colname :admin send404))))
+                    request handler param
+                    :admins colname :admin send404))))
 
 (defn wwrap-find-user [param]
   (fn [handler]
     (fn [request] (sd/req-find-data
-                   request handler param
-                   :users :id :user true))))
+                    request handler param
+                    :users :id :user true))))
 
 ;### swagger io schema ########################################################
 
 (def schema_export-admin
   {:id s/Uuid
-   :user_id s/Uuid
-   :updated_at s/Any
-   :created_at s/Any})
+   ;:user_id s/Uuid
+   ;:updated_at s/Any
+   ;:created_at s/Any}
+   (s/optional-key :user_id) s/Uuid
+   (s/optional-key :updated_at) s/Any
+   (s/optional-key :created_at) s/Any
+   })
+
 
 ;### wrappers #################################################################
 
 ; TODO docu
 (def ring-routes
-  [["/admins/"
+  ["/admins"
+   {:swagger {:tags ["admin/admins"] :security [{"auth" []}]}}
+   ["/"
     {:get
-     {:summary (sd/sum_adm "List admin users.")
+     {:summary (sd/sum_adm (t "List admin users."))
       :handler handle_list-admin
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
       :parameters {:query {(s/optional-key :full_data) s/Bool}}
-      :responses {200 {:body {:admins [schema_export-admin]}}}}}]
+      :responses {200 {:body {:admins [schema_export-admin]}}}}}] ;; TODO: fixme
+      ;:responses {200 {:body {:admins [s/Any]}}}}}]
+
    ; edit admin
    ["/admins/:id"
     {:get
-     {:summary (sd/sum_adm "Get admin by id.")
+     {:summary (sd/sum_adm (t "Get admin by id."))
       :handler handle_get-admin
       :middleware [wrap-authorize-admin!
                    (wwrap-find-admin :id :id true)]
@@ -145,7 +143,7 @@
                   404 {:body s/Any}}}
 
      :delete
-     {:summary (sd/sum_adm "Delete admin by id.")
+     {:summary (sd/sum_adm (t "Delete admin by id."))
       :coercion reitit.coercion.schema/coercion
       :handler handle_delete-admin
       :middleware [wrap-authorize-admin!
@@ -158,7 +156,7 @@
    ; access via user
    ["/admins/:user_id/user"
     {:post
-     {:summary (sd/sum_adm "Create admin for user with id.")
+     {:summary (sd/sum_adm (t "Create admin for user with id."))
       :handler handle_create-admin
       :middleware [wrap-authorize-admin!
                    (wwrap-find-user :user_id)
@@ -170,7 +168,7 @@
                   406 {:body s/Any}}}
 
      :get
-     {:summary (sd/sum_adm "Get admin for user.")
+     {:summary (sd/sum_adm (t "Get admin for user."))
       :handler handle_get-admin
       :middleware [wrap-authorize-admin!
                    (wwrap-find-admin :user_id :user_id true)]
@@ -181,7 +179,7 @@
                   406 {:body s/Any}}}
 
      :delete
-     {:summary (sd/sum_adm "Delete admin for user.")
+     {:summary (sd/sum_adm (t "Delete admin for user."))
       :coercion reitit.coercion.schema/coercion
       :handler handle_delete-admin
       :middleware [wrap-authorize-admin!
