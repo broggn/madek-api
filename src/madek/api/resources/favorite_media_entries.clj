@@ -197,6 +197,11 @@
 
 (def admin-routes
   [["/favorite/media-entries"
+
+    {:swagger {:tags ["admin/favorite/media-entries"] :security [{"auth" []}]}}
+
+    ["/"
+
     {:get
      {:summary (sd/sum_adm "Query favorite_media_entries.")
       :handler handle_list-favorite_media_entries
@@ -235,4 +240,4 @@
       :middleware [wrap-authorize-admin!
                    (wwrap-find-favorite_media_entry true)]
       :parameters {:path {:user_id s/Uuid
-                          :media_entry_id s/Uuid}}}}]])
+                          :media_entry_id s/Uuid}}}}]]])

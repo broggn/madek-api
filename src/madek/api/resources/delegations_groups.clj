@@ -141,7 +141,8 @@
   [["/delegation/groups"
     {:swagger {:tags ["admin/delegation/groups1"] :security [{"auth" []}]}}
 
-    {:get§
+    ["/"
+    {:get
      {:summary (sd/sum_adm "Query delegations_groups.")
       :handler handle_list-delegations_groups
       :coercion reitit.coercion.schema/coercion
@@ -174,4 +175,4 @@
       :handler handle_delete-delegations_group
       :middleware [(wwrap-find-delegations_group true)]
       :parameters {:path {:group_id s/Uuid
-                          :delegation_id s/Uuid}}}}]])
+                          :delegation_id s/Uuid}}}}]]])

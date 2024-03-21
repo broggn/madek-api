@@ -9,6 +9,9 @@
             ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
             [madek.api.db.core :refer [get-ds]]
 
+            [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids t f to-uuid merge-query-parts]]
+
+
             [madek.api.resources.shared :as sd]
            ;; all needed imports
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
@@ -27,7 +30,12 @@
 
 (defn handle_list-favorite_collection
   [req]
-  (let [db-result (sd/query-find-all :favorite_collections :*)]
+  (let [
+        col-sel (if (true? (-> req :parameters :query :full_data))
+                   :*
+                  :user_id)
+        ;db-result (sd/query-find-all :favorite_collections :*)]
+        db-result (sd/query-find-all :favorite_collections col-sel)]
     ;(logging/info "handle_list-favorite_collection" "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
@@ -72,17 +80,13 @@
       (let [favorite_collection (-> req res-req-name)
             user-id (:user_id favorite_collection)
             collection-id (res-col-name favorite_collection)
-
-            ;    sql-query (-> (sql/delete-from :favorite_collections) (sql/where [:= :user_id user-id] [:= :collection_id collection-id]) sql-format)]
-            ;(if (= 1 (first (jdbc/execute! (get-ds) sql-query)))
-
-            sql-query (-> (sql/delete-from :favorite_collections) (sql/where [:= :user_id user-id] [:= :collection_id collection-id]) sql-format)
-            p (println ">o> ?????????????")
-
+            sql-query (-> (sql/delete-from :favorite_collections)
+                          (sql/where [:= :user_id user-id] [:= :collection_id collection-id])
+                          (sql/returning :*)
+                          sql-format)
             del-result (spy (jdbc/execute-one! (get-ds) (spy sql-query)))]
-        (if (= 1 (spy (::jdbc/update-count del-result)))
-          ;(if (= 1 (spy (::jdbc/update-count del-result)))
 
+        (if del-result
           (sd/response_ok favorite_collection)
           (sd/response_failed "Could not delete favorite collection: " 406))))
     (catch Exception ex (sd/response_exception ex))))
@@ -126,9 +130,11 @@
 
 (def schema_favorite_collection_export
   {:user_id s/Uuid
-   :collection_id s/Uuid
-   :updated_at s/Any
-   :created_at s/Any})
+  (s/optional-key :collection_id) s/Uuid
+  (s/optional-key :updated_at) s/Any
+  (s/optional-key :created_at) s/Any
+   }
+  )
 
 ; TODO docu
 ; TODO tests
@@ -171,8 +177,13 @@
 ; TODO tests
 (def admin-routes
   [["/favorite/collections"
+
+    {:swagger {:tags ["admin/favorite/collections"] :security [{"auth" []}]}}
+
+    ["/"
+
     {:get
-     {:summary (sd/sum_adm "List favorite_collection users.")
+     {:summary (sd/sum_adm (f (t "List favorite_collection users.") "pagination?"))
       :handler handle_list-favorite_collection
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
@@ -183,7 +194,7 @@
       :responses {200 {:body [schema_favorite_collection_export]}}}}]
    ; edit favorite collections for other users
    ["/favorite/collections/:collection_id/:user_id"
-    {:post {:summary (sd/sum_adm "Create favorite_collection for user and collection.")
+    {:post {:summary (sd/sum_adm (t "Create favorite_collection for user and collection."))
             :handler handle_create-favorite_collection
 
             :middleware [wrap-authorize-admin!
@@ -197,7 +208,7 @@
                         404 {:body s/Any}
                         406 {:body s/Any}}}
 
-     :get {:summary (sd/sum_adm "Get favorite_collection by user and collection id.")
+     :get {:summary (sd/sum_adm (t "Get favorite_collection by user and collection id."))
            :handler handle_get-favorite_collection
            :middleware [wrap-authorize-admin!
                         (wwrap-find-favorite_collection true)]
@@ -208,7 +219,7 @@
                        404 {:body s/Any}
                        406 {:body s/Any}}}
 
-     :delete {:summary (sd/sum_adm "Delete favorite_collection by user and collection id.")
+     :delete {:summary (sd/sum_adm (t "Delete favorite_collection by user and collection id."))
               :coercion reitit.coercion.schema/coercion
               :handler handle_delete-favorite_collection
               :middleware [wrap-authorize-admin!
@@ -217,4 +228,4 @@
                                   :collection_id s/Uuid}}
               :responses {200 {:body schema_favorite_collection_export}
                           404 {:body s/Any}
-                          406 {:body s/Any}}}}]])
+                          406 {:body s/Any}}}}]]])
