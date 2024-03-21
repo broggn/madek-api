@@ -1,7 +1,7 @@
 (ns madek.api.resources.contexts
   (:require
    [clojure.tools.logging :as logging]
-            ;; all needed imports
+   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
@@ -13,12 +13,12 @@
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
 
-;         [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+   ;         [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
    ;[clojure.java.jdbc :as jdbc]
    ;         [madek.api.utils.sql :as sql]
 
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-                        ;[leihs.core.db :as db]
+   ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
 
@@ -72,15 +72,22 @@
       ;      ins-res (jdbc/insert! (get-ds) :contexts data)]
 
       (let [data (-> req :parameters :body)
-            sql (spy (-> {:insert-into :contexts :values [data]} sql-format))
-            ;ins-res (jdbc/execute! (get-ds) [sql data])]
-            ins-res (spy (jdbc/execute! (get-ds) [sql data]))]
 
-        (sd/logwrite req (str "handle_create-contexts: " "\nnew-data:\n" data "\nresult:\n" ins-res))
+            sql (-> (sql/insert-into :contexts)
+                    (sql/values [(cast-to-hstore data)])
+                    (sql/returning :*)
+                    sql-format)
 
-        (if-let [result (first ins-res)]
-        ; TODO clean result
-          (sd/response_ok (context_transform_ml result))
+            res (jdbc/execute-one! (get-ds) sql)
+            res (context_transform_ml res)
+            ]
+
+        ;(sd/logwrite req (str "handle_create-contexts: " "\nnew-data:\n" data "\nresult:\n" ins-res))
+
+        ;(if-let [result (first ins-res)]
+        (if res
+          ; TODO clean result
+          (sd/response_ok res)
           (sd/response_failed "Could not create context." 406))))
     (catch Exception ex (sd/response_exception ex))))
 
@@ -89,7 +96,7 @@
   (try
     (catcher/with-logging {}
 
-;(let [data (-> req :parameters :body)
+      ;(let [data (-> req :parameters :body)
       ;      id (-> req :parameters :path :id)
       ;      dwid (assoc data :id id)
       ;  ;old-data (-> req :context)
@@ -99,16 +106,34 @@
       (let [data (-> req :parameters :body)
             id (-> req :parameters :path :id)
             dwid (assoc data :id id)
-            sql-map {:update :contexts
-                     :set dwid
-                     :where [:= :id id]}
-            sql (-> sql-map sql-format)
-            upd-result (jdbc/execute! (get-ds) [sql (vals dwid)])] ;; FIXME
 
-        (sd/logwrite req (str "handle_update-contexts: " id "\nnew-data:\n" dwid "\nupd-result\n" upd-result))
+            ;sql-map {:update :contexts
+            ;         :set dwid
+            ;         :where [:= :id id]}
+            ;sql (-> sql-map sql-format)
+            ;upd-result (jdbc/execute! (get-ds) [sql (vals dwid)])
 
-        (if (= 1 (first upd-result))
-          (sd/response_ok (context_transform_ml (sd/query-eq-find-one :contexts :id id)))
+
+            fir (-> (sql/update :contexts)
+                    ;(sql/set dwid)
+                    (sql/set (cast-to-hstore dwid))
+                    ;(sql/where [:raw upd-query])
+                    (sql/where [:= :id id])
+                    (sql/returning :*)
+                    sql-format)
+            p (println ">o> !!!!!!!!!!! sql-fir" fir)
+
+            upd-result (jdbc/execute-one! (get-ds) (spy fir))
+
+
+            ] ;; FIXME
+
+        ;(sd/logwrite req (str "handle_update-contexts: " id "\nnew-data:\n" dwid "\nupd-result\n" upd-result))
+
+        ;(if (= 1 (first upd-result))
+        (if upd-result
+          ;(sd/response_ok (context_transform_ml (sd/query-eq-find-one :contexts :id id)))
+          (sd/response_ok (context_transform_ml upd-result))
           (sd/response_failed "Could not update context." 406))))
     (catch Exception ex (sd/response_exception ex))))
 
@@ -117,30 +142,29 @@
   (try
     (catcher/with-logging {}
 
-      ;(let [context (-> req :context)
-      ;      id (-> req :context :id)
-      ;      del-result (jdbc/delete! (get-ds) :contexts ["id = ?" id])]
-
-      (let [context (-> req :context)
+      (let [
             id (-> req :context :id)
-            sql-map {:delete :contexts
-                     :where [:= :id id]}
-            sql (-> sql-map sql-format)
-            del-result (jdbc/execute! (get-ds) [sql [id]])] ;; FIXME
+            sql-query (-> (sql/delete-from :contexts)
+                          (sql/where [:= :id id])
+                          (sql/returning :* )
+                          sql-format
+                          spy)
+            del-result (jdbc/execute-one! (get-ds) sql-query)]
 
-        (sd/logwrite req (str "handle_delete-context: " id " result: " del-result))
+        ;(sd/logwrite req (str "handle_delete-context: " id " result: " del-result))
 
-        (if (= 1 (first del-result))
-          (sd/response_ok (context_transform_ml context))
+        ;(if (= 1 (first del-result))
+        (if del-result
+          (sd/response_ok (context_transform_ml del-result))
           (logging/error "Could not delete context " id))))
     (catch Exception ex (sd/response_exception ex))))
 
 (defn wwrap-find-context [param colname send404]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler
-                                    param
-                                    :contexts colname
-                                    :context send404))))
+                    param
+                    :contexts colname
+                    :context send404))))
 
 (def schema_import_contexts
   {:id s/Str
@@ -172,17 +196,17 @@
 (def admin-routes
 
   ["/contexts"
-   {:swagger {:tags ["admin/contexts"] }}
+   {:swagger {:tags ["admin/contexts"]}}
 
    ["/"
-    {:post {:summary (sd/sum_adm_todo "Create contexts.")
+    {:post {:summary (sd/sum_adm_todo (t "Create contexts."))
             :handler handle_create-contexts
             :middleware [wrap-authorize-admin!]
             :coercion reitit.coercion.schema/coercion
             :parameters {:body schema_import_contexts}
             :responses {200 {:body schema_export_contexts_adm}
                         406 {:body s/Any}}}
-    ; context list / query
+     ; context list / query
      :get {:summary (sd/sum_adm (t "List contexts."))
            :handler handle_adm-list-contexts
            :middleware [wrap-authorize-admin!]
@@ -190,7 +214,7 @@
            ;:parameters {:query {(s/optional-key :full-data) s/Bool}}
            :responses {200 {:body [schema_export_contexts_adm]}
                        406 {:body s/Any}}}}]
-    ; edit context
+   ; edit context
    ["/:id"
     {:get {:summary (sd/sum_adm (t "Get contexts by id."))
            :handler handle_adm-get-context
@@ -202,7 +226,7 @@
                        404 {:body s/Any}}}
 
 
-     :put {:summary (sd/sum_adm "Update contexts with id.")
+     :put {:summary (sd/sum_adm (t "Update contexts with id."))
            :handler handle_update-contexts
            :middleware [wrap-authorize-admin!
                         (wwrap-find-context :id :id true)]
@@ -214,7 +238,7 @@
                        406 {:body s/Any}
                        500 {:body s/Any}}}
 
-     :delete {:summary (sd/sum_adm_todo "Delete context by id.")
+     :delete {:summary (sd/sum_adm_todo (t "Delete context by id."))
               :coercion reitit.coercion.schema/coercion
               :handler handle_delete-context
               :middleware [wrap-authorize-admin!
@@ -229,7 +253,7 @@
 (def user-routes
 
   ["/contexts"
-   {:swagger {:tags ["contexts"] }}
+   {:swagger {:tags ["contexts"]}}
 
    ["/"
     {:get {:summary (sd/sum_usr (t "List contexts."))
@@ -238,7 +262,7 @@
            ;:parameters {:query {(s/optional-key :full-data) s/Bool}}
            :responses {200 {:body [schema_export_contexts_usr]}
                        406 {:body s/Any}}}}]
-    ; edit context
+   ; edit context
    ["/:id"
     {:get {:summary (sd/sum_usr (t "Get contexts by id."))
            :handler handle_usr-get-context

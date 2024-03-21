@@ -149,6 +149,10 @@ ToAsk
 10. 'List-Response' vs 'Object containing List': `[] vs delegations : []`
 11. Should we log updated-values in general as well(old vs new)? **NO**
 12. Why using :patch instead of :put? `m.a.r.users.main`
+13. Which logger to use?
+    1. [madek.api.resources.shared :as sd] / (sd/logwrite req
+    2. taoensso.timbre :refer [debug info warn error spy]])) / (error ..)
+
 
 
 FYI
