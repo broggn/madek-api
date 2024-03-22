@@ -271,6 +271,7 @@
                :middleware [wrap-authorize-admin!]
                :swagger {:produces "application/json"}
                :parameters {:query schema_query-groups}
+               ;:parameters {:query s/Any}
                :content-type "application/json"
                :coercion reitit.coercion.schema/coercion
                :responses {200 {:body {:groups [schema_export-group]}}}}
@@ -366,7 +367,8 @@
                                }}
 
                          ; TODO works with tests, but not with the swagger ui
-                         :put {:summary (f (t "Update group users by group-id and list of users.") "tests-needed")
+                         ; TODO: broken test / duplicate key issue
+                         :put {:summary (f (t "Update group users by group-id and list of users.") "tests-needed / BROKEN-TEST")
                                :description "Update group users by group-id and list of users."
                                :swagger {:consumes "application/json" :produces "application/json"}
                                :content-type "application/json"

@@ -195,7 +195,7 @@
           (jdbc/execute!
             tx
             del-query)))
-      (when (first ins-users)
+      (when (first ins-users)                               ;; TODO: causes error
         (do
           (println ">o> (first ins-users)")
           (jdbc/execute!
@@ -232,7 +232,8 @@
 
 (def schema_update-group-user-list
   {:users
-   [{(s/optional-key :id) s/Uuid
+   [{(s/required-key :id) s/Uuid
+   ;[{(s/optional-key :id) s/Uuid
      (s/optional-key :institutional_id) s/Uuid
      (s/optional-key :email) s/Str}]})
 
