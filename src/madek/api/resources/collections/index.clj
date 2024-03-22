@@ -23,8 +23,13 @@
 ;### collection_id ############################################################
 
 (defn- filter-by-collection-id [sqlmap {:keys [collection_id] :as query-params}]
+
+  (println ">o> collection_id=" collection_id)
+  (println ">o> collection_id.cl=" (class collection_id))
+  (println ">o> map=" sqlmap)
+
   (cond-> sqlmap
-    (seq collection_id)
+    (seq (str collection_id))
     (-> (sql/join [:collection_collection_arcs :cca]
                   [:= :cca.child_id :collections.id])
         (sql/where [:= :cca.parent_id collection_id]))))
@@ -45,7 +50,13 @@
 
 ; TODO test query and paging
 (defn- build-query [request]
-  (let [query-params (:query-params request)
+  (let [
+
+
+        query-params (:query-params request)
+        p (println ">o> query-params" query-params)
+
+
         authenticated-entity (:authenticated-entity request)
         sql-query (-> (base-query (:full_data query-params))
                       (set-order query-params)
@@ -62,7 +73,19 @@
     sql-query))
 
 (defn- query-index-resources [request]
-  (jdbc/execute! (get-ds) (build-query request)))
+
+
+  (let [
+        query (build-query request)
+        p (println ">o> query" query)
+
+        res (jdbc/execute! (get-ds) query)
+
+        p (println ">o> res" res)
+
+        ]res)
+
+  )
 
 ;### index ####################################################################
 
@@ -73,6 +96,6 @@
       (query-index-resources request)}}))
 
 ;### Debug ####################################################################
-;(debug/debug-ns *ns*)
+(debug/debug-ns *ns*)
 ;(debug/wrap-with-log-debug #'filter-by-permissions)
 ;(debug/wrap-with-log-debug #'build-query)

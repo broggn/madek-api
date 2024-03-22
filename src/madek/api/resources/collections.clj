@@ -31,7 +31,13 @@
 
 (defn handle_get-index [req]
   (let [query-params (-> req :parameters :query)
-        qreq (assoc-in req [:query-params] query-params)]
+
+        p (println ">o> query-params" query-params)
+
+        qreq (assoc-in req [:query-params] query-params)
+        p (println ">o> qreq" qreq)
+
+        ]
     (logging/info "handle_get-index" "\nquery-params\n" query-params)
     (get-index qreq)))
 
@@ -159,7 +165,7 @@
   {(s/optional-key :page) s/Int
    (s/optional-key :count) s/Int
    (s/optional-key :full_data) s/Bool
-   (s/optional-key :collection_id) s/Str
+   (s/optional-key :collection_id) s/Uuid
    (s/optional-key :order) s/Str
 
    (s/optional-key :creator_id) s/Uuid
@@ -203,9 +209,9 @@
    {:swagger {:tags ["collection"] }}
    ["collections"
     {:get
-     {:summary (sd/sum_usr (t "Query/List collections."))
+     {:summary (sd/sum_usr (f (t "Query/List collections.") "BROKEN-FILTER"))
       :handler handle_get-index
-      :swagger {:produces "application/json"}
+      :swagger {:produces ["application/json" "application/octet-stream"]}
       :parameters {:query schema_collection-query}
       :coercion reitit.coercion.schema/coercion
       :responses {200 {:body {:collections [schema_collection-export]}}}}}]
