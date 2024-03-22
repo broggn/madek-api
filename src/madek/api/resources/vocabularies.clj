@@ -64,7 +64,6 @@
     (catcher/with-logging {}
       (let [data (-> req :parameters :body)
             id (-> req :path-params :id)
-
             dwid (assoc data :id id)
             dwid (convert-map-if-exist (cast-to-hstore dwid))
 
@@ -74,35 +73,18 @@
         (if old-data
           (let [
                 is_admin_endpoint (str/includes? (-> req :uri) "/admin/")
-                ;returning (if is_admin_endpoint
-                ;
-                ;            (sql/returning :*)
-                ;            (sql/returning :id :position :labels :descriptions :admin_comment)
-                ;
-                ;            )
 
-                cols (if is_admin_endpoint
-
-                            [:*]
-                            [:id :position :labels :descriptions :admin_comment]
-
-                            )
-
-                ;; FIXME
+                cols (if is_admin_endpoint [:*] [:id :position :labels :descriptions :admin_comment])
                 sql-query (-> (sql/update :vocabularies)
-                              (sql/set dwid)                ;; TODO: convert
+                              (sql/set dwid)
                               (sql/where [:= :id id]))
                 sql-query (apply sql/returning sql-query cols)
                 sql-query (-> sql-query
                               sql-format)
 
-                p (println ">o> sql-query" sql-query)
-
                 upd-res (jdbc/execute-one! (get-ds) sql-query)
-                p (println ">o> upd-res1 ====> " upd-res)
-                ;upd-res (replace-java-hashmaps upd-res)
                 upd-res (sd/transform_ml_map upd-res)
-                p (println ">o> upd-res2" upd-res)]
+                ]
 
             (if upd-res
               (do
@@ -125,7 +107,7 @@
                   )
 
         ;query (apply sql/returning query [:id :description :first_name]) ;;works
-        query (apply sql/returning query cols) ;;works
+        query (apply sql/returning query cols)              ;;works
 
         query (sql-format query)
         p (println ">o> query" query)
@@ -322,7 +304,6 @@
                                    :required true}]}
 
            :parameters {:body schema_update-vocabulary}
-           ;:responses {200 {:body schema_export-vocabulary}
            :responses {200 {:body schema_export-vocabulary-admin}
                        400 {:body s/Any}
                        404 {:description "Not found."
