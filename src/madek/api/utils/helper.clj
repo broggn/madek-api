@@ -69,8 +69,8 @@
         ;p (println "\nquery ok1" (class (to-uuid "123e4567-e89b-12d3-a456-426614174000" :user_id)))
         ;
 
-        k "123e4567-e89b-12d3-a456-426614174000" ;ok
-        k "123e" ;error - return val
+        k "123e4567-e89b-12d3-a456-426614174000"            ;ok
+        k "123e"                                            ;error - return val
         ;k 123                                               ;ok - return val
 
         p (println "\nquery result=" (to-uuid k))
@@ -115,7 +115,7 @@
   (-> map
       (update :external_uris #(if (nil? %)
                                 [:raw "'{}'"]
-                                (convert-to-raw-set %))) ;;rename to convert-to-raw-set
+                                (convert-to-raw-set %)))    ;;rename to convert-to-raw-set
 
       (update :creator_id #(if (contains? map :creator_id) (to-uuid % :creator_id)))
 
@@ -137,20 +137,36 @@
 ; [madek.api.utils.helper :refer [convert-map-if-exist]]
 (defn convert-map-if-exist [m]
   (-> m
+      ;; uuid
       (modify-if-exists :id #(if (contains? m :id) (to-uuid % :id)))
-      (modify-if-exists :settings #(if (nil? %) [:raw "'{}'"] (convert-to-raw-set %)))
-      (modify-if-exists :external_uris #(if (nil? %) [:raw "'{}'"] (convert-to-raw-set %)))
-
+      (modify-if-exists :media_entry_default_license_id #(if (contains? m :id) (to-uuid %)))
+      (modify-if-exists :edit_meta_data_power_users_group_id #(if (contains? m :edit_meta_data_power_users_group_id) (to-uuid %)))
       (modify-if-exists :creator_id #(if (contains? m :creator_id) (to-uuid %)))
       (modify-if-exists :person_id #(if (contains? m :person_id) (to-uuid %)))
       (modify-if-exists :user_id #(if (contains? m :user_id) (to-uuid %)))
       (modify-if-exists :accepted_usage_terms_id #(if (contains? m :accepted_usage_terms_id) (to-uuid %)))
 
-      (modify-if-exists :allowed_people_subtypes #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))))
-;(modify-if-exists :allowed_people_subtypes #(if (nil? %) [:raw "'[]'"] (convert-to-raw-array %)))))
+      ;; jsonb / character varying
+      (modify-if-exists :settings #(if (nil? %) [:raw "'{}'"] (convert-to-raw-set %)))
+      (modify-if-exists :external_uris #(if (nil? %) [:raw "'{}'"] (convert-to-raw-set %)))
+      (modify-if-exists :sitemap #(if (nil? %) [:raw "'{}'"] (convert-to-raw-set %)))
+      (modify-if-exists :available_locales #(if (nil? %) [:raw "'{}'"] (convert-to-raw-set %)))
+
+      ;; text[]
+      (modify-if-exists :contexts_for_entry_extra #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))
+      (modify-if-exists :contexts_for_list_details #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))
+      (modify-if-exists :contexts_for_entry_validation #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))
+      (modify-if-exists :contexts_for_dynamic_filters #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))
+      (modify-if-exists :contexts_for_collection_edit #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))
+      (modify-if-exists :contexts_for_collection_extra #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))
+      (modify-if-exists :contexts_for_entry_edit #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))
+      (modify-if-exists :contexts_for_context_keys #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))
+      (modify-if-exists :catalog_context_keys #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))
+      (modify-if-exists :copyright_notice_templates #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))
+      (modify-if-exists :allowed_people_subtypes #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))
+      ))
 
 (comment
-
   ;[honey.sql :refer [format] :rename {format sql-format}]
   ;[leihs.core.db :as db]
   ;[next.jdbc :as jdbc]
@@ -165,15 +181,19 @@
 
 ; [madek.api.utils.helper :refer [cast-to-hstore]]
 (defn cast-to-hstore [data]
-  (let [keys [:labels :descriptions :contents :hints :documentation_urls]]
+  (let [keys [:labels :descriptions :contents :hints :documentation_urls
+              :site_titles :brand_texts :welcome_titles :welcome_texts
+              :featured_set_titles :featured_set_subtitles :catalog_subtitles :catalog_titles
+              :about_pages :support_urls :provenance_notices
+              ]]
     (reduce (fn [acc key]
               (if (contains? acc key)
                 (let [field-value (get acc key)
                       transformed-value (to-hstore field-value)] ; Assume to-hstore is defined elsewhere
                   (assoc acc key transformed-value))
                 acc))
-            data
-            keys)))
+      data
+      keys)))
 
 (defn array-to-map [arr]
   (zipmap arr (range (count arr))))
@@ -196,8 +216,8 @@
 (defn replace-java-hashmaps [m]
   (reduce-kv (fn [acc k v]
                (assoc acc k (replace-java-hashmap v)))
-             {}
-             m))
+    {}
+    m))
 
 
 

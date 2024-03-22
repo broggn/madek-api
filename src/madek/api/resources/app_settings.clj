@@ -48,12 +48,28 @@
   "Updates app_settings and returns true if that happened and
   false otherwise"
   [data ds]
-  (-> (sql/update :app_settings)
-      (sql/set (-> data convert-sequential-values-to-sql-arrays))
-      (sql-format :inline false)
-      (->> (jdbc/execute-one! ds))
-      :next.jdbc/update-count
-      (= 1)))
+
+
+  (let [
+
+        data (convert-map-if-exist (cast-to-hstore data))
+
+        ;p (println ">o> data=" data)
+        p (println ">o> data.edit_meta..=" (:edit_meta_data_power_users_group_id data))
+
+        res (-> (sql/update :app_settings)
+
+                ;(sql/set (-> data convert-sequential-values-to-sql-arrays))
+                (sql/set data)
+
+                (sql-format :inline false)
+                (->> (jdbc/execute-one! ds))
+                :next.jdbc/update-count
+                (= 1))
+
+        ] res)
+
+  )
 
 (defn handle_update-app-settings
   [{{body :body} :parameters ds :tx :as req}]
@@ -62,7 +78,7 @@
       (if (update-app-settings body ds)
         (sd/response_ok (transform_ml (db-get-app-settings ds)))
         (sd/response_failed "Could not update app-settings." 406)))
-    (catch Exception ex (sd/response_exception ex))))
+    (catch Exception ex (sd/parsed_response_exception ex))))
 
 ;;; schema ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -86,7 +102,7 @@
    (s/optional-key :copyright_notice_default_text) (s/maybe s/Str)
    (s/optional-key :copyright_notice_templates) [s/Str]
    (s/optional-key :default_locale) (s/maybe s/Str)
-   (s/optional-key :edit_meta_data_power_users_group_id) (s/maybe s/Str)
+   (s/optional-key :edit_meta_data_power_users_group_id) (s/maybe s/Uuid)
    (s/optional-key :featured_set_subtitles) sd/schema_ml_list
    (s/optional-key :featured_set_titles) sd/schema_ml_list
    (s/optional-key :ignored_keyword_keys_for_browsing) (s/maybe s/Str)
@@ -127,7 +143,7 @@
    (s/optional-key :copyright_notice_templates) [s/Str]
    (s/optional-key :created_at) s/Any
    (s/optional-key :default_locale) (s/maybe s/Str)
-   (s/optional-key :edit_meta_data_power_users_group_id) (s/maybe s/Str)
+   (s/optional-key :edit_meta_data_power_users_group_id) (s/maybe s/Uuid)
    (s/optional-key :featured_set_id) (s/maybe s/Uuid)
    (s/optional-key :featured_set_subtitles) (s/maybe sd/schema_ml_list)
    (s/optional-key :featured_set_titles) (s/maybe sd/schema_ml_list)
@@ -167,13 +183,18 @@
       :put {:summary (sd/sum_adm "Update App Settings.")
             :handler handle_update-app-settings
             :middleware [wrap-authorize-admin!]
+
+            :description (slurp "./md/admin-app-settings.md")
+
             :swagger {:produces "application/json"
                       :consumes "application/json"}
             :content-type "application/json"
             :coercion reitit.coercion.schema/coercion
             :parameters {:body schema_update-app-settings}
             :responses {200 {:body schema_export-app-settings}
-                        406 {:body s/Any}}}}]]])
+                        403 {:message  "Only administrators are allowed to access this resource."}
+                        404 {:message  "<Groups|Meta-Keys> entry does not exist"}
+                        }}}]]])
 
 (def user-routes
   [["/app-settings"
