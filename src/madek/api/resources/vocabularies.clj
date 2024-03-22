@@ -29,7 +29,7 @@
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
 
    [madek.api.utils.helper :refer [cast-to-hstore]]
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist f replace-java-hashmaps t v]]
+   ;[madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist f replace-java-hashmaps t v]]
    [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
 
    [next.jdbc :as jdbc]
@@ -72,13 +72,34 @@
             p (println ">o> old-data" old-data)]
 
         (if old-data
-          (let [sql-query (-> (sql/update :vocabularies)
+          (let [
+                is_admin_endpoint (str/includes? (-> req :uri) "/admin/")
+                ;returning (if is_admin_endpoint
+                ;
+                ;            (sql/returning :*)
+                ;            (sql/returning :id :position :labels :descriptions :admin_comment)
+                ;
+                ;            )
+
+                cols (if is_admin_endpoint
+
+                            [:*]
+                            [:id :position :labels :descriptions :admin_comment]
+
+                            )
+
+                ;; FIXME
+                sql-query (-> (sql/update :vocabularies)
                               (sql/set dwid)                ;; TODO: convert
-                              (sql/where [:= :id id])
-                              (sql/returning :id :position :labels :descriptions :admin_comment)
+                              (sql/where [:= :id id]))
+                sql-query (apply sql/returning sql-query cols)
+                sql-query (-> sql-query
                               sql-format)
+
+                p (println ">o> sql-query" sql-query)
+
                 upd-res (jdbc/execute-one! (get-ds) sql-query)
-                p (println ">o> upd-res1" upd-res)
+                p (println ">o> upd-res1 ====> " upd-res)
                 ;upd-res (replace-java-hashmaps upd-res)
                 upd-res (sd/transform_ml_map upd-res)
                 p (println ">o> upd-res2" upd-res)]
@@ -92,6 +113,35 @@
     (catch Exception ex (sd/response_exception ex))))
 
 
+(comment
+  (let [
+        data {:first_name "foo" :last_name "bar"}
+
+        ;cols [:id :description]
+        cols [:*]
+
+        query (-> (sql/insert-into :people)
+                  (sql/values [data])
+                  )
+
+        ;query (apply sql/returning query [:id :description :first_name]) ;;works
+        query (apply sql/returning query cols) ;;works
+
+        query (sql-format query)
+        p (println ">o> query" query)
+
+        db-result (jdbc/execute-one! (get-ds) query)
+
+
+        p (println ">o> query" query)
+        p (println ">o> db-result" db-result)
+
+        ]
+    db-result)
+  )
+
+
+
 (defn handle_delete-vocab [req]
   (try
     (catcher/with-logging {}
@@ -99,10 +149,12 @@
         (if-let [old-data (sd/query-eq-find-one :vocabularies :id id)]
           (let [sql-query (-> (sql/delete-from :vocabularies)
                               (sql/where [:= :id id])
+                              (sql/returning :*)
                               sql-format)
                 db-result (jdbc/execute-one! (get-ds) sql-query)]
             ;; rest of your code
-            (if (= 1 (::jdbc/update-count db-result))
+            ;(if (= 1 (::jdbc/update-count db-result))
+            (if db-result
               (sd/response_ok (sd/transform_ml_map old-data))
               (sd/response_failed "Could not delete vocabulary." 406)))
           (sd/response_not_found "No such vocabulary."))))
@@ -223,7 +275,7 @@
             :coercion reitit.coercion.schema/coercion
             :parameters {:body schema_import-vocabulary}
             :responses {200 {:body schema_export-vocabulary-admin}
-            ;:responses {200 {:body schema_export-vocabulary}
+                        ;:responses {200 {:body schema_export-vocabulary}
 
                         406 {:description "Creation failed."
                              :schema s/Str
@@ -270,7 +322,8 @@
                                    :required true}]}
 
            :parameters {:body schema_update-vocabulary}
-           :responses {200 {:body schema_export-vocabulary}
+           ;:responses {200 {:body schema_export-vocabulary}
+           :responses {200 {:body schema_export-vocabulary-admin}
                        400 {:body s/Any}
                        404 {:description "Not found."
                             :schema s/Str
@@ -287,7 +340,8 @@
               :accept "application/json"
               :coercion reitit.coercion.schema/coercion
               :parameters {:path {:id s/Str}}
-              :responses {200 {:body schema_export-vocabulary}
+              ;:responses {200 {:body schema_export-vocabulary}
+              :responses {200 {:body schema_export-vocabulary-admin}
 
                           403 {:description "Forbidden."
                                :schema s/Str
