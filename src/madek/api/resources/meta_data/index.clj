@@ -1,25 +1,16 @@
 (ns madek.api.resources.meta-data.index
   (:require
-   ;; all needed imports
-   [honey.sql :refer [format] :rename {format sql-format}]
-   [honey.sql.helpers :as sql]
-    ;[clojure.java.jdbc :as jdbc]
+   [clojure.java.jdbc :as jdbc]
     ;[clojure.tools.logging :as logging]
    [logbug.catcher :as catcher]
    [logbug.debug :as debug]
-    ;[madek.api.pagination :as pagination]
-
-;[madek.api.authorization :as authorization]
+    ;[madek.api.authorization :as authorization]
    [madek.api.constants :as constants]
-   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
-
+    ;[madek.api.pagination :as pagination]
    [madek.api.resources.vocabularies.permissions :as permissions]
-
-   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-
-   ;[leihs.core.db :as db]
-   [next.jdbc :as jdbc]))
+   [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+   [madek.api.utils.sql :as sql]))
 
 ; TODO error if user-id is undefined (public)
 (defn md-vocab-where-clause
@@ -44,12 +35,12 @@
                   :meta_data.other_media_entry_id
                   :meta_data.meta_data_updated_at)
       (sql/from :meta_data)
-      (sql/where [:in :meta_data.type
-                  constants/SUPPORTED_META_DATA_TYPES])
+      (sql/merge-where [:in :meta_data.type
+                        constants/SUPPORTED_META_DATA_TYPES])
       ; TODO use in other md access
-      (sql/join :meta_keys [:= :meta_data.meta_key_id :meta_keys.id])
-      (sql/join :vocabularies [:= :meta_keys.vocabulary_id :vocabularies.id])
-      (sql/where (md-vocab-where-clause user-id))
+      (sql/merge-join :meta_keys [:= :meta_data.meta_key_id :meta_keys.id])
+      (sql/merge-join :vocabularies [:= :meta_keys.vocabulary_id :vocabularies.id])
+      (sql/merge-where (md-vocab-where-clause user-id))
 
       (sql/order-by [:vocabularies.position :asc]
                     [:meta_keys.position :asc]
@@ -57,11 +48,11 @@
 
 (defn- meta-data-query-for-media-entry [media-entry-id user-id]
   (-> (base-query user-id)
-      (sql/where [:= :meta_data.media_entry_id media-entry-id])))
+      (sql/merge-where [:= :meta_data.media_entry_id media-entry-id])))
 
 (defn- meta-data-query-for-collection [collection-id user-id]
   (-> (base-query user-id)
-      (sql/where [:= :meta_data.collection_id collection-id])))
+      (sql/merge-where [:= :meta_data.collection_id collection-id])))
 
 ; TODO test with json
 ; TODO add query param meta-keys as json list of strings
@@ -72,25 +63,25 @@
         String (throw (ex-info (str "The value of the meta-keys parameter"
                                     " must be a json encoded list of strings.")
                                {:status 422})))
-      (sql/where query [:in :meta_key_id meta-keys]))
+      (sql/merge-where query [:in :meta_key_id meta-keys]))
     query))
 
 (defn build-query [request base-query]
   (let [query (-> base-query
                   (sd/build-query-ts-after (-> request :parameters :query) :updated_after "meta_data.meta_data_updated_at")
                   (filter-meta-data-by-meta-key-ids request)
-                  sql-format)]
+                  sql/format)]
     ;(logging/info "MD:build-query:\n " query)
     query))
 
 (defn get-media-entry-meta-data [id user-id]
   (->> (meta-data-query-for-media-entry id user-id)
        (build-query nil)
-       (jdbc/execute! (get-ds))))
+       (jdbc/query (get-ds))))
 
 (defn get-collection-meta-data [id user-id]
-  (let [mdq (sql-format (meta-data-query-for-collection id user-id))
-        result (jdbc/execute! (get-ds) mdq)]
+  (let [mdq (sql/format (meta-data-query-for-collection id user-id))
+        result (jdbc/query (get-ds) mdq)]
     ;(logging/info "get-collection-meta-data:"
     ;              "\n col id: " id
     ;              "\n user id: " user-id
@@ -111,7 +102,7 @@
                                     "MediaEntry" (meta-data-query-for-media-entry id user-id)
                                     "Collection" (meta-data-query-for-collection id user-id)))]
         ;(logging/info "get-meta-data" "\n db-query \n" db-query)
-        (jdbc/execute! (get-ds) db-query)))))
+        (jdbc/query (get-ds) db-query)))))
 
 (defn get-index [request]
   ;(logging/info "get-index" "\nmedia-resource\n" (:media-resource request))

@@ -6,11 +6,6 @@
    [madek.api.authorization :as authorization]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
-
-   [madek.api.utils.helper :refer [mslurp]]
-
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
-
    [madek.api.resources.users.common :as users-common
     :refer [wrap-find-user find-user-by-uid]]
    [madek.api.resources.users.get :as get-user]
@@ -43,7 +38,6 @@
 
 (def schema
   {(s/optional-key :accepted_usage_terms_id) (s/maybe s/Uuid) ; TODO
-
    (s/optional-key :autocomplete) s/Str
    (s/optional-key :email) s/Str
    (s/optional-key :first_name) s/Str
@@ -53,17 +47,12 @@
    (s/optional-key :notes) (s/maybe s/Str) ; TODO
    (s/optional-key :searchable) s/Str})
 
-
 (def route
-  {:summary (sd/sum_adm (f (t "Update user with id")))
-   ;:description "Patch a user with id. Returns 404, if no such user exists."
+  {:summary (sd/sum_adm "Update user with id")
+   :description "Patch a user with id. Returns 404, if no such user exists."
    :swagger {:consumes "application/json"
              :produces "application/json"}
    :coercion reitit.coercion.schema/coercion
-
-   :description (mslurp "./md/users-patch.md")
-
-
    :content-type "application/json"
    :accept "application/json"
    :parameters {:path {:id s/Str}
@@ -71,10 +60,6 @@
    :handler update-user-handler
    :middleware [wrap-authorize-admin!
                 (wrap-find-user :id)]
-   :responses {
-               200 {:body get-user/schema}
+   :responses {200 {:body get-user/schema}
+               404 {:body s/Any}}})
 
-               404 {:description "Not Found."
-                    :schema s/Str
-                    :examples {"application/json" {:message "No such user."}}}
-               }})

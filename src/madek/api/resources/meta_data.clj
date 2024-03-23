@@ -1,25 +1,15 @@
 (ns madek.api.resources.meta-data
   (:require [cheshire.core :as cheshire]
-   ;[clojure.java.jdbc :as jdbc]
+            [clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as logging]
-            [honey.sql :refer [format] :rename {format sql-format}]
-            [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
-   ;[madek.api.utils.rdbms :as rdbms]
-   ;[madek.api.utils.sql :as sql]
-            [madek.api.db.core :refer [get-ds]]
             [madek.api.resources.meta-data.index :as meta-data.index]
-
-;; all needed imports
             [madek.api.resources.meta-data.meta-datum :as meta-datum]
-
-   ;; all needed imports
             [madek.api.resources.shared :as sd]
-   ;[leihs.core.db :as db]
-            [next.jdbc :as jdbc]
+            [madek.api.utils.rdbms :as rdbms]
+            [madek.api.utils.sql :as sql]
             [reitit.coercion.schema]
             [reitit.coercion.spec]
-
             [schema.core :as s]))
 
 (defn- col-key-for-mr-type [mr]
@@ -37,7 +27,7 @@
   (let [md-sql (-> (sql/where [:and
                                [:= :meta_key_id mk-id]
                                [:= (col-key-for-mr-type mr) (str (-> mr :id))]])
-                   sql-format
+                   sql/format
                    sd/hsql-upd-clause-format)]
     md-sql))
 
@@ -46,7 +36,7 @@
                                [:= :meta_key_id mk-id]
                                [:= :type md-type]
                                [:= (col-key-for-mr-type mr) (str (-> mr :id))]])
-                   sql-format
+                   sql/format
                    sd/hsql-upd-clause-format)]
     md-sql))
 
@@ -60,7 +50,7 @@
 (defn db-get-meta-data
 
   ([mr mk-id md-type]
-   (db-get-meta-data mr mk-id md-type (get-ds)))
+   (db-get-meta-data mr mk-id md-type (rdbms/get-ds)))
 
   ([mr mk-id md-type db]
    (let [mr-id (str (-> mr :id))
@@ -70,8 +60,8 @@
                       (sql/where [:and
                                   [:= :meta_key_id mk-id]
                                   [:= mr-key mr-id]])
-                      sql-format)
-         db-result (jdbc/execute-one! db db-query)
+                      sql/format)
+         db-result (first (jdbc/query db db-query))
          db-type (:type db-result)]
 
      (if (or (= nil md-type) (= md-type db-type))
@@ -81,30 +71,23 @@
 (defn- db-create-meta-data
   ([db meta-data]
    (logging/info "db-create-meta-data: " meta-data)
-   (let [;result (first (jdbc/insert! db :meta_data meta-data))
-
-         sql-query (-> (sql/insert-into :meta_data)
-                       (sql/values [meta-data])
-                       sql-format)
-         result (jdbc/execute-one! db sql-query)]
-
-     (if result
-       result
-       nil)))
+   (if-let [result (first (jdbc/insert! db :meta_data meta-data))]
+     result
+     nil))
 
   ([db mr meta-key-id md-type user-id]
-    ;(logging/info "db-create-meta-data: " "MK-ID: " meta-key-id "Type:" md-type "User: " user-id)
+   ;(logging/info "db-create-meta-data: " "MK-ID: " meta-key-id "Type:" md-type "User: " user-id)
    (db-create-meta-data db (fabric-meta-data mr meta-key-id md-type user-id)))
 
   ([db mr meta-key-id md-type user-id meta-data]
-    ;(logging/info "db-create-meta-data: " "MK-ID: " meta-key-id "Type:" md-type "User: " user-id "MD: " meta-data)
+   ;(logging/info "db-create-meta-data: " "MK-ID: " meta-key-id "Type:" md-type "User: " user-id "MD: " meta-data)
    (let [md (merge (fabric-meta-data mr meta-key-id md-type user-id) meta-data)]
-      ;(logging/info "db-create-meta-data: "
-      ;              "MK-ID: " meta-key-id
-      ;              "Type:" md-type
-      ;              "User: " user-id
-      ;              "MD: " meta-data
-      ;              "MD-new: " md)
+     ;(logging/info "db-create-meta-data: "
+     ;              "MK-ID: " meta-key-id
+     ;              "Type:" md-type
+     ;              "User: " user-id
+     ;              "MD: " meta-data
+     ;              "MD-new: " md)
      (db-create-meta-data db md))))
 
 (defn- handle-delete-meta-data [req]
@@ -112,16 +95,8 @@
         meta-data (-> req :meta-data)
         meta-key-id (:meta_key_id meta-data)
         del-clause (sql-cls-upd-meta-data mr meta-key-id)
-
-          ;    del-result (jdbc/delete! (get-ds) :meta_data del-clause)]
-          ;(if (= 1 (first del-result))
-
-        sql-query (-> (sql/delete-from :meta_data)
-                      (sql/where del-clause)
-                      sql-format)
-        del-result (jdbc/execute-one! (get-ds) sql-query)]
-    (if (= 1 (::jdbc/update-count del-result))
-
+        del-result (jdbc/delete! (rdbms/get-ds) :meta_data del-clause)]
+    (if (= 1 (first del-result))
       (sd/response_ok meta-data)
       (sd/response_failed "Could not delete meta_data." 406))))
 
@@ -130,18 +105,10 @@
   (try
     (catcher/with-logging {}
       (let [mr (-> req :media-resource)
-              ;upd-data2 (assoc upd-data (col-key-for-mr-type mr) (:id mr))
+            ;upd-data2 (assoc upd-data (col-key-for-mr-type mr) (:id mr))
             meta-key-id (-> req :parameters :path :meta_key_id)
             upd-clause (sql-cls-upd-meta-data-typed-id mr meta-key-id md-type)
-
-              ;upd-result (jdbc/update! (get-ds) :meta_data upd-data upd-clause)
-
-            sql-query (-> (sql/update :meta_data)
-                          (sql/set upd-data)
-                          (sql/where upd-clause)
-                          sql-format)
-            upd-result (jdbc/execute-one! (get-ds) sql-query)
-
+            upd-result (jdbc/update! (rdbms/get-ds) :meta_data upd-data upd-clause)
             result-data (db-get-meta-data mr meta-key-id md-type)]
 
         (sd/logwrite req (str "handle_update-meta-data-text-base:"
@@ -152,12 +119,12 @@
                               " upd-clause: " upd-clause
                               " upd-result: " upd-result))
 
-        (if (= 1 (::jdbc/update-count upd-result))
+        (if (= 1 (first upd-result))
           (sd/response_ok result-data)
           (sd/response_failed {:message "Failed to update meta data text base"} 406))))
     (catch Exception ex (sd/response_exception ex))))
 
-  ; TODO tests, response coercion
+; TODO tests, response coercion
 (defn handle_create-meta-data-text
   [req]
   (try
@@ -168,7 +135,7 @@
             text-data (-> req :parameters :body :string)
             md-type "MetaDatum::Text"
             mdnew {:string text-data}
-            ins-result (db-create-meta-data (get-ds) mr meta-key-id md-type user-id mdnew)]
+            ins-result (db-create-meta-data (rdbms/get-ds) mr meta-key-id md-type user-id mdnew)]
 
         (sd/logwrite req (str "handle_create-meta-data-text"
                               " mr-id: " (:id mr)
@@ -189,7 +156,7 @@
     (logging/info "handle_update-meta-data-text" "\nupd-data\n" upd-data)
     (handle_update-meta-data-text-base req md-type upd-data)))
 
-  ; TODO tests, response coercion
+; TODO tests, response coercion
 (defn handle_create-meta-data-text-date
   [req]
   (try
@@ -200,7 +167,7 @@
             text-data (-> req :parameters :body :string)
             md-type "MetaDatum::TextDate"
             mdnew {:string text-data}
-            ins-result (db-create-meta-data (get-ds) mr meta-key-id md-type user-id mdnew)]
+            ins-result (db-create-meta-data (rdbms/get-ds) mr meta-key-id md-type user-id mdnew)]
 
         (sd/logwrite req (str "handle_create-meta-data-text-date:"
                               " mr-id: " (:id mr)
@@ -216,12 +183,12 @@
   [req]
   (let [text-data (-> req :parameters :body :string)
         upd-data {:string text-data}
-          ; TODO multi line ? or other params
+        ; TODO multi line ? or other params
         md-type "MetaDatum::TextDate"]
     (logging/info "handle_update-meta-data-text-date" "\nupd-data\n" upd-data)
     (handle_update-meta-data-text-base req md-type upd-data)))
 
-  ; TODO tests, response coercion
+; TODO tests, response coercion
 (defn handle_create-meta-data-json
   [req]
   (try
@@ -232,9 +199,9 @@
             json-data (-> req :parameters :body :json)
             json-parsed (cheshire/parse-string json-data)
             md-type "MetaDatum::JSON"
-              ;mdnew {:json json-parsed}
+            ;mdnew {:json json-parsed}
             mdnew {:json (with-meta json-parsed {:pgtype "jsonb"})}
-            ins-result (db-create-meta-data (get-ds) mr meta-key-id md-type user-id mdnew)]
+            ins-result (db-create-meta-data (rdbms/get-ds) mr meta-key-id md-type user-id mdnew)]
 
         (sd/logwrite req (str "handle_create-meta-data-json:"
                               " mr-id: " (:id mr)
@@ -250,7 +217,7 @@
   [req]
   (let [text-data (-> req :parameters :body :json)
         json-parsed (cheshire/parse-string text-data)
-          ;upd-data {:json json-parsed}
+        ;upd-data {:json json-parsed}
         upd-data {:json (with-meta json-parsed {:pgtype "jsonb"})}
         md-type "MetaDatum::JSON"]
     (logging/info "handle_update-meta-data-json"
@@ -262,14 +229,7 @@
   (let [data {:meta_datum_id md-id
               :keyword_id kw-id
               :created_by_id user-id}
-
-          ;result (jdbc/insert! db :meta_data_keywords data)]
-
-        sql-query (-> (sql/insert-into :meta_data_keywords)
-                      (sql/values [data])
-                      sql-format)
-        result (jdbc/execute! db sql-query)]
-
+        result (jdbc/insert! db :meta_data_keywords data)]
     (logging/info "db-create-meta-data-keyword"
                   "\nkw-data\n" data
                   "\nresult\n" result)
@@ -278,14 +238,7 @@
 (defn- db-delete-meta-data-keyword
   [db md-id kw-id]
   (let [query ["meta_datum_id = ? AND keyword_id = ?" md-id kw-id]
-
-          ;result (jdbc/delete! db :meta_data_keywords query)]
-
-        sql-query (-> (sql/delete-from :meta_data_keywords)
-                      (sql/where query)
-                      sql-format)
-        result (jdbc/execute! db sql-query)]
-
+        result (jdbc/delete! db :meta_data_keywords query)]
     (logging/info "db-delete-meta-data-keyword"
                   "\nmd-id\n" md-id
                   "\nkw-id\n" kw-id
@@ -302,15 +255,15 @@
 
   (try
     (catcher/with-logging {}
-      (jdbc/with-transaction [tx (get-ds)]
+      (jdbc/with-db-transaction [tx (rdbms/get-ds)]
         (if-let [meta-data (db-get-meta-data mr meta-key-id nil tx)]
-            ; already has meta-data
+        ; already has meta-data
           (if-let [result (db-create-meta-data-keyword tx (:id meta-data) kw-id user-id)]
             {:meta_data meta-data
              MD_KEY_KW_DATA result}
             nil)
 
-            ; create meta-data and md-kw
+        ; create meta-data and md-kw
           (if-let [mdins-result (db-create-meta-data tx mr meta-key-id MD_TYPE_KEYWORDS user-id)]
             (if-let [ip-result (db-create-meta-data-keyword tx (-> mdins-result :id str) kw-id user-id)]
               {:meta_data mdins-result
@@ -321,7 +274,7 @@
       (logging/error "Could not create md keyword" _)
       nil)))
 
-  ; TODO tests, response coercion
+; TODO tests, response coercion
 (defn handle_create-meta-data-keyword
   [req]
   (try
@@ -332,9 +285,9 @@
             user-id (-> req :authenticated-entity :id str)]
 
         (if-let [result (create_md_and_keyword mr meta-key-id kw-id user-id)]
-            ;((sd/logwrite req  (str "handle_create-meta-data-keyword:" "mr-id: " (:id mr) "kw-id: " kw-id "result: " result))
+          ;((sd/logwrite req  (str "handle_create-meta-data-keyword:" "mr-id: " (:id mr) "kw-id: " kw-id "result: " result))
           (sd/response_ok result)
-            ;)
+          ;)
           (if-let [retryresult (create_md_and_keyword mr meta-key-id kw-id user-id)]
             ((sd/logwrite req (str "handle_create-meta-data-keyword:" "mr-id: " (:id mr) "kw-id: " kw-id "result: " retryresult))
              (sd/response_ok retryresult))
@@ -348,12 +301,12 @@
                   (sql/merge-where [:= :meta_datum_id md-id])
                   (sql/merge-join :keywords [:= :keywords.id :meta_data_keywords.keyword_id])
                   (sql/order-by [:keywords.term :asc])
-                  sql-format)]
+                  sql/format)]
     (logging/info "db-get-meta-data-keywords:\n" query)
-    (let [result (jdbc/query (get-ds) query)]
+    (let [result (jdbc/query (rdbms/get-ds) query)]
       (logging/info "db-get-meta-data-keywords:\n" result)))
 
-  ; TODO only some results
+; TODO only some results
 (defn handle_get-meta-data-keywords
   [req]
   (let [mr (-> req :media-resource)
@@ -380,7 +333,7 @@
             kw-id (-> req :parameters :path :keyword_id)
             md (db-get-meta-data mr meta-key-id MD_TYPE_KEYWORDS)
             md-id (-> md :id)
-            delete-result (db-delete-meta-data-keyword (get-ds) md-id kw-id)
+            delete-result (db-delete-meta-data-keyword (rdbms/get-ds) md-id kw-id)
             mdr (db-get-meta-data-keywords md-id)]
 
         (sd/logwrite req (str "handle_delete-meta-data-keyword:"
@@ -401,15 +354,8 @@
   (let [data {:meta_datum_id md-id
               :person_id person-id
               :created_by_id user-id}
-
-          ;result (jdbc/insert! db :meta_data_people data)]
-
-        sql-query (-> (sql/insert-into :meta_data_people)
-                      (sql/values [data])
-                      sql-format)
-        result (jdbc/execute! db sql-query)]
-
-;(logging/info "db-create-meta-data-people" "\npeople-data\n" data "\nresult\n" result)
+        result (jdbc/insert! db :meta_data_people data)]
+        ;(logging/info "db-create-meta-data-people" "\npeople-data\n" data "\nresult\n" result)
     result))
 
 (def MD_TYPE_PEOPLE "MetaDatum::People")
@@ -421,15 +367,15 @@
   [mr meta-key-id person-id user-id]
   (try
     (catcher/with-logging {}
-      (jdbc/with-transaction [tx (get-ds)]
+      (jdbc/with-db-transaction [tx (rdbms/get-ds)]
         (if-let [meta-data (db-get-meta-data mr meta-key-id nil tx)]
-            ; already has meta-data
+        ; already has meta-data
           (if-let [result (db-create-meta-data-people tx (:id meta-data) person-id user-id)]
             {:meta_data meta-data
              MD_KEY_PEOPLE_DATA result}
             nil)
 
-            ; create meta-data and md-people
+        ; create meta-data and md-people
           (if-let [mdins-result (db-create-meta-data tx mr meta-key-id MD_TYPE_PEOPLE user-id)]
             (if-let [ip-result (db-create-meta-data-people tx (-> mdins-result :id str) person-id user-id)]
               {:meta_data mdins-result
@@ -440,7 +386,7 @@
       (logging/error "Could not create md people" _)
       nil)))
 
-  ; TODO tests, response coercion
+; TODO tests, response coercion
 (defn handle_create-meta-data-people
   [req]
   (try
@@ -451,19 +397,19 @@
             user-id (-> req :authenticated-entity :id str)]
 
         (if-let [result (create_md_and_people mr meta-key-id person-id user-id)]
+          ;((sd/logwrite req (str "handle_create-meta-data-people:"
+          ;                       "mr-id: " (:id mr)
+          ;                       "meta-key: " meta-key-id
+          ;                       "person-id:" person-id
+          ;                       "result: " result))
+          (sd/response_ok result);)
+          (if-let [retryresult (create_md_and_people mr meta-key-id person-id user-id)]
             ;((sd/logwrite req (str "handle_create-meta-data-people:"
             ;                       "mr-id: " (:id mr)
             ;                       "meta-key: " meta-key-id
             ;                       "person-id:" person-id
-            ;                       "result: " result))
-          (sd/response_ok result) ;)
-          (if-let [retryresult (create_md_and_people mr meta-key-id person-id user-id)]
-              ;((sd/logwrite req (str "handle_create-meta-data-people:"
-              ;                       "mr-id: " (:id mr)
-              ;                       "meta-key: " meta-key-id
-              ;                       "person-id:" person-id
-              ;                       "result: " retryresult))
-            (sd/response_ok retryresult) ;)
+            ;                       "result: " retryresult))
+            (sd/response_ok retryresult);)
             (sd/response_failed "Could not create md people" 406)))))
     (catch Exception ex (sd/response_exception ex))))
 
@@ -471,7 +417,7 @@
   [md-id]
   (sd/query-eq-find-all :meta_data_people :meta_datum_id md-id))
 
-  ; TODO only some results
+; TODO only some results
 (defn handle_get-meta-data-people
   [req]
   (let [mr (-> req :media-resource)
@@ -498,22 +444,14 @@
             person-id (-> req :parameters :path :person_id)
             md (db-get-meta-data mr meta-key-id MD_TYPE_PEOPLE)
             md-id (-> md :id)
-
-            sql-query (-> (sql/delete-from :meta_data_people)
-                          (sql/where [:and
-                                      [:= :meta_datum_id md-id]
-                                      [:= :person_id person-id]])
-                          sql-format)
-            del-result (jdbc/execute! (get-ds) sql-query)]
-
-              ;mdr-clause ["meta_datum_id = ? AND person_id = ?" md-id person-id]
-              ;del-result (jdbc/delete! (get-ds) :meta_data_people mdr-clause)]
+            mdr-clause ["meta_datum_id = ? AND person_id = ?" md-id person-id]
+            del-result (jdbc/delete! (rdbms/get-ds) :meta_data_people mdr-clause)]
 
         (sd/logwrite req (str "handle_delete-meta-data-people:"
                               " mr-id: " (:id mr)
                               " meta-key: " meta-key-id
                               " person-id: " person-id
-                                           ;" upd-cls: " mdr-clause
+                              " upd-cls: " mdr-clause
                               " result: " del-result))
 
         (if (= 1 (first del-result))
@@ -533,29 +471,22 @@
               :person_id person-id
               :role_id role-id
               :position position}
-
-          ;result (jdbc/insert! db :meta_data_roles data)]
-
-        sql-query (-> (sql/insert-into :meta_data_roles)
-                      (sql/values [data])
-                      sql-format)
-        result (jdbc/execute! db sql-query)]
-
+        result (jdbc/insert! db :meta_data_roles data)]
     result))
 
 (defn- create_md_and_role
   [mr meta-key-id role-id person-id position user-id]
   (try
     (catcher/with-logging {}
-      (jdbc/with-transaction [tx (get-ds)]
+      (jdbc/with-db-transaction [tx (rdbms/get-ds)]
         (if-let [meta-data (db-get-meta-data mr meta-key-id nil tx)]
-            ;already has meta-data
+        ;already has meta-data
           (if-let [result (db-create-meta-data-roles tx (:id meta-data) role-id person-id position)]
             {:meta_data meta-data
              MD_KEY_ROLES_DATA result}
             nil)
 
-            ;create meta-data and role
+        ;create meta-data and role
           (if-let [mdins-result (db-create-meta-data tx mr meta-key-id MD_TYPE_ROLES user-id)]
             (if-let [ip-result (db-create-meta-data-roles
                                 tx
@@ -577,7 +508,7 @@
                         " result: " result))
   (sd/response_ok result))
 
-  ; TODO tests, response coercion, error handling
+; TODO tests, response coercion, error handling
 (defn handle_create-meta-data-role
   [req]
   (try
@@ -622,7 +553,7 @@
         (sd/response_ok result))
       (sd/response_failed "Not found" 404))))
 
-  ; TODO del meta-data if md-roles is empty ? sql-trigger ?
+; TODO del meta-data if md-roles is empty ? sql-trigger ?
 (defn handle_delete-meta-data-role
   [req]
   (let [mr (-> req :media-resource)
@@ -631,18 +562,12 @@
         person-id (-> req :parameters :path :person_id)
         md (db-get-meta-data mr meta-key-id MD_TYPE_ROLES)
         md-id (-> md :id)
-          ;mdr (db-get-meta-data-roles md-id)
+        ;mdr (db-get-meta-data-roles md-id)
         del-clause (sd/sql-update-clause
                     "meta_datum_id" md-id
                     "role_id" role-id
                     "person_id" person-id)
-
-          ;del-result (jdbc/delete! (get-ds) :meta_data_roles del-clause)]
-
-        sql-query (-> (sql/delete-from :meta_data_roles)
-                      (sql/where del-clause)
-                      sql-format)
-        del-result (jdbc/execute! (get-ds) sql-query)]
+        del-result (jdbc/delete! (rdbms/get-ds) :meta_data_roles del-clause)]
 
     (sd/logwrite req (str "handle_delete-meta-data-role:"
                           " mr-id: " (:id mr)
@@ -708,15 +633,15 @@
 
     (if-let [result (db-get-meta-data mr meta-key-id nil)]
       (let [extra-result (add-meta-data-extra result)]
-          ;(logging/info "handle_get-meta-key-meta-data"
-          ;              "\nmeta-key-id " meta-key-id
-          ;              "meta-data " extra-result)
+        ;(logging/info "handle_get-meta-key-meta-data"
+        ;              "\nmeta-key-id " meta-key-id
+        ;              "meta-data " extra-result)
         (sd/response_ok extra-result))
 
       (sd/response_failed "No such meta data" 404))))
 
 (defn handle_get-mr-meta-data-with-related [request]
-    ;(logging/info "get-index" "\nmedia-resource\n" (:media-resource request))
+  ;(logging/info "get-index" "\nmedia-resource\n" (:media-resource request))
   (when-let [media-resource (:media-resource request)]
     (when-let [meta-data (meta-data.index/get-meta-data request media-resource)]
       (let [extra (map #(add-meta-data-extra %) meta-data)
@@ -777,7 +702,7 @@
                  :meta-key
                  true)))
 
-  ; TODO meta-key makes error media_content:remark
+; TODO meta-key makes error media_content:remark
 (defn wrap-check-vocab [handler]
   (fn [req]
     (let [meta-key (req :meta-key)
@@ -786,16 +711,16 @@
 
           vocab-clause (-> (sql/select :*)
                            (sql/from :vocabularies)
-                           (sql/where [:= :id (:vocabulary_id meta-key)])
-                           (sql/where user-vocab-query)
-                           (sql-format))
-          result (jdbc/execute! (get-ds) vocab-clause)]
+                           (sql/merge-where [:= :id (:vocabulary_id meta-key)])
+                           (sql/merge-where user-vocab-query)
+                           (sql/format))
+          result (jdbc/query (rdbms/get-ds) vocab-clause)]
 
-        ;(logging/info "wrap-check-vocab"
-        ;              "\nmeta-key-id" (:id meta-key)
-        ;              "\nvocab-clause" vocab-clause
-        ;              ;"\nresult" result
-        ;              )
+      ;(logging/info "wrap-check-vocab"
+      ;              "\nmeta-key-id" (:id meta-key)
+      ;              "\nvocab-clause" vocab-clause
+      ;              ;"\nresult" result
+      ;              )
 
       (if (= 0 (count result))
         (sd/response_not_found "Invalid meta-key, or no vocabulary access.")
@@ -809,7 +734,7 @@
    (s/optional-key :media_entry_id) s/Uuid
    (s/optional-key :collection_id) s/Uuid})
 
-  ; TODO response coercion
+; TODO response coercion
 (def meta-data-routes
   ["/meta-data"
    ["/:meta_datum_id" {:get {:handler meta-datum/get-meta-datum
@@ -825,15 +750,15 @@
                                          500 {:body s/Any}}}}]
 
    ["/:meta_datum_id/data-stream" {:get {:handler meta-datum/get-meta-datum-data-stream
-                                           ; TODO json meta-data: fix response conversion error
+                                         ; TODO json meta-data: fix response conversion error
                                          :middleware [sd/ring-wrap-add-meta-datum-with-media-resource
                                                       sd/ring-wrap-authorization-view]
                                          :summary "Get meta-data data-stream."
                                          :description "Get meta-data data-stream."
                                          :coercion reitit.coercion.schema/coercion
                                          :parameters {:path {:meta_datum_id s/Str}}}}]
-     ;:responses {200 {:body s/Any}
-     ;422 {:body s/Any}}
+                                          ;:responses {200 {:body s/Any}
+                                                      ;422 {:body s/Any}}
    ])
 (def schema_export_mdrole
   {:id s/Uuid
@@ -859,7 +784,7 @@
            :handler meta-data.index/get-index
            :middleware [sd/ring-wrap-add-media-resource
                         sd/ring-wrap-authorization-view]
-             ; TODO 401s test fails
+                                                   ; TODO 401s test fails
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:collection_id s/Str}
                         :query {(s/optional-key :updated_after) s/Inst
@@ -871,7 +796,7 @@
            :handler handle_get-mr-meta-data-with-related
            :middleware [sd/ring-wrap-add-media-resource
                         sd/ring-wrap-authorization-view]
-             ; TODO 401s test fails
+                                                      ; TODO 401s test fails
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:collection_id s/Str}
                         :query {(s/optional-key :updated_after) s/Inst
@@ -1039,7 +964,7 @@
                                    :meta_key_id s/Str
                                    :person_id s/Str}}
                :responses {200 {:body s/Any}}}}]
-      ; TODO meta-data roles
+   ; TODO meta-data roles
     ["/:meta_key_id/role/:role_id"
      {:post {:summary "Create meta-data role for media-entry"
              :handler handle_create-meta-data-role
@@ -1057,7 +982,7 @@
    ["/:media_entry_id/meta-data"
     {:get {:summary "Get meta-data for media-entry."
            :handler meta-data.index/get-index
-             ; TODO 401s test fails
+; TODO 401s test fails
            :middleware [sd/ring-wrap-add-media-resource
                         sd/ring-wrap-authorization-view]
            :coercion reitit.coercion.schema/coercion
@@ -1082,7 +1007,7 @@
      {:get {:summary "Get meta-data for media-entry and meta-key."
             :handler handle_get-meta-key-meta-data
             :middleware [wrap-add-meta-key
-                           ;wrap-check-vocab
+                        ;wrap-check-vocab
                          sd/ring-wrap-add-media-resource
                          sd/ring-wrap-authorization-view]
             :coercion reitit.coercion.schema/coercion
@@ -1232,7 +1157,7 @@
                                    :meta_key_id s/Str
                                    :person_id s/Str}}
                :responses {200 {:body s/Any}}}}]
-      ; TODO meta-data roles
+   ; TODO meta-data roles
     ["/:meta_key_id/role"
      {:get {:summary "Get meta-data role for media-entry."
             :handler handle_get-meta-data-roles
@@ -1272,5 +1197,5 @@
                                  :position s/Int}}
              :responses {200 {:body s/Any}}}}]]])
 
-  ;### Debug ####################################################################
-  ;(debug/debug-ns *ns*)
+;### Debug ####################################################################
+;(debug/debug-ns *ns*)

@@ -1,19 +1,13 @@
 (ns madek.api.resources.vocabularies.index
   (:require
-   [honey.sql :refer [format] :rename {format sql-format}]
-   [honey.sql.helpers :as sql]
+   [clojure.java.jdbc :as jdbc]
+   [clojure.tools.logging :as logging]
    [logbug.catcher :as catcher]
-   [madek.api.db.core :refer [get-ds]]
-   [clojure.string :as str]
-
-
    [logbug.debug :as debug]
-
-
    [madek.api.resources.shared :as sd]
    [madek.api.resources.vocabularies.permissions :as permissions]
-   [madek.api.utils.helper :refer [str-to-int]]
-   [next.jdbc :as jdbc]))
+   [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+   [madek.api.utils.sql :as sql]))
 
 (defn- where-clause
   [user-id]
@@ -25,55 +19,17 @@
        [:in :vocabularies.id vocabulary-ids]])))
 
 (defn- base-query
-  ([user-id size offset]
-   (-> (sql/select :*)                                      ;:id)
-       (sql/from :vocabularies)
-       (sql/where (where-clause user-id))
-       (sql/offset offset)
-       (sql/limit size)
-       sql-format))
-
-  ([user-id size offset request]
-
-   (let [
-         is_admin (-> request :is_admin)
-         is_admin_endpoint (str/includes? (-> request :uri) "/admin/")
-
-         select (if is_admin_endpoint
-                  (sql/select :*)
-                  (sql/select :admin_comment :position :labels :descriptions))
-         ]
-
-     (-> select
-         (sql/from :vocabularies)
-         (sql/where (where-clause user-id))
-         (sql/offset offset)
-         (sql/limit size)
-         sql-format)))
-
-  )
-
-
+  [user-id]
+  (-> (sql/select :*);:id)
+      (sql/from :vocabularies)
+      (sql/merge-where (where-clause user-id))
+      sql/format))
 
 (defn- query-index-resources [request]
   (let [user-id (-> request :authenticated-entity :id)
-        qparams (-> request :query-params)
-
-        p (println ">o> qparams1" qparams)
-        p (println ">o> qparams2" (-> request :path-params))
-
-        page (get qparams "page")
-        count (get qparams "count")
-
-        offset (str-to-int page 1)
-        size (str-to-int count 5)
-
-        p (println ">o> offset" offset ", size" size)
-
-        query (base-query user-id size offset request)
-        p (println ">o> query" query)]
+        query (base-query user-id)]
     ;(logging/info "query-index-resources: " query)
-    (jdbc/execute! (get-ds) query)))
+    (jdbc/query (get-ds) query)))
 
 (defn transform_ml [vocab]
   (assoc vocab
@@ -82,40 +38,11 @@
 
 (defn get-index [request]
   (catcher/with-logging {}
-    (let [
-
-          db-result (query-index-resources request)
-
-          is_admin (-> request :is_admin)
-
-          is_admin_endpoint (str/includes? (-> request :uri) "/admin/")
-
-          uri (-> request :uri)
-
-
-
-          p (println ">o> isAdmin?" (-> request :is_admin))
-
-          p (println ">o> db-result" db-result)
-          p (println ">o> uri" uri)
-          p (println ">o> is_admin_endpoint" is_admin_endpoint)
-
-          ;;;; TODO: BROKEN
-          ;result (->> db-result
-          ;         sd/transform_ml)
-
-          ; iterate over result and process sd/transform_ml for each element
-           result (map transform_ml db-result)
-
-
-          p (println ">o> result" result)
-
-          ]
-      (sd/response_ok {:vocabularies result})
-
-      ))
-
-  )
+    (let [db-result (query-index-resources request)
+          result (->> db-result
+                      (map transform_ml)
+                      (map sd/remove-internal-keys))]
+      (sd/response_ok {:vocabularies result}))))
 
 ;### Debug ####################################################################
-(debug/debug-ns *ns*)
+;(debug/debug-ns *ns*)

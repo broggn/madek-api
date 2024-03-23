@@ -13,11 +13,6 @@
    [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-
-   [madek.api.resources.users.get :as get-user]
-
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
-
    [schema.core :as s]
    [taoensso.timbre :refer [debug error info spy warn]]))
 
@@ -34,22 +29,12 @@
 
 (defn handler
   [{{id :id :as user} :user ds :tx :as req}]
-
-  (try
-
   (if (delete-user id ds)
     (sd/response_ok user)
-    (sd/response_failed "Could not delete user." 406)
-    )
-
-  (catch Exception ex (sd/parsed_response_exception ex)
-
-    )
-
-  ))
+    (sd/response_failed "Could not delete user." 406)))
 
 (def route
-  {:summary (sd/sum_adm (t "Delete user by id"))
+  {:summary (sd/sum_adm "Delete user by id")
    :description "Delete a user by id. Returns 404, if no such user exists."
    :handler handler
    :middleware [wrap-authorize-admin!
@@ -58,14 +43,5 @@
    :coercion reitit.coercion.schema/coercion
    :content-type "application/json"
    :parameters {:path {:id s/Str}}
-   :responses {200 {:body get-user/schema}
-
-               403 {:description "Forbidden."
-                    :schema s/Str
-                    :examples {"application/json" {:message "References still exist"}}}
-
-               404 {:description "Not Found."
-                    :schema s/Str
-                    :examples {"application/json" {:message "No such user."}}}
-
-               }})
+   :responses {200 {:body s/Any}
+               404 {:body s/Any}}})

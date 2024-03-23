@@ -58,7 +58,7 @@
 (defn find-user-by-uid [uid ds]
   (-> base-query
       (where-uid uid)
-      sql-format
+      (sql-format)
       (->> (jdbc/execute-one! ds))))
 
 (defn wrap-find-user [param]

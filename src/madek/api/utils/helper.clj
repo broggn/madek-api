@@ -4,8 +4,8 @@
   (:import (java.util UUID)))
 
 
-(def LOAD-SWAGGER-DESCRIPTION-FROM-FILE false)
 (def LOAD-SWAGGER-DESCRIPTION-FROM-FILE true)
+(def LOAD-SWAGGER-DESCRIPTION-FROM-FILE false)
 
 ; [madek.api.utils.helper :refer [t d]]
 (defn t [s] (str s ".. MANUALLY TESTED"))
