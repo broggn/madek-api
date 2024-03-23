@@ -10,7 +10,7 @@
    [taoensso.timbre :refer [debug error info spy warn]]))
 
 ; There are some things missing here yet. A non admin user should be able to
-; get limited users set (by properties and number of resutls). The index for
+; get limited users set (by properties and number of results). The index for
 ; admins misses useful query params.
 ; This is pending because of possible future changes of the relation between
 ; the users and the people table.
@@ -19,6 +19,7 @@
 
 (def admin-routes
   ["/users"
+   {:swagger {:tags ["admin/users"] :security [{"auth" []}]}}
    ["/"
     {:get index/route
      :post create-user/route}]
