@@ -349,7 +349,7 @@
 
    ["collection"
     {:post
-     {:summary (sd/sum_usr "Create collection")
+     {:summary (sd/sum_usr (t "Create collection"))
 
       ;:description "CAUTION: Either :responsible_user_id OR :responsible_user_id has to be set - not both (db-constraint)"
 
@@ -377,7 +377,7 @@
                        404 {:body s/Any}
                        422 {:body s/Any}}}
 
-     :put {:summary (sd/sum_usr "Update collection for id.")
+     :put {:summary (sd/sum_usr (t "Update collection for id."))
            :handler handle_update-collection
            :middleware [sd/ring-wrap-add-media-resource
                         sd/ring-wrap-authorization-edit-metadata]
@@ -394,7 +394,7 @@
 
      ; TODO Frage: wer darf eine col löschen: nur der benutzer und der responsible
      ; TODO check owner or responsible
-     :delete {:summary (sd/sum_usr "Delete collection for id.")
+     :delete {:summary (sd/sum_usr (t "Delete collection for id."))
               :handler handle_delete-collection
               :middleware [sd/ring-wrap-add-media-resource
                            sd/ring-wrap-authorization-edit-permissions]

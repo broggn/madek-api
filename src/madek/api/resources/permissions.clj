@@ -552,7 +552,7 @@
 
    ["/"
     {:get
-     {:summary "Query collection permissions."
+     {:summary (t "Query collection permissions.")
       :swagger {:produces "application/json"}
       :content-type "application/json"
       :handler handle_list-perms
@@ -564,7 +564,7 @@
 
    ["/resources"
     {:get
-     {:summary "Query collection permissions."
+     {:summary (t "Query collection permissions.")
       :swagger {:produces "application/json"}
       :content-type "application/json"
       :handler handle_get_entity_perms
@@ -599,7 +599,7 @@
       :responses {200 {:body schema_export-collection-perms}}}}]
 
    ["/users"
-    {:get {:summary "Query collection permissions."
+    {:get {:summary (t "Query collection permissions.")
            :swagger {:produces "application/json"}
            :content-type "application/json"
            :handler handle_list-user-perms
