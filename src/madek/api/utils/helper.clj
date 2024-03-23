@@ -3,6 +3,9 @@
             [pghstore-clj.core :refer [to-hstore]])
   (:import (java.util UUID)))
 
+
+(def LOAD-SWAGGER-DESCRIPTION-FROM-FILE false)
+
 ; [madek.api.utils.helper :refer [t d]]
 (defn t [s] (str s ".. MANUALLY TESTED"))
 (defn d [s] (str s " / doc-example"))
@@ -21,6 +24,14 @@
     (Integer/parseInt (str value))
     (catch NumberFormatException e
       default-value)))
+
+; [madek.api.utils.helper :refer [mslurp]]
+(defn mslurp [file-path]
+  (if LOAD-SWAGGER-DESCRIPTION-FROM-FILE
+    (slurp file-path)
+    "DESCRIPTION DEACTIVATED"
+    )
+  )
 
 (comment
   (let [p (println ">o> int" (class 1))

@@ -9,6 +9,8 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
 
+   [madek.api.utils.helper :refer [mslurp]]
+
    [pghstore-clj.core :refer [to-hstore]]
 
    [logbug.catcher :as catcher]
@@ -250,7 +252,7 @@
             :handler handle_create-vocab
             :middleware [wrap-authorize-admin!]
 
-            :description (slurp "./md/vocabularies-post.md")
+            :description (mslurp "./md/vocabularies-post.md")
 
             :content-type "application/json"
             :accept "application/json"
@@ -294,7 +296,7 @@
            :accept "application/json"
            :coercion reitit.coercion.schema/coercion
 
-           :description (slurp "./md/vocabularies-put.md")
+           :description (mslurp "./md/vocabularies-put.md")
 
            :swagger {:produces "application/json"
                      :consumes "application/json"

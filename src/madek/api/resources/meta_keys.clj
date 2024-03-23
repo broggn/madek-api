@@ -6,6 +6,9 @@
    [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
+
+
+   [madek.api.utils.helper :refer [mslurp]]
    [logbug.debug :as debug]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.meta-keys.index :as mkindex]
@@ -459,7 +462,7 @@
             :handler handle_create_meta-key
             :middleware [wrap-authorize-admin!]
 
-            :description (slurp "./md/meta-key-post.md")
+            :description (mslurp "./md/meta-key-post.md")
 
             :parameters {:body schema_create-meta-key}
 
@@ -510,7 +513,7 @@
            :content-type "application/json"
            :accept "application/json"
 
-           :description (slurp "./md/meta-key-put.md")
+           :description (mslurp "./md/meta-key-put.md")
 
            :middleware [wrap-authorize-admin!
                         (sd/wrap-check-valid-meta-key-new :id)

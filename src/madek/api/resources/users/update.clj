@@ -7,6 +7,8 @@
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
 
+   [madek.api.utils.helper :refer [mslurp]]
+
    [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
 
    [madek.api.resources.users.common :as users-common
@@ -59,7 +61,7 @@
              :produces "application/json"}
    :coercion reitit.coercion.schema/coercion
 
-   :description (slurp "./md/users-patch.md")
+   :description (mslurp "./md/users-patch.md")
 
 
    :content-type "application/json"

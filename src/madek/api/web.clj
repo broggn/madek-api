@@ -9,6 +9,8 @@
    [madek.api.authentication :as authentication]
    [madek.api.db.core :as db]
    [madek.api.http.server :as http-server]
+
+   [madek.api.utils.helper :refer [mslurp]]
    [madek.api.json-protocol]
    [madek.api.management :as management]
    [madek.api.resources]
@@ -111,7 +113,7 @@
    {:no-doc false
     :swagger {
               :info {:title "Madek API v2"
-                     :description (slurp "md/api-description.md")
+                     :description (mslurp "md/api-description.md")
                      :version "2.0.0"
                      :contact {:name "fjdkls"
                                }}

@@ -9,6 +9,8 @@
             [madek.api.resources.groups.users :as group-users]
             [madek.api.resources.shared :as sd]
 
+
+            [madek.api.utils.helper :refer [mslurp]]
             [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
 
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
@@ -340,7 +342,7 @@
                   :accept "application/json"
                   :handler handle_update-group
 
-                  :description (slurp "./md/admin-groups-put.md")
+                  :description (mslurp "./md/admin-groups-put.md")
 
                   :middleware [wrap-authorize-admin!]
                   :coercion reitit.coercion.schema/coercion

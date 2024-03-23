@@ -9,7 +9,7 @@
    [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-
+   [madek.api.utils.helper :refer [mslurp]]
    [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
 
    [schema.core :as s]
@@ -184,7 +184,7 @@
             :handler handle_update-app-settings
             :middleware [wrap-authorize-admin!]
 
-            :description (slurp "./md/admin-app-settings.md")
+            :description (mslurp "./md/admin-app-settings.md")
 
             :swagger {:produces "application/json"
                       :consumes "application/json"}

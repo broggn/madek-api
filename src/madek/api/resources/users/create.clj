@@ -8,6 +8,7 @@
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
 
+   [madek.api.utils.helper :refer [mslurp]]
    [clojure.data.json :as json]
 
    [madek.api.utils.validation :refer [email-validation json-and-json-str-validation json-and-json-str-validation vector-or-hashmap-validation]]
@@ -116,7 +117,7 @@
    :content-type "application/json"
    ;:description "Create user."
 
-   :description (slurp "./md/admin-users-post.md")
+   :description (mslurp "./md/admin-users-post.md")
 
    :handler handle-create-user
    :middleware [wrap-authorize-admin!]
