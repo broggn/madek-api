@@ -50,7 +50,14 @@ describe 'Getting a media-entry resource with authentication' do
     end
 
     it 'is allowed 200' do
-      expect(response.status).to be == 200
+      binding.pry
+
+      # method=:get,
+      #   body={"message"=>"Not authorized for media-resource"},
+      #   url=#<URI::HTTP http://localhost:3104/api/media-entry/33035611-a9df-4d8a-8d72-163c53b82534>,
+
+
+          expect(response.status).to be == 200
     end
   end
 
@@ -219,6 +226,8 @@ describe 'Getting a media-entry resource with authentication' do
     end
 
     it 'is not allowed 403' do
+      binding.pry
+
       expect(response.status).to be == 403
     end
   end
@@ -240,7 +249,19 @@ describe 'Getting a media-entry resource with authentication' do
         }.to_json
         req.headers['Content-Type'] = 'application/json'
       end
-      expect(group_perm.status).to be == 200
+
+      # binding.pry
+      #
+      # method=:post,
+      #   body="",
+      #   url=#<URI::HTTP http://localhost:3104/api/media-entry/d2354fca-1e2e-4ac4-87a5-842a83a193cd/perms/group/01340476-d7fe-4fdb-876e-92a60aad9d0d>,
+      #
+      #     response_headers={"content-type"=>"application/octet-stream", "content-length"=>"0", "server"=>"http-kit", "date"=>"Sat, 23 Mar 2024 21:58:41 GMT"},
+      #   status=404,
+      #   reason_phrase="Not Found">,
+
+
+        expect(group_perm.status).to be == 200
       readok = newbasic_auth_plain_faraday_json_client(@entity.login, @entity.password)
         .get("/api/media-entry/#{@media_entry.id}")
       expect(readok.status).to be == 200

@@ -25,10 +25,28 @@ context 'users' do
         end
 
         it 'responses with 200' do
+          # TODO
+          # binding.pry
+
+          # method=:get,
+          # body={"msg"=>"null"},
+          # url=#<URI::HTTP http://localhost:3104/api/admin/users/?count=100>,
+
+
+
           expect(users_result.status).to be== 200
         end
 
         it 'returns some data but less than created because we paginate' do
+
+          # TODO
+          # binding.pry
+          #
+          # [1] pry(#<RSpec::ExampleGroups::Users::AdminUser::GetUsers>)> users_result.body
+          # >> url=http://localhost:3104/api
+          # => {"msg"=>"null"}
+
+
           expect(
             users_result.body['users'].count
           ).to be< @users.count

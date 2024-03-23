@@ -48,6 +48,13 @@ describe 'filtering collections' do
                                get_metadata_and_previews: true)
           }
 
+          # binding.pry
+          # >> url=http://localhost:3104/api
+          # >>> {"me_get_metadata_and_previews"=>"true"}
+          # >>> {"content-type"=>"application/json; charset=utf-8", "access-control-allow-credentials"=>"true", "content-length"=>"67", "server"=>"http-kit", "date"=>"Sat, 23 Mar 2024 22:18:05 GMT"}
+          # => {"msg"=>"These SQL clauses are unknown or have nil values: :offset"}
+
+
           get_collections('me_get_metadata_and_previews' => 'true').body['collections']
             .each do |c|
             collection = Collection.unscoped.find(c['id'])
@@ -61,6 +68,13 @@ describe 'filtering collections' do
                                responsible_user: user,
                                get_metadata_and_previews: false)
           }
+
+          # binding.pry
+          # >> url=http://localhost:3104/api
+          # >>> {"me_get_metadata_and_previews"=>"true"}
+          # >>> {"content-type"=>"application/json; charset=utf-8", "access-control-allow-credentials"=>"true", "content-length"=>"67", "server"=>"http-kit", "date"=>"Sat, 23 Mar 2024 22:20:20 GMT"}
+          # => {"msg"=>"These SQL clauses are unknown or have nil values: :offset"}
+
 
           get_collections('me_get_metadata_and_previews' => 'true').body['collections']
             .each do |c|
@@ -77,6 +91,14 @@ describe 'filtering collections' do
                                              get_metadata_and_previews: false),
               user: user
           end
+
+
+          # binding.pry
+          # >> url=http://localhost:3104/api
+          # >>> {"me_get_metadata_and_previews"=>"true"}
+          # >>> {"content-type"=>"application/json; charset=utf-8", "access-control-allow-credentials"=>"true", "content-length"=>"67", "server"=>"http-kit", "date"=>"Sat, 23 Mar 2024 22:01:29 GMT"}
+          # => {"msg"=>"These SQL clauses are unknown or have nil values: :offset"}
+
 
           get_collections('me_get_metadata_and_previews' => 'true').body['collections']
             .each do |c|

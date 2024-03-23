@@ -58,6 +58,14 @@ describe 'filtering collections' do
         response = get_collections('collection_id' => @collection.id,
                                    'me_get_metadata_and_previews' => true)
 
+
+        # [11] pry(#<RSpec::ExampleGroups::FilteringCollections::ByCollectionId>)> get_collections('collection_id' => @collection.id,
+        # >>0> {"collection_id"=>"ed08c313-0580-4567-a3b4-6de61b866ab3", "me_get_metadata_and_previews"=>true}
+        # >>1a {"content-type"=>"application/json; charset=utf-8", "access-control-allow-credentials"=>"true", "content-length"=>"67", "server"=>"http-kit", "date"=>"Sat, 23 Mar 2024 22:12:46 GMT"}
+        # >>2> {"msg"=>"These SQL clauses are unknown or have nil values: :offset"}
+        #
+        #
+        # binding.pry
         puts ">>1> #{response}"
 
         # expect(response.count).to be == 2  ;; TODO: fixme
