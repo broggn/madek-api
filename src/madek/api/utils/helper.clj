@@ -5,6 +5,7 @@
 
 
 (def LOAD-SWAGGER-DESCRIPTION-FROM-FILE false)
+(def LOAD-SWAGGER-DESCRIPTION-FROM-FILE true)
 
 ; [madek.api.utils.helper :refer [t d]]
 (defn t [s] (str s ".. MANUALLY TESTED"))
@@ -148,6 +149,15 @@
 ; [madek.api.utils.helper :refer [convert-map-if-exist]]
 (defn convert-map-if-exist [m]
   (-> m
+      ;; collections: cast to specific db-type
+      ;(modify-if-exists :layout #(if (contains? m :layout) (assoc m :layout [:cast % :public.collection_layout])))
+      ;(modify-if-exists :default_resource_type #(if (contains? m :default_resource_type) (assoc m :default_resource_type [:cast % :public.collection_default_resource_type])))
+      ;(modify-if-exists :sorting #(if (contains? m :sorting) (assoc m :sorting [:cast % :public.collection_sorting])))
+
+      (modify-if-exists :layout #(if (contains? m :layout) [:cast % :public.collection_layout]))
+      (modify-if-exists :default_resource_type #(if (contains? m :default_resource_type) [:cast % :public.collection_default_resource_type]))
+      (modify-if-exists :sorting #(if (contains? m :sorting) [:cast % :public.collection_sorting]))
+
       ;; uuid
       (modify-if-exists :id #(if (contains? m :id) (to-uuid % :id)))
       (modify-if-exists :media_entry_default_license_id #(if (contains? m :id) (to-uuid %)))
@@ -176,6 +186,22 @@
       (modify-if-exists :copyright_notice_templates #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))
       (modify-if-exists :allowed_people_subtypes #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))
       ))
+
+
+(comment
+  (let [
+
+        m {:layout "list"
+           :default_resource_type "collections"
+           :sorting "manual DESC"
+           }
+
+        res (convert-map-if-exist m)
+
+        ]
+    res
+    )
+  )
 
 (comment
   ;[honey.sql :refer [format] :rename {format sql-format}]

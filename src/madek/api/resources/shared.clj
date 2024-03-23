@@ -619,6 +619,7 @@
     (str/includes? (ex-message ex) "is not present in table \"people\"") (response_failed (str "People entry does not exist") 404)
     (str/includes? (ex-message ex) "is not present in table \"groups\"") (response_failed (str "Groups entry does not exist") 404)
     (str/includes? (ex-message ex) "is not present in table \"meta_keys\"") (response_failed (str "Meta-Keys entry does not exist") 404)
+    (str/includes? (ex-message ex) "insert or update on table \"collections\" violates foreign key constraint \"fk_rails_9085ae39f1\"") (response_failed (str "Workflows entry does not exist") 404)
     (str/includes? (ex-message ex) "violates foreign key constraint") (response_failed (str "Violation of constraint (specific error-handler not yet defined)") 403)
     :else (response_exception ex)))
 
