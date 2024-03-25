@@ -76,8 +76,8 @@
   {
    (s/optional-key :institution) s/Str
    (s/optional-key :subtype) s/Str
-   (s/required-key :page) greater-equal-zero-validation
-   (s/required-key :count) greater-zero-validation
+   (s/optional-key :page) greater-equal-zero-validation
+   (s/optional-key :count) greater-zero-validation
    })
 
 (def route

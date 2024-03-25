@@ -31,6 +31,11 @@
 (defn handler
   [{{{id :id} :path} :parameters
     ds :tx :as req}]
+
+  (println ">o>people.get / handler, id=" id)
+  (println ">o>people.get / handler, id.cl=" (class id))
+
+
   (debug req)
   (debug id)
   (if-let [person (-> (person-query id)
@@ -49,7 +54,9 @@
    :swagger {:produces "application/json"}
    :coercion reitit.coercion.schema/coercion
    :content-type "application/json"
-   :parameters {:path {:id s/Uuid}}
+
+   :parameters {:path {:id s/Str}}
+
    :responses {200 {:body schema}
 
                404 {:description "Not found."

@@ -35,19 +35,6 @@ context 'people' do
         end
 
         it 'responses with 200' do
-          binding.pry
-
-          # method=:get,
-          #   body=
-          #     {"schema"=>{"(opt :institution)"=>"java.lang.String", "(opt :subtype)"=>"java.lang.String", "page"=>"(constrained Int \"Invalid Number, required: value >= 0\")", "count"=>"(constrained Int \"Invalid Number, required: value > 0\")", "Keyword"=>"Any"},
-          #      "errors"=>{"page"=>"missing-required-key"},
-          #      "type"=>"reitit.coercion/request-coercion",
-          #      "coercion"=>"schema",
-          #      "value"=>{"count"=>"100"},
-          #      "in"=>["request", "query-params"]},
-          #   url=#<URI::HTTP http://localhost:3104/api/admin/people/?count=100>,
-
-
               expect(result.status).to be== 200
         end
 
@@ -65,19 +52,6 @@ context 'people' do
 
 
         it 'returns excaclty the people with the proper oraganization' do
-
-          # binding.pry
-          # #<struct Faraday::Env
-          # method=:get,
-          #   body=
-          #     {"schema"=>{"(opt :institution)"=>"java.lang.String", "(opt :subtype)"=>"java.lang.String", "page"=>"(constrained Int \"Invalid Number, required: value >= 0\")", "count"=>"(constrained Int \"Invalid Number, required: value > 0\")", "Keyword"=>"Any"},
-          #      "errors"=>{"page"=>"missing-required-key"},
-          #      "type"=>"reitit.coercion/request-coercion",
-          #      "coercion"=>"schema",
-          #      "value"=>{"count"=>"1000", "institution"=>"foo.com"},
-          #      "in"=>["request", "query-params"]},
-
-
             expect(result.status).to be== 200
           expect(result.body['people'].count).to be== 3*77
         end

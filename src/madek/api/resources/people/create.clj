@@ -112,7 +112,11 @@
   )
 
 (def schema
-  {:subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
+  {
+   ;; TODO: fixme, create customized schema to validate enums
+   ;:subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
+   :subtype  (s/maybe s/Str)
+
    (s/optional-key :description) (s/maybe s/Str)
    (s/optional-key :external_uris) [s/Str]
    (s/optional-key :first_name) (s/maybe s/Str)

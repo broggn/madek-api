@@ -94,7 +94,10 @@
 
 (defn handle_query-people
   [request]
-  (let [query-params (-> request :parameters :query)
+  (let [
+        p (println ">o> handle_query-people" )
+
+        query-params (-> request :parameters :query)
         sql-query (build-index-query query-params)
 
         db-result (jdbc/execute! (get-ds) sql-query)
@@ -212,7 +215,17 @@
 
 (defn handle_get-person
   [req]
-  (let [id-or-institutinal-person-id (-> req :parameters :path :id str)]
+  (let [
+        p (println ">o> handle_get-person" )
+
+        ;/api/people/%5B%22fake-university.com%22%2C%22https%3A%2F%2Ffake-university.com%2Fstudents%2F12345%22%5D
+        ;/api/people/["fake-university.com","https://fake-university.com/students/12345"]
+
+        id-or-institutinal-person-id (-> req :parameters :path :id str)
+
+        p (println ">o> id-or-institutinal-person-id=" id-or-institutinal-person-id)
+
+        ]
     (if-let [person (db-person-get id-or-institutinal-person-id)]
       (sd/response_ok (transform_export person))
       (sd/response_failed "No such person found" 404))))
@@ -256,96 +269,102 @@
           (sd/response_failed "Could not update person" 406))))
     (catch Exception ex (sd/response_exception ex))))
 
-;; TODO: not in use?
-(def admin-routes
-  ["/people"
-   ["/" {:get
-         {:summary "Get all people ids???"
-          :description "Query list of people only for ids or full-data. Optional Paging."
-          :handler handle_query-people
-          :middleware [wrap-authorize-admin!]
-          :swagger {:produces "application/json"}
-          :parameters {:query schema_query_people}
-          :content-type "application/json"
-                ;:accept "application/json"
-          :coercion reitit.coercion.schema/coercion
-          :responses {200 {:body {:people [schema_export_people]}}}}
-
-         :post
-         {:summary "Create a person"
-          :description "Create a person.\n The \nThe [subtype] has to be one of [Person, ...]. \nAt least one of [first_name, last_name, description] must have a value."
-          :handler handle_create-person
-          :middleware [wrap-authorize-admin!]
-          :swagger {:produces "application/json" :consumes "application/json"}
-          :content-type "application/json"
-          :accept "application/json"
-          :coercion reitit.coercion.schema/coercion
-          :parameters {:body schema_import_person}
-          :responses {201 {:body schema_import_person_result}
-                      406 {:body s/Any}}}}]
-
-   ["/:id"
-    {:get
-     {:summary "Get person by id"
-      :description "Get person by id. Returns 404, if no such person exists. TODO query params."
-      :swagger {:produces "application/json"}
-      :content-type "application/json"
-      :accept "application/json"
-      :handler handle_get-person
-      :middleware [wrap-authorize-admin!]
-      :coercion reitit.coercion.schema/coercion
-      :parameters {:path {:id s/Str}}
-      :responses {200 {:body schema_export_person}
-                  404 {:body s/Str}}}
-
-     :put
-     {:summary "Updates person entity fields"
-      :description "Updates the person entity fields"
-      :swagger {:consumes "application/json" :produces "application/json"}
-      :content-type "application/json"
-      :accept "application/json"
-      :handler handle_patch-person
-      :middleware [wrap-authorize-admin!]
-      :coercion reitit.coercion.schema/coercion
-      :parameters {:path {:id s/Str}
-                   :body schema_update_person}
-      :responses {200 {:body schema_export_person}
-                  404 {:body s/Str}}}
-
-     :delete
-     {:summary "Deletes a person by id"
-      :description "Delete a person by id"
-      :swagger {:produces "application/json"}
-      :content-type "application/json"
-      :handler handle_delete-person
-      :middleware [wrap-authorize-admin!]
-      :coercion reitit.coercion.schema/coercion
-      :parameters {:path {:id s/Str}}
-      :responses {200 {:body schema_export_person}
-                  404 {:body s/Any}}}}]])
-
-; TODO user can create a person
-; are public routes
-(def user-routes
-  ["/people"
-   {:swagger {:tags ["people"]}}
-   ["/" {:get {:summary (sd/sum_pub "Get all people ids")
-               :description "Query list of people only for ids or full-data. Optional Paging."
-               :handler handle_query-people
-
-               :swagger {:produces "application/json"}
-               :parameters {:query schema_query_people}
-               :content-type "application/json"
-               :coercion reitit.coercion.schema/coercion
-               :responses {200 {:body {:people [schema_export_people]}}}}}]
-
-   ["/:id" {:get {:summary (sd/sum_pub "Get person by id")
-                  :description "Get person by id. Returns 404, if no such person exists. TODO query params."
-                  :swagger {:produces "application/json"}
-                  :content-type "application/json"
-                  :accept "application/json"
-                  :handler handle_get-person
-                  :coercion reitit.coercion.schema/coercion
-                  :parameters {:path {:id s/Str}}
-                  :responses {200 {:body schema_export_person}
-                              404 {:body s/Str}}}}]])
+;;; TODO: not in use?
+;(def admin-routes
+;  ["/people"
+;   ["/" {:get
+;         {:summary "Get all people ids???"
+;          :description "Query list of people only for ids or full-data. Optional Paging."
+;          :handler handle_query-people
+;          :middleware [wrap-authorize-admin!]
+;          :swagger {:produces "application/json"}
+;          :parameters {:query schema_query_people}
+;          :content-type "application/json"
+;                ;:accept "application/json"
+;          :coercion reitit.coercion.schema/coercion
+;          :responses {200 {:body {:people [schema_export_people]}}}}
+;
+;         :post
+;         {:summary "Create a person"
+;          :description "Create a person.\n The \nThe [subtype] has to be one of [Person, ...]. \nAt least one of [first_name, last_name, description] must have a value."
+;          :handler handle_create-person
+;          :middleware [wrap-authorize-admin!]
+;          :swagger {:produces "application/json" :consumes "application/json"}
+;          :content-type "application/json"
+;          :accept "application/json"
+;          :coercion reitit.coercion.schema/coercion
+;          :parameters {:body schema_import_person}
+;          :responses {201 {:body schema_import_person_result}
+;                      406 {:body s/Any}}}}]
+;
+;   ["/:id"
+;    {:get
+;     {:summary "Get person by id"
+;      :description "Get person by id. Returns 404, if no such person exists. TODO query params."
+;      :swagger {:produces "application/json"}
+;      :content-type "application/json"
+;      :accept "application/json"
+;      :handler handle_get-person
+;      :middleware [wrap-authorize-admin!]
+;      :coercion reitit.coercion.schema/coercion
+;      :parameters {:path {:id s/Str}}
+;      :responses {200 {:body schema_export_person}
+;                  404 {:body s/Str}}}
+;
+;     :put
+;     {:summary "Updates person entity fields"
+;      :description "Updates the person entity fields"
+;      :swagger {:consumes "application/json" :produces "application/json"}
+;      :content-type "application/json"
+;      :accept "application/json"
+;      :handler handle_patch-person
+;      :middleware [wrap-authorize-admin!]
+;      :coercion reitit.coercion.schema/coercion
+;      :parameters {:path {:id s/Str}
+;                   :body schema_update_person}
+;      :responses {200 {:body schema_export_person}
+;                  404 {:body s/Str}}}
+;
+;     :delete
+;     {:summary "Deletes a person by id"
+;      :description "Delete a person by id"
+;      :swagger {:produces "application/json"}
+;      :content-type "application/json"
+;      :handler handle_delete-person
+;      :middleware [wrap-authorize-admin!]
+;      :coercion reitit.coercion.schema/coercion
+;      :parameters {:path {:id s/Str}}
+;      :responses {200 {:body schema_export_person}
+;                  404 {:body s/Any}}}}]])
+;
+;; TODO user can create a person
+;; are public routes
+;;; TODO: not in use?
+;
+;(def user-routes
+;  ["/people"
+;   {:swagger {:tags ["people"]}}
+;   ["/" {:get {:summary (sd/sum_pub "Get all people ids")
+;               :description "Query list of people only for ids or full-data. Optional Paging."
+;               :handler handle_query-people
+;
+;               :swagger {:produces "application/json"}
+;               :parameters {:query schema_query_people}
+;               :content-type "application/json"
+;               :coercion reitit.coercion.schema/coercion
+;               :responses {200 {:body {:people [schema_export_people]}}}}}]
+;
+;   ["/:id" {:get {:summary (sd/sum_pub "Get person by id OR string")
+;                  :description "Get person by id. Returns 404, if no such person exists. TODO query params."
+;                  :swagger {:produces "application/json"}
+;                  :content-type "application/json"
+;                  :accept "application/json"
+;                  :handler handle_get-person
+;                  :coercion reitit.coercion.schema/coercion
+;
+;                  ;:parameters {:path {:id s/Str}}
+;                  :parameters {:path {:id s/Any}}
+;
+;                  :responses {200 {:body schema_export_person}
+;                              404 {:body s/Str}}}}]])
+;(debug/debug-ns *ns*)
