@@ -13,7 +13,7 @@ describe 'search for media entries with meta data from not public vocabulary' do
     #media_entries_relation.get(filter).data['media-entries']
   end
 
-  context 'applying a meta data filter', :skip  do
+  context 'applying a meta data filter'  do
     include_context 'meta data from not public vocabulary shared context'
 
     it 'returns 200 with empty result' do

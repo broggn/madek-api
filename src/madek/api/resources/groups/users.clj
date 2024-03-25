@@ -9,6 +9,8 @@
    [madek.api.pagination :as pagination]
    [madek.api.resources.groups.shared :as groups]
 
+   [madek.api.utils.helper :refer [convert-groupid-userid]]
+
    ; all needed imports
    [madek.api.resources.shared :as sd]
    [madek.api.utils.helper :refer [to-uuid]]
@@ -98,10 +100,25 @@
 
 (defn add-user [group-id user-id]
   (logging/info "add-user" group-id ":" user-id)
-  (if-let [user (find-group-user group-id user-id)]
+
+  (println ">o> 0find-group-user=" (find-group-user group-id user-id))
+  (println ">o> 0group" group-id)
+  (println ">o> 0group.cl" (class group-id))
+  (println ">o> 0user" user-id)
+  (println ">o> 0user.cl" (class user-id))
+
+  (if-let [user (spy (find-group-user group-id user-id))]
     (sd/response_ok {:users (group-users group-id nil)})
     (let [group (groups/find-group group-id)
-          user (find-user user-id)]
+          user (find-user user-id)
+
+
+          p (println ">o> 1group" group)
+          p (println ">o> 1group.cl" (class group))
+          p (println ">o> 1user" user)
+          p (println ">o> 1user.cl" (class user))
+
+          ]
       (if-not (and group user)
         (sd/response_not_found "No such user or group.")
         (do (jdbc/execute! (get-ds)
@@ -165,15 +182,32 @@
 (defn update-insert-query [group-id ids]
   (println ">o> update-insert-query1 " group-id)
   (println ">o> update-insert-query1 " ids)
-  (-> (sql/insert-into :groups_users)
-      (sql/columns :group_id :user_id)
-      (sql/values (->> ids (map (fn [id] [(to-uuid group-id) (to-uuid id)]))))
-      sql-format))
+
+
+  (let [
+        ;; TODO: FIX THIS WITH PRIO!!
+        values (->> ids (map (fn [id] [(to-uuid group-id) (to-uuid id)])))
+        p (println ">o> values=" values)
+
+        res (-> (sql/insert-into :groups_users)
+                (sql/columns :group_id :user_id)
+                (sql/values values)
+                ;(sql/upsert (-> (sql/on-conflict :group_id)
+                ;                (sql/do-update-set :user_id)))
+                sql-format)
+
+        ]res)
+
+
+  )
 
 (defn update-group-users [group-id data]
 
   (println ">o> update-group-users1" group-id)
   (println ">o> update-group-users2" data)
+
+
+  (println ">o> -----------------------")
 
   (jdbc/with-transaction [tx (get-ds)]
     (let [current-group-users-ids (current-group-users-ids tx group-id)
@@ -183,13 +217,15 @@
                                    [])
 
           p (println ">o> target-group-users-ids" target-group-users-ids)
+          p (println ">o> -----------------------")
 
           del-users (clojure.set/difference current-group-users-ids target-group-users-ids)
           p (println ">o> del-users" del-users)
-
+          p (println ">o> -----------------------")
 
           ins-users (clojure.set/difference target-group-users-ids current-group-users-ids)
           p (println ">o> ins-users" ins-users)
+          p (println ">o> -----------------------")
 
           del-query (update-delete-query group-id del-users)
           ins-query (update-insert-query group-id ins-users)]
@@ -198,12 +234,14 @@
       ;(logging/info "update-group-users" "\nins-u\n" ins-users)
       ;(logging/info "update-group-users" "\ndel-q\n" del-query)
       ;(logging/info "update-group-users" "\nins-q\n" ins-query)
+
       (when (first del-users)
         (do
           (println ">o> (first del-users)")
           (jdbc/execute!
             tx
             del-query)))
+
       (when (first ins-users)                               ;; TODO: causes error
         (do
           (println ">o> (first ins-users)")
@@ -250,36 +288,14 @@
   (let [group-id (-> req :parameters :path :group-id)
         user-id (-> req :parameters :path :user-id)
 
-        ;; TODO: move to helper
-        is_uuid (re-matches
-                 #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-                 group-id)
-        group-id (if is_uuid (to-uuid group-id) group-id)
-
-        p (println ">o> 2group-id" group-id)
-        p (println ">o> 2group-id.cl" (class group-id))
+        converted (convert-groupid-userid group-id user-id)
 
 
-
-
-
-        ;; TODO: move to helper
-        ;; create schema-validation for this
-        is_email (re-matches
-                   #"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" user-id)
-        is_uuid (re-matches
-                 #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-                 user-id)
-
-        _ (if (and (not is_email) (not is_uuid))
+        _ (if (-> converted :is_userid_valid)
             (sd/response_failed "Invalid user-id." 400))
 
-
-        user-id (if is_uuid (to-uuid user-id) user-id)
-
-        p (println ">o> 2user-id" user-id)
-        p (println ">o> 2user-id.cl" (class user-id))
-        ;
+        group-id (-> converted :group-id)
+        user-id (-> converted :user-id)
 
         ]
 
@@ -306,7 +322,16 @@
 
 (defn handle_add-group-user [req]
   (let [group-id (-> req :parameters :path :group-id)
-        user-id (-> req :parameters :path :user-id)]
+        user-id (-> req :parameters :path :user-id)
+
+        converted (convert-groupid-userid group-id user-id)
+
+        p (println ">o> handle_add-group-user / converted=" converted)
+
+        group-id (-> converted :group-id)
+        user-id (-> converted :user-id)
+
+        ]
     (add-user group-id user-id)))
 
 ;### Debug ####################################################################

@@ -38,8 +38,9 @@ describe 'updating group-users' do
         end
       end
 
+      # TODO: test
       it 'works and sets the group users to exactly those given with the request' do
-        binding.pry
+        # binding.pry
 
         # method=:put,
         #   body={"msg"=>"ERROR: duplicate key value violates unique constraint \"index_groups_users_on_user_id_and_group_id\"\n  Detail: Key (user_id, group_id)=(942035a7-2f1c-438a-9d58-7f90c3d4f01d, 07d832a8-d349-458e-9256-1109ccc3972a) already exists."},

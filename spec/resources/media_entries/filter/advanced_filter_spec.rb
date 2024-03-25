@@ -22,7 +22,7 @@ describe 'advanced filtering of media entries' do
   context 'applying a combined filter' do
     include_context 'meta data shared context'
 
-    it 'returns 200 with correct result', :skip do
+    it 'returns 200 with correct result' do
       20.times do
         FactoryBot.create \
           [:media_entry_with_image_media_file,

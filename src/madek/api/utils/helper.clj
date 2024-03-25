@@ -257,4 +257,45 @@
     m))
 
 
+; [madek.api.utils.helper :refer [convert-groupid-userid]]
+(defn convert-groupid-userid [group-id user-id]
+  (let [is_uuid (re-matches
+                  #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+                  group-id)
+        group-id (if is_uuid (to-uuid group-id) group-id)
+
+
+        is_email (re-matches #"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" user-id)
+        is_uuid (re-matches
+                  #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+                  user-id)
+        user-id (if is_uuid (to-uuid user-id) user-id)
+
+        is_userid_valid (and (not is_email) (not is_uuid))
+
+        res {:group-id group-id
+             :user-id user-id
+             :is_userid_valid is_userid_valid
+             }
+        p (println ">o> convert-groupid-userid, result:" res)
+        ]
+    res
+
+    ))
+
+
+; [madek.api.utils.helper :refer [convert-groupid]]
+(defn convert-groupid [group-id]
+  (let [is_uuid (re-matches
+                  #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+                  group-id)
+        group-id (if is_uuid (to-uuid group-id) group-id)
+
+        res {:group-id group-id
+             }
+        p (println ">o> convert-groupid, result:" res)
+        ]
+    res
+
+    ))
 

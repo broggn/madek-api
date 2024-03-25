@@ -9,6 +9,8 @@
             [madek.api.resources.groups.users :as group-users]
             [madek.api.resources.shared :as sd]
 
+            [madek.api.utils.helper :refer [convert-groupid]]
+
             [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
 
             [madek.api.utils.helper :refer [mslurp]]
@@ -210,11 +212,15 @@
         p (println ">o> group-id" group-id)
         p (println ">o> group-id.cl" (class group-id))
 
-        ;; TODO: move to helper
-        is_uuid (re-matches
-              #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-              group-id)
-        id (if is_uuid (to-uuid group-id) group-id)
+        ;;; TODO: move to helper
+        ;is_uuid (re-matches
+        ;          #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+        ;          group-id)
+        ;id (if is_uuid (to-uuid group-id) group-id)
+
+        id (-> (convert-groupid group-id) :group-id)
+
+        ; [madek.api.utils.helper :refer [convert-groupid]]
 
         p (println ">o> 2group-id" id)
         p (println ">o> 2group-id.cl" (class id))
@@ -386,7 +392,7 @@
                                :responses {
                                            200 {:description "OK - Returns a list of group users OR an empty list."
                                                 :schema {:body {:users [group-users/schema_export-group-user-simple]}}}
-                               }}
+                                           }}
 
                          ; TODO works with tests, but not with the swagger ui
                          ; TODO: broken test / duplicate key issue
@@ -426,7 +432,7 @@
                                                         :examples {"application/json" {:message "No such group or user."}}}
                                                    }
 
-                                       } ; TODO error handling
+                                       }                    ; TODO error handling
 
                                  :put {:summary (t "Get group user by group-id and user-id")
                                        :description "Get group user by group-id and user-id."
@@ -435,7 +441,12 @@
                                        :handler group-users/handle_add-group-user
                                        :middleware [wrap-authorize-admin!]
                                        :coercion reitit.coercion.schema/coercion
-                                       :parameters {:path {:group-id s/Uuid :user-id s/Uuid}}
+
+                                       ;; TODO: FIX: group-id and user-id are not uuids
+                                       :parameters {:path {:group-id s/Str :user-id s/Str}}
+                                       ;:parameters {:path {:group-id s/Uuid :user-id s/Uuid}}
+
+
                                        :responses {200 {:body {:users [group-users/schema_export-group-user-simple]}}
 
                                                    ;404 {:body s/Any}
@@ -444,7 +455,7 @@
                                                         :schema s/Str
                                                         :examples {"application/json" {:message "No such group or user."}}}
 
-                                                   }} ; TODO error handling
+                                                   }}       ; TODO error handling
 
                                  :delete {:summary (t "Deletes a group-user by group-id and user-id")
                                           :description "Delete a group-user by group-id and user-id."

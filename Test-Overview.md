@@ -9,17 +9,18 @@ Overview spec-tests
   - admin ok
   - collection ok
   - media-file ok
-  
+  - media_entries ok
   - collections ok
-  - groups 4fails
-  - media-entry 11fail
-  - media_entries 12fail
+  - meta-data ok
+  - meta-keys ok
+  - preview ok
+  - roles ok
+  
+  - groups 1fails  (upsert) ./spec/resources/groups/users/update_spec.rb:42
+  - media-entry 4fail
   - users 3fail
-  - meta-data 97fail
-  - meta-keys 2fail
   - people 5fail
-  - preview 2fail
-  - roles 2fail
+  
   - vocabularies 2fail
   - basic
     - app-settings ok
