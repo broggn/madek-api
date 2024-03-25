@@ -68,6 +68,12 @@ context 'a user in a group' do
           it 'works' do
             url = "/api/admin/groups/#{CGI.escape(@group.institutional_id)}" \
               "/users/#{CGI.escape(@user.email)}"
+
+            # "/api/admin/groups/a64f6b63-198f-40f8-84c2-9011c3cc2ec7/users/renae.strosin_bde11f54%40hammes.io"
+            aa=client.get(url)
+
+            # binding.pry
+
             expect(client.get(url).status).to be== 200
           end
         end

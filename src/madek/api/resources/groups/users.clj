@@ -242,13 +242,49 @@
 (def schema_update-group-user-list
   {:users
    [{(s/required-key :id) s/Uuid
-   ;[{(s/optional-key :id) s/Uuid
+     ;[{(s/optional-key :id) s/Uuid
      (s/optional-key :institutional_id) s/Uuid
      (s/optional-key :email) s/Str}]})
 
 (defn handle_get-group-user [req]
   (let [group-id (-> req :parameters :path :group-id)
-        user-id (-> req :parameters :path :user-id)]
+        user-id (-> req :parameters :path :user-id)
+
+        ;; TODO: move to helper
+        is_uuid (re-matches
+                 #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+                 group-id)
+        group-id (if is_uuid (to-uuid group-id) group-id)
+
+        p (println ">o> 2group-id" group-id)
+        p (println ">o> 2group-id.cl" (class group-id))
+
+
+
+
+
+        ;; TODO: move to helper
+        ;; create schema-validation for this
+        is_email (re-matches
+                   #"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" user-id)
+        is_uuid (re-matches
+                 #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+                 user-id)
+
+        _ (if (and (not is_email) (not is_uuid))
+            (sd/response_failed "Invalid user-id." 400))
+
+
+        user-id (if is_uuid (to-uuid user-id) user-id)
+
+        p (println ">o> 2user-id" user-id)
+        p (println ">o> 2user-id.cl" (class user-id))
+        ;
+
+        ]
+
+
+
     (logging/info "handle_get-group-user" "\ngroup-id\n" group-id "\nuser-id\n" user-id)
     (get-group-user group-id user-id)))
 

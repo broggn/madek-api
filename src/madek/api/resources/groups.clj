@@ -210,11 +210,10 @@
         p (println ">o> group-id" group-id)
         p (println ">o> group-id.cl" (class group-id))
 
-
+        ;; TODO: move to helper
         is_uuid (re-matches
               #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
               group-id)
-
         id (if is_uuid (to-uuid group-id) group-id)
 
         p (println ">o> 2group-id" id)
@@ -408,13 +407,18 @@
                                            404 {:body s/Str}}}}]
 
    ["/:group-id/users/:user-id" {:get {:summary (t "Get group user by group-id and user-id")
-                                       :description "Get group user by group-id and user-id. gid: 4059e7eb-cf2d-4434-b14e-9a8b4119cfbe uid: 74feaf67-6706-469a-92a5-eff9aef9f897 "
+                                       :description "gid= uuid/institutional_id\n
+                                       user_id= uuid|email??\n WTF
+                                       Get group user by group-id and user-id. gid: 4059e7eb-cf2d-4434-b14e-9a8b4119cfbe uid: 74feaf67-6706-469a-92a5-eff9aef9f897 "
                                        :swagger {:produces "application/json"}
                                        :content-type "application/json"
                                        :handler group-users/handle_get-group-user
                                        :middleware [wrap-authorize-admin!]
                                        :coercion reitit.coercion.schema/coercion
-                                       :parameters {:path {:group-id s/Uuid :user-id s/Uuid}}
+
+                                       ;:parameters {:path {:group-id s/Uuid :user-id s/Uuid}}
+                                       :parameters {:path {:group-id s/Str :user-id s/Str}}
+
                                        :responses {200 {:body group-users/schema_export-group-user-simple}
 
                                                    404 {:description "Creation failed."

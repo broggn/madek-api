@@ -27,7 +27,7 @@ context 'groups' do
         end
 
         it 'works' do
-          binding.pry
+          # binding.pry
           expect(get_group_result.status).to be==200
         end
 

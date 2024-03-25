@@ -39,7 +39,16 @@ describe 'updating group-users' do
       end
 
       it 'works and sets the group users to exactly those given with the request' do
-        expect(response.status).to be== 200
+        binding.pry
+
+        # method=:put,
+        #   body={"msg"=>"ERROR: duplicate key value violates unique constraint \"index_groups_users_on_user_id_and_group_id\"\n  Detail: Key (user_id, group_id)=(942035a7-2f1c-438a-9d58-7f90c3d4f01d, 07d832a8-d349-458e-9256-1109ccc3972a) already exists."},
+        #   url=#<URI::HTTP http://localhost:3104/api/admin/groups/07d832a8-d349-458e-9256-1109ccc3972a/users/>,
+        #     request=#<struct Faraday::RequestOptions params_encoder=nil, proxy=nil, bind=nil, timeout=nil, open_timeout=nil, write_timeout=nil, boundary=nil, oauth=nil, context=nil>,
+        #       request_headers={"Accept"=>"application/json", "User-Agent"=>"Faraday v0.17.6", "Content-Type"=>"application/json", "Authorization"=>"Basic ZGFycmVsbGIyM2RkZDYwOlRPUFNFQ1JFVA=="},
+
+
+          expect(response.status).to be== 200
         expect(
           Set.new(@group.users.reload.map(&:id))
         ).to be== Set.new(@update_users.map(&:id))
