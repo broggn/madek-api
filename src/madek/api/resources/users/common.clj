@@ -5,6 +5,9 @@
    [honey.sql.helpers :as sql]
    [logbug.debug :as debug]
    [madek.api.resources.shared :as sd]
+
+   [madek.api.utils.helper :refer [convert-userid]]
+
    [next.jdbc :as jdbc]
    [schema.core :as s]
    [taoensso.timbre :refer [debug error info spy warn]]))
@@ -36,11 +39,12 @@
   ([sql-map uid]
    (-> sql-map
        (sql/where
-        (if (uuid/uuidable? uid)
-          [:= :users.id (uuid/as-uuid uid)]
-          [:or
-           [:= :users.login [:lower uid]]
-           [:= [:lower :users.email] [:lower uid]]])))))
+         (if (uuid/uuidable? uid)
+           ;[:= :users.id (uuid/as-uuid uid)]
+           [:= :users.id uid]
+           [:or
+            [:= :users.login [:lower uid]]
+            [:= [:lower :users.email] [:lower uid]]])))))
 
 (def is-admin-sub
   [:exists
@@ -59,14 +63,48 @@
   (-> base-query
       (where-uid uid)
       sql-format
+      spy
       (->> (jdbc/execute-one! ds))))
 
 (defn wrap-find-user [param]
   (fn [handler]
     (fn [{{uid param} :path-params ds :tx :as request}]
-      (if-let [user (find-user-by-uid uid ds)]
-        (handler (assoc request :user user))
-        (sd/response_not_found "No such user.")))))
+
+      (let [
+
+            p (println ">o> wrap-find-user =================" )
+            p (println ">o> uid=" uid)
+            p (println ">o> param=" param)
+
+            p (println ">o> uid=" uid)
+            p (println ">o> uid.cl=" (class uid))
+
+            converted (convert-userid uid)
+            uid (-> converted :user-id)
+
+            ;user (find-user-by-uid uid ds)
+
+            p (println ">o> uid=" uid)
+            p (println ">o> uid.cl=" (class uid))
+
+
+            user (find-user-by-uid uid ds)
+            p (println ">o> user=" user)
+            p (println ">o> handler=" handler)
+            ]
+
+        (if (-> converted :is_userid_valid)
+          ;(if-let [user (find-user-by-uid uid ds)]
+          (if user
+            (handler (assoc request :user user))
+            (sd/response_not_found "No such user."))
+          (sd/response_bad_request "UserId is not valid."))
+        )
+
+
+      )))
+
+
 
 ;### Debug ####################################################################
-;(debug/debug-ns *ns*)
+(debug/debug-ns *ns*)

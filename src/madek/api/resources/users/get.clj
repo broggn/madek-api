@@ -38,7 +38,9 @@
    :created_at s/Any
 
    ;:email (s/with-fn-validation valid-email? s/Str)
-   (s/optional-key :email) email-validation
+
+   ;(s/optional-key :email) email-validation ;; ?? TODO: invalid email?
+   (s/optional-key :email) s/Str
 
    :first_name (s/maybe s/Str)
    :id s/Uuid
@@ -58,6 +60,10 @@
 
 (defn handler
   [{user :user :as req}]
+
+
+  (println ">o> users.get::handler user=" user)
+
   (sd/response_ok user))
 
 (def route

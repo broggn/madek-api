@@ -50,7 +50,7 @@ describe 'Getting a media-entry resource with authentication' do
     end
 
     it 'is allowed 200' do
-      binding.pry
+      # binding.pry
 
       # method=:get,
       #   body={"message"=>"Not authorized for media-resource"},
@@ -226,7 +226,7 @@ describe 'Getting a media-entry resource with authentication' do
     end
 
     it 'is not allowed 403' do
-      binding.pry
+      # binding.pry
 
       expect(response.status).to be == 403
     end

@@ -256,23 +256,24 @@
     {}
     m))
 
+(def email-regex #"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$")
 
 ; [madek.api.utils.helper :refer [convert-groupid-userid]]
 (defn convert-groupid-userid [group-id user-id]
-  (let [is_uuid (re-matches
+  (let [is_uuid (boolean (re-matches
                   #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-                  group-id)
+                  group-id))
         group-id (if is_uuid (to-uuid group-id) group-id)
 
 
-        is_email (re-matches #"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" user-id)
-        is_uuid (re-matches
+        ;is_email (re-matches #"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" user-id)
+        is_email (re-matches email-regex user-id)
+        is_uuid (boolean (re-matches
                   #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-                  user-id)
+                  user-id))
         user-id (if is_uuid (to-uuid user-id) user-id)
 
-        is_userid_valid (and (not is_email) (not is_uuid))
-
+        is_userid_valid (or is_email is_uuid)
         res {:group-id group-id
              :user-id user-id
              :is_userid_valid is_userid_valid
@@ -284,11 +285,76 @@
     ))
 
 
+
+; [madek.api.utils.helper :refer [convert-userid]]
+(defn convert-userid [user-id]
+  (let [
+        ;is_email (re-matches #"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" user-id)
+
+        p (println ">o> user-id=" user-id)
+        p (println ">o> user-id.cl=" (class user-id))
+
+        is_email (boolean (re-matches email-regex (str user-id)))
+
+
+        p (println ">o> is_email_VALID?" is_email)
+
+        is_uuid (boolean (re-matches
+                  #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+                  user-id))
+        p (println ">o> is_uuid_VALID?" is_uuid)
+
+        user-id (if is_uuid (to-uuid user-id) user-id)
+
+        is_userid_valid (or is_email is_uuid)
+
+        res {
+             :user-id user-id
+             :is_userid_valid is_userid_valid
+             :is_valid_email is_email
+             :is_valid_uuid is_uuid
+             }
+        p (println ">o> convert-userid, result:" res)
+        ]
+    res
+
+    ))
+
+
+(comment
+  (let [
+        mail "_somename@example.com"
+        ;mail "somename@example.com"
+        ;mail "123e4567-e89b-12d3-a456-426614174000"
+
+        res (convert-userid mail)
+
+        ]
+    res)
+  )
+
+
+
+(defn valid-email? [email]
+  (boolean (re-matches email-regex email)))
+
+;; Example usage:
+(comment
+  (let [email1 "_somename@example.com"
+        email2 "somename@example.com"
+        valid1 (valid-email? email1)
+        valid2 (valid-email? email2)]
+    (println "Email 1 is valid:" valid1)
+    (println "Email 2 is valid:" valid2))
+
+  )
+
+
 ; [madek.api.utils.helper :refer [convert-groupid]]
 (defn convert-groupid [group-id]
-  (let [is_uuid (re-matches
+  (let [is_uuid (boolean (re-matches
                   #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-                  group-id)
+                  group-id))
         group-id (if is_uuid (to-uuid group-id) group-id)
 
         res {:group-id group-id
