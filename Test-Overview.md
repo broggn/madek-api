@@ -15,13 +15,13 @@ Overview spec-tests
   - meta-keys ok
   - preview ok
   - roles ok
+  - vocabularies ok
   
   - groups 1fails  (upsert) ./spec/resources/groups/users/update_spec.rb:42
   - media-entry 4fail
   - users 3fail
   - people 5fail
   
-  - vocabularies 2fail
   - basic
     - app-settings ok
     - context-key ok

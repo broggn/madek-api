@@ -59,12 +59,12 @@
         p (println ">o> qparams1" qparams)
         p (println ">o> qparams2" (-> request :path-params))
 
+        ;; TODO: SPOT: pagination-handling
         page (get qparams "page")
         count (get qparams "count")
 
-        offset (str-to-int page 1)
-        size (str-to-int count 5)
-
+        offset (str-to-int page 0)
+        size (str-to-int count 100)
         p (println ">o> offset" offset ", size" size)
 
         query (base-query user-id size offset request)

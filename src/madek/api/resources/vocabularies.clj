@@ -596,10 +596,7 @@
                :coercion reitit.coercion.schema/coercion
                :swagger (generate-swagger-pagination-params)
                :responses {
-                           ;200 {:body {:vocabularies [schema_export-vocabulary]}}
-                           200 {:body {:vocabularies s/Any}}
-
-
+                           200 {:body {:vocabularies [schema_export-vocabulary]}}
                            }}}]
 
    ["/:id" {:get {:summary (t "Get vocabulary by id.")

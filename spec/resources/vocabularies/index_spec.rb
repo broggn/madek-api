@@ -8,11 +8,8 @@ describe 'index' do
 
     it 'should return 200 with only viewable by public vocabularies' do
       FactoryBot.create(:vocabulary, enabled_for_public_view: false)
-
-      binding.pry
-
       expect(vocabularies_resource.status).to be == 200
-      #expect(vocabularies_resource.body['vocabularies'].count).to be == 1
+      expect(vocabularies_resource.body['vocabularies'].count).to be == 1
       data = vocabularies_resource.body['vocabularies']
       vocab_ids = [ 'madek_core']
       data.each do |vocab|
@@ -35,7 +32,6 @@ describe 'index' do
 
           vocab_ids = [vocabulary.id, 'madek_core']
           data = vocabularies_resource.body['vocabularies']
-
           data.each do |vocab|
             expect(vocab_ids).to include vocab['id']
           end
@@ -56,16 +52,6 @@ describe 'index' do
           #expect(data['id']).to eq vocabulary.id
 
           data = vocabularies_resource.body['vocabularies']
-
-          # FIXME
-          # => {"schema"=>{"vocabularies"=>[{"id"=>"java.lang.String", "position"=>"Int", "labels"=>"(maybe {(optional-key :de) (maybe Str), (optional-key :en) (maybe Str)})", "descriptions"=>"(maybe {(optional-key :de) (maybe Str), (optional-key :en) (maybe Str)})", "(opt :admin_comment)"=>"(maybe Str)"}]},
-          #     "errors"=>{"vocabularies"=>[{"id"=>"missing-required-key"}]},
-          #     "type"=>"reitit.coercion/response-coercion",
-          #     "coercion"=>"schema",
-
-          # '/api/vocabularies/'
-          # binding.pry
-
           vocab_ids = [vocabulary.id, 'madek_core']
           data.each do |vocab|
             expect(vocab_ids).to include vocab['id']
