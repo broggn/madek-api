@@ -66,36 +66,6 @@
            (= perm "edit_metadata_and_relations"))
      (group-permission-for-user-exists-condition perm id))])
 
-;(defn- filter-by-permission-for-auth-entity [sqlmap permission authenticated-entity]
-;
-;
-;  (try
-;    (println ">o> filter-by-permission-for-auth-entity authenticated-entity/type=" (:type authenticated-entity))
-;    (println ">o> filter-by-permission-for-auth-entity authenticated-entity/entity=" authenticated-entity)
-;    (println ">o> filter-by-permission-for-auth-entity permission=" permission)
-;
-;    (catch Exception ex
-;      (println ">o> filter-by-permission-for-auth-entity ERROR")
-;      )
-;    )
-;
-;  (when-not authenticated-entity
-;    (do
-;      (println ">o> CAUTION/FIX-ME !!!!!!!!!!!!!!")
-;      sqlmap)
-;    (case (:type authenticated-entity)
-;      "User" (sql/where sqlmap (user-authorized-condition
-;                                 permission (:id authenticated-entity)))
-;
-;
-;      ; TODO session
-;      ;"ApiClient" (sql/where sqlmap (api-client-authorized-condition
-;      ;                                      permission (:id authenticated-entity)))
-;      (throw (ex-info (str "Filtering for " permission " requires a signed-in entity.")
-;               {:status 422})))
-;    )
-;  )
-
 (defn- filter-by-permission-for-auth-entity [sqlmap permission authenticated-entity]
   (case (:type authenticated-entity)
     "User" (sql/where sqlmap (user-authorized-condition
@@ -107,34 +77,6 @@
              {:status 422}))))
 
 (defn filter-by-query-params [sqlmap query-params authenticated-entity]
-
-  ;(let [
-  ;      p (println ">o> query-params=" query-params)
-  ;
-  ;      true_param ["me_get_metadata_and_previews"
-  ;                  "me_edit_metadata_and_relations"
-  ;                  "me_edit_permission"]
-  ;
-  ;      p (println ">o> true_param" true_param)
-  ;
-  ;      res1 (get query-params (keyword true_param))
-  ;      p (println ">o> res1=" res1)
-  ;
-  ;      res2 (not= (get query-params (keyword true_param)) true)
-  ;      p (println ">o> res2=" res2)
-  ;
-  ;
-  ;      ;>o> query-params= {:me_edit_metadata_and_relations true, :collection_id #uuid "b71e14b7-f5c4-4166-81e5-d51090d13232"}
-  ;      ;>o> true_param [me_get_metadata_and_previews me_edit_metadata_and_relations me_edit_permission]
-  ;      ;>o> res1= nil
-  ;      ;>o> res2= true
-  ;      ;>o> filter-by-query-params
-  ;      ;>o> authenticated-entity/type= nil
-  ;
-  ;      ])
-
-
-
   (doseq [true_param ["me_get_metadata_and_previews"
                       "me_edit_metadata_and_relations"
                       "me_edit_permission"]]

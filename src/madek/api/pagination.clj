@@ -42,19 +42,9 @@
 
   (let [
         defaults {:page 0 :count 100}
-        ;params defaults
-
-
         params (merge defaults params)
         off (compute-offset params)
         limit (page-count params)
-
-        p (println ">o> params" params)
-        p (println ">o> off" off)
-        p (println ">o> limit" limit)
-
-        p (println ">o> off" (class off))
-        p (println ">o> limit" (class limit))
         ]
     (-> query
         (sql/limit limit)

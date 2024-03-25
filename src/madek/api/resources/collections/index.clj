@@ -62,24 +62,14 @@
 ; TODO test query and paging
 (defn- build-query [request]
   (let [
-
-
         query-params (:query-params request)
         p (println ">o> query-params" query-params)
 
-
         authenticated-entity (:authenticated-entity request)
         p (println ">o> authenticated-entity=" authenticated-entity)
-
-
         p (println ">o> abc" query-params)
 
-        ;defaults {:page 0 :count 100}
-        ;params (merge defaults params)
-
-
         full_data (= true (:full_data query-params))
-
         sql-query (-> (base-query full_data)
                       (set-order query-params)
                       (sd/build-query-param query-params :creator_id)
