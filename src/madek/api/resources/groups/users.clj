@@ -171,6 +171,10 @@
       sql-format))
 
 (defn update-group-users [group-id data]
+
+  (println ">o> update-group-users1" group-id)
+  (println ">o> update-group-users2" data)
+
   (jdbc/with-transaction [tx (get-ds)]
     (let [current-group-users-ids (current-group-users-ids tx group-id)
           p (println ">o> current-group-users-ids" current-group-users-ids)
@@ -181,7 +185,12 @@
           p (println ">o> target-group-users-ids" target-group-users-ids)
 
           del-users (clojure.set/difference current-group-users-ids target-group-users-ids)
+          p (println ">o> del-users" del-users)
+
+
           ins-users (clojure.set/difference target-group-users-ids current-group-users-ids)
+          p (println ">o> ins-users" ins-users)
+
           del-query (update-delete-query group-id del-users)
           ins-query (update-insert-query group-id ins-users)]
       ;(logging/info "update-group-users" "\ncurr\n" current-group-users-ids "\ntarget\n" target-group-users-ids )

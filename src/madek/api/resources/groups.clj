@@ -9,6 +9,7 @@
             [madek.api.resources.groups.users :as group-users]
             [madek.api.resources.shared :as sd]
 
+            [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
 
             [madek.api.utils.helper :refer [mslurp]]
             [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
@@ -204,7 +205,21 @@
   )
 
 (defn handle_get-group [req]
-  (let [id (-> req :parameters :path :id)]
+  (let [group-id (-> req :parameters :path :id)
+
+        p (println ">o> group-id" group-id)
+        p (println ">o> group-id.cl" (class group-id))
+
+
+        is_uuid (re-matches
+              #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+              group-id)
+
+        id (if is_uuid (to-uuid group-id) group-id)
+
+        p (println ">o> 2group-id" id)
+        p (println ">o> 2group-id.cl" (class id))
+        ]
     (logging/info "handle_get-group" "\nid\n" id)
     (get-group id)))
 
@@ -300,15 +315,21 @@
 
                             500 {:body s/Any}}}}]
 
-   ["/:id" {:get {:summary (t "Get group by id")
-                  :description "Get group by id. Returns 404, if no such group exists."
+   ["/:id" {:get {:summary (t "Get group by id OR institutional-id")
+                  :description "CAUTION: Get group by id OR institutional-id. Returns 404, if no such group exists."
                   :swagger {:produces "application/json"}
                   :content-type "application/json"
                   :accept "application/json"
                   :handler handle_get-group
                   :middleware [wrap-authorize-admin!]
                   :coercion reitit.coercion.schema/coercion
-                  :parameters {:path {:id s/Uuid}}
+
+                  ;:parameters {:path {:id s/Uuid}}
+                  :parameters {:path {:id s/Any}}
+                  ;; can be uuid (group-id) or string (institutional-id)
+                  ;; http://localhost:3104/api/admin/groups/%3Fthis%23id%2Fneeds%2Fto%2Fbe%2Furl%26encoded>,
+
+
                   :responses {200 {:body schema_export-group}
 
                               404 {:description "Not Found."

@@ -113,6 +113,6 @@
       (query-index-resources request)}}))
 
 ;### Debug ####################################################################
-(debug/debug-ns *ns*)
+;(debug/debug-ns *ns*)
 ;(debug/wrap-with-log-debug #'filter-by-permissions)
 ;(debug/wrap-with-log-debug #'build-query)

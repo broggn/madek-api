@@ -12,7 +12,7 @@ context 'a user in a group' do
     include_context :json_client_for_authenticated_admin_user do
 
       # TODO json roa remove: test links
-      # describe 'getting the the user via the group with json roa' do
+      #describe 'getting the the user via the group with json roa' do
       #  it 'works' do
       #    expect(
       #      client.get.relation('group').get(id: @group.id) \
@@ -33,7 +33,8 @@ context 'a user in a group' do
       #    ).to be== @user[:id]
       #  end
 
-      # end
+      #end
+
 
       describe 'getting the the user via the group over bare http' do
 
@@ -43,14 +44,14 @@ context 'a user in a group' do
           end
 
           it 'works' do
-            expect(faraday_response.status).to be == 200
+            expect(faraday_response.status).to be== 200
           end
 
           it 'has the expected properties' do
             expect(
               faraday_response.body.with_indifferent_access \
-                              .slice(:id, :email, :institutional_id, :person_id)
-            ).to be == @user.slice(:id, :email, :institutional_id, :person_id)
+              .slice(:id, :email, :institutional_id, :person_id)
+            ).to be== @user.slice(:id, :email, :institutional_id, :person_id)
           end
 
         end
@@ -59,36 +60,25 @@ context 'a user in a group' do
           it 'works' do
             url = "/api/admin/groups/#{CGI.escape(@group.institutional_id)}" \
               "/users/#{CGI.escape(@user.institutional_id)}"
-            expect(client.get(url).status).to be == 200
+            expect(client.get(url).status).to be== 200
           end
         end
 
-        # TODO: fixme
         describe ' via email ' do
-          it 'works', :skip do
-            pending "tofix"
-
+          it 'works' do
             url = "/api/admin/groups/#{CGI.escape(@group.institutional_id)}" \
               "/users/#{CGI.escape(@user.email)}"
-
-            puts ">> url: #{url}"
-
-            expect(client.get(url).status).to be == 200
+            expect(client.get(url).status).to be== 200
           end
         end
 
       end
 
       describe ' using the wrong id (email) ' do
-        it 'returns 404', :skip do
-          pending "tofix"
-
+        it 'returns 404' do
           url = "/api/admin/groups/#{CGI.escape(@group.institutional_id)}" \
             "/users/#{CGI.escape('noexists@nowhere')}"
-
-          puts ">> url: #{url}"
-
-          expect(client.get(url).status).to be == 404
+          expect(client.get(url).status).to be== 404
         end
       end
 

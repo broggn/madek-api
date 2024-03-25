@@ -27,6 +27,7 @@ context 'groups' do
         end
 
         it 'works' do
+          binding.pry
           expect(get_group_result.status).to be==200
         end
 
@@ -38,26 +39,21 @@ context 'groups' do
         end
       end
 
-      context 'a institunal group (with naughty institutional_id)' do
+      context 'a institutional group (with naughty institutional_id)' do
         before :each do
           @inst_group = FactoryBot.create :institutional_group,
             institutional_id: '?this#id/needs/to/be/url&encoded'
         end
-
-        it 'can be retrieved by the institutional_id', :skip do
-          pending "tofix"
-          puts(">>0> /api/admin/groups/#{CGI.escape(@inst_group.institutional_id)}")
+        it 'can be retrieved by the institutional_id' do
 
 
-          abc = client.get("/api/admin/groups/#{CGI.escape(@inst_group.institutional_id)}")
-          puts(">>1> #{abc.status}")
-          puts(">>2> #{abc.body}")
+          puts ">>> institutional_id1: #{@inst_group["institutional_id"]}"
+          puts ">>> institutional_id2: #{CGI.escape(@inst_group["institutional_id"])}"
+          # binding.pry
 
           expect(
             client.get("/api/admin/groups/#{CGI.escape(@inst_group.institutional_id)}").status
           ).to be== 200
-
-
           expect(
             client.get("/api/admin/groups/#{CGI.escape(@inst_group.institutional_id)}").body["id"]
           ).to be== @inst_group["id"]

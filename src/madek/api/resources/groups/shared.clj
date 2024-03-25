@@ -24,10 +24,12 @@
    ;(if (re-matches
    ;     #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
    ;     group-id)
+
    (if (instance? java.util.UUID group-id)
+
      (sql/where sql-map [:or
-                         ;[:= :groups.id (to-uuid group-id)]
-                         [:= :groups.id group-id]
+                         [:= :groups.id (to-uuid group-id)]
+                         ;[:= :groups.id group-id]
                          [:= :groups.institutional_id (str group-id)]])
      (sql/where sql-map [:= :groups.institutional_id (str group-id)]))))
 
