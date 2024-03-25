@@ -18,10 +18,9 @@ Overview spec-tests
   - vocabularies ok
   - people ok
   - users ok
+  - groups ok  (upsert) ./spec/resources/groups/users/update_spec.rb:42
   
-  - groups 1fails  (upsert) ./spec/resources/groups/users/update_spec.rb:42
-  - 
-  - media-entry 4fail
+    - media-entry 4fail
   
   - basic
     - app-settings ok
