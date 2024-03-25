@@ -8,6 +8,9 @@ describe 'index' do
 
     it 'should return 200 with only viewable by public vocabularies' do
       FactoryBot.create(:vocabulary, enabled_for_public_view: false)
+
+      binding.pry
+
       expect(vocabularies_resource.status).to be == 200
       #expect(vocabularies_resource.body['vocabularies'].count).to be == 1
       data = vocabularies_resource.body['vocabularies']
@@ -32,9 +35,6 @@ describe 'index' do
 
           vocab_ids = [vocabulary.id, 'madek_core']
           data = vocabularies_resource.body['vocabularies']
-
-          # FIXME
-          # binding.pry
 
           data.each do |vocab|
             expect(vocab_ids).to include vocab['id']

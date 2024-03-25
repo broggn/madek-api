@@ -25,8 +25,9 @@
        [:in :vocabularies.id vocabulary-ids]])))
 
 (defn- base-query
+  ;; TODO: should be depr, because of is_admin_endpoint-feature
   ([user-id size offset]
-   (-> (sql/select :*)                                      ;:id)
+   (-> (sql/select :*)
        (sql/from :vocabularies)
        (sql/where (where-clause user-id))
        (sql/offset offset)
@@ -34,14 +35,11 @@
        sql-format))
 
   ([user-id size offset request]
-
    (let [
-         is_admin (-> request :is_admin)
          is_admin_endpoint (str/includes? (-> request :uri) "/admin/")
-
          select (if is_admin_endpoint
                   (sql/select :*)
-                  (sql/select :admin_comment :position :labels :descriptions))
+                  (sql/select :id :admin_comment :position :labels :descriptions))
          ]
 
      (-> select
@@ -50,7 +48,6 @@
          (sql/offset offset)
          (sql/limit size)
          sql-format)))
-
   )
 
 
@@ -71,7 +68,7 @@
         p (println ">o> offset" offset ", size" size)
 
         query (base-query user-id size offset request)
-        p (println ">o> query" query)]
+        p (println ">o> ???? query" query)]
     ;(logging/info "query-index-resources: " query)
     (jdbc/execute! (get-ds) query)))
 

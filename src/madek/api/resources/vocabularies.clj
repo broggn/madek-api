@@ -595,7 +595,12 @@
                :content-type "application/json"
                :coercion reitit.coercion.schema/coercion
                :swagger (generate-swagger-pagination-params)
-               :responses {200 {:body {:vocabularies [schema_export-vocabulary]}}}}}]
+               :responses {
+                           ;200 {:body {:vocabularies [schema_export-vocabulary]}}
+                           200 {:body {:vocabularies s/Any}}
+
+
+                           }}}]
 
    ["/:id" {:get {:summary (t "Get vocabulary by id.")
                   ;:description "Get a vocabulary by id. Returns 404, if no such vocabulary exists."
