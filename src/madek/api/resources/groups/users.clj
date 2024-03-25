@@ -186,6 +186,10 @@
 
   (let [
         ;; TODO: FIX THIS WITH PRIO!!
+
+        p (println ">o> ? group-id" group-id)
+        p (println ">o> ? group-id.cl" (class group-id))
+
         values (->> ids (map (fn [id] [(to-uuid group-id) (to-uuid id)])))
         p (println ">o> values=" values)
 

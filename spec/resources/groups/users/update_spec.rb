@@ -34,6 +34,7 @@ describe 'updating group-users' do
       let :response do
         client.put("/api/admin/groups/#{CGI.escape(@group.id)}/users/") do |req|
           req.body = {users: @update_data}.to_json
+          puts ">>> req.body=#{req.body.inspect}"
           req.headers['Content-Type'] = 'application/json'
         end
       end
