@@ -17,10 +17,11 @@ Overview spec-tests
   - roles ok
   - vocabularies ok
   - people ok
+  - users ok
   
   - groups 1fails  (upsert) ./spec/resources/groups/users/update_spec.rb:42
+  - 
   - media-entry 4fail
-  - users 3fail
   
   - basic
     - app-settings ok
