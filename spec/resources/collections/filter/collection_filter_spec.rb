@@ -14,10 +14,11 @@ describe 'filtering collections' do
 
 
     puts ">>1a #{ccc.headers}"
+    puts ">>1b #{ccc.body}"
 
     aaa = ccc.body
 
-
+    # binding.pry
 
     puts ">>2> #{aaa}"
     # binding.qqqqqqqpry

@@ -10,7 +10,7 @@ Overview spec-tests
   - collection ok
   - media-file ok
   
-  - collections 5fail
+  - collections ok
   - groups 4fails
   - media-entry 11fail
   - media_entries 12fail
@@ -64,6 +64,7 @@ rspec ./spec/resources/collections/filter/permissions_filter_spec.rb:45 # filter
 rspec ./spec/resources/collections/filter/permissions_filter_spec.rb:58 # filtering collections by me_ permissons me_get_metadata_and_previews for a user 200 for responsible user
 rspec ./spec/resources/collections/filter/permissions_filter_spec.rb:72 # filtering collections by me_ permissons me_get_metadata_and_previews for a user 200 for user permission
 rspec ./spec/resources/collections/filter/permissions_filter_spec.rb:88 # filtering collections by me_ permissons me_get_metadata_and_previews for a user 200 for group permission
+
 rspec ./spec/resources/media_entries/filter/advanced_filter_spec.rb:48 # advanced filtering of media entries searching a string through all meta data returns 200 with correct result
 rspec ./spec/resources/media_entries/index-order-by_spec.rb[1:3:9:1] # ordering media entries created_at madek_core:title ascending order
 rspec ./spec/resources/media_entries/index-order-by_spec.rb[1:3:9:2] # ordering media entries created_at madek_core:title descending order
@@ -76,6 +77,7 @@ rspec ./spec/resources/media_entries/index-order-by_spec.rb[1:4:4:2:1] # orderin
 rspec ./spec/resources/media_entries/index-order-by_spec.rb[1:4:4:2:2] # ordering media entries ordering media-entries in a particular set ordering by order param madek_core:title descending order
 rspec ./spec/resources/media_entries/index-order-by_spec.rb:331 # ordering media entries ordering media-entries in a particular set ordering by order param stored_in_collection when collection has title ASC sorting ascending order
 rspec ./spec/resources/media_entries/index-order-by_spec.rb:337 # ordering media entries ordering media-entries in a particular set ordering by order param stored_in_collection when collection has title DESC sorting descending order
+
 rspec ./spec/resources/meta-data/by-media-resource/meta-datum-json_spec.rb[1:1:1:1:1:1:1] # generated runs ROUND 1 meta_datum_json_for_random_resource_type authenticated_json_client with creator is authed user the meta-datum resource status 200
 rspec ./spec/resources/meta-data/by-media-resource/meta-datum-json_spec.rb[1:1:1:1:1:1:2] # generated runs ROUND 1 meta_datum_json_for_random_resource_type authenticated_json_client with creator is authed user the meta-datum resource holds the proper json value
 rspec ./spec/resources/meta-data/by-media-resource/meta-datum-json_spec.rb[1:2:1:1:1:1:1] # generated runs ROUND 2 meta_datum_json_for_random_resource_type authenticated_json_client with creator is authed user the meta-datum resource status 200
@@ -174,18 +176,24 @@ rspec ./spec/resources/meta-data/edit/meta-datum-text_spec.rb:112 # generated ru
 rspec ./spec/resources/meta-data/edit/meta-datum-text_spec.rb:116 # generated runs ROUND 1 edit meta-data-text for random_resource_type authenticated_json_client with creator is authed user delete the meta-datum resource holds the proper value
 rspec ./spec/resources/meta-data/meta-datum-roles_spec.rb[1:2:1:1:1:1:2:2:1] # generated runs ROUND 2 meta_datum_roles_for_random_resource_type authenticated_json_client with random public view permission the meta-data resource if the response is 200 MetaDatum::Role resource provides valid relations
 rspec ./spec/resources/meta-data/meta-datum-roles_spec.rb[1:3:1:1:1:1:2:2:1] # generated runs ROUND 3 meta_datum_roles_for_random_resource_type authenticated_json_client with random public view permission the meta-data resource if the response is 200 MetaDatum::Role resource provides valid relations
+
 rspec ./spec/resources/meta-keys/index_spec.rb:24 # index when user is authenticated when view permission is true returns meta key in collection through the user permissions
 rspec ./spec/resources/meta-keys/index_spec.rb:39 # index when user is authenticated when view permission is true returns meta key in collection through the group permissions
+
 rspec ./spec/resources/people/get_person_spec.rb:46 # people admin user a institunal person (with naughty institutional_id) can be retrieved by the pair [institution, institutional_id]
+
 rspec ./spec/resources/people/index_spec.rb:37 # people admin user get an unfiltered people list as an admin responses with 200
 rspec ./spec/resources/people/index_spec.rb:41 # people admin user get an unfiltered people list as an admin returns the count of requested items
 rspec ./spec/resources/people/index_spec.rb:54 # people admin user filter people by their institution returns excaclty the people with the proper oraganization
 rspec ./spec/resources/people/index_spec.rb:68 # people admin user filter people by their subtype returns excaclty the people with the proper sybtype
+
 rspec ./spec/resources/preview/user_authorization_spec.rb:69 # Getting a preview resource with authentication check_allowed_if_user_permission is allowed 200
 rspec ./spec/resources/preview/user_authorization_spec.rb:84 # Getting a preview resource with authentication check_allowed_if_group_permission is allowed 200
+
 rspec ./spec/resources/users/get_spec.rb:71 # users admin user a user (with a naughty email) can be retrieved by the email_address
 rspec ./spec/resources/users/index_spec.rb:27 # users admin user get users responses with 200
 rspec ./spec/resources/users/index_spec.rb:31 # users admin user get users returns some data but less than created because we paginate
+
 rspec ./spec/resources/vocabularies/index_spec.rb:22 # index when user is authenticated when view permission is true returns vocabulary in collection through the user permissions
 rspec ./spec/resources/vocabularies/index_spec.rb:41 # index when user is authenticated when view permission is true returns vocabulary in collection through the group permissions
 
