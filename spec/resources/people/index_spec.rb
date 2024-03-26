@@ -36,7 +36,6 @@ context 'people' do
         end
 
         it 'returns the count of requested items' do
-          # binding.pry
           expect(result.body['people'].count).to be == 100
         end
 
@@ -49,14 +48,7 @@ context 'people' do
         end
 
         it 'returns excaclty the people with the proper oraganization' do
-
-          # binding.pry
           expect(result.status).to be == 200
-
-          cou=result.body['people'].count
-
-          puts ">>> count: #{cou}"
-
           expect(result.body['people'].count).to be == 3 * 77
         end
 

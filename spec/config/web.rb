@@ -14,7 +14,6 @@ def json_roa_client(&block)
 end
 
 def plain_faraday_json_client
-  puts ">> url=#{api_base_url}"
   @plain_faraday_json_client ||= Faraday.new(
     url: api_base_url,
     headers: { accept: 'application/json' }) do |conn|
@@ -25,7 +24,6 @@ def plain_faraday_json_client
 end
 
 def basic_auth_plain_faraday_json_client(login, password)
-  puts ">> url=#{api_base_url}"
   @basic_auth_plain_faraday_json_client ||= Faraday.new(
     url: api_base_url,
     headers: { accept: 'application/json' }) do |conn|

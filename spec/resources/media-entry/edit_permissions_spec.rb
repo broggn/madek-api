@@ -1,7 +1,7 @@
 require 'spec_helper'
 require Pathname(File.expand_path('..', __FILE__)).join('shared')
 
-#TODO check can ... download, edit-metadata, edit-permissions
+# TODO check can ... download, edit-metadata, edit-permissions
 describe 'Getting a media-entry resource without authentication' do
   before :example do
     @media_entry = FactoryBot.create(:media_entry,
@@ -24,7 +24,7 @@ describe 'Getting a media-entry resource with authentication' do
     @entity = FactoryBot.create(:user, password: 'password')
     @media_entry = FactoryBot.create(
       :media_entry, get_metadata_and_previews: false,
-      responsible_user:  @owner)
+      responsible_user: @owner)
 
   end
 
@@ -135,7 +135,6 @@ describe 'Getting a media-entry resource with authentication' do
     end
   end
 
-
   context :check_not_allowed_if_deleted_user_permission do
     before :example do
       curl = "#{api_base_url}/media-entry/#{@media_entry.id}/perms/user/#{@entity.id}"
@@ -162,7 +161,6 @@ describe 'Getting a media-entry resource with authentication' do
       expect(response.status).to be == 403
     end
   end
-
 
   context :check_allowed_if_group_permission do
     let :group do
@@ -311,7 +309,7 @@ describe 'Getting a media-entry resource with authentication' do
     end
 
     it 'edit group perms is allowed 200' do
-      #TODO
+      # TODO
     end
   end
 

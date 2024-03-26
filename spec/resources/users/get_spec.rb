@@ -29,12 +29,10 @@ context 'users' do
         end
 
         it 'works' do
-          # binding.pry
           expect(get_user_result.status).to be == 200
         end
 
         it 'has the proper data, sans :searchable and :previous_id' do
-          # binding.pry
           expect(get_user_result.body.with_indifferent_access \
                                 .slice(:id, :email, :login, :person_id)).to be == \
                                                                               @user.attributes.with_indifferent_access \
@@ -70,7 +68,7 @@ context 'users' do
             # 'customer/department=shipping@example.com',
             # '$A12345@example.com',
             # '!def!xyz%abc@example.com',
-          '_somename@example.com'
+            '_somename@example.com'
           ]
           @users = valid_email_addresses.map do |a|
             FactoryBot.create :user, email: a
@@ -78,29 +76,7 @@ context 'users' do
         end
         it 'can be retrieved by the email_address' do
           @users.each do |user|
-
-            # TODO
-            # binding.pry
-
-            # >> /api/admin/users/abc%5C%40def%40example.com
-            # >> /api/admin/users/abc\@def@example.com
-            # >> /api/admin/users/abc%5C%40def%40example.com
-            # >> /api/admin/users/
-            # >> abc%5C%40def%40example.com
-
-            # "errors"=>{"email"=>"(not (\"Invalid email address\" a-java.lang.String))"},
-            #   "type"=>"reitit.coercion/response-coercion",
-            #   "coercion"=>"schema",
-
             resp = client.get("#{admin_users_route}/#{CGI.escape(user.email)}")
-            if resp.status != 200 then
-              puts ">> #{admin_users_route}/#{CGI.escape(user.email)}"
-              puts ">> #{admin_users_route}/"
-              puts ">>esc #{CGI.escape(user.email)}"
-              puts ">> valid-email =>  #{user.email}"
-              # binding.pry
-            end
-
             expect(
               resp.status
             ).to be == 200
