@@ -37,36 +37,17 @@
   can be either the id, the email_address, or the login. If uid is a UUID only
   users.id can be a match, otherwise either email or could be a match."
   ([sql-map uid]
-
-
-
-    (println ">o> 1uid=" uid)
-    (println ">o> 1uid.cl=" (class uid))
-    (println ">o> 1uuid?=" (uuid/uuidable? uid))
-    (println ">o> 1instance-uuid?=" (instance? java.util.UUID uid))
-
-
-   (let [
-
-         uid (if (and (uuid/uuidable? uid) (not (instance? java.util.UUID uid)))
+   (let [uid (if (and (uuid/uuidable? uid) (not (instance? java.util.UUID uid)))
                (uuid/as-uuid uid)
                uid)
-
-         res    (-> sql-map
-                    (sql/where
-                      (if (uuid/uuidable? uid)
-                        ;(if (instance? java.util.UUID uid)
-                        ;[:= :users.id (uuid/as-uuid uid)]
-                        [:= :users.id uid]
-                        [:or
-                         [:= :users.login [:lower uid]]
-                         [:= [:lower :users.email] [:lower uid]]])))
-
-         ]res)
-
-
-
-   ))
+         res (-> sql-map
+                 (sql/where
+                   (if (uuid/uuidable? uid)
+                     [:= :users.id uid]
+                     [:or
+                      [:= :users.login [:lower uid]]
+                      [:= [:lower :users.email] [:lower uid]]])))
+         ] res)))
 
 (def is-admin-sub
   [:exists
@@ -87,10 +68,10 @@
         p (println ">o> find-user-by-uid" uid)
 
 
-        res   (-> base-query
-                  (where-uid uid)
-                  sql-format
-                  )
+        res (-> base-query
+                (where-uid uid)
+                sql-format
+                )
 
         p (println ">o> query=" res)
 
@@ -98,9 +79,7 @@
         p (println ">o> res=" res)
 
         p (println ">o> find-user-by-uid -------------END")
-        ]res )
-
-
+        ] res)
 
   )
 

@@ -25,7 +25,13 @@
 
 
 
-
+(defn parse-specific-keys [params keys-to-parse]
+  (into {}
+    (map (fn [[k v]]
+           [k (if (contains? keys-to-parse k)
+                (Integer/parseInt (str v))
+                v)])
+      params)))
 
 
 (defn sql-offset-and-limit [query params] "Caution: zero-based page numbers"
@@ -33,10 +39,13 @@
         defaults {:page 0 :count 100}
         params (merge defaults params)
 
-        params (into {} (map (fn [[k v]] [k (Integer/parseInt (str v))]) params))
+        p (println ">o>>>> params.before-toInt =>" params)
+        ;params (into {} (map (fn [[k v]] [k (Integer/parseInt (str v))]) params))
 
+        params (parse-specific-keys params [:page :count])
 
-        p (println ">o> params=>" params)
+        p (println ">o>>>> params.after-toInt =>" params)
+
         p (println ">o> params=>" (:count params))
         p (println ">o> params=>" (class (:count params)))
 
