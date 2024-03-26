@@ -17,34 +17,20 @@
    [madek.api.resources.collections.advanced-filter.permissions :as permissions :refer [filter-by-query-params]]
    [madek.api.resources.shared :as sd]
 
-
-
-
-         ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]))
 
 ;### collection_id ############################################################
 
 (defn- filter-by-collection-id [sqlmap {:keys [collection_id] :as query-params}]
-
-  (println ">o> filter-by-collection-id")
-
-
-  (println ">o> collection_id=" collection_id)
-  (println ">o> collection_id.cl=" (class collection_id))
-  (println ">o> map=" sqlmap)
-
   (cond-> sqlmap
     (seq (str collection_id))
     (-> (sql/join [:collection_collection_arcs :cca]
-                  [:= :cca.child_id :collections.id])
+          [:= :cca.child_id :collections.id])
         (sql/where [:= :cca.parent_id collection_id]))))
 
 ;### query ####################################################################
 
 (defn ^:private base-query [full-data]
-  (println ">o> base-query" full-data)
-
   (let [toselect (if (true? full-data)
                    (sql/select :*)
                    (sql/select :collections.id, :collections.created_at))]
@@ -52,23 +38,14 @@
         (sql/from :collections))))
 
 (defn- set-order [query query-params]
-
-  (println ">o> set-order" query-params)
-
   (if (some #{"desc"} [(-> query-params :order)])
     (-> query (sql/order-by [:collections.created_at :desc]))
     (-> query (sql/order-by [:collections.created_at :asc]))))
 
 ; TODO test query and paging
 (defn- build-query [request]
-  (let [
-        query-params (:query-params request)
-        p (println ">o> query-params" query-params)
-
+  (let [query-params (:query-params request)
         authenticated-entity (:authenticated-entity request)
-        p (println ">o> authenticated-entity=" authenticated-entity)
-        p (println ">o> abc" query-params)
-
         full_data (= true (:full_data query-params))
         sql-query (-> (base-query full_data)
                       (set-order query-params)
@@ -76,13 +53,10 @@
                       (sd/build-query-param query-params :responsible_user_id)
                       (filter-by-collection-id query-params)
                       (permissions/filter-by-query-params query-params
-                                                          authenticated-entity)
+                        authenticated-entity)
                       (pagination/add-offset-for-honeysql query-params)
                       sql-format
-                      spy )
-
-
-        p (println ">o> sql-query=" sql-query)
+                      spy)
         ]
     ;(logging/info "build-query"
     ;              "\nquery\n" query-params
@@ -90,18 +64,9 @@
     sql-query))
 
 (defn- query-index-resources [request]
-
-
-  (let [
-        query (build-query request)
-        p (println ">o> query" query)
-
+  (let [query (build-query request)
         res (jdbc/execute! (get-ds) query)
-
-        p (println ">o> res" res)
-
-        ]res)
-
+        ] res)
   )
 
 ;### index ####################################################################

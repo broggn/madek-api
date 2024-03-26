@@ -85,7 +85,6 @@
         (throw (ex-info (str "Value of " true_param " must be true when present.")
                  {:status 422})))))
 
-  (println ">o> filter-by-query-params")
   (cond-> sqlmap
     (:public_get_metadata_and_previews query-params)
     (sql/where [:= :collections.get_metadata_and_previews true])

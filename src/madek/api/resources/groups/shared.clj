@@ -9,50 +9,29 @@
 
    [taoensso.timbre :refer [debug error info spy warn]]
 
-)
+   )
 
-  ;(import [java.util.UUID])
   )
 
 (defn sql-merge-where-id
   ([group-id] (println ">> 1") (sql-merge-where-id {} group-id))
 
   ([sql-map group-id]
-   (println ">> 2" sql-map group-id)
-   (println ">> 2a" (instance? java.util.UUID group-id))
-   (println ">> 2b")
-   ;(if (re-matches
-   ;     #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-   ;     group-id)
-
    (if (instance? java.util.UUID group-id)
-
      (sql/where sql-map [:or
                          [:= :groups.id (to-uuid group-id)]
-                         ;[:= :groups.id group-id]
                          [:= :groups.institutional_id (str group-id)]])
      (sql/where sql-map [:= :groups.institutional_id (str group-id)]))))
 
 (defn jdbc-update-group-id-where-clause [id]
   (println ">> 3")
-  (-> id sql-merge-where-id
-      ;sql-format
-      ;(update-in [0] #(clojure.string/replace % "WHERE" ""))
-      ))
-
-
-
-;(defn jdbc-update-group-id-where-clause-old [id]
-;  (println ">> 3")
-;  (-> id sql-merge-where-id sql-format
-;      (update-in [0] #(clojure.string/replace % "WHERE" ""))))
+  (-> id sql-merge-where-id))
 
 (defn find-group-sql [id]
   (-> (sql-merge-where-id id)
       (sql/select :*)
       (sql/from :groups)
       sql-format
-      spy
       ))
 
 ; TODO: remove this

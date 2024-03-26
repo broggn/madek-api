@@ -33,9 +33,6 @@
   ([id] (sql-merge-user-where-id {} id))
   ([sql-map id]
    (if (instance? java.util.UUID id)
-     ;(if (re-matches
-     ;   #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-     ;   id)
      (sql/where sql-map [:or
                          [:= :users.id id]
                          [:= :users.institutional_id (str id)]
@@ -65,7 +62,6 @@
    (sql-merge-user-where-id user-id)
    (groups/sql-merge-where-id group-id)
    sql-format
-   spy
    ))
 
 (defn find-group-user [group-id user-id]
@@ -101,24 +97,11 @@
 (defn add-user [group-id user-id]
   (logging/info "add-user" group-id ":" user-id)
 
-  (println ">o> 0find-group-user=" (find-group-user group-id user-id))
-  (println ">o> 0group" group-id)
-  (println ">o> 0group.cl" (class group-id))
-  (println ">o> 0user" user-id)
-  (println ">o> 0user.cl" (class user-id))
-
-  (if-let [user (spy (find-group-user group-id user-id))]
+  (if-let [user (find-group-user group-id user-id)]
     (sd/response_ok {:users (group-users group-id nil)})
     (let [group (groups/find-group group-id)
-          user (find-user user-id)
+          user (find-user user-id)]
 
-
-          p (println ">o> 1group" group)
-          p (println ">o> 1group.cl" (class group))
-          p (println ">o> 1user" user)
-          p (println ">o> 1user.cl" (class user))
-
-          ]
       (if-not (and group user)
         (sd/response_not_found "No such user or group.")
         (do (jdbc/execute! (get-ds)
@@ -144,252 +127,82 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn current-group-users-ids [tx group-id]
-  (println ">o> current-group-users-ids???" group-id)
-  (println ">o> current-group-users-ids??? class" (class group-id))
-
-  (let [
-        res (jdbc/execute! tx (-> (sql/select-distinct :user_id)
-                                 (sql/from :groups_users)
-                                 ;(sql/where [:= :groups_users.group_id (to-uuid group-id)])
-                                 (sql/where [:= :group_id group-id])
-                                 sql-format
-                                 spy
-                                 ))
-        new res
-
-        p (println ">o> a res=" res)
-        p (println ">o> a2 res=" (count res))
-
-        ;res2 (map :users/id res)
-
-        res3 (map :groups_users/group_id res )
-        p (println ">o> b res=" res3)
-
-        ;res2 (map :group_id res )
-        ;p (println ">o> b? res=" res2)
-
-        res (set res3)
-        p (println ">o> c res=" res)
-
-
-        res (set (map :groups_users/user_id new))
-        p (println ">o> c res-new=" res)
-
-        ]res)
-
-  ;(spy (->> (jdbc/execute! tx (-> (sql/select-distinct :*)
-  ;                                (sql/from :groups_users)
-  ;                                ;(sql/where [:= :groups_users.group_id (to-uuid group-id)])
-  ;                                (sql/where [:= :group_id group-id])
-  ;                                sql-format
-  ;                                spy
-  ;                                ))
-  ;       spy
-  ;       (map :groups_users/group_id)
-  ;       set))
-
-  )
-
-(defn target-group-users-query [users]
-
-   (println ">o> ??? 1 target-group-users-query=" users)
-   (println ">o> ??? 2 target-group-users-query=" (->> users
-                                                     (map #(-> % :id to-uuid))))
-
-   (println ">o> ??? 3 target-group-users-query=" (->> users
-                                                     (map #(-> % :id to-uuid))
-                                                     ;(map #(-> % :users.id to-uuid))
-                                                     (filter identity)))
-
-  (-> (sql/select :id)
-      (sql/from :users)
-      (sql/where                                            ;[:or
-        [:in :users.id (->> users
-                         (map #(-> % :id to-uuid))
-                         ;(map #(-> % :users.id to-uuid))
-                         (filter identity))])
-      sql-format))
-
-(defn target-group-users-ids [tx users]
-
-  (let [
-
-        p (println ">o> f users=" users)
-
-        res (jdbc/execute! tx (target-group-users-query users))
-        p (println ">o> g res" res)
-
-
-        p (println ">o> abc first" (first res))
-        p (println ">o> abc first" (keys (first res)))
-
-
-        res2 (map :users/id res)
-        p (println ">o> h res" res2)
-
-        res (set res2)
-        p (println ">o> res.count" (count res2))
-
-        ]res)
-
-
-  ;(->> (jdbc/execute! tx (target-group-users-query users))
-  ;  (map :users/id)
-  ;  set)
-
-  )
-
-(defn update-delete-query [group-id ids]                    ;;here
-  (println ">o> update-delete-query1 " group-id)
-  (println ">o> update-delete-query1 " ids)
-  (-> (sql/delete-from :groups_users)
-      ;(sql/where [:= :groups_users.group_id (to-uuid group-id)])
-      (sql/where [:= :groups_users.group_id group-id])
-      (sql/where [:in :groups_users.user_id ids])
-      sql-format))
-
-
-;(defn update-delete-query [group-id ids]
-;  (-> (sql/delete-from :groups_users)
-;      (sql/merge-where [:= :groups_users.group_id group-id])
-;      (sql/merge-where [:in :groups_users.user_id ids])
-;      sql/format))
-
-;(defn update-insert-query [group-id ids]
-;  (println ">o> update-insert-query1 " group-id)
-;  (println ">o> update-insert-query1 " ids)
-;
-;
-;  (let [
-;        ;; TODO: FIX THIS WITH PRIO!!
-;
-;        p (println ">o> ? group-id" group-id)
-;        p (println ">o> ? group-id.cl" (class group-id))
-;
-;        values (->> ids (map (fn [id] [(to-uuid group-id) (to-uuid id)])))
-;        p (println ">o> values=" values)
-;
-;        res (-> (sql/insert-into :groups_users)
-;                (sql/columns :group_id :user_id)
-;                (sql/values values)
-;                ;(sql/upsert (-> (sql/on-conflict :group_id)
-;                ;                (sql/do-update-set :user_id)))
-;                sql-format)
-;
-;        ] res)
-;
-;  )
-
-(defn update-insert-query [group-id ids]
-  (-> (sql/insert-into :groups_users)
-      (sql/columns :group_id :user_id)
-      (sql/values (->> ids (map (fn [id] [group-id id]))))
-      sql-format))
-
-(defn update-group-users [group-id data]
-
-  (println ">o> update-group-users1" group-id)
-  (println ">o> update-group-users2" data)
-
-
-
-  (jdbc/with-transaction [tx (get-ds)]
-    (println ">o> update-group-users ==========================================")
-
-
-    (let [current-group-users-ids (current-group-users-ids tx group-id)
-          p (println ">o> 1 a current-group-users-ids" current-group-users-ids)
-          p (println ">o>>>> 1 b current-group-users-ids" (count current-group-users-ids))
-          target-group-users-ids (if (first (:users data))
-                                   (target-group-users-ids tx (:users data))
-                                   [])
-
-          p (println ">o> 2 target-group-users-ids" target-group-users-ids)
-          p (println ">o>>>> 2 target-group-users-ids" (count target-group-users-ids))
-          p (println ">o> -----------------------")
-
-          del-users (clojure.set/difference current-group-users-ids target-group-users-ids)
-          p (println ">o> 3 del-users" (count del-users))
-          p (println ">o> -----------------------")
-
-          ins-users (clojure.set/difference target-group-users-ids current-group-users-ids)
-          p (println ">o> 4 ins-users" (count ins-users))
-          p (println ">o> -----------------------")
-
-          del-query (update-delete-query group-id del-users)
-          ins-query (update-insert-query group-id ins-users)]
-      ;(logging/info "update-group-users" "\ncurr\n" current-group-users-ids "\ntarget\n" target-group-users-ids )
-      ;(logging/info "update-group-users" "\ndel-u\n" del-users)
-      ;(logging/info "update-group-users" "\nins-u\n" ins-users)
-      ;(logging/info "update-group-users" "\ndel-q\n" del-query)
-      ;(logging/info "update-group-users" "\nins-q\n" ins-query)
-
-
-
-      (let [
-            p (println ">o> 1del-query" del-users)
-            p (println ">o> 2del-query" (first del-users))
-            p (println ">o> 3del-query" (count del-users))
-            p (println ">o> 4del-query" del-query)
-
-
-            p (println ">o> 11del-query" ins-users)
-            p (println ">o> 12del-query" (first ins-users))
-            p (println ">o> 13del-query" (count ins-users))
-            p (println ">o> 14del-query" ins-query)
-
-            ])
-
-      (when (first del-users)
-        (do
-          (println ">o> (first del-users)")
-          (jdbc/execute!
-            tx
-            del-query)))
-
-      (when (first ins-users)                               ;; TODO: causes error
-        (do
-          (println ">o> (first ins-users)")
-          (jdbc/execute!
-            tx
-            ins-query))
-        )
-
-      (let [
-            p (println ">o> 1del-query" del-users)
-            p (println ">o> 2del-query" (first del-users))
-            p (println ">o> 3del-query" (count del-users))
-            p (println ">o> 4del-query" del-query)
-
-
-            p (println ">o> 11del-query" ins-users)
-            p (println ">o> 12del-query" (first ins-users))
-            p (println ">o> 13del-query" (count ins-users))
-            p (println ">o> 14del-query" ins-query)
-
-            ;res (sd/response_ok {:users (jdbc/query tx
-            ;                              (group-users-query group-id nil))})
-
-
-            res (sd/response_ok {:users (jdbc/execute! tx
-                                          (group-users-query group-id nil)
-                                          jdbc/unqualified-snake-kebab-opts
-                                          )})
-
-            ]
-
-        (println ">o> =============================================================")
-
-
-        res
-
-
-        ;(spy (sd/response_ok {:users (jdbc/execute! tx
-        ;                               (group-users-query group-id nil)
-        ;                               jdbc/unqualified-snake-kebab-opts
-        ;                               )}))
-
-        ))))
+  (let [res (jdbc/execute! tx (-> (sql/select-distinct :user_id)
+                                  (sql/from :groups_users)
+                                  (sql/where [:= :group_id group-id])
+                                  sql-format))
+
+        res (set (map :groups_users/user_id res))
+        ] res))
+
+  (defn target-group-users-query [users]
+    (-> (sql/select :id)
+        (sql/from :users)
+        (sql/where [:in :users.id (->> users
+                                    (map #(-> % :id to-uuid))
+                                    (filter identity))])
+        sql-format))
+
+  (defn target-group-users-ids [tx users]
+    (let [res (jdbc/execute! tx (target-group-users-query users))
+
+          res2 (map :users/id res)
+          res (set res2)
+          ] res))
+
+  (defn update-delete-query [group-id ids]
+    (-> (sql/delete-from :groups_users)
+        (sql/where [:= :groups_users.group_id group-id])
+        (sql/where [:in :groups_users.user_id ids])
+        sql-format))
+
+
+  (defn update-insert-query [group-id ids]
+    (-> (sql/insert-into :groups_users)
+        (sql/columns :group_id :user_id)
+        (sql/values (->> ids (map (fn [id] [group-id id]))))
+        sql-format))
+
+  (defn update-group-users [group-id data]
+    (jdbc/with-transaction [tx (get-ds)]
+      (let [current-group-users-ids (current-group-users-ids tx group-id)
+            target-group-users-ids (if (first (:users data))
+                                     (target-group-users-ids tx (:users data))
+                                     [])
+            del-users (clojure.set/difference current-group-users-ids target-group-users-ids)
+            ins-users (clojure.set/difference target-group-users-ids current-group-users-ids)
+            del-query (update-delete-query group-id del-users)
+            ins-query (update-insert-query group-id ins-users)]
+        ;(logging/info "update-group-users" "\ncurr\n" current-group-users-ids "\ntarget\n" target-group-users-ids )
+        ;(logging/info "update-group-users" "\ndel-u\n" del-users)
+        ;(logging/info "update-group-users" "\nins-u\n" ins-users)
+        ;(logging/info "update-group-users" "\ndel-q\n" del-query)
+        ;(logging/info "update-group-users" "\nins-q\n" ins-query)
+        (when (first del-users)
+          (do
+            (println ">o> (first del-users)")
+            (jdbc/execute!
+              tx
+              del-query)))
+
+        (when (first ins-users)                             ;; TODO: causes error
+          (do
+            (println ">o> (first ins-users)")
+            (jdbc/execute!
+              tx
+              ins-query))
+          )
+
+        (let [res (sd/response_ok {:users (jdbc/execute! tx
+                                            (group-users-query group-id nil)
+                                            jdbc/unqualified-snake-kebab-opts
+                                            )})
+
+              ]
+
+
+          res
+          ))))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -421,19 +234,14 @@
   (defn handle_get-group-user [req]
     (let [group-id (-> req :parameters :path :group-id)
           user-id (-> req :parameters :path :user-id)
-
           converted (convert-groupid-userid group-id user-id)
-
 
           _ (if (-> converted :is_userid_valid)
               (sd/response_failed "Invalid user-id." 400))
 
           group-id (-> converted :group-id)
           user-id (-> converted :user-id)
-
           ]
-
-
 
       (logging/info "handle_get-group-user" "\ngroup-id\n" group-id "\nuser-id\n" user-id)
       (get-group-user group-id user-id)))
@@ -450,29 +258,16 @@
 
   (defn handle_update-group-users [req]
     (let [id (-> req :parameters :path :group-id)
-          data (-> req :parameters :body)
-          ;data (-> req :parameters :body :users)
-
-          p (println ">o> ??????????? handle_update-group-users")
-          p (println ">o> id=" id)
-          p (println ">o> data.count=" (count (:users data)))
-
-          ]
+          data (-> req :parameters :body)]
       (logging/info "handle_update-group-users" "\nid\n" id "\ndata\n" data)
-      (update-group-users id data)))                        ;; here
+      (update-group-users id data)))
 
   (defn handle_add-group-user [req]
     (let [group-id (-> req :parameters :path :group-id)
           user-id (-> req :parameters :path :user-id)
-
           converted (convert-groupid-userid group-id user-id)
-
-          p (println ">o> handle_add-group-user / converted=" converted)
-
           group-id (-> converted :group-id)
-          user-id (-> converted :user-id)
-
-          ]
+          user-id (-> converted :user-id)]
       (add-user group-id user-id)))
 
   ;### Debug ####################################################################

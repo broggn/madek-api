@@ -11,13 +11,7 @@
 
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
-   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-
-               ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
-
-         ;[madek.api.utils.rdbms :as rdbms]
-   ;[madek.api.utils.sql :as sql]
    [pandect.algo.sha256 :as algo.sha256])
   (:import
    [java.util Base64]))
@@ -42,10 +36,7 @@
                             (filter identity)
                             (map hash-string))])
            (sql/where [:<> :api_tokens.revoked true])
-
-           ;(sql/where (sql/raw "now() < api_tokens.expires_at"))
            (sql/where [:raw "now() < api_tokens.expires_at"])
-
            (sql/join :users [:= :users.id :api_tokens.user_id])
            (sql-format))
        (jdbc/execute! (get-ds))
