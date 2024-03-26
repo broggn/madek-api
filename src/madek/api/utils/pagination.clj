@@ -25,13 +25,46 @@
 
 
 
+;(defn parse-specific-keys [params keys-to-parse]
+;  (into {}
+;    (map (fn [[k v]]
+;           [k (if (contains? keys-to-parse k)
+;                (do
+;                  (println ">o>>>> parse k=>" k)
+;                  (Integer/parseInt (str v)))
+;                v)])
+;      params)))
+
+
+(defn parse-to-int [value]
+  (try
+    (Integer/parseInt value)
+    (catch Exception e
+      nil)))
+
 (defn parse-specific-keys [params keys-to-parse]
   (into {}
     (map (fn [[k v]]
-           [k (if (contains? keys-to-parse k)
-                (Integer/parseInt (str v))
-                v)])
+           [k (if (some #{k} keys-to-parse)
+                (do
+                  (println ">o>>>> parse k=>" k)
+                  (parse-to-int v))
+                (do
+                  (println ">o>>>> nothing to parse k=>" k)
+                  v))])
       params)))
+
+(comment
+  (let [
+        res (parse-specific-keys {:page "1" :count "100" :foo "bar"} [:page :count])
+
+        p (println ">o> res1" (:page res))
+        p (println ">o> res2" (class (:page res)))
+
+        ]
+    res
+    )
+  )
 
 
 (defn sql-offset-and-limit [query params] "Caution: zero-based page numbers"
