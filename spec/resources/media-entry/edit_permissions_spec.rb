@@ -1,7 +1,7 @@
 require 'spec_helper'
 require Pathname(File.expand_path('..', __FILE__)).join('shared')
 
-# TODO check can ... download, edit-metadata, edit-permissions
+#TODO check can ... download, edit-metadata, edit-permissions
 describe 'Getting a media-entry resource without authentication' do
   before :example do
     @media_entry = FactoryBot.create(:media_entry,
@@ -24,7 +24,7 @@ describe 'Getting a media-entry resource with authentication' do
     @entity = FactoryBot.create(:user, password: 'password')
     @media_entry = FactoryBot.create(
       :media_entry, get_metadata_and_previews: false,
-      responsible_user: @owner)
+      responsible_user:  @owner)
 
   end
 
@@ -46,17 +46,10 @@ describe 'Getting a media-entry resource with authentication' do
         }.to_json
         req.headers['Content-Type'] = 'application/json'
       end
-      binding.pry
       #@media_entry.update! responsible_user: @entity
     end
 
     it 'is allowed 200' do
-      binding.pry
-
-      # method=:get,
-      #   body={"message"=>"Not authorized for media-resource"},
-      #   url=#<URI::HTTP http://localhost:3104/api/media-entry/33035611-a9df-4d8a-8d72-163c53b82534>,
-
       expect(response.status).to be == 200
     end
   end
@@ -142,6 +135,7 @@ describe 'Getting a media-entry resource with authentication' do
     end
   end
 
+
   context :check_not_allowed_if_deleted_user_permission do
     before :example do
       curl = "#{api_base_url}/media-entry/#{@media_entry.id}/perms/user/#{@entity.id}"
@@ -169,6 +163,7 @@ describe 'Getting a media-entry resource with authentication' do
     end
   end
 
+
   context :check_allowed_if_group_permission do
     let :group do
       group = FactoryBot.create(:group)
@@ -190,7 +185,7 @@ describe 'Getting a media-entry resource with authentication' do
 
     end
 
-    it 'is allowed 200', :skip do
+    it 'is allowed 200' do
       expect(response.status).to be == 200
     end
 
@@ -223,9 +218,7 @@ describe 'Getting a media-entry resource with authentication' do
       expect(update_perm.status).to be == 200
     end
 
-    it 'is not allowed 403', :skip do
-      # binding.pry
-
+    it 'is not allowed 403' do
       expect(response.status).to be == 403
     end
   end
@@ -247,18 +240,6 @@ describe 'Getting a media-entry resource with authentication' do
         }.to_json
         req.headers['Content-Type'] = 'application/json'
       end
-
-      # binding.pry
-      #
-      # method=:post,
-      #   body="",
-      #   url=#<URI::HTTP http://localhost:3104/api/media-entry/d2354fca-1e2e-4ac4-87a5-842a83a193cd/perms/group/01340476-d7fe-4fdb-876e-92a60aad9d0d>,
-      #
-      #     response_headers={"content-type"=>"application/octet-stream", "content-length"=>"0", "server"=>"http-kit", "date"=>"Sat, 23 Mar 2024 21:58:41 GMT"},
-      #   status=404,
-      #   reason_phrase="Not Found">,
-
-      binding.pry
       expect(group_perm.status).to be == 200
       readok = newbasic_auth_plain_faraday_json_client(@entity.login, @entity.password)
                  .get("/api/media-entry/#{@media_entry.id}")
@@ -270,7 +251,6 @@ describe 'Getting a media-entry resource with authentication' do
     end
 
     it 'is not allowed 403' do
-      binding.pry
       expect(response.status).to be == 403
     end
 
@@ -331,7 +311,7 @@ describe 'Getting a media-entry resource with authentication' do
     end
 
     it 'edit group perms is allowed 200' do
-      # TODO
+      #TODO
     end
   end
 
