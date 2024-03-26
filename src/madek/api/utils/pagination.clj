@@ -30,8 +30,20 @@
 
 (defn sql-offset-and-limit [query params] "Caution: zero-based page numbers"
   (let [
+        defaults {:page 0 :count 100}
+        params (merge defaults params)
+
+        params (into {} (map (fn [[k v]] [k (Integer/parseInt (str v))]) params))
+
+
+        p (println ">o> params=>" params)
+        p (println ">o> params=>" (:count params))
+        p (println ">o> params=>" (class (:count params)))
+
+        p (println ">o> params=>" (:count defaults))
+        p (println ">o> params=>" (class (:count defaults)))
+
         ;p (println ">o> query=>" query)
-        ;p (println ">o> params=>" params)
         off (compute-offset params)
         p (println ">o> params.page=>" (:page params))
         ;p (println ">o> off=>" off)

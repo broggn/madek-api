@@ -31,13 +31,19 @@
   "Get an index of the users. Query parameters are pending to be implemented."
   [{params :params tx :tx :as req}]
 
-  (let [params (-> params
-                   (update :page #(Integer/parseInt %))
-                   (update :count #(Integer/parseInt %)))
+  (let [
+        p (println ">o> get::handler" params)
+        ;params (-> params
+        ;           (update :page #(Integer/parseInt %))
+        ;           (update :count #(Integer/parseInt %)))
+
+        p (println ">o> params=" params)
+
         query (-> common/base-query
                   (pagination/sql-offset-and-limit params)
                   (handle-email-clause params)
                   (sql-format :inline false))
+        p (println ">o> query=" query)
 
         res (->> query
               (jdbc/execute! tx)
@@ -74,7 +80,9 @@
                            :default 0
                            :minimum 0
                            :type "number"
-                           :pattern "^([1-9][0-9]*|0)$"
+                           ;:type "integer"
+                           ;:type "long"
+                           ;:pattern "^([1-9][0-9]*|0)$"
                            }
                           {:name "count"
                            :in "query"
@@ -84,7 +92,9 @@
                            :maximum 100
                            :value 100
                            :default 100
+                           ;:type "integer"
                            :type "number"
+                           ;:type "long"
                            }]
              }
 
