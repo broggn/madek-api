@@ -5,8 +5,10 @@
    [honey.sql.helpers :as sql]
    [logbug.debug :as debug]
 
+
    [madek.api.utils.validation :refer [greater-zero-validation greater-equal-zero-validation]]
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
+   ;[madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
+   [madek.api.utils.helper :refer [parse-specific-keys t f]]
 
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.people.common :as common]
@@ -64,11 +66,36 @@
 
 (defn handler
   "Get an index of the people. Query parameters are pending to be implemented."
-  [{{query :query} :parameters tx :tx :as req}]
+  [{{query :query} :parameters params :params tx :tx :as req}]
   (debug 'query query)
-  (let [people (-> (build-query query)
-                   (sql-format :inline false)
-                   (->> (jdbc/execute! tx)))]
+  (let [
+        p (println ">o> params" params)
+        p (println ">o> query" query)
+
+        defaults {:page 0 :count 1000}
+        ;params (merge defaults params)
+
+        p (println ">o>>>> params.before-toInt =>" params)
+        ;params (into {} (map (fn [[k v]] [k (Integer/parseInt (str v))]) params))
+
+        ;params (parse-specific-keys params [:page :count])
+        params (parse-specific-keys params defaults)
+
+        p (println ">o> !!! pagination-params=" params)
+
+        query (-> (build-query query)
+                  (pagination/sql-offset-and-limit params)
+
+                  sql-format
+                  ;(sql-format :inline false)
+                  )
+
+        p (println ">o> query" query)
+
+        people (jdbc/execute! tx query)
+
+        p (println ">o> people.count" (count people))
+        ]
     (debug 'people people)
     {:status 200, :body {:people people}}))
 

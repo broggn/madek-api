@@ -36,7 +36,8 @@ context 'people' do
         end
 
         it 'returns the count of requested items' do
-          expect(result.body['people'].count).to be == 232
+          # binding.pry
+          expect(result.body['people'].count).to be == 100
         end
 
       end

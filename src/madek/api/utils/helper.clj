@@ -261,16 +261,16 @@
 ; [madek.api.utils.helper :refer [convert-groupid-userid]]
 (defn convert-groupid-userid [group-id user-id]
   (let [is_uuid (boolean (re-matches
-                  #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-                  group-id))
+                           #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+                           group-id))
         group-id (if is_uuid (to-uuid group-id) group-id)
 
 
         ;is_email (re-matches #"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" user-id)
         is_email (re-matches email-regex user-id)
         is_uuid (boolean (re-matches
-                  #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-                  user-id))
+                           #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+                           user-id))
         user-id (if is_uuid (to-uuid user-id) user-id)
 
         is_userid_valid (or is_email is_uuid)
@@ -300,8 +300,8 @@
         p (println ">o> is_email_VALID?" is_email)
 
         is_uuid (boolean (re-matches
-                  #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-                  user-id))
+                           #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+                           user-id))
         p (println ">o> is_uuid_VALID?" is_uuid)
 
         user-id (if is_uuid (to-uuid user-id) user-id)
@@ -353,8 +353,8 @@
 ; [madek.api.utils.helper :refer [convert-groupid]]
 (defn convert-groupid [group-id]
   (let [is_uuid (boolean (re-matches
-                  #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-                  group-id))
+                           #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+                           group-id))
         group-id (if is_uuid (to-uuid group-id) group-id)
 
         res {:group-id group-id
@@ -365,3 +365,65 @@
 
     ))
 
+
+
+
+
+
+(defn parse-to-int [value default-value]
+  (try
+    (let [
+          value (if (instance? java.lang.Long value) (str value) value)
+          value (if (instance? java.lang.Integer value) (str value) value)
+
+      p (println ">o>> before.parseInt" value)
+      p (println ">o>> before.parseInt.class" (class value))
+
+          ]
+
+
+      ;(Integer/parseInt (str value))
+      (Integer/parseInt value)
+      )
+    (catch Exception e
+      (do
+        (println ">o>>>> failed to parse-to-int: value=>" value ", set default-value=>" default-value)
+        default-value))))
+
+; [madek.api.utils.helper :refer [parse-specific-keys]]
+(defn parse-specific-keys [params defaults]
+  (into {}
+    (map (fn [[k v]]
+           [k (if (contains? defaults k)
+                (parse-to-int v (defaults k))
+                v)])
+      params)))
+
+;(defn parse-specific-keys [params defaults]
+;  (into {}
+;    (map (fn [[k v]]
+;           [k (if (some #{k} defaults)
+;                (do
+;                  (println ">o>>>> parse k=>" k)
+;                  ;(parse-to-int v))
+;                                (parse-to-int v (defaults k)))
+;
+;
+;                (do
+;                  (println ">o>>>> nothing to parse k=>" k)
+;                  v))])
+;      params)))
+
+(comment
+  (let [
+        ;res (parse-specific-keys {:page "1" :count "100" :foo "bar"} [:page :count])
+
+        defaults {:page 99 :count 99}
+        res (parse-specific-keys {:page "2" :count "1000" :foo "bar"} defaults)
+
+        p (println ">o> res1" (:page res))
+        p (println ">o> res2" (class (:page res)))
+        ]
+    res
+    )
+  )

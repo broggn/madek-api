@@ -3,6 +3,7 @@
    [clojure.walk :refer [keywordize-keys]]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
+    [madek.api.utils.helper :refer [parse-specific-keys]]
    [logbug.debug :as debug]
    [taoensso.timbre :refer [debug error info spy warn]]))
 
@@ -54,39 +55,36 @@
 ;                  v))])
 ;      params)))
 
-
-(defn parse-to-int [value default-value]
-  (try
-    (Integer/parseInt value)
-    (catch Exception e
-      (do
-        (println ">o>>>> failed to parse-to-int: value=>" value ", set default-value=>" default-value )
-        default-value))))
-
-(defn parse-specific-keys [params defaults]
-  (into {}
-    (map (fn [[k v]]
-           [k (if (contains? defaults k)
-                (parse-to-int v (defaults k))
-                v)])
-      params)))
-
-(comment
-  (let [
-
-
-        ;res (parse-specific-keys {:page "1" :count "100" :foo "bar"} [:page :count])
-
-        defaults {:page 99 :count 99}
-        res (parse-specific-keys {:page "0" :count "1000" :foo "bar"} defaults)
-
-        p (println ">o> res1" (:page res))
-        p (println ">o> res2" (class (:page res)))
-
-        ]
-    res
-    )
-  )
+;
+;(defn parse-to-int [value default-value]
+;  (try
+;    (Integer/parseInt value)
+;    (catch Exception e
+;      (do
+;        (println ">o>>>> failed to parse-to-int: value=>" value ", set default-value=>" default-value )
+;        default-value))))
+;
+;(defn parse-specific-keys [params defaults]
+;  (into {}
+;    (map (fn [[k v]]
+;           [k (if (contains? defaults k)
+;                (parse-to-int v (defaults k))
+;                v)])
+;      params)))
+;
+;(comment
+;  (let [
+;        ;res (parse-specific-keys {:page "1" :count "100" :foo "bar"} [:page :count])
+;
+;        defaults {:page 99 :count 99}
+;        res (parse-specific-keys {:page "0" :count "1000" :foo "bar"} defaults)
+;
+;        p (println ">o> res1" (:page res))
+;        p (println ">o> res2" (class (:page res)))
+;        ]
+;    res
+;    )
+;  )
 
 
 (defn sql-offset-and-limit [query params] "Caution: zero-based page numbers"
