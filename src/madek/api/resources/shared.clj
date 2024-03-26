@@ -395,7 +395,7 @@
         p (println "\nres=" res)]))
 
 ; begin media resources helpers
-(defn- get-media-resource
+(defn- get-media-resource                                   ;;here
   "First checks for collection_id, then for media_entry_id.
    If creating collection-media-entry-arc, the collection permission is checked."
   ([request]
@@ -444,7 +444,19 @@
        (merge (ex-data e)
          {:statuc 406, :body {:message (.getMessage e)}})))))
 
-(defn- ring-add-media-resource [request handler]
+
+
+
+
+
+
+
+
+
+
+
+
+(defn- ring-add-media-resource [request handler]            ;;here
 
   (let [
         media-resource (get-media-resource request)
@@ -574,7 +586,7 @@
 
 ; begin wrappers
 
-(defn ring-wrap-add-media-resource [handler]
+(defn ring-wrap-add-media-resource [handler]                ;;here
   (fn [request]
     (ring-add-media-resource request handler)))
 

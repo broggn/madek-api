@@ -332,9 +332,11 @@
 
           ]
 
-
+      (println ">o> permission-by-auth-entity? a1 some.." (some #(= (:responsible_delegation_id resource) %) (delegation-ids auth-entity-id)))
       (println ">o> permission-by-auth-entity? a User/(= auth-entity.." (:responsible_user_id resource))
-      (println ">o> permission-by-auth-entity? a User/(= auth-entity.." (= auth-entity-id (:responsible_user_id resource)))
+      (println ">o> permission-by-auth-entity? ae1 User/(= auth-entity.." (= auth-entity-id (:responsible_user_id resource)))
+      (println ">o> permission-by-auth-entity? ae2 :responsible_user_id.." (:responsible_user_id resource))
+      (println ">o> permission-by-auth-entity? ae3 auth-entity-id.." auth-entity-id)
       (println ">o> permission-by-auth-entity? b res=" res)
       res
 
