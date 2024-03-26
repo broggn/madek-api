@@ -516,13 +516,17 @@
   ;              "\nis-admin:\n" (-> request :is_admin)
   ;              )
 
+  (println "======================================================")
   (println "auth-request-for-mr"
     "\nhandler: " handler
     "\nscope: " scope
     "\nauth entity:\n" (-> request :authenticated-entity)
     "\nis-admin:\n" (-> request :is_admin)
     "\nmedia-resource:\n" (:media-resource request)
+    "\n(public? media-resource):\n" (public? (:media-resource request))
+    "\nrequest:\n" request
     )
+  (println "======================================================")
   (if-let [media-resource (:media-resource request)]
 
     (if (and (= scope :view) (public? media-resource))
