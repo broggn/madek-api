@@ -72,7 +72,8 @@
    (println ">o> keys-to-cast-to-uuid / earlyExitByTableName" table)
    (println ">o> blacklistedTables=" blacklisted-tables)
 
-   (if (contains? blacklisted-tables (name table))
+   ;; XXX: To fix db-exceptions of io_interfaces
+   (if (or (contains? blacklisted-tables (name table)) (and (= table :io_interfaces) (= key :id)))
      value
      (to-uuid value key))))
 
