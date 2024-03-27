@@ -7,11 +7,7 @@
    [madek.api.utils.helper :refer [to-uuid]]
    [next.jdbc :as jdbc]
 
-   [taoensso.timbre :refer [debug error info spy warn]]
-
-   )
-
-  )
+   [taoensso.timbre :refer [debug error info spy warn]]))
 
 (defn sql-merge-where-id
   ([group-id] (println ">> 1") (sql-merge-where-id {} group-id))
@@ -31,8 +27,7 @@
   (-> (sql-merge-where-id id)
       (sql/select :*)
       (sql/from :groups)
-      sql-format
-      ))
+      sql-format))
 
 ; TODO: remove this
 ;(def builder-fn-options

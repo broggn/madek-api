@@ -1,7 +1,7 @@
 (ns madek.api.utils.auth
   (:require
    [clj-uuid]
-   [clojure.java.jdbc :as jdbco]
+   ;[clojure.java.jdbc :as jdbco]
    [clojure.tools.logging :as logging]
    ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]

@@ -4,7 +4,7 @@
 
 (ns madek.api.utils.rdbms
   (:require
-   [clojure.java.jdbc :as jdbco]
+   ;[clojure.java.jdbc :as jdbco]
    [clojure.tools.logging :as logging]
    ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
