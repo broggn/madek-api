@@ -4,16 +4,15 @@
    [honey.sql.helpers :as sql]
    [logbug.debug :as debug]
    [madek.api.db.core :refer [get-ds]]
+   [madek.api.resources.people.common :as common]
    [madek.api.resources.people.common :refer [find-person-by-uid]]
    [madek.api.resources.people.get :as get-person]
+
    [madek.api.resources.shared :as sd]
 
-   [madek.api.utils.helper :refer [array-to-map t convert-map-if-exist map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-
-   [madek.api.resources.people.common :as common]
-
-
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+
+   [madek.api.utils.helper :refer [array-to-map t convert-map-if-exist map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
@@ -22,8 +21,7 @@
 (defn handle-create-person
   [{{data :body} :parameters ds :tx :as req}]
   (try
-    (let [
-          ;; old version
+    (let [;; old version
           {id :id} (-> (sql/insert-into :people)
                        (sql/values [(convert-map-if-exist data)])
                        sql-format
@@ -42,16 +40,10 @@
       (error "handle-create-person failed" {:request req})
       (sd/parsed_response_exception e))))
 
-
-
-
-
 (comment
-  (let [
-        key "string8"
+  (let [key "string8"
 
-        data {
-              :institution key
+        data {:institution key
               :institutional_id key
 
               :subtype "PeopleInstitutionalGroup"
@@ -60,8 +52,7 @@
               :admin_comment "string"
               :last_name "string"
               :first_name "string"
-              :description "string"
-              }
+              :description "string"}
 
         query (-> (sql/insert-into :people)
                   (sql/values [(convert-map-if-exist data)])
@@ -83,17 +74,17 @@
 
                   ;; works
                   (sql/returning :people.created_at
-                    :people.description
-                    :people.external_uris
-                    :people.id
-                    :people.first_name
-                    :people.institution
-                    :people.institutional_id
-                    :people.last_name
-                    :people.admin_comment
-                    :people.pseudonym
-                    :people.subtype
-                    :people.updated_at)
+                                 :people.description
+                                 :people.external_uris
+                                 :people.id
+                                 :people.first_name
+                                 :people.institution
+                                 :people.institutional_id
+                                 :people.last_name
+                                 :people.admin_comment
+                                 :people.pseudonym
+                                 :people.subtype
+                                 :people.updated_at)
 
                   sql-format
                   spy)
@@ -102,20 +93,14 @@
 
         result (jdbc/execute-one! (get-ds) query)
 
+        p (println "result" result)]
 
-
-        p (println "result" result)
-
-        ]
-    result
-    )
-  )
+    result))
 
 (def schema
-  {
-   ;; TODO: fixme, create customized schema to validate enums
+  {;; TODO: fixme, create customized schema to validate enums
    ;:subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
-   :subtype  (s/maybe s/Str)
+   :subtype (s/maybe s/Str)
 
    (s/optional-key :description) (s/maybe s/Str)
    (s/optional-key :external_uris) [s/Str]
@@ -136,12 +121,10 @@
    :parameters {:body schema}
    :responses {201 {:body get-person/schema}
 
-
                409 {:description "Conflict."
                     :schema s/Str
-                    :examples {"application/json" {:message "Violation of constraint"}}}
+                    :examples {"application/json" {:message "Violation of constraint"}}}}
 
-               }
    :summary (t "Create a person")
    :swagger {:produces "application/json"
              :consumes "application/json"}})

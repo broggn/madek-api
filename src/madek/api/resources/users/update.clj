@@ -7,14 +7,14 @@
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
 
-   [madek.api.utils.helper :refer [mslurp]]
-
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
-
    [madek.api.resources.users.common :as users-common
     :refer [wrap-find-user find-user-by-uid]]
+
    [madek.api.resources.users.get :as get-user]
+
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
+   [madek.api.utils.helper :refer [mslurp]]
    [madek.api.utils.logging :as logging]
    [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
    [next.jdbc :as jdbc]
@@ -53,7 +53,6 @@
    (s/optional-key :notes) (s/maybe s/Str) ; TODO
    (s/optional-key :searchable) s/Str})
 
-
 (def route
   {:summary (sd/sum_adm (f (t "Update user with id")))
    ;:description "Patch a user with id. Returns 404, if no such user exists."
@@ -63,7 +62,6 @@
 
    :description (mslurp "./md/users-patch.md")
 
-
    :content-type "application/json"
    :accept "application/json"
    :parameters {:path {:id s/Str}
@@ -71,10 +69,8 @@
    :handler update-user-handler
    :middleware [wrap-authorize-admin!
                 (wrap-find-user :id)]
-   :responses {
-               200 {:body get-user/schema}
+   :responses {200 {:body get-user/schema}
 
                404 {:description "Not Found."
                     :schema s/Str
-                    :examples {"application/json" {:message "No such user."}}}
-               }})
+                    :examples {"application/json" {:message "No such user."}}}}})

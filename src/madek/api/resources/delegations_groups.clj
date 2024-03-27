@@ -32,15 +32,13 @@
                   (sql/select :*)
                   (sql/select :group_id))
 
-
         base-query (-> col-sel (sql/from :delegations_groups))
         query (cond-> base-query
                 delegation_id (sql/where [:= :delegation_id delegation_id])
                 group_id (sql/where [:= :group_id group_id]))
         db-result (jdbc/execute! (get-ds) (sql-format query))
 
-
-        ;db-result (sd/query-find-all :delegations_groups col-sel)
+;db-result (sd/query-find-all :delegations_groups col-sel)
         ]
     ;(->> db-result (map :id) set)
     (logging/info "handle_list-delegations_group" "\nresult\n" db-result)
@@ -89,25 +87,24 @@
                       (sql/returning :*)
                       sql-format)
 
-        result (jdbc/execute-one! (get-ds) sql-query)
-        ]
+        result (jdbc/execute-one! (get-ds) sql-query)]
 
-    ;(if (= 1 (first (jdbc/execute! (get-ds) sql-query)))
+;(if (= 1 (first (jdbc/execute! (get-ds) sql-query)))
     (if result
       (sd/response_ok delegations_group)
       (logging/error "Failed delete delegations_group "
-        "group-id: " group-id "delegation-id: " delegation-id))))
+                     "group-id: " group-id "delegation-id: " delegation-id))))
 
 (defn wwrap-find-delegations_group [send404]
   (fn [handler]
     (fn [request]
       (sd/req-find-data2
-        request handler
-        :group_id :delegation_id
-        :delegations_groups
-        :group_id :delegation_id
-        res-req-name
-        send404))))
+       request handler
+       :group_id :delegation_id
+       :delegations_groups
+       :group_id :delegation_id
+       res-req-name
+       send404))))
 
 ; rubbish find by users groups
 (defn wwrap-find-delegations_group-by-auth [send404]
@@ -117,24 +114,24 @@
             del-id (-> request :parameters :path :delegation_id str)]
         (logging/info "uid\n" group-id "del-id\n" del-id)
         (sd/req-find-data-search2
-          request handler
-          group-id del-id
-          :delegations_groups
-          :group_id :delegation_id
-          res-req-name
-          send404)))))
+         request handler
+         group-id del-id
+         :delegations_groups
+         :group_id :delegation_id
+         res-req-name
+         send404)))))
 
 (defn wwrap-find-group [param]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler param
-                    :groups :id
-                    :group true))))
+                                    :groups :id
+                                    :group true))))
 
 (defn wwrap-find-delegation [param]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler param
-                    :delegations :id
-                    :delegation true))))
+                                    :delegations :id
+                                    :delegation true))))
 
 (def schema_delegations_groups_export
   {:group_id s/Uuid

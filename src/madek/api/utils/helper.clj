@@ -3,7 +3,6 @@
             [pghstore-clj.core :refer [to-hstore]])
   (:import (java.util UUID)))
 
-
 (def LOAD-SWAGGER-DESCRIPTION-FROM-FILE true)
 (def LOAD-SWAGGER-DESCRIPTION-FROM-FILE false)
 
@@ -30,9 +29,7 @@
 (defn mslurp [file-path]
   (if LOAD-SWAGGER-DESCRIPTION-FROM-FILE
     (slurp file-path)
-    "DESCRIPTION DEACTIVATED"
-    )
-  )
+    "DESCRIPTION DEACTIVATED"))
 
 (comment
   (let [p (println ">o> int" (class 1))
@@ -82,8 +79,8 @@
         ;p (println "\nquery ok1" (class (to-uuid "123e4567-e89b-12d3-a456-426614174000" :user_id)))
         ;
 
-        k "123e4567-e89b-12d3-a456-426614174000"            ;ok
-        k "123e"                                            ;error - return val
+        k "123e4567-e89b-12d3-a456-426614174000" ;ok
+        k "123e" ;error - return val
         ;k 123                                               ;ok - return val
 
         p (println "\nquery result=" (to-uuid k))
@@ -128,7 +125,7 @@
   (-> map
       (update :external_uris #(if (nil? %)
                                 [:raw "'{}'"]
-                                (convert-to-raw-set %)))    ;;rename to convert-to-raw-set
+                                (convert-to-raw-set %))) ;;rename to convert-to-raw-set
 
       (update :creator_id #(if (contains? map :creator_id) (to-uuid % :creator_id)))
 
@@ -138,9 +135,6 @@
       ;(update :inspection_start_date #(if (contains? map :inspection_start_date) (format-date %)))
       ;(update :updated_at #(if (contains? map :updated_at) (format-date %)))
       ))
-
-
-
 (defn modify-if-exists [m k f]
   (if (contains? m k)
     (update m k f)
@@ -185,24 +179,16 @@
       (modify-if-exists :contexts_for_context_keys #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))
       (modify-if-exists :catalog_context_keys #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))
       (modify-if-exists :copyright_notice_templates #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))
-      (modify-if-exists :allowed_people_subtypes #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))
-      ))
-
+      (modify-if-exists :allowed_people_subtypes #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))))
 
 (comment
-  (let [
-
-        m {:layout "list"
+  (let [m {:layout "list"
            :default_resource_type "collections"
-           :sorting "manual DESC"
-           }
+           :sorting "manual DESC"}
 
-        res (convert-map-if-exist m)
+        res (convert-map-if-exist m)]
 
-        ]
-    res
-    )
-  )
+    res))
 
 (comment
   ;[honey.sql :refer [format] :rename {format sql-format}]
@@ -222,16 +208,15 @@
   (let [keys [:labels :descriptions :contents :hints :documentation_urls
               :site_titles :brand_texts :welcome_titles :welcome_texts
               :featured_set_titles :featured_set_subtitles :catalog_subtitles :catalog_titles
-              :about_pages :support_urls :provenance_notices
-              ]]
+              :about_pages :support_urls :provenance_notices]]
     (reduce (fn [acc key]
               (if (contains? acc key)
                 (let [field-value (get acc key)
                       transformed-value (to-hstore field-value)] ; Assume to-hstore is defined elsewhere
                   (assoc acc key transformed-value))
                 acc))
-      data
-      keys)))
+            data
+            keys)))
 
 (defn array-to-map [arr]
   (zipmap arr (range (count arr))))
@@ -254,87 +239,67 @@
 (defn replace-java-hashmaps [m]
   (reduce-kv (fn [acc k v]
                (assoc acc k (replace-java-hashmap v)))
-    {}
-    m))
+             {}
+             m))
 
 (def email-regex #"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$")
 
 ; [madek.api.utils.helper :refer [convert-groupid-userid]]
 (defn convert-groupid-userid [group-id user-id]
   (let [is_uuid (boolean (re-matches
-                           #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-                           group-id))
+                          #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+                          group-id))
         group-id (if is_uuid (to-uuid group-id) group-id)
 
-
-        ;is_email (re-matches #"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" user-id)
+;is_email (re-matches #"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" user-id)
         is_email (re-matches email-regex user-id)
         is_uuid (boolean (re-matches
-                           #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-                           user-id))
+                          #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+                          user-id))
         user-id (if is_uuid (to-uuid user-id) user-id)
 
         is_userid_valid (or is_email is_uuid)
         res {:group-id group-id
              :user-id user-id
-             :is_userid_valid is_userid_valid
-             }
-        p (println ">o> convert-groupid-userid, result:" res)
-        ]
-    res
-
-    ))
-
-
+             :is_userid_valid is_userid_valid}
+        p (println ">o> convert-groupid-userid, result:" res)]
+    res))
 
 ; [madek.api.utils.helper :refer [convert-userid]]
 (defn convert-userid [user-id]
-  (let [
-        ;is_email (re-matches #"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" user-id)
+  (let [;is_email (re-matches #"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" user-id)
 
         p (println ">o> user-id=" user-id)
         p (println ">o> user-id.cl=" (class user-id))
 
         is_email (boolean (re-matches email-regex (str user-id)))
 
-
         p (println ">o> is_email_VALID?" is_email)
 
         is_uuid (boolean (re-matches
-                           #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-                           user-id))
+                          #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+                          user-id))
         p (println ">o> is_uuid_VALID?" is_uuid)
 
         user-id (if is_uuid (to-uuid user-id) user-id)
 
         is_userid_valid (or is_email is_uuid)
 
-        res {
-             :user-id user-id
+        res {:user-id user-id
              :is_userid_valid is_userid_valid
              :is_valid_email is_email
-             :is_valid_uuid is_uuid
-             }
-        p (println ">o> convert-userid, result:" res)
-        ]
-    res
-
-    ))
-
+             :is_valid_uuid is_uuid}
+        p (println ">o> convert-userid, result:" res)]
+    res))
 
 (comment
-  (let [
-        mail "_somename@example.com"
+  (let [mail "_somename@example.com"
         ;mail "somename@example.com"
         ;mail "123e4567-e89b-12d3-a456-426614174000"
 
-        res (convert-userid mail)
+        res (convert-userid mail)]
 
-        ]
-    res)
-  )
-
-
+    res))
 
 (defn valid-email? [email]
   (boolean (re-matches email-regex email)))
@@ -346,46 +311,29 @@
         valid1 (valid-email? email1)
         valid2 (valid-email? email2)]
     (println "Email 1 is valid:" valid1)
-    (println "Email 2 is valid:" valid2))
-
-  )
-
+    (println "Email 2 is valid:" valid2)))
 
 ; [madek.api.utils.helper :refer [convert-groupid]]
 (defn convert-groupid [group-id]
   (let [is_uuid (boolean (re-matches
-                           #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-                           group-id))
+                          #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+                          group-id))
         group-id (if is_uuid (to-uuid group-id) group-id)
 
-        res {:group-id group-id
-             }
-        p (println ">o> convert-groupid, result:" res)
-        ]
-    res
-
-    ))
-
-
-
-
-
+        res {:group-id group-id}
+        p (println ">o> convert-groupid, result:" res)]
+    res))
 
 (defn parse-to-int [value default-value]
   (try
-    (let [
-          value (if (instance? java.lang.Long value) (str value) value)
+    (let [value (if (instance? java.lang.Long value) (str value) value)
           value (if (instance? java.lang.Integer value) (str value) value)
 
-      p (println ">o>> before.parseInt" value)
-      p (println ">o>> before.parseInt.class" (class value))
+          p (println ">o>> before.parseInt" value)
+          p (println ">o>> before.parseInt.class" (class value))]
 
-          ]
-
-
-      ;(Integer/parseInt (str value))
-      (Integer/parseInt value)
-      )
+;(Integer/parseInt (str value))
+      (Integer/parseInt value))
     (catch Exception e
       (do
         (println ">o>>>> failed to parse-to-int: value=>" value ", set default-value=>" default-value)
@@ -394,11 +342,11 @@
 ; [madek.api.utils.helper :refer [parse-specific-keys]]
 (defn parse-specific-keys [params defaults]
   (into {}
-    (map (fn [[k v]]
-           [k (if (contains? defaults k)
-                (parse-to-int v (defaults k))
-                v)])
-      params)))
+        (map (fn [[k v]]
+               [k (if (contains? defaults k)
+                    (parse-to-int v (defaults k))
+                    v)])
+             params)))
 
 ;(defn parse-specific-keys [params defaults]
 ;  (into {}
@@ -416,15 +364,11 @@
 ;      params)))
 
 (comment
-  (let [
-        ;res (parse-specific-keys {:page "1" :count "100" :foo "bar"} [:page :count])
+  (let [;res (parse-specific-keys {:page "1" :count "100" :foo "bar"} [:page :count])
 
         defaults {:page 99 :count 99}
         res (parse-specific-keys {:page "2" :count "1000" :foo "bar"} defaults)
 
         p (println ">o> res1" (:page res))
-        p (println ">o> res2" (class (:page res)))
-        ]
-    res
-    )
-  )
+        p (println ">o> res2" (class (:page res)))]
+    res))

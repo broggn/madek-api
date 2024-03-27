@@ -6,12 +6,10 @@
    [madek.api.db.core :refer [get-ds]]
    [madek.api.utils.helper :refer [to-uuid]]
    [next.jdbc :as jdbc]
-
    [taoensso.timbre :refer [debug error info spy warn]]))
 
 (defn sql-merge-where-id
-  ([group-id] (println ">> 1") (sql-merge-where-id {} group-id))
-
+  ([group-id] (sql-merge-where-id {} group-id))
   ([sql-map group-id]
    (if (instance? java.util.UUID group-id)
      (sql/where sql-map [:or
@@ -20,7 +18,6 @@
      (sql/where sql-map [:= :groups.institutional_id (str group-id)]))))
 
 (defn jdbc-update-group-id-where-clause [id]
-  (println ">> 3")
   (-> id sql-merge-where-id))
 
 (defn find-group-sql [id]
@@ -29,17 +26,6 @@
       (sql/from :groups)
       sql-format))
 
-; TODO: remove this
-;(def builder-fn-options
-;  {:builder-fn next.jdbc.result-set/as-unqualified-lower-maps})
-
 (defn find-group [id]
-  ; TODO: works correctly
-  (jdbc/execute-one! (get-ds) (find-group-sql id))
+  (jdbc/execute-one! (get-ds) (find-group-sql id)))
 
-  ; TODO: BROKEN: "groups/institution": "local",
-  ;(jdbc/execute-one! (rdbms/get-ds) (find-group-sql id))
-
-  ; TODO: works correctly
-  ;(jdbc/execute-one! (rdbms/get-ds) (find-group-sql id) builder-fn-options)
-  )

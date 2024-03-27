@@ -3,8 +3,8 @@
    [clojure.walk :refer [keywordize-keys]]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-    [madek.api.utils.helper :refer [parse-specific-keys]]
    [logbug.debug :as debug]
+   [madek.api.utils.helper :refer [parse-specific-keys]]
    [taoensso.timbre :refer [debug error info spy warn]]))
 
 (def DEFAULT_LIMIT 1000)
@@ -20,12 +20,6 @@
 (defn compute-offset [params]
   (* (page-count params) (page-number params)))
 
-
-
-
-
-
-
 ;(defn parse-specific-keys [params keys-to-parse]
 ;  (into {}
 ;    (map (fn [[k v]]
@@ -35,7 +29,6 @@
 ;                  (Integer/parseInt (str v)))
 ;                v)])
 ;      params)))
-
 
 ;(defn parse-to-int [value]
 ;  (try
@@ -86,10 +79,8 @@
 ;    )
 ;  )
 
-
 (defn sql-offset-and-limit [query params] "Caution: zero-based page numbers"
-  (let [
-        defaults {:page 0 :count 1000}
+  (let [defaults {:page 0 :count 1000}
         params (merge defaults params)
 
         p (println ">o>>>> params.before-toInt =>" params)
@@ -108,7 +99,6 @@
         ;
         ;;p (println ">o> query=>" query)
 
-
         p (println ">o> final params for paginationo=" params)
 
         off (compute-offset params)
@@ -118,32 +108,23 @@
         limit (page-count params)
         ;p (println ">o> params.count=>" (:count params))
         p (println ">o>>>>> limit=>" limit)
-        p (println ">o> PAGINATION-DETAIL: offset=" off ", limit=" limit)
-        ]
+        p (println ">o> PAGINATION-DETAIL: offset=" off ", limit=" limit)]
     (-> query
         (sql/offset off)
         (sql/limit limit))
 
     ;{:offset off :limit limit}
     ))
-
-
 (comment
 
-  (let [
-
-        page 1
+  (let [page 1
         page 0
         count 2
         params {:page page :count count}
 
-        res (sql-offset-and-limit nil params)
+        res (sql-offset-and-limit nil params)]
 
-        ]
-    res
-    )
-
-  )
+    res))
 
 (defn next-page-query-query-params [query-params]
   (let [query-params (keywordize-keys query-params)

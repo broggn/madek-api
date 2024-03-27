@@ -1,14 +1,12 @@
 (ns madek.api.resources.vocabularies.index
   (:require
+   [clojure.string :as str]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-   [madek.api.db.core :refer [get-ds]]
-   [clojure.string :as str]
-
-
    [logbug.debug :as debug]
 
+   [madek.api.db.core :refer [get-ds]]
 
    [madek.api.resources.shared :as sd]
    [madek.api.resources.vocabularies.permissions :as permissions]
@@ -35,22 +33,17 @@
        sql-format))
 
   ([user-id size offset request]
-   (let [
-         is_admin_endpoint (str/includes? (-> request :uri) "/admin/")
+   (let [is_admin_endpoint (str/includes? (-> request :uri) "/admin/")
          select (if is_admin_endpoint
                   (sql/select :*)
-                  (sql/select :id :admin_comment :position :labels :descriptions))
-         ]
+                  (sql/select :id :admin_comment :position :labels :descriptions))]
 
      (-> select
          (sql/from :vocabularies)
          (sql/where (where-clause user-id))
          (sql/offset offset)
          (sql/limit size)
-         sql-format)))
-  )
-
-
+         sql-format))))
 
 (defn- query-index-resources [request]
   (let [user-id (-> request :authenticated-entity :id)
@@ -79,17 +72,13 @@
 
 (defn get-index [request]
   (catcher/with-logging {}
-    (let [
-
-          db-result (query-index-resources request)
+    (let [db-result (query-index-resources request)
 
           is_admin (-> request :is_admin)
 
           is_admin_endpoint (str/includes? (-> request :uri) "/admin/")
 
           uri (-> request :uri)
-
-
 
           p (println ">o> isAdmin?" (-> request :is_admin))
 
@@ -102,17 +91,11 @@
           ;         sd/transform_ml)
 
           ; iterate over result and process sd/transform_ml for each element
-           result (map transform_ml db-result)
+          result (map transform_ml db-result)
 
+          p (println ">o> result" result)]
 
-          p (println ">o> result" result)
-
-          ]
-      (sd/response_ok {:vocabularies result})
-
-      ))
-
-  )
+      (sd/response_ok {:vocabularies result}))))
 
 ;### Debug ####################################################################
 (debug/debug-ns *ns*)

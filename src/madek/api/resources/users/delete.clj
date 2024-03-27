@@ -8,15 +8,15 @@
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
    [madek.api.resources.users.common :refer [wrap-find-user]]
+   [madek.api.resources.users.get :as get-user]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
    [madek.api.utils.logging :as logging]
    [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
+
    [next.jdbc :as jdbc]
+
    [reitit.coercion.schema]
-
-   [madek.api.resources.users.get :as get-user]
-
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
 
    [schema.core :as s]
    [taoensso.timbre :refer [debug error info spy warn]]))
@@ -37,16 +37,11 @@
 
   (try
 
-  (if (delete-user id ds)
-    (sd/response_ok user)
-    (sd/response_failed "Could not delete user." 406)
-    )
+    (if (delete-user id ds)
+      (sd/response_ok user)
+      (sd/response_failed "Could not delete user." 406))
 
-  (catch Exception ex (sd/parsed_response_exception ex)
-
-    )
-
-  ))
+    (catch Exception ex (sd/parsed_response_exception ex))))
 
 (def route
   {:summary (sd/sum_adm (t "Delete user by id"))
@@ -66,6 +61,4 @@
 
                404 {:description "Not Found."
                     :schema s/Str
-                    :examples {"application/json" {:message "No such user."}}}
-
-               }})
+                    :examples {"application/json" {:message "No such user."}}}}})

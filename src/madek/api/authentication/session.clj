@@ -4,29 +4,18 @@
    [buddy.core.hash :as hash]
    [clj-time.core :as time]
    [clj-time.format :as time-format]
-   ;[clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
    [clojure.walk :refer [keywordize-keys]]
    ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   ;[honey.sql :refer [format] :rename {format sql-format}]
-   ;[honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.legacy.session.encryptor :refer [decrypt]]
-   ;[madek.api.utils.rdbms :as rdbms]
-
-   ;[next.jdbc :as njdbc]
-
    [madek.api.legacy.session.signature :refer [valid?]]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.config :refer [get-config
                                    parse-config-duration-to-seconds]]
-
-   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-
-         ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
 
    [taoensso.timbre :refer [debug spy]]))

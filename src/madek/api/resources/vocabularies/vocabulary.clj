@@ -1,11 +1,11 @@
 (ns madek.api.resources.vocabularies.vocabulary
   (:require
+   [clojure.string :as str]
    ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [madek.api.db.core :refer [get-ds]]
 
-   [clojure.string :as str]
+   [madek.api.db.core :refer [get-ds]]
    ;[madek.api.utils.rdbms :refer [get-ds]]
 
    ;[clojure.java.jdbc :as jdbc]
@@ -26,8 +26,8 @@
 (defn- add-fields-for-default-locale
   [result]
   (add-field-for-default-locale
-    "label" (add-field-for-default-locale
-              "description" result)))
+   "label" (add-field-for-default-locale
+            "description" result)))
 
 (defn- where-clause
   [id user-id]
@@ -51,7 +51,7 @@
       (sql-format)))
 
 ; TODO add flag for default locale
-(defn get-vocabulary [request]                              ;; HERE
+(defn get-vocabulary [request] ;; HERE
   (let [id (-> request :parameters :path :id)
         user-id (-> request :authenticated-entity :id)
         query (build-vocabulary-query id user-id)
@@ -67,9 +67,7 @@
                        transform_ml
                        sd/remove-internal-keys)))
 
-
-        p (println ">o> result" result)
-        ]
+        p (println ">o> result" result)]
     (if result
       (sd/response_ok result)
       (sd/response_failed "Vocabulary could not be found!" 404))))

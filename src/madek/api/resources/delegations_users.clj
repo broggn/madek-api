@@ -7,10 +7,9 @@
    [honey.sql.helpers :as sql]
    [madek.api.db.core :refer [get-ds]]
 
-   [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids t f to-uuid merge-query-parts]]
-
-
    [madek.api.resources.shared :as sd]
+
+   [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids t f to-uuid merge-query-parts]]
    ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
    ;[madek.api.utils.sql :as sqlo]
    ;[leihs.core.db :as db]
@@ -43,11 +42,9 @@
         query (cond-> base-query
                 delegation_id (sql/where [:= :delegation_id delegation_id])
                 user_id (sql/where [:= :user_id user_id]))
-        db-result (jdbc/execute! (get-ds) (sql-format query))
-        ]
+        db-result (jdbc/execute! (get-ds) (sql-format query))]
 
-
-    ;(->> db-result (map :id) set)
+;(->> db-result (map :id) set)
     (logging/info "handle_list-delegations_user" "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
@@ -80,8 +77,7 @@
                       (sql/returning :*)
                       sql-format)
 
-        ins-res (jdbc/execute-one! (get-ds) sql-query)
-        ]
+        ins-res (jdbc/execute-one! (get-ds) sql-query)]
     ;(if-let [ins-res (first (jdbc/execute! (get-ds) sql-query))]
     (if ins-res
       (sd/response_ok ins-res)
@@ -98,25 +94,24 @@
                       (sql/returning :*)
                       sql-format)
 
-        res (jdbc/execute-one! (get-ds) sql-query)
-        ]
+        res (jdbc/execute-one! (get-ds) sql-query)]
 
-    ;(if (= 1 (first (jdbc/execute! (get-ds) sql-query)))
+;(if (= 1 (first (jdbc/execute! (get-ds) sql-query)))
     (if res
       (sd/response_ok delegations_user)
       (logging/error "Failed delete delegations_user "
-        "user-id: " user-id "delegation-id: " delegation-id))))
+                     "user-id: " user-id "delegation-id: " delegation-id))))
 
 (defn wwrap-find-delegations_user [send404]
   (fn [handler]
     (fn [request]
       (sd/req-find-data2
-        request handler
-        :user_id :delegation_id
-        :delegations_users
-        :user_id :delegation_id
-        res-req-name
-        send404))))
+       request handler
+       :user_id :delegation_id
+       :delegations_users
+       :user_id :delegation_id
+       res-req-name
+       send404))))
 
 (defn wwrap-find-delegations_user-by-auth [send404]
   (fn [handler]
@@ -125,24 +120,24 @@
             del-id (-> request :parameters :path :delegation_id str)]
         (logging/info "uid\n" user-id "del-id\n" del-id)
         (sd/req-find-data-search2
-          request handler
-          user-id del-id
-          :delegations_users
-          :user_id :delegation_id
-          res-req-name
-          send404)))))
+         request handler
+         user-id del-id
+         :delegations_users
+         :user_id :delegation_id
+         res-req-name
+         send404)))))
 
 (defn wwrap-find-user [param]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler param
-                    :users :id
-                    :user true))))
+                                    :users :id
+                                    :user true))))
 
 (defn wwrap-find-delegation [param]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler param
-                    :delegations
-                    :id :delegation true))))
+                                    :delegations
+                                    :id :delegation true))))
 
 (def schema_delegations_users_export
   {:user_id s/Uuid

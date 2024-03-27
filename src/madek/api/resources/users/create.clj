@@ -1,30 +1,30 @@
 (ns madek.api.resources.users.create
   (:require
    [clj-uuid :as uuid]
+   [clojure.data.json :as json]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.debug :as debug]
    [madek.api.authorization :as authorization]
    [madek.api.db.core :refer [get-ds]]
+
    [madek.api.resources.shared :as sd]
-
-   [madek.api.utils.helper :refer [mslurp]]
-   [clojure.data.json :as json]
-
-   [madek.api.utils.validation :refer [email-validation json-and-json-str-validation json-and-json-str-validation vector-or-hashmap-validation]]
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
-
    [madek.api.resources.users.common :refer [find-user-by-uid]]
-   [madek.api.resources.users.get :as get-user]
-   [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.logging :as logging]
-   [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
-   [madek.api.utils.helper :refer [convert-map-if-exist]]
-   [next.jdbc :as jdbc]
-   [reitit.coercion.schema]
 
+   [madek.api.resources.users.get :as get-user]
    ;[madek.api.resources.users.get :refer [schema]]
    [madek.api.resources.users.get :as users-get]
+
+   [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
+   [madek.api.utils.helper :refer [convert-map-if-exist]]
+   [madek.api.utils.helper :refer [mslurp]]
+   [madek.api.utils.logging :as logging]
+   [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
+   [madek.api.utils.validation :refer [email-validation json-and-json-str-validation json-and-json-str-validation vector-or-hashmap-validation]]
+   [next.jdbc :as jdbc]
+
+   [reitit.coercion.schema]
 
    [schema.core :as s]
 
@@ -39,10 +39,7 @@
 
     ;(s/validate users-get/schema data)
 
-
-    (let [
-
-          p (println ">o> data" data)
+    (let [p (println ">o> data" data)
           p (println ">o> data.sett" (:settings data))
           p (println ">o> data.sett.cl" (class (:settings data)))
 
@@ -71,27 +68,22 @@
           ;result nil
           ;result []
 
-          p (println ">o> result" result)
-
-          ]
+          p (println ">o> result" result)]
 
       (if result
         (do
           (println ">o> result-ok")
-          (sd/response_ok result 201))                      ;; looses content type
+          (sd/response_ok result 201)) ;; looses content type
         ;(sd/response_ok "alles suppi"))
         ;(sd/response_ok {:test "alles suppi"}))
         ;(sd/response_ok {} 201))
         (do
           (println ">o> failed")
-          (sd/response_failed)))
-
-      )
+          (sd/response_failed))))
 
     (catch Exception e
       (error "handle-create-user failed" {:request req})
       (sd/parsed_response_exception e))))
-
 
 (def schema
   {:person_id s/Uuid
@@ -105,10 +97,7 @@
    (s/optional-key :notes) (s/maybe s/Str)
 
    ;(s/optional-key :settings) json-and-json-str-validation
-   (s/optional-key :settings) vector-or-hashmap-validation
-
-   })
-
+   (s/optional-key :settings) vector-or-hashmap-validation})
 
 ;; post /users
 (def route
@@ -122,15 +111,13 @@
    :handler handle-create-user
    :middleware [wrap-authorize-admin!]
    :parameters {:body schema}
-   :responses {
-               201 {:description "Created."
+   :responses {201 {:description "Created."
                     :body s/Any
                     ;:body get-user/schema
                     }
 
                400 {:description "Bad Request"
-                    :body s/Any
-                    }
+                    :body s/Any}
 
                404 {:description "Not Found."
                     :schema s/Str
@@ -138,8 +125,7 @@
 
                409 {:description "Conflict."
                     :schema s/Str
-                    :examples {"application/json" {:message "Entry already exists"}}}
-               }
+                    :examples {"application/json" {:message "Entry already exists"}}}}
    :summary (sd/sum_adm (f (t "Create user.")))
    :swagger {:consumes "application/json"
              :produces "application/json"}})

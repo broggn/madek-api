@@ -3,14 +3,12 @@
    [clojure.tools.logging :as logging]
    [logbug.debug :as debug]
 
-   [madek.api.utils.validation :refer [positive-number-1-to-1000-validation positive-number-0-to-100-validation positive-number-1-to-100-validation email-validation positive-number-with-max-100-validation positive-number-with-max-validation json-and-json-str-validation json-and-json-str-validation vector-or-hashmap-validation]]
+   [madek.api.resources.roles.role :as role]
 
+   [madek.api.resources.shared :as sd]
 
    [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist f replace-java-hashmaps t v]]
-
-
-   [madek.api.resources.roles.role :as role]
-   [madek.api.resources.shared :as sd]
+   [madek.api.utils.validation :refer [positive-number-1-to-1000-validation positive-number-0-to-100-validation positive-number-1-to-100-validation email-validation positive-number-with-max-100-validation positive-number-with-max-validation json-and-json-str-validation json-and-json-str-validation vector-or-hashmap-validation]]
    [reitit.coercion.schema]
    [schema.core :as s]))
 
@@ -85,7 +83,6 @@
                :parameters {:query {(s/required-key :page) positive-number-0-to-100-validation
                                     (s/required-key :count) positive-number-1-to-1000-validation}}
 
-
                :content-type "application/json"
                :coercion reitit.coercion.schema/coercion
                :responses {200 {:body {:roles [schema_export-role]}}}}
@@ -107,9 +104,7 @@
 
                             406 {:description "Not Acceptable."
                                  :schema s/Str
-                                 :examples {"application/json" {:message "Could not create role."}}}
-
-                            }}}]
+                                 :examples {"application/json" {:message "Could not create role."}}}}}}]
 
    ["/:id"
     {:get {:summary (sd/sum_adm (t "Get role by id"))
@@ -135,9 +130,7 @@
 
                        406 {:description "Not Acceptable."
                             :schema s/Str
-                            :examples {"application/json" {:message "Could not update role."}}}
-
-                       }}
+                            :examples {"application/json" {:message "Could not update role."}}}}}
 
      :delete {:summary (sd/sum_adm (t "Delete role."))
               :handler role/handle_delete-role
@@ -153,9 +146,7 @@
 
                           406 {:description "Not Acceptable."
                                :schema s/Str
-                               :examples {"application/json" {:message "Could not delete role."}}}
-
-                          }}}]])
+                               :examples {"application/json" {:message "Could not delete role."}}}}}}]])
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

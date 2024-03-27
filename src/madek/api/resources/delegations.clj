@@ -14,8 +14,7 @@
 
    [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
 
-
-   ;[leihs.core.db :as db]
+;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
 
    [reitit.coercion.schema]
@@ -72,9 +71,8 @@
 
     ; create delegation entry
     (logging/info "handle_update-delegations: " "\nid\n" id "\ndwid\n" dwid
-      "\nold-data\n" old-data
-      "\nupd-query\n" upd-query)
-
+                  "\nold-data\n" old-data
+                  "\nupd-query\n" upd-query)
 
     (if-let [ins-res (first (jdbc/execute! (get-ds) sql-query))]
       (let [new-data (sd/query-eq-find-one :delegations :id id)]
@@ -113,11 +111,10 @@
 
     (catch Exception ex (sd/parsed_response_exception ex))))
 
-
 (defn wwrap-find-delegation [param colname send404]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler param
-                    :delegations colname :delegation send404))))
+                                    :delegations colname :delegation send404))))
 
 (def schema_import_delegations
   {;:id s/Str
@@ -151,8 +148,7 @@
 (def ring-routes
 
   ["/delegations"
-   {:swagger {:tags ["admin/delegations"]                       :security [{"auth" []}]
-              }}
+   {:swagger {:tags ["admin/delegations"] :security [{"auth" []}]}}
    ["/"
     {:post {:summary (sd/sum_adm_todo (t "Create delegations."))
             ; TODO labels and descriptions
@@ -175,25 +171,20 @@
                                    :type "boolean"
                                    ;:type s/Bool
                                    ;:pattern "^[1-9][0-9]*$"
-                                   }]
-                     }
+                                   }]}
+           :responses {200 {:body [schema_get_delegations]}}}}]
 
-           :responses {200 {:body [schema_get_delegations]}
-                       }}}]
-
-   ; edit delegation
+; edit delegation
    ["/:id"
     {:get {:summary (sd/sum_adm (t "Get delegations by id."))
            :handler handle_get-delegation
            :middleware [(wwrap-find-delegation :id :id true)]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Uuid}}
-           :responses {
-                       200 {:body schema_export_delegations}
+           :responses {200 {:body schema_export_delegations}
                        404 {:description "Not Found."
                             :schema s/Str
-                            :examples {"application/json" {:message "No such entity in :delegations as :id with <id>"}}}
-                       }}
+                            :examples {"application/json" {:message "No such entity in :delegations as :id with <id>"}}}}}
 
      :put {:summary (sd/sum_adm (t "Update delegations with id."))
            :handler handle_update-delegations
@@ -207,8 +198,7 @@
                             :examples {"application/json" {:message "No such entity in :delegations as :id with <id>"}}}
                        406 {:description "Not Acceptable."
                             :schema s/Str
-                            :examples {"application/json" {:message "Could not update delegation."}}}
-                       }}
+                            :examples {"application/json" {:message "Could not update delegation."}}}}}
 
      :delete {:summary (sd/sum_adm_todo (t "Delete delegation by id."))
               :coercion reitit.coercion.schema/coercion
@@ -216,8 +206,7 @@
               :middleware [(wwrap-find-delegation :id :id true)]
               :parameters {:path {:id s/Uuid}}
 
-              :responses {
-                          200 {:body schema_export_delegations}
+              :responses {200 {:body schema_export_delegations}
                           404 {:description "Not Found."
                                :schema s/Str
                                ;:examples {"application/json" {:message "No such entity in :delegations as :id with <id>"}}}
@@ -225,7 +214,4 @@
 
                           406 {:description "Not Acceptable."
                                :schema s/Str
-                               :examples {"application/json" {:message "Could not delete delegation."}}}
-                          }
-
-              }}]])
+                               :examples {"application/json" {:message "Could not delete delegation."}}}}}}]])

@@ -12,31 +12,28 @@
 
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids  t f to-uuid merge-query-parts]]
+   [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids t f to-uuid merge-query-parts]]
 
-   [taoensso.timbre :refer [info warn error spy]]
-
-
-  ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   ;[madek.api.utils.sql :as sqlo]
-
-;[leihs.core.db :as db]
+   ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
 
+;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+   ;[madek.api.utils.sql :as sqlo]
+
    [reitit.coercion.schema]
-   [schema.core :as s]))
+
+   [schema.core :as s]
+   [taoensso.timbre :refer [info warn error spy]]))
 
 (defn build-query [query-params]
-  (let [
-        p (println ">o> :full_data? val=" (-> query-params :full_data))
+  (let [p (println ">o> :full_data? val=" (-> query-params :full_data))
         p (println ">o> :full_data? val.class=" (class (-> query-params :full_data)))
         p (println ">o> :full_data? true?=" (true? (-> query-params :full_data)))
         col-sel (if (true? (-> query-params :full_data))
                   (sql/select :*)
                   (sql/select :id))
 
-        p (println ">o> col-sel?? = " col-sel)
-        ]
+        p (println ">o> col-sel?? = " col-sel)]
     (-> col-sel
         (sql/from :edit_sessions)
         (sd/build-query-param query-params :id)
@@ -196,7 +193,7 @@
 
 (def admin-routes
   ["/edit_sessions"
-   {:swagger {:tags ["admin/edit_sessions"] :security [{"auth" []}] }}
+   {:swagger {:tags ["admin/edit_sessions"] :security [{"auth" []}]}}
    ["/"
     {:get {:summary (sd/sum_adm (t "List edit_sessions."))
            :handler handle_adm_list-edit-sessions
@@ -219,7 +216,7 @@
 
 (def query-routes
   ["/edit_sessions"
-   {:swagger {:tags ["edit_sessions"] }}
+   {:swagger {:tags ["edit_sessions"]}}
    ["/"
     {:get {:summary (sd/sum_usr (t "List authed users edit_sessions."))
            :handler handle_usr_list-edit-sessions

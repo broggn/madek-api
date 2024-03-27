@@ -12,8 +12,7 @@
 
    ;[leihs.core.db :as db]
    ;[clojure.java.jdbc :as jdbc]
-   [next.jdbc :as jdbc]
-   ))
+   [next.jdbc :as jdbc]))
 
 ;; TODO: FIXME: use get-ds
 (def db-spec {:dbtype "postgresql"
@@ -26,10 +25,8 @@
   (rdbms/initialize dburl)
   (when-let [ds get-ds] ds))
 
-
 (defn dbinsert [table data]
-  (let [
-        data (convert-map-if-exist data)
+  (let [data (convert-map-if-exist data)
         insert-stmt (-> (sql/insert-into table)
                         (sql/values [data])
                         sql-format)

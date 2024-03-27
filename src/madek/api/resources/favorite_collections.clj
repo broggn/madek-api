@@ -9,12 +9,11 @@
             ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
             [madek.api.db.core :refer [get-ds]]
 
-            [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids t f to-uuid merge-query-parts]]
-
-
             [madek.api.resources.shared :as sd]
-           ;; all needed imports
+
+;; all needed imports
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+            [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids t f to-uuid merge-query-parts]]
 
 ;[leihs.core.db :as db]
             [next.jdbc :as jdbc]
@@ -30,9 +29,8 @@
 
 (defn handle_list-favorite_collection
   [req]
-  (let [
-        col-sel (if (true? (-> req :parameters :query :full_data))
-                   :*
+  (let [col-sel (if (true? (-> req :parameters :query :full_data))
+                  :*
                   :user_id)
         ;db-result (sd/query-find-all :favorite_collections :*)]
         db-result (sd/query-find-all :favorite_collections col-sel)]
@@ -130,11 +128,9 @@
 
 (def schema_favorite_collection_export
   {:user_id s/Uuid
-  (s/optional-key :collection_id) s/Uuid
-  (s/optional-key :updated_at) s/Any
-  (s/optional-key :created_at) s/Any
-   }
-  )
+   (s/optional-key :collection_id) s/Uuid
+   (s/optional-key :updated_at) s/Any
+   (s/optional-key :created_at) s/Any})
 
 ; TODO docu
 ; TODO tests
@@ -182,25 +178,36 @@
 
     ["/"
 
-    {:get
-     {:summary (sd/sum_adm (f (t "List favorite_collection users.") "pagination?"))
-      :handler handle_list-favorite_collection
-      :middleware [wrap-authorize-admin!]
-      :coercion reitit.coercion.schema/coercion
+     {:get
+      {:summary (sd/sum_adm (f (t "List favorite_collection users.") "pagination?"))
+       :handler handle_list-favorite_collection
+       :middleware [wrap-authorize-admin!]
+       :coercion reitit.coercion.schema/coercion
       ; TODO query params?
-      :parameters {:query {;(s/optional-key :user_id) s/Uuid
+       :parameters {:query {;(s/optional-key :user_id) s/Uuid
                            ;(s/optional-key :collection_id) s/Uuid
-                           (s/optional-key :full_data) s/Bool}}
-      :responses {200 {:body [schema_favorite_collection_export]}}}}]
+                            (s/optional-key :full_data) s/Bool}}
+       :responses {200 {:body [schema_favorite_collection_export]}}}}]
    ; edit favorite collections for other users
-   ["/favorite/collections/:collection_id/:user_id"
-    {:post {:summary (sd/sum_adm (t "Create favorite_collection for user and collection."))
-            :handler handle_create-favorite_collection
+    ["/favorite/collections/:collection_id/:user_id"
+     {:post {:summary (sd/sum_adm (t "Create favorite_collection for user and collection."))
+             :handler handle_create-favorite_collection
 
+             :middleware [wrap-authorize-admin!
+                          (wwrap-find-user :user_id)
+                          (wwrap-find-collection :collection_id)
+                          (wwrap-find-favorite_collection false)]
+             :coercion reitit.coercion.schema/coercion
+             :parameters {:path {:user_id s/Uuid
+                                 :collection_id s/Uuid}}
+             :responses {200 {:body schema_favorite_collection_export}
+                         404 {:body s/Any}
+                         406 {:body s/Any}}}
+
+      :get {:summary (sd/sum_adm (t "Get favorite_collection by user and collection id."))
+            :handler handle_get-favorite_collection
             :middleware [wrap-authorize-admin!
-                         (wwrap-find-user :user_id)
-                         (wwrap-find-collection :collection_id)
-                         (wwrap-find-favorite_collection false)]
+                         (wwrap-find-favorite_collection true)]
             :coercion reitit.coercion.schema/coercion
             :parameters {:path {:user_id s/Uuid
                                 :collection_id s/Uuid}}
@@ -208,24 +215,13 @@
                         404 {:body s/Any}
                         406 {:body s/Any}}}
 
-     :get {:summary (sd/sum_adm (t "Get favorite_collection by user and collection id."))
-           :handler handle_get-favorite_collection
-           :middleware [wrap-authorize-admin!
-                        (wwrap-find-favorite_collection true)]
-           :coercion reitit.coercion.schema/coercion
-           :parameters {:path {:user_id s/Uuid
-                               :collection_id s/Uuid}}
-           :responses {200 {:body schema_favorite_collection_export}
-                       404 {:body s/Any}
-                       406 {:body s/Any}}}
-
-     :delete {:summary (sd/sum_adm (t "Delete favorite_collection by user and collection id."))
-              :coercion reitit.coercion.schema/coercion
-              :handler handle_delete-favorite_collection
-              :middleware [wrap-authorize-admin!
-                           (wwrap-find-favorite_collection true)]
-              :parameters {:path {:user_id s/Uuid
-                                  :collection_id s/Uuid}}
-              :responses {200 {:body schema_favorite_collection_export}
-                          404 {:body s/Any}
-                          406 {:body s/Any}}}}]]])
+      :delete {:summary (sd/sum_adm (t "Delete favorite_collection by user and collection id."))
+               :coercion reitit.coercion.schema/coercion
+               :handler handle_delete-favorite_collection
+               :middleware [wrap-authorize-admin!
+                            (wwrap-find-favorite_collection true)]
+               :parameters {:path {:user_id s/Uuid
+                                   :collection_id s/Uuid}}
+               :responses {200 {:body schema_favorite_collection_export}
+                           404 {:body s/Any}
+                           406 {:body s/Any}}}}]]])

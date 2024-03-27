@@ -78,15 +78,13 @@
                             (sql/returning :*)
                             sql-format)
             ins-res (jdbc/execute-one! (get-ds) insert-stmt)
-            ins-res (transform-ml-role ins-res)
-            ]
+            ins-res (transform-ml-role ins-res)]
 
         (logging/info "handle_create-role: " "\new-data:\n" data "\nresult:\n" ins-res)
 
         (if ins-res
           (sd/response_ok ins-res)
-          (sd/response_failed "Could not create role." 406)))
-      )
+          (sd/response_failed "Could not create role." 406))))
     (catch Exception ex
       (sd/parsed_response_exception ex))))
 
@@ -121,11 +119,10 @@
 
           (let [delete-stmt (-> (sql/delete-from :roles)
                                 (sql/where [:= :id id])
-                                (sql/returning :* )
+                                (sql/returning :*)
                                 (sql-format))
                 del-result (jdbc/execute-one! (get-ds) delete-stmt)
-                del-result (transform-ml-role del-result)
-                ]
+                del-result (transform-ml-role del-result)]
 
             (logging/info "handle_delete-role: " id " result: " del-result)
             (if del-result

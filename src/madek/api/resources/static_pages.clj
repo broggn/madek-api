@@ -174,9 +174,7 @@
 
                        404 {:description "Not Found."
                             :schema s/Str
-                            :examples {"application/json" {:message "No such entity in :static_pages as :id with <id>"}}}
-
-                       }}
+                            :examples {"application/json" {:message "No such entity in :static_pages as :id with <id>"}}}}}
 
      :put {:summary (sd/sum_adm (t "Update static_pages with id."))
            :handler handle_update-static_page

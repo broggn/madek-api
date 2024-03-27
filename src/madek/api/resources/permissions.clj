@@ -4,12 +4,10 @@
    [logbug.catcher :as catcher]
    [madek.api.resources.media-resources.permissions :as mr-permissions]
 
-
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
-
-
    [madek.api.resources.shared :as sd]
+
    [madek.api.resources.vocabularies.permissions :as voc-perms]
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
    [reitit.coercion.schema]
    [schema.core :as s]))
 
@@ -361,7 +359,7 @@
 
 (def media-entry-routes
   ["/media-entry/:media_entry_id/perms"
-   {:swagger {:tags ["media-entry/perms"] }}
+   {:swagger {:tags ["media-entry/perms"]}}
 
    ["/"
     {:get
@@ -550,7 +548,7 @@
 
 (def collection-routes
   ["/collection/:collection_id/perms"
-   {:swagger {:tags ["collection/perms"] }}
+   {:swagger {:tags ["collection/perms"]}}
 
    ["/"
     {:get

@@ -8,14 +8,13 @@
    ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
    [madek.api.authorization :as authorization]
 
-   [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids t f to-uuid merge-query-parts]]
-
-
    ;; all needed imports
    [madek.api.db.core :refer [get-ds]]
-   ;[leihs.core.db :as db]
+
+;[leihs.core.db :as db]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+   [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids t f to-uuid merge-query-parts]]
 
    [next.jdbc :as jdbc]
 
@@ -205,42 +204,42 @@
 
     ["/"
 
-    {:get
-     {:summary (sd/sum_adm (t "Query favorite_media_entries."))
-      :handler handle_list-favorite_media_entries
-      :middleware [wrap-authorize-admin!]
-      :coercion reitit.coercion.schema/coercion
+     {:get
+      {:summary (sd/sum_adm (t "Query favorite_media_entries."))
+       :handler handle_list-favorite_media_entries
+       :middleware [wrap-authorize-admin!]
+       :coercion reitit.coercion.schema/coercion
         ;:parameters {:query {(s/optional-key :user_id) s/Uuid
         ;                     (s/optional-key :media_entry_id) s/Uuid
         ;                     (s/optional-key :full_data) s/Bool}}
-      }}]
+       }}]
 
-   ["/favorite/media_entries/:media_entry_id/:user_id"
-    {:post
-     {:summary (sd/sum_adm (t "Create favorite_media-entry for user and media-entry."))
-      :handler handle_create-favorite_media_entry
-      :middleware [wrap-authorize-admin!
-                   (wwrap-find-user :user_id)
-                   (wwrap-find-media_entry :media_entry_id)
-                   (wwrap-find-favorite_media_entry false)]
-      :coercion reitit.coercion.schema/coercion
-      :parameters {:path {:user_id s/Uuid
-                          :media_entry_id s/Uuid}}}
+    ["/favorite/media_entries/:media_entry_id/:user_id"
+     {:post
+      {:summary (sd/sum_adm (t "Create favorite_media-entry for user and media-entry."))
+       :handler handle_create-favorite_media_entry
+       :middleware [wrap-authorize-admin!
+                    (wwrap-find-user :user_id)
+                    (wwrap-find-media_entry :media_entry_id)
+                    (wwrap-find-favorite_media_entry false)]
+       :coercion reitit.coercion.schema/coercion
+       :parameters {:path {:user_id s/Uuid
+                           :media_entry_id s/Uuid}}}
 
-     :get
-     {:summary (sd/sum_adm (t "Get favorite_media-entry for user and media-entry."))
-      :handler handle_get-favorite_media_entry
-      :middleware [wrap-authorize-admin!
-                   (wwrap-find-favorite_media_entry true)]
-      :coercion reitit.coercion.schema/coercion
-      :parameters {:path {:user_id s/Uuid
-                          :media_entry_id s/Uuid}}}
+      :get
+      {:summary (sd/sum_adm (t "Get favorite_media-entry for user and media-entry."))
+       :handler handle_get-favorite_media_entry
+       :middleware [wrap-authorize-admin!
+                    (wwrap-find-favorite_media_entry true)]
+       :coercion reitit.coercion.schema/coercion
+       :parameters {:path {:user_id s/Uuid
+                           :media_entry_id s/Uuid}}}
 
-     :delete
-     {:summary (sd/sum_adm (t "Delete favorite_media-entry for user and media-entry."))
-      :coercion reitit.coercion.schema/coercion
-      :handler handle_delete-favorite_media_entry
-      :middleware [wrap-authorize-admin!
-                   (wwrap-find-favorite_media_entry true)]
-      :parameters {:path {:user_id s/Uuid
-                          :media_entry_id s/Uuid}}}}]]])
+      :delete
+      {:summary (sd/sum_adm (t "Delete favorite_media-entry for user and media-entry."))
+       :coercion reitit.coercion.schema/coercion
+       :handler handle_delete-favorite_media_entry
+       :middleware [wrap-authorize-admin!
+                    (wwrap-find-favorite_media_entry true)]
+       :parameters {:path {:user_id s/Uuid
+                           :media_entry_id s/Uuid}}}}]]])

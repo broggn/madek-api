@@ -8,7 +8,6 @@
    [honey.sql.helpers :as sql]
    [logbug.debug :as debug]
    [logbug.thrown :as thrown]
-
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
    [next.jdbc :as jdbc]

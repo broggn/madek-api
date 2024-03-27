@@ -4,14 +4,10 @@
    ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   ;[madek.api.utils.sql :as sql]
-
    [logbug.catcher :as catcher]
    [logbug.debug :as debug]
    [madek.api.db.core :refer [get-ds]]
-
    [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-
    ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]))
 
@@ -44,9 +40,9 @@
                (sql/where [:= :cgp.collection_id :collections.id])
                (sql/where [:= (keyword (str "cgp." perm)) true])
                (sql/join :groups
-                 [:= :groups.id :cgp.group_id])
+                         [:= :groups.id :cgp.group_id])
                (sql/join [:groups_users :gu]
-                 [:= :gu.group_id :groups.id])
+                         [:= :gu.group_id :groups.id])
                (sql/where [:= :gu.user_id id]))])
 
 (defn- user-authorized-condition [perm id]
@@ -58,23 +54,23 @@
    [:= :collections.responsible_user_id id]
 
    (when (or (= perm "get_metadata_and_previews")
-           (= perm "edit_metadata_and_relations")
-           (= perm "edit_permissions"))
+             (= perm "edit_metadata_and_relations")
+             (= perm "edit_permissions"))
      (user-permission-exists-condition perm id))
 
    (when (or (= perm "get_metadata_and_previews")
-           (= perm "edit_metadata_and_relations"))
+             (= perm "edit_metadata_and_relations"))
      (group-permission-for-user-exists-condition perm id))])
 
 (defn- filter-by-permission-for-auth-entity [sqlmap permission authenticated-entity]
   (case (:type authenticated-entity)
     "User" (sql/where sqlmap (user-authorized-condition
-                                     permission (:id authenticated-entity)))
+                              permission (:id authenticated-entity)))
     ; TODO session
     ;"ApiClient" (sql/merge-where sqlmap (api-client-authorized-condition
     ;                                      permission (:id authenticated-entity)))
     (throw (ex-info (str "Filtering for " permission " requires a signed-in entity.")
-             {:status 422}))))
+                    {:status 422}))))
 
 (defn filter-by-query-params [sqlmap query-params authenticated-entity]
   (doseq [true_param ["me_get_metadata_and_previews"
@@ -83,8 +79,7 @@
     (when (contains? query-params (keyword true_param))
       (when (not= (get query-params (keyword true_param)) true)
         (throw (ex-info (str "Value of " true_param " must be true when present.")
-                 {:status 422})))))
-
+                        {:status 422})))))
   (cond-> sqlmap
     (:public_get_metadata_and_previews query-params)
     (sql/where [:= :collections.get_metadata_and_previews true])

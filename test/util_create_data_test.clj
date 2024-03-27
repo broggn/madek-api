@@ -13,8 +13,7 @@
   (tu/del-test-person2)
   (tu/init-test-person2)
   (tu/init-test-user2)
-  (tu/init-test-auth2)
-  )
+  (tu/init-test-auth2))
 
 (deftest dev-create-user
   (tu/init-db td/dburltest)
@@ -23,8 +22,7 @@
   (tu/del-test-person2)
   (tu/init-test-person2)
   (tu/init-test-user2)
-  (tu/init-test-auth2)
-  )
+  (tu/init-test-auth2))
 
 (deftest dev-create-admin-user
   (tu/init-db td/dburltest)

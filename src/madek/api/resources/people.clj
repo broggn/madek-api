@@ -94,8 +94,7 @@
 
 (defn handle_query-people
   [request]
-  (let [
-        p (println ">o> handle_query-people" )
+  (let [p (println ">o> handle_query-people")
 
         query-params (-> request :parameters :query)
         sql-query (build-index-query query-params)
@@ -215,17 +214,15 @@
 
 (defn handle_get-person
   [req]
-  (let [
-        p (println ">o> handle_get-person" )
+  (let [p (println ">o> handle_get-person")
 
         ;/api/people/%5B%22fake-university.com%22%2C%22https%3A%2F%2Ffake-university.com%2Fstudents%2F12345%22%5D
         ;/api/people/["fake-university.com","https://fake-university.com/students/12345"]
 
         id-or-institutinal-person-id (-> req :parameters :path :id str)
 
-        p (println ">o> id-or-institutinal-person-id=" id-or-institutinal-person-id)
+        p (println ">o> id-or-institutinal-person-id=" id-or-institutinal-person-id)]
 
-        ]
     (if-let [person (db-person-get id-or-institutinal-person-id)]
       (sd/response_ok (transform_export person))
       (sd/response_failed "No such person found" 404))))

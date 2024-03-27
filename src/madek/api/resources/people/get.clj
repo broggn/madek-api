@@ -2,10 +2,10 @@
   (:require
    [honey.sql :refer [format] :rename {format sql-format}]
    [logbug.debug :as debug]
-   [madek.api.resources.people.common :refer [person-query]]
-   [madek.api.resources.shared :as sd]
-
    [madek.api.db.core :refer [get-ds]]
+   [madek.api.resources.people.common :refer [person-query]]
+
+   [madek.api.resources.shared :as sd]
 
    [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
 
@@ -35,7 +35,6 @@
   (println ">o>people.get / handler, id=" id)
   (println ">o>people.get / handler, id.cl=" (class id))
 
-
   (debug req)
   (debug id)
   (if-let [person (-> (person-query id)
@@ -61,6 +60,4 @@
 
                404 {:description "Not found."
                     :schema s/Str
-                    :examples {"application/json" {:message "No such person found."}}}
-
-               }})
+                    :examples {"application/json" {:message "No such person found."}}}}})

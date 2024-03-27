@@ -7,15 +7,14 @@
    [madek.api.resources.users.common :as common]
    [madek.api.resources.users.get :as get-user]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.pagination :as pagination]
-   [next.jdbc :as jdbc]
-
    [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
+   [madek.api.utils.pagination :as pagination]
+
+   [next.jdbc :as jdbc]
 
    [reitit.coercion.schema]
    [schema.core :as s]
    [taoensso.timbre :refer [debug error info spy warn]]))
-
 
 (defn handle-email-clause [thread-obj params]
   (println ">o> params>>>>" params)
@@ -31,8 +30,7 @@
   "Get an index of the users. Query parameters are pending to be implemented."
   [{params :params tx :tx :as req}]
 
-  (let [
-        p (println ">o> get::handler" params)
+  (let [p (println ">o> get::handler" params)
         ;params (-> params
         ;           (update :page #(Integer/parseInt %))
         ;           (update :count #(Integer/parseInt %)))
@@ -46,18 +44,14 @@
         p (println ">o> query=" query)
 
         res (->> query
-              (jdbc/execute! tx)
-              (assoc {} :users))
-
+                 (jdbc/execute! tx)
+                 (assoc {} :users))
 
         te_pr (println ">o> 1res" res)
         res (sd/transform_ml_map res)
-        te_pr (println ">o> 2res" res)
-        ]
+        te_pr (println ">o> 2res" res)]
 
-    (sd/response_ok res)
-    )
-  )
+    (sd/response_ok res)))
 
 (def query-schema
   {(s/optional-key :count) s/Int
@@ -95,9 +89,7 @@
                            ;:type "integer"
                            :type "number"
                            ;:type "long"
-                           }]
-             }
-
+                           }]}
    :content-type "application/json"
    :handler handler
    :middleware [wrap-authorize-admin!]

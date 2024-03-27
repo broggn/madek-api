@@ -1,8 +1,6 @@
 (ns madek.api.db.core
   (:require
    [environ.core :refer [env]]
-   ;[honey.sql :refer [format] :rename {format sql-format}]
-   ;[honey.sql.helpers :as sql]
    [madek.api.db.type-conversion]
    [madek.api.utils.cli :refer [long-opt-for-key]]
    [next.jdbc :as jdbc]

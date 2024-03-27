@@ -9,32 +9,29 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
 
-   [madek.api.utils.helper :refer [mslurp]]
-
-   [pghstore-clj.core :refer [to-hstore]]
-
    [logbug.catcher :as catcher]
+
    [madek.api.db.core :refer [get-ds]]
-
-
-
-   ;[madek.api.resources.vocabularies.vocabulary :refer [transform_ml]]
-
 
    [madek.api.resources.shared :as sd]
    [madek.api.resources.vocabularies.index :refer [get-index]]
-   [madek.api.resources.vocabularies.permissions :as permissions]
 
+;[madek.api.resources.vocabularies.vocabulary :refer [transform_ml]]
+
+   [madek.api.resources.vocabularies.permissions :as permissions]
    ;; all needed imports
    [madek.api.resources.vocabularies.vocabulary :refer [get-vocabulary]]
-
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
 
    [madek.api.utils.helper :refer [cast-to-hstore]]
+
    ;[madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist f replace-java-hashmaps t v]]
    [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
 
+   [madek.api.utils.helper :refer [mslurp]]
    [next.jdbc :as jdbc]
+
+   [pghstore-clj.core :refer [to-hstore]]
 
    [reitit.coercion.schema]
 
@@ -53,8 +50,7 @@
 
             ins-res (jdbc/execute-one! (get-ds) sql-query)
             ins-res (sd/transform_ml_map ins-res)
-            p (println ">o> ins-res=" ins-res)
-            ]
+            p (println ">o> ins-res=" ins-res)]
 
         (if ins-res
           (sd/response_ok ins-res)
@@ -73,8 +69,7 @@
             p (println ">o> old-data" old-data)]
 
         (if old-data
-          (let [
-                is_admin_endpoint (str/includes? (-> req :uri) "/admin/")
+          (let [is_admin_endpoint (str/includes? (-> req :uri) "/admin/")
 
                 cols (if is_admin_endpoint [:*] [:id :position :labels :descriptions :admin_comment])
                 sql-query (-> (sql/update :vocabularies)
@@ -85,8 +80,7 @@
                               sql-format)
 
                 upd-res (jdbc/execute-one! (get-ds) sql-query)
-                upd-res (sd/transform_ml_map upd-res)
-                ]
+                upd-res (sd/transform_ml_map upd-res)]
 
             (if upd-res
               (do
@@ -96,35 +90,27 @@
           (sd/response_not_found "No such vocabulary."))))
     (catch Exception ex (sd/response_exception ex))))
 
-
 (comment
-  (let [
-        data {:first_name "foo" :last_name "bar"}
+  (let [data {:first_name "foo" :last_name "bar"}
 
         ;cols [:id :description]
         cols [:*]
 
         query (-> (sql/insert-into :people)
-                  (sql/values [data])
-                  )
+                  (sql/values [data]))
 
-        ;query (apply sql/returning query [:id :description :first_name]) ;;works
-        query (apply sql/returning query cols)              ;;works
+;query (apply sql/returning query [:id :description :first_name]) ;;works
+        query (apply sql/returning query cols) ;;works
 
         query (sql-format query)
         p (println ">o> query" query)
 
         db-result (jdbc/execute-one! (get-ds) query)
 
-
         p (println ">o> query" query)
-        p (println ">o> db-result" db-result)
+        p (println ">o> db-result" db-result)]
 
-        ]
-    db-result)
-  )
-
-
+    db-result))
 
 (defn handle_delete-vocab [req]
   (try
@@ -149,8 +135,7 @@
    :position s/Int
    :labels (s/maybe sd/schema_ml_list)
    :descriptions (s/maybe sd/schema_ml_list)
-   (s/optional-key :admin_comment) (s/maybe s/Str)
-   })
+   (s/optional-key :admin_comment) (s/maybe s/Str)})
 
 (def schema_export-vocabulary-admin
   {:id s/Str
@@ -159,8 +144,7 @@
    :position s/Int
    :labels (s/maybe sd/schema_ml_list)
    :descriptions (s/maybe sd/schema_ml_list)
-   (s/optional-key :admin_comment) (s/maybe s/Str)
-   })
+   (s/optional-key :admin_comment) (s/maybe s/Str)})
 
 (def schema_import-vocabulary
   {:id s/Str
@@ -231,9 +215,7 @@
                  :type "integer"
                  :minimum 1
                  ;:pattern "^[1-9][0-9]*$"
-                 }]
-   })
-
+                 }]})
 ; TODO vocab permission
 (def admin-routes
   ["/vocabularies"
@@ -286,8 +268,7 @@
            :responses {200 {:body schema_export-vocabulary-admin}
                        404 {:description "Creation failed."
                             :schema s/Str
-                            :examples {"application/json" {:message "Vocabulary could not be found!"}}}
-                       }}
+                            :examples {"application/json" {:message "Vocabulary could not be found!"}}}}}
 
      :put {:summary (sd/sum_adm_todo (f (t "Update vocabulary.")))
            :handler handle_update-vocab
@@ -428,8 +409,7 @@
                         :examples {"application/json" {:message "{Vocabulary|User} entry not found"}}}
                    409 {:description "Conflict."
                         :schema s/Str
-                        :examples {"application/json" {:message "Entry already exists"}}}
-                   }}
+                        :examples {"application/json" {:message "Entry already exists"}}}}}
 
       :put
       {:summary (sd/sum_adm (t "Update vocabulary user permissions"))
@@ -534,8 +514,7 @@
 
                    409 {:description "Conflict."
                         :schema s/Str
-                        :examples {"application/json" {:message "Entry already exists"}}}
-                   }}
+                        :examples {"application/json" {:message "Entry already exists"}}}}}
 
       :put
       {:summary (sd/sum_adm_todo (t "Update vocabulary group permissions"))
@@ -595,9 +574,7 @@
                :content-type "application/json"
                :coercion reitit.coercion.schema/coercion
                :swagger (generate-swagger-pagination-params)
-               :responses {
-                           200 {:body {:vocabularies [schema_export-vocabulary]}}
-                           }}}]
+               :responses {200 {:body {:vocabularies [schema_export-vocabulary]}}}}}]
 
    ["/:id" {:get {:summary (t "Get vocabulary by id.")
                   ;:description "Get a vocabulary by id. Returns 404, if no such vocabulary exists."

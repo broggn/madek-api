@@ -7,23 +7,23 @@
             [logbug.catcher :as catcher]
             [madek.api.authorization :as authorization]
 
-            [madek.api.utils.helper :refer [mslurp]]
-
             [madek.api.db.core :refer [get-ds]]
+
             [madek.api.resources.collections.index :refer [get-index]]
+            [madek.api.resources.shared :as sd]
 
             [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
 
-            [madek.api.resources.shared :as sd]
+            [madek.api.utils.helper :refer [mslurp]]
             [madek.api.utils.rdbms :as rdbms]
    ;[leihs.core.db :as db]
             [next.jdbc :as jdbc]
 
             [reitit.coercion.schema]
 
-            [taoensso.timbre :refer [debug info warn error spy]]
+            [schema.core :as s]
 
-            [schema.core :as s]))
+            [taoensso.timbre :refer [debug info warn error spy]]))
 
 (defn handle_get-collection [request]
   (let [collection (:media-resource request)
@@ -31,7 +31,7 @@
                      ;:responsible_delegation_id
                      ; TODO Frage cipboard_user
                      ;:clipboard_user_id
-                     )]
+                           )]
     (sd/response_ok cleanedcol)))
 
 (defn handle_get-index [req]
@@ -40,9 +40,8 @@
         p (println ">o> query-params" query-params)
 
         qreq (assoc-in req [:query-params] query-params)
-        p (println ">o> qreq" qreq)
+        p (println ">o> qreq" qreq)]
 
-        ]
     (logging/info "handle_get-index" "\nquery-params\n" query-params)
     (get-index qreq)))
 
@@ -59,13 +58,11 @@
 
               p (println ">o> original-data=" req-data)
 
-
-              ;{:responsible_user_id nil, :is_master true, :responsible_delegation_id #uuid "9f52df0d-6688-4512-81f7-d4f4eb0ec6e3",
+;{:responsible_user_id nil, :is_master true, :responsible_delegation_id #uuid "9f52df0d-6688-4512-81f7-d4f4eb0ec6e3",
               ; :workflow_id #uuid "3fa85f64-5717-4562-b3fc-2c963f66afa6", :layout {:responsible_user_id nil, :is_master true,
               ;                                                                     :responsible_delegation_id #uuid "9f52df0d-6688-4512-81f7-d4f4eb0ec6e3", :workflow_id #uuid "3fa85f64-5717-4562-b3fc-2c963f66afa6", :layout [:cast list :public.collection_layout], :default_context_id "columns", :creator_id #uuid "47da46e9-8a5f-4eac-a7c0-056706a70fc0", :get_metadata_and_previews true, :default_resource_type collections, :sorting manual DESC}, :default_context_id columns, :creator_id #uuid "47da46e9-8a5f-4eac-a7c0-056706a70fc0", :get_metadata_and_previews true, :default_resource_type {:responsible_user_id nil, :is_master true, :responsible_delegation_id #uuid "9f52df0d-6688-4512-81f7-d4f4eb0ec6e3", :workflow_id #uuid "3fa85f64-5717-4562-b3fc-2c963f66afa6", :layout list, :default_context_id columns, :creator_id #uuid "47da46e9-8a5f-4eac-a7c0-056706a70fc0", :get_metadata_and_previews true, :default_resource_type [:cast collections :public.collection_default_resource_type], :sorting manual DESC}, :sorting {:responsible_user_id nil, :is_master true, :responsible_delegation_id #uuid "9f52df0d-6688-4512-81f7-d4f4eb0ec6e3", :workflow_id #uuid "3fa85f64-5717-4562-b3fc-2c963f66afa6", :layout list, :default_context_id columns, :creator_id #uuid "47da46e9-8a5f-4eac-a7c0-056706a70fc0", :get_metadata_and_previews true, :default_resource_type collections, :sorting [:cast manual DESC :public.collection_sorting]}}
 
-
-              ;; TODO: CAUTION
+;; TODO: CAUTION
               ;; FIX OF BROKEN LOGIC - DB-CONSTRAINT ALLOWS ONLY ONE UUID FOR responsible_user_id OR responsible_delegation_id
               ;ins-data (assoc req-data :creator_id auth-id :responsible_user_id auth-id)
               ins-data (assoc req-data :creator_id auth-id)
@@ -76,9 +73,7 @@
 
               sql-map {:insert-into :collections
                        :values [ins-data]
-                       :returning :*
-                       }
-
+                       :returning :*}
 
               sql (-> sql-map sql-format)
               ;ins-result (jdbc/execute! (get-ds) [sql ins-data])]
@@ -91,28 +86,18 @@
         (sd/response_failed "Could not create collection. Not logged in." 406)))
     (catch Exception ex (sd/parsed_response_exception ex))))
 
-
-
-
-
-
 (comment
 
-  (let [
-
-        {:responsible_user_id #uuid "47da46e9-8a5f-4eac-a7c0-056706a70fc0", :is_master true,
+  (let [{:responsible_user_id #uuid "47da46e9-8a5f-4eac-a7c0-056706a70fc0", :is_master true,
          :responsible_delegation_id #uuid "9f52df0d-6688-4512-81f7-d4f4eb0ec6e3", :workflow_id #uuid "3fa85f64-5717-4562-b3fc-2c963f66afa6",
          :layout [:cast "list" :public.collection_layout], :default_context_id "columns", :creator_id #uuid "47da46e9-8a5f-4eac-a7c0-056706a70fc0",
          :get_metadata_and_previews true, :default_resource_type "collections", :sorting "manual DESC"}
-
 
         {:responsible_user_id #uuid "47da46e9-8a5f-4eac-a7c0-056706a70fc0", :is_master true, :responsible_delegation_id #uuid "9f52df0d-6688-4512-81f7-d4f4eb0ec6e3",
          :workflow_id #uuid "3fa85f64-5717-4562-b3fc-2c963f66afa6", :layout [:cast "list" :public.collection_layout], :default_context_id "columns",
          :creator_id #uuid "47da46e9-8a5f-4eac-a7c0-056706a70fc0", :get_metadata_and_previews true, :default_resource_type "collections", :sorting "manual DESC"}
 
-
-        params {
-                ;; CAUTION: Either :responsible_user_id OR :responsible_user_id has to be set - not both (db-constraint)
+        params {;; CAUTION: Either :responsible_user_id OR :responsible_user_id has to be set - not both (db-constraint)
 
                 ;:responsible_user_id #uuid "47da46e9-8a5f-4eac-a7c0-056706a70fc0",
                 ;:responsible_delegation_id nil,
@@ -120,49 +105,32 @@
                 ;OR
 
                 :responsible_user_id nil,
-                :responsible_delegation_id #uuid "9f52df0d-6688-4512-81f7-d4f4eb0ec6e3",
-
+                :responsible_delegation_id #uuid "9f52df0d-6688-4512-81f7-d4f4eb0ec6e3"
 
                 :creator_id #uuid "47da46e9-8a5f-4eac-a7c0-056706a70fc0",
                 :default_context_id "columns",
                 :workflow_id #uuid "1343d71c-4db6-4808-9a56-6933e3a1818f",
 
-                :is_master true,
+                :is_master true
 
+                :layout [:cast "list" :public.collection_layout]
 
-
-                :layout [:cast "list" :public.collection_layout],
-
-
-                :get_metadata_and_previews true,
-
+                :get_metadata_and_previews true
 
                 :default_resource_type [:cast "collections" :public.collection_default_resource_type],
 
-                :sorting [:cast "manual DESC" :public.collection_sorting]
+                :sorting [:cast "manual DESC" :public.collection_sorting]}
 
-                }
-
-        ;; next.jdbc
+;; next.jdbc
         ;    [madek.api.db.core :refer [get-ds]]
         ;    [honey.sql :refer [format] :rename {format sql-format}]
         res (->> (jdbc/execute-one! (get-ds) (-> (sql/insert-into :collections)
                                                  (sql/values [params])
                                                  (sql/returning :*)
                                                  sql-format
-                                                 spy
-                                                 )))
+                                                 spy)))]
 
-        ]
-    res
-    )
-  )
-
-
-
-
-
-
+    res))
 
 (defn handle_update-collection [req]
   (try
@@ -191,10 +159,8 @@
                       (sql/returning :*)
                       sql-format)
 
-
-
-            ;result (jdbc/execute! (get-ds) [sql params])]   ;;broken
-            result (jdbc/execute! (get-ds) query)]          ;;broken
+;result (jdbc/execute! (get-ds) [sql params])]   ;;broken
+            result (jdbc/execute! (get-ds) query)] ;;broken
 
         (sd/logwrite req (str "handle_update-collection: " col-id result))
 
@@ -226,14 +192,11 @@
                       (sql/returning :*)
                       sql-format)
 
-
             p (println ">o> whatsThis?? 1=" (get-in collection [:type :table-name]))
             p (println ">o> whatsThis?? 2=" (:type collection))
 
             ;delresult (jdbc/execute! (get-ds) [sql [col-id]])
-            delresult (jdbc/execute-one! (get-ds) query)
-
-            ]
+            delresult (jdbc/execute-one! (get-ds) query)]
 
         (sd/logwrite req (str "handle_delete-collection: " col-id delresult))
         ;(if (= 1 (first delresult))
@@ -250,12 +213,12 @@
 
 (def schema_sorting_types
   (s/enum "created_at ASC"
-    "created_at DESC"
-    "title ASC"
-    "title DESC"
-    "last_change"
-    "manual ASC"
-    "manual DESC"))
+          "created_at DESC"
+          "title ASC"
+          "title DESC"
+          "last_change"
+          "manual ASC"
+          "manual DESC"))
 
 (def schema_default_resource_type
   (s/enum "collections" "entries" "all"))
@@ -267,7 +230,7 @@
    (s/optional-key :layout) schema_layout_types
    (s/optional-key :is_master) s/Bool
    (s/optional-key :sorting) schema_sorting_types
-   (s/optional-key :default_context_id) (s/maybe s/Str)     ;;cautioin
+   (s/optional-key :default_context_id) (s/maybe s/Str) ;;cautioin
    ;(s/optional-key :clipboard_user_id) (s/maybe s/Uuid)
    (s/optional-key :workflow_id) (s/maybe s/Uuid)
 
@@ -386,8 +349,7 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:collection_id s/Uuid}
                         :body schema_collection-update}
-           :responses {
-                       ;200 {:body schema_collection-export} ;; TODO: fixme
+           :responses {;200 {:body schema_collection-export} ;; TODO: fixme
                        200 {:body s/Any}
                        404 {:body s/Any}
                        422 {:body s/Any}}}

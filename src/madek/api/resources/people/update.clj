@@ -9,10 +9,9 @@
    [madek.api.resources.people.get :as get-person]
    [madek.api.resources.shared :as sd]
 
-   [madek.api.utils.helper :refer [array-to-map t convert-map-if-exist map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-
-
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+
+   [madek.api.utils.helper :refer [array-to-map t convert-map-if-exist map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
    [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
@@ -61,7 +60,5 @@
                     :examples {"application/json" {:message "Person not found."}}}
                409 {:description "Conflict."
                     :schema s/Str
-                    :examples {"application/json" {:message "Update of person failed"}}}
-               }
-   })
+                    :examples {"application/json" {:message "Update of person failed"}}}}})
 

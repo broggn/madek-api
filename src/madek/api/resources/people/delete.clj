@@ -5,11 +5,10 @@
    [honey.sql.helpers :as sql]
    [logbug.debug :as debug]
 
-   [madek.api.utils.helper :refer [array-to-map t convert-map-if-exist map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-
-
    [madek.api.resources.shared :as sd]
+
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+   [madek.api.utils.helper :refer [array-to-map t convert-map-if-exist map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
@@ -31,13 +30,11 @@
   ; delete person should only false if no person was found; if the delete fails
   ; because of constraints an exception would have been raised
   (try
-  (if (delete-person id ds)
-    {:status 204}
-    {:status 404 :body {:message "Person not found."}})
+    (if (delete-person id ds)
+      {:status 204}
+      {:status 404 :body {:message "Person not found."}})
 
-  (catch Exception ex (sd/parsed_response_exception ex))))
-
-
+    (catch Exception ex (sd/parsed_response_exception ex))))
 
 (def route
   {:summary (sd/sum_adm (t "Delete person by id"))
@@ -56,8 +53,6 @@
 
                404 {:description "Not found."
                     :schema s/Str
-                    :examples {"application/json" {:message "Person not found."}}}
-
-               }})
+                    :examples {"application/json" {:message "Person not found."}}}}})
 
 

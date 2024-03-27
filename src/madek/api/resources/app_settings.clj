@@ -6,11 +6,11 @@
    [logbug.debug :as debug]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
+   [madek.api.utils.helper :refer [mslurp]]
    [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-   [madek.api.utils.helper :refer [mslurp]]
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
 
    [schema.core :as s]
    [taoensso.timbre :refer [debug error info spy warn]]))
@@ -49,10 +49,7 @@
   false otherwise"
   [data ds]
 
-
-  (let [
-
-        data (convert-map-if-exist (cast-to-hstore data))
+  (let [data (convert-map-if-exist (cast-to-hstore data))
 
         ;p (println ">o> data=" data)
         p (println ">o> data.edit_meta..=" (:edit_meta_data_power_users_group_id data))
@@ -65,11 +62,7 @@
                 (sql-format :inline false)
                 (->> (jdbc/execute-one! ds))
                 :next.jdbc/update-count
-                (= 1))
-
-        ] res)
-
-  )
+                (= 1))] res))
 
 (defn handle_update-app-settings
   [{{body :body} :parameters ds :tx :as req}]
@@ -113,7 +106,7 @@
    (s/optional-key :provenance_notices) (s/maybe sd/schema_ml_list)
    (s/optional-key :section_meta_key_id) (s/maybe s/Str)
    (s/optional-key :site_titles) sd/schema_ml_list
-   (s/optional-key :sitemap) (s/maybe s/Any)                ;jsonb
+   (s/optional-key :sitemap) (s/maybe s/Any) ;jsonb
    (s/optional-key :splashscreen_slideshow_set_id) (s/maybe s/Uuid)
    (s/optional-key :support_urls) sd/schema_ml_list
    (s/optional-key :teaser_set_id) (s/maybe s/Uuid)
@@ -156,7 +149,7 @@
    (s/optional-key :provenance_notices) (s/maybe sd/schema_ml_list)
    (s/optional-key :section_meta_key_id) (s/maybe s/Str)
    (s/optional-key :site_titles) (s/maybe sd/schema_ml_list)
-   (s/optional-key :sitemap) (s/maybe s/Any)                ;jsonb
+   (s/optional-key :sitemap) (s/maybe s/Any) ;jsonb
    (s/optional-key :splashscreen_slideshow_set_id) (s/maybe s/Uuid)
    (s/optional-key :support_urls) (s/maybe sd/schema_ml_list)
    (s/optional-key :teaser_set_id) (s/maybe s/Uuid)
@@ -192,9 +185,8 @@
             :coercion reitit.coercion.schema/coercion
             :parameters {:body schema_update-app-settings}
             :responses {200 {:body schema_export-app-settings}
-                        403 {:message  "Only administrators are allowed to access this resource."}
-                        404 {:message  "<Groups|Meta-Keys> entry does not exist"}
-                        }}}]]])
+                        403 {:message "Only administrators are allowed to access this resource."}
+                        404 {:message "<Groups|Meta-Keys> entry does not exist"}}}}]]])
 
 (def user-routes
   [["/app-settings"

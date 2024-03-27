@@ -11,18 +11,12 @@
    [inflections.core :refer :all]
    [logbug.debug :as debug]
    [logbug.debug :as debug]
-   ;[madek.api.utils.rdbms :as rdbms])
-
    [logbug.thrown :as thrown]
    [madek.api.authentication.token :as token-authentication]
-
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-
-   ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
-
    [taoensso.timbre :refer [info warn error spy]])
   (:import
    [java.util Base64]))
@@ -110,4 +104,4 @@
     (authenticate request handler)))
 
 ;### Debug ####################################################################
-(debug/debug-ns *ns*)
+;(debug/debug-ns *ns*)

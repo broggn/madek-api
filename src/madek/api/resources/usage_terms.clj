@@ -11,13 +11,12 @@
 
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist f replace-java-hashmaps t v]]
+
    ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
 
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist f replace-java-hashmaps t v]]
-
-
-   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
    [reitit.coercion.schema]
 
    [schema.core :as s]))
@@ -71,8 +70,7 @@
 
             upd-result (jdbc/execute-one! (get-ds) sql-query)
 
-            p (println ">o> upd-result" upd-result)
-            ]
+            p (println ">o> upd-result" upd-result)]
 
         (logging/info "handle_update-usage_terms: " "\nid\n" id "\ndwid\n" dwid "\nupd-result:" upd-result)
 
@@ -99,8 +97,8 @@
 (defn wwrap-find-usage_term [param]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler param
-                    :usage_terms :id
-                    :usage_term true))))
+                                    :usage_terms :id
+                                    :usage_term true))))
 
 (def schema_import_usage_terms
   {;:id is db assigned or optional
@@ -123,7 +121,7 @@
    (s/optional-key :version) s/Str
    (s/optional-key :intro) s/Str
    (s/optional-key :body) s/Str
-   (s/optional-key :created_at) s/Any                       ; TODO as Inst
+   (s/optional-key :created_at) s/Any ; TODO as Inst
    (s/optional-key :updated_at) s/Any})
 
 ; TODO auth admin
@@ -161,12 +159,10 @@
                         (wwrap-find-usage_term :id)]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Uuid}}
-           :responses {
-                       200 {:body schema_export_usage_term}
+           :responses {200 {:body schema_export_usage_term}
                        404 {:description "Not found."
                             :schema s/Str
-                            :examples {"application/json" {:message "No such entity in :usage_terms as :id with <id>"}}}
-                       }}
+                            :examples {"application/json" {:message "No such entity in :usage_terms as :id with <id>"}}}}}
 
      :put {:summary (sd/sum_adm (t "Update usage_terms with id."))
            :handler handle_update-usage_terms
@@ -175,8 +171,7 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Uuid}
                         :body schema_update_usage_terms}
-           :responses {
-                       200 {:body schema_export_usage_term}
+           :responses {200 {:body schema_export_usage_term}
                        404 {:description "Not found."
                             :schema s/Str
                             :examples {"application/json" {:message "No such entity in :usage_terms as :id with <id>"}}}
@@ -188,20 +183,16 @@
               :middleware [wrap-authorize-admin!
                            (wwrap-find-usage_term :id)]
               :parameters {:path {:id s/Uuid}}
-              :responses {
-                          200 {:body schema_export_usage_term}
+              :responses {200 {:body schema_export_usage_term}
 
                           404 {:description "Not found."
                                :schema s/Str
-                               :examples {"application/json" {:message "No such entity in :usage_terms as :id with <id>"}}}
-
-                          }}}]])
+                               :examples {"application/json" {:message "No such entity in :usage_terms as :id with <id>"}}}}}}]])
 
 ; TODO usage_terms get the most recent one ?!?
 (def user-routes
   ["/usage-terms"
-   {:swagger {:tags ["usage-terms"]
-              }}
+   {:swagger {:tags ["usage-terms"]}}
    ["/"
     {:get {:summary (sd/sum_pub (t "List usage_terms."))
            :handler handle_list-usage_term

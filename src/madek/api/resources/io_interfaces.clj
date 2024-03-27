@@ -14,8 +14,7 @@
 
    [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
 
-
-   ;[leihs.core.db :as db]
+;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
 
                 ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
@@ -31,22 +30,18 @@
   (let [p (println ">o> ??? handle_list-io_interface")
         p (println ">o> quer" (-> req :parameters :query))
         full_data (true? (-> req :parameters :query :full_data))
-            p (println ">o> full_data" full_data)
+        p (println ">o> full_data" full_data)
         qd (if (true? full_data) :* :io_interfaces.id)
-        db-result (sd/query-find-all :io_interfaces qd)
+        db-result (sd/query-find-all :io_interfaces qd)]
 
-
-
-        ]
-    ;(logging/info "handle_list-io_interface" "\nqd\n" qd "\nresult\n" db-result)
+;(logging/info "handle_list-io_interface" "\nqd\n" qd "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
 (defn handle_get-io_interface
   [req]
   (let [io_interface (-> req :io_interface)
 
-        p (println ">o> io_interface" io_interface)
-        ]
+        p (println ">o> io_interface" io_interface)]
     ;(logging/info "handle_get-io_interface" io_interface)
     (sd/response_ok io_interface)))
 
@@ -133,7 +128,6 @@
   {;(s/optional-key :id) s/Str
    (s/optional-key :description) s/Str})
 
-
 (def schema_export_io_interfaces_opt
   {:id s/Str
    (s/optional-key :description) (s/maybe s/Str)
@@ -150,7 +144,7 @@
 ; TODO docu
 (def admin-routes
   ["/io_interfaces"
-   {:swagger {:tags ["admin/io_interfaces"]  :security [{"auth" []}]}}
+   {:swagger {:tags ["admin/io_interfaces"] :security [{"auth" []}]}}
    ["/"
     {:post
      {:summary (sd/sum_adm (t "Create io_interfaces."))

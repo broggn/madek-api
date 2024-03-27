@@ -12,23 +12,23 @@
   (println ">o> authorized-view?" auth-entity resource)
   (case (:type resource)
     "MediaEntry" (media-entry-perms/viewable-by-auth-entity?
-                   resource auth-entity)
+                  resource auth-entity)
     "Collection" (collection-perms/viewable-by-auth-entity?
-                   resource auth-entity)
+                  resource auth-entity)
     false))
 
 (defn authorized-download? [auth-entity resource]
   (case (:type resource)
     "MediaEntry" (media-entry-perms/downloadable-by-auth-entity?
-                   resource auth-entity)
+                  resource auth-entity)
     false))
 
 (defn authorized-edit-metadata? [auth-entity resource]
   (let [auth-res (case (:type resource)
                    "MediaEntry" (media-entry-perms/editable-meta-data-by-auth-entity?
-                                  resource auth-entity)
+                                 resource auth-entity)
                    "Collection" (collection-perms/editable-meta-data-by-auth-entity?
-                                  resource auth-entity)
+                                 resource auth-entity)
                    ;"Collection" (mr-permissions/permission-by-auth-entity?
                    ;              resource auth-entity :edit_metadata_and_relations "collection")
                    false)]
@@ -38,14 +38,14 @@
 (defn authorized-edit-permissions? [auth-entity resource]
   (case (:type resource)
     "MediaEntry" (media-entry-perms/editable-permissions-by-auth-entity?
-                   resource auth-entity)
+                  resource auth-entity)
     "Collection" (collection-perms/editable-permissions-by-auth-entity?
-                   resource auth-entity)
+                  resource auth-entity)
     false))
 
 (defn authorized-view?! [request resource]
   (or authorized-view?
-    (throw (ex-info "Forbidden" {:status 403}))))
+      (throw (ex-info "Forbidden" {:status 403}))))
 
 (defn authorized? [auth-entity resource scope]
   (let [auth-res (case scope
@@ -53,12 +53,10 @@
                    :download (authorized-download? auth-entity resource)
                    :edit-md (authorized-edit-metadata? auth-entity resource)
                    :edit-perm (authorized-edit-permissions? auth-entity resource)
-                   false)
+                   false)]
 
-        ]
     (logging/info 'authorized? scope auth-res)
     (println ">o>>>" 'authorized? scope auth-res)
-
 
     auth-res))
 
@@ -73,7 +71,7 @@
 (defn wrap-authorize-http-method [handler]
   (fn [request]
     (if (and (= (request :authentication-method) "Session")
-          (destructive-methods (request :request-method)))
+             (destructive-methods (request :request-method)))
       {:status 405,
        :body {:message "Destructive methods not allowed for session authentication!"}}
       (handler request))))

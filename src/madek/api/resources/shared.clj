@@ -73,16 +73,16 @@
 (defn try-parse-date-time [dt_string]
   (try
     (logging/info "try-parse-date-time "
-      dt_string)
+                  dt_string)
     (let [zoneid (java.time.ZoneId/systemDefault)
 
           parsed2 (jt/local-date-time (jt/offset-date-time dt_string) zoneid)
           pcas (.toString parsed2)]
       (logging/info "try-parse-date-time "
-        dt_string
-        "\n zoneid " zoneid
-        "\n parsed " parsed2
-        "\n result:  " pcas)
+                    dt_string
+                    "\n zoneid " zoneid
+                    "\n parsed " parsed2
+                    "\n result:  " pcas)
       pcas)
 
     (catch Exception ex
@@ -165,28 +165,28 @@
 (defn query-eq-find-all
   ([table-name col-name row-data]
    (catcher/snatch {}
-     (spy (jdbc/execute!
-            (get-ds)
-            (sql-query-find-eq table-name col-name row-data)))))
+                   (spy (jdbc/execute!
+                         (get-ds)
+                         (sql-query-find-eq table-name col-name row-data)))))
 
   ([table-name col-name row-data col-name2 row-data2]
    (catcher/snatch {}
-     (spy (jdbc/execute!
-            (get-ds)
-            (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))))
+                   (spy (jdbc/execute!
+                         (get-ds)
+                         (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))))
 
 (defn query-eq-find-all-one
   ([table-name col-name row-data]
    (catcher/snatch {}
-     (spy (jdbc/execute-one!
-            (get-ds)
-            (sql-query-find-eq table-name col-name row-data)))))
+                   (spy (jdbc/execute-one!
+                         (get-ds)
+                         (sql-query-find-eq table-name col-name row-data)))))
 
   ([table-name col-name row-data col-name2 row-data2]
    (catcher/snatch {}
-     (spy (jdbc/execute-one!
-            (get-ds)
-            (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))))
+                   (spy (jdbc/execute-one!
+                         (get-ds)
+                         (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))))
 
 (defn query-eq-find-one
   ([table-name col-name row-data]
@@ -196,9 +196,9 @@
 
 #_(defn query-eq2-find-all [table-name col-name row-data col-name2 row-data2]
     (catcher/snatch {}
-      (jdbc/query
-        (get-ds)
-        (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))
+                    (jdbc/query
+                     (get-ds)
+                     (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))
 
 #_(defn query-eq2-find-one [table-name col-name row-data col-name2 row-data2]
     (first (query-eq-find-all table-name col-name row-data col-name2 row-data2)))
@@ -223,20 +223,15 @@
 
 (defn response_failed
   ([] {:status 409 :body {:message "Failure occurred"}})
-  ([msg status] {:status status :body {:message msg}})
-  )
-
+  ([msg status] {:status status :body {:message msg}}))
 
 (defn response_bad_request
 
   ([msg]
-   {
-    :status 400
+   {:status 400
     :body {:message (str "Bad Request: " msg)}
     ;:headers {"content-type" "application/json; charset=utf-8"}
-
     })
-
   ([msg details]
    {:status 400
     :body {:message (str "Bad Request: " msg) :details details}
@@ -350,14 +345,14 @@
 (defn is-admin [user-id]
   (let [none (->
               (jdbc/execute!
-                (get-ds)
-                (spy (-> (sql/select :*)
-                         (sql/from :admins)
-                         (sql/where [:= :user_id (to-uuid user-id)])
-                         sql-format))
+               (get-ds)
+               (spy (-> (sql/select :*)
+                        (sql/from :admins)
+                        (sql/where [:= :user_id (to-uuid user-id)])
+                        sql-format))
 
                 ;["SELECT * FROM admins WHERE user_id = ? " user-id]
-                ) empty?)
+               )empty?)
         result (not none)]
     ;(logging/info "is-admin: " user-id " : " result)
     (spy result)))
@@ -385,23 +380,23 @@
         table-name "users"
 
         res (spy (jdbc/execute-one! (get-ds)
-                   (spy (-> (sql/select :*)
+                                    (spy (-> (sql/select :*)
                             ;(sql/from [:raw table-name])
                             ;(sql/from table-name)
                             ;(sql/from [[:inline table-name]])
-                            (sql/from (keyword table-name))
-                            sql-format))))
+                                             (sql/from (keyword table-name))
+                                             sql-format))))
 
         p (println "\nres=" res)]))
 
 ; begin media resources helpers
-(defn- get-media-resource                                   ;;here
+(defn- get-media-resource ;;here
   "First checks for collection_id, then for media_entry_id.
    If creating collection-media-entry-arc, the collection permission is checked."
   ([request]
    (println ">o> get-media-resource[x]")
    (or (get-media-resource request :collection_id "collections" "Collection")
-     (get-media-resource request :media_entry_id "media_entries" "MediaEntry")))
+       (get-media-resource request :media_entry_id "media_entries" "MediaEntry")))
 
   ([request id-key table-name type]
 
@@ -411,10 +406,7 @@
 
    (try
 
-
-     (let [
-
-           p (println ">o> table=" table-name)
+     (let [p (println ">o> table=" table-name)
            p (println ">o> id-key=" id-key)
            p (println ">o> id-key.cl=" (class id-key))
 
@@ -423,49 +415,29 @@
            p (println ">o> id.cl=" (class id))
 
            p (println ">o> id=" (-> request :parameters :path id-key))
-           p (println ">o> id.cl=" (class (-> request :parameters :path id-key)))
-
-           ])
-
+           p (println ">o> id.cl=" (class (-> request :parameters :path id-key)))])
 
      (when-let [id (-> request :parameters :path id-key)]
        ;(logging/info "get-media-resource" "\nid\n" id)
        (when-let [resource (spy (jdbc/execute-one! (get-ds)
-                                  (spy (-> (sql/select :*)
-                                           (sql/from (keyword table-name))
-                                           (sql/where [:= :id (to-uuid id)])
-                                           sql-format))))]
-         (spy (assoc resource :type type :table-name table-name))
-
-         ))
+                                                   (spy (-> (sql/select :*)
+                                                            (sql/from (keyword table-name))
+                                                            (sql/where [:= :id (to-uuid id)])
+                                                            sql-format))))]
+         (spy (assoc resource :type type :table-name table-name))))
 
      (catch Exception e
        (logging/error "ERROR: get-media-resource: " (ex-data e))
        (merge (ex-data e)
-         {:statuc 406, :body {:message (.getMessage e)}})))))
+              {:statuc 406, :body {:message (.getMessage e)}})))))
 
+(defn- ring-add-media-resource [request handler] ;;here
 
+  (let [media-resource (get-media-resource request)
+        p (println ">o> media-resource=" media-resource)])
 
+  (if-let [media-resource (get-media-resource request)]
 
-
-
-
-
-
-
-
-
-
-(defn- ring-add-media-resource [request handler]            ;;here
-
-  (let [
-        media-resource (get-media-resource request)
-        p (println ">o> media-resource=" media-resource)
-        ])
-
-  (if-let [media-resource (get-media-resource request)
-
-           ]
     (let [request-with-media-resource (assoc request :media-resource media-resource)]
       ;(logging/info "ring-add-media-resource" "\nmedia-resource\n" media-resource)
       (handler request-with-media-resource))
@@ -484,24 +456,24 @@
       ;                  [(str "SELECT * FROM meta_data "
       ;                        "WHERE id = ? ") id])
       ;first)
-      (jdbc/execute-one! (get-ds)
-        (-> (sql/select :*)
-            (sql/from :meta_data)
-            (sql/where [:= :id (to-uuid id)])
-            sql-format))
+     (jdbc/execute-one! (get-ds)
+                        (-> (sql/select :*)
+                            (sql/from :meta_data)
+                            (sql/where [:= :id (to-uuid id)])
+                            sql-format))
 
-      (throw (IllegalStateException. (str "We expected to find a MetaDatum for "
-                                          id " but did not."))))))
+     (throw (IllegalStateException. (str "We expected to find a MetaDatum for "
+                                         id " but did not."))))))
 
 (defn- query-media-resource-for-meta-datum [meta-datum]
   (or (when-let [id (:media_entry_id meta-datum)]
         (get-media-resource {:parameters {:path {:media_entry_id id}}}
-          :media_entry_id "media_entries" "MediaEntry"))
-    (when-let [id (:collection_id meta-datum)]
-      (get-media-resource {:parameters {:path {:collection_id id}}}
-        :collection_id "collections" "Collection"))
-    (throw (IllegalStateException. (str "Getting the resource for "
-                                        meta-datum "
+                            :media_entry_id "media_entries" "MediaEntry"))
+      (when-let [id (:collection_id meta-datum)]
+        (get-media-resource {:parameters {:path {:collection_id id}}}
+                            :collection_id "collections" "Collection"))
+      (throw (IllegalStateException. (str "Getting the resource for "
+                                          meta-datum "
                                           is not implemented yet.")))))
 
 (defn- ring-add-meta-datum-with-media-resource [request handler]
@@ -530,14 +502,13 @@
 
   (println "======================================================")
   (println "auth-request-for-mr"
-    "\nhandler: " handler
-    "\nscope: " scope
-    "\nauth entity:\n" (-> request :authenticated-entity)
-    "\nis-admin:\n" (-> request :is_admin)
-    "\nmedia-resource:\n" (:media-resource request)
-    "\n(public? media-resource):\n" (public? (:media-resource request))
-    "\nrequest:\n" request
-    )
+           "\nhandler: " handler
+           "\nscope: " scope
+           "\nauth entity:\n" (-> request :authenticated-entity)
+           "\nis-admin:\n" (-> request :is_admin)
+           "\nmedia-resource:\n" (:media-resource request)
+           "\n(public? media-resource):\n" (public? (:media-resource request))
+           "\nrequest:\n" request)
   (println "======================================================")
   (if-let [media-resource (:media-resource request)]
 
@@ -579,14 +550,14 @@
   ;((assoc-in request [:query-params2] (-> request :parameters :query))
   (handler (assoc request :query-params
                   (->> request :query-params
-                    (map (fn [[k v]] [k (try-as-json v)]))
-                    (into {})))))
+                       (map (fn [[k v]] [k (try-as-json v)]))
+                       (into {})))))
 
 ; end json query param helpers
 
 ; begin wrappers
 
-(defn ring-wrap-add-media-resource [handler]                ;;here
+(defn ring-wrap-add-media-resource [handler] ;;here
   (fn [request]
     (ring-add-media-resource request handler)))
 

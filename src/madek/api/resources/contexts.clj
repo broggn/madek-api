@@ -7,17 +7,16 @@
    [logbug.catcher :as catcher]
    [logbug.debug :as debug]
 
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
-
-
    [madek.api.db.core :refer [get-ds]]
+
    [madek.api.resources.shared :as sd]
+   [madek.api.utils.auth :refer [wrap-authorize-admin!]]
 
    ;         [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
    ;[clojure.java.jdbc :as jdbc]
    ;         [madek.api.utils.sql :as sql]
 
-   [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
    ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
@@ -79,10 +78,9 @@
                     sql-format)
 
             res (jdbc/execute-one! (get-ds) sql)
-            res (context_transform_ml res)
-            ]
+            res (context_transform_ml res)]
 
-        ;(sd/logwrite req (str "handle_create-contexts: " "\nnew-data:\n" data "\nresult:\n" ins-res))
+;(sd/logwrite req (str "handle_create-contexts: " "\nnew-data:\n" data "\nresult:\n" ins-res))
 
         ;(if-let [result (first ins-res)]
         (if res
@@ -113,7 +111,6 @@
             ;sql (-> sql-map sql-format)
             ;upd-result (jdbc/execute! (get-ds) [sql (vals dwid)])
 
-
             fir (-> (sql/update :contexts)
                     ;(sql/set dwid)
                     (sql/set (cast-to-hstore dwid))
@@ -123,10 +120,9 @@
                     sql-format)
             p (println ">o> !!!!!!!!!!! sql-fir" fir)
 
-            upd-result (jdbc/execute-one! (get-ds) (spy fir))
+            upd-result (jdbc/execute-one! (get-ds) (spy fir))]
 
-
-            ] ;; FIXME
+;; FIXME
 
         ;(sd/logwrite req (str "handle_update-contexts: " id "\nnew-data:\n" dwid "\nupd-result\n" upd-result))
 
@@ -142,11 +138,10 @@
   (try
     (catcher/with-logging {}
 
-      (let [
-            id (-> req :context :id)
+      (let [id (-> req :context :id)
             sql-query (-> (sql/delete-from :contexts)
                           (sql/where [:= :id id])
-                          (sql/returning :* )
+                          (sql/returning :*)
                           sql-format
                           spy)
             del-result (jdbc/execute-one! (get-ds) sql-query)]
@@ -162,9 +157,9 @@
 (defn wwrap-find-context [param colname send404]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler
-                    param
-                    :contexts colname
-                    :context send404))))
+                                    param
+                                    :contexts colname
+                                    :context send404))))
 
 (def schema_import_contexts
   {:id s/Str
@@ -224,7 +219,6 @@
            :parameters {:path {:id s/Str}}
            :responses {200 {:body schema_export_contexts_adm}
                        404 {:body s/Any}}}
-
 
      :put {:summary (sd/sum_adm (t "Update contexts with id."))
            :handler handle_update-contexts

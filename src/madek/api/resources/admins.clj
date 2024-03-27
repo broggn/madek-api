@@ -12,10 +12,9 @@
 
    [madek.api.resources.shared :as sd]
 
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
-
-
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
@@ -78,7 +77,7 @@
           admin-id (:id admin)
           sql (-> (sql/delete-from :admins)
                   (sql/where [:= :id admin-id])
-                  (sql/returning :* )
+                  (sql/returning :*)
                   sql-format
                   spy)
           del-result (spy (jdbc/execute-one! (get-ds) sql))]
@@ -92,14 +91,14 @@
 (defn wwrap-find-admin [param colname send404]
   (fn [handler]
     (fn [request] (sd/req-find-data
-                    request handler param
-                    :admins colname :admin send404))))
+                   request handler param
+                   :admins colname :admin send404))))
 
 (defn wwrap-find-user [param]
   (fn [handler]
     (fn [request] (sd/req-find-data
-                    request handler param
-                    :users :id :user true))))
+                   request handler param
+                   :users :id :user true))))
 
 ;### swagger io schema ########################################################
 
@@ -110,9 +109,7 @@
    ;:created_at s/Any}
    (s/optional-key :user_id) s/Uuid
    (s/optional-key :updated_at) s/Any
-   (s/optional-key :created_at) s/Any
-   })
-
+   (s/optional-key :created_at) s/Any})
 
 ;### wrappers #################################################################
 
