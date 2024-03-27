@@ -102,10 +102,7 @@
     (concat merged remaining)))
 
 (defn format-uris [uris]
-  ;(clojure.string/join "" (str "{" uris "}")))
-
   (println ">o> format-uris =>" format-uris)
-
   (clojure.string/join "" (map #(str "{" % "}") uris)))
 
 ; [madek.api.utils.helper :refer [urls-to-custom-format]]
@@ -185,17 +182,10 @@
   (let [m {:layout "list"
            :default_resource_type "collections"
            :sorting "manual DESC"}
-
         res (convert-map-if-exist m)]
-
     res))
 
 (comment
-  ;[honey.sql :refer [format] :rename {format sql-format}]
-  ;[leihs.core.db :as db]
-  ;[next.jdbc :as jdbc]
-  ;[honey.sql.helpers :as sql]
-
   (let [map {:external_uris "{mein/link/78}"}
         map {:external_uris "{mein/link/78}"}
         map {:external_uris ["test/me/now/78"]}
@@ -296,9 +286,7 @@
   (let [mail "_somename@example.com"
         ;mail "somename@example.com"
         ;mail "123e4567-e89b-12d3-a456-426614174000"
-
         res (convert-userid mail)]
-
     res))
 
 (defn valid-email? [email]
@@ -347,21 +335,6 @@
                     (parse-to-int v (defaults k))
                     v)])
              params)))
-
-;(defn parse-specific-keys [params defaults]
-;  (into {}
-;    (map (fn [[k v]]
-;           [k (if (some #{k} defaults)
-;                (do
-;                  (println ">o>>>> parse k=>" k)
-;                  ;(parse-to-int v))
-;                                (parse-to-int v (defaults k)))
-;
-;
-;                (do
-;                  (println ">o>>>> nothing to parse k=>" k)
-;                  v))])
-;      params)))
 
 (comment
   (let [;res (parse-specific-keys {:page "1" :count "100" :foo "bar"} [:page :count])

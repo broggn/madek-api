@@ -9,7 +9,6 @@
    [madek.api.authentication :as authentication]
    [madek.api.db.core :as db]
    [madek.api.http.server :as http-server]
-
    [madek.api.json-protocol]
    [madek.api.management :as management]
    [madek.api.resources]

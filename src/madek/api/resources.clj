@@ -1,11 +1,9 @@
 (ns madek.api.resources
   (:require
-   ;[clojure.java.jdbc :as jdbco]
    [clojure.tools.logging :as logging]
             ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-            ;[logbug.catcher :as catcher]
    [logbug.debug :as debug]
    [madek.api.authentication :as authentication]
    [madek.api.db.core :refer [get-ds]]
@@ -27,18 +25,12 @@
    [madek.api.resources.full-texts :as full-texts]
    [madek.api.resources.groups :as groups]
    [madek.api.resources.io-interfaces :as io-interfaces]
-
-;[madek.api.resources.io-mappings :as io-mappings]
    [madek.api.resources.keywords :as keywords]
    [madek.api.resources.media-entries :as media-entries]
    [madek.api.resources.media-files :as media-files]
-
    [madek.api.resources.meta-data :as meta-data]
-
    [madek.api.resources.meta-keys :as meta-keys]
-
    [madek.api.resources.people.main :as people]
-            ;[madek.api.resources.people :as people]
    [madek.api.resources.permissions :as permissions]
    [madek.api.resources.previews :as previews]
    [madek.api.resources.roles :as roles]

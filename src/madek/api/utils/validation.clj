@@ -1,7 +1,5 @@
 (ns madek.api.utils.validation
-
   (:require [clojure.data.json :as json]
-
             [schema.core :as s]))
 
 ;; Define a regular expression for email validation
@@ -48,9 +46,7 @@
   (valid-json? json false))
 
 (defn valid-positive-number? [int max]
-
   (println ">o> valid-positive-number?" int max)
-
   false)
 
 (defn number-within-range? [number min-value max-value]
@@ -142,4 +138,3 @@
   (s/constrained s/Any valid-hashmap? "Invalid JSON format"))
 (def json-vector-validation
   (s/constrained s/Any valid-vector? "Invalid JSON format"))
-

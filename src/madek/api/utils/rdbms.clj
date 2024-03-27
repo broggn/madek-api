@@ -4,21 +4,13 @@
 
 (ns madek.api.utils.rdbms
   (:require
-   ;[clojure.java.jdbc :as jdbco]
    [clojure.tools.logging :as logging]
    ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-
    [logbug.catcher :as catcher]
-   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-               ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
-
-               ;[madek.api.db.core :refer [get-ds]]
-
    [pg-types.all]
-
    [ring.util.codec])
   (:import
    [com.mchange.v2.c3p0 ComboPooledDataSource DataSources]

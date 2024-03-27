@@ -1,19 +1,13 @@
 (ns madek.api.utils.auth
   (:require
    [clj-uuid]
-   ;[clojure.java.jdbc :as jdbco]
    [clojure.tools.logging :as logging]
    ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
-   ;[madek.api.utils.rdbms :as rdbms]
-
    [honey.sql.helpers :as sql]
    [logbug.debug :as debug]
    [madek.api.db.core :refer [get-ds]]
-
    [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-
-         ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]))
 
 ;### admin check ##############################################################
@@ -23,10 +17,6 @@
   checking (-> request :authenticated-entity :is_admin) if present or performing
   an db query.  If so adds {:is_amdin true} to the requests an calls handler.
   Throws a ExceptionInfo with status 403 otherwise. "
-
-  (println "authorize-admin! request.id: " (-> request :authenticated-entity :id))
-  (println "authorize-admin! request.is_admin: " (-> request :is_admin))
-
   (handler
    (or
       ;(if (contains? (-> request :authenticated-entity) :is_admin)

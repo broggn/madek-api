@@ -9,7 +9,6 @@
    [madek.api.resources.media-resources.permissions :as mr-permissions]))
 
 (defn authorized-view? [auth-entity resource]
-  (println ">o> authorized-view?" auth-entity resource)
   (case (:type resource)
     "MediaEntry" (media-entry-perms/viewable-by-auth-entity?
                   resource auth-entity)
@@ -54,10 +53,7 @@
                    :edit-md (authorized-edit-metadata? auth-entity resource)
                    :edit-perm (authorized-edit-permissions? auth-entity resource)
                    false)]
-
     (logging/info 'authorized? scope auth-res)
-    (println ">o>>>" 'authorized? scope auth-res)
-
     auth-res))
 
 (defn wrap-authorized-user [handler]
