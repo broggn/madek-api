@@ -33,7 +33,6 @@
     (if (delete-person id ds)
       {:status 204}
       {:status 404 :body {:message "Person not found."}})
-
     (catch Exception ex (sd/parsed_response_exception ex))))
 
 (def route

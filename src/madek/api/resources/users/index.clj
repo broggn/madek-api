@@ -17,39 +17,24 @@
    [taoensso.timbre :refer [debug error info spy warn]]))
 
 (defn handle-email-clause [thread-obj params]
-  (println ">o> params>>>>" params)
-  (println ">o> params2>>>>" (:email params))
   (if-let [email (:email params)]
     (-> thread-obj
-        (sql/where [:= :email email])
-        ;(sql-format :inline false)
-        )
+        (sql/where [:= :email email])        )
     thread-obj))
 
 (defn handler
   "Get an index of the users. Query parameters are pending to be implemented."
   [{params :params tx :tx :as req}]
 
-  (let [p (println ">o> get::handler" params)
-        ;params (-> params
-        ;           (update :page #(Integer/parseInt %))
-        ;           (update :count #(Integer/parseInt %)))
-
-        p (println ">o> params=" params)
-
-        query (-> common/base-query
+  (let [ query (-> common/base-query
                   (pagination/sql-offset-and-limit params)
                   (handle-email-clause params)
                   (sql-format :inline false))
-        p (println ">o> query=" query)
-
         res (->> query
                  (jdbc/execute! tx)
                  (assoc {} :users))
+        res (sd/transform_ml_map res)        ]
 
-        te_pr (println ">o> 1res" res)
-        res (sd/transform_ml_map res)
-        te_pr (println ">o> 2res" res)]
 
     (sd/response_ok res)))
 

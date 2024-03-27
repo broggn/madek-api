@@ -27,7 +27,6 @@
   (let [; TODO why is this needed for compojure
         ;filename (:filename preview)
         ; TODO why is this needed for reitit
-
         filename (:filename preview)
         [first-char] filename]
     (clojure.string/join

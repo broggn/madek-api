@@ -36,7 +36,6 @@
   [{{id :id :as user} :user ds :tx :as req}]
 
   (try
-
     (if (delete-user id ds)
       (sd/response_ok user)
       (sd/response_failed "Could not delete user." 406))

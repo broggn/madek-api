@@ -31,10 +31,6 @@
 (defn handler
   [{{{id :id} :path} :parameters
     ds :tx :as req}]
-
-  (println ">o>people.get / handler, id=" id)
-  (println ">o>people.get / handler, id.cl=" (class id))
-
   (debug req)
   (debug id)
   (if-let [person (-> (person-query id)

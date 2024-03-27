@@ -6,16 +6,10 @@
    [honey.sql.helpers :as sql]
 
    [madek.api.db.core :refer [get-ds]]
-   ;[madek.api.utils.rdbms :refer [get-ds]]
-
-   ;[clojure.java.jdbc :as jdbc]
    [madek.api.resources.locales :refer [add-field-for-default-locale]]
    [madek.api.resources.shared :as sd]
    [madek.api.resources.vocabularies.permissions :as permissions]
 
-   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-
-   ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]))
 
 (defn transform_ml [vocab]
@@ -51,23 +45,19 @@
       (sql-format)))
 
 ; TODO add flag for default locale
-(defn get-vocabulary [request] ;; HERE
+(defn get-vocabulary [request]
   (let [id (-> request :parameters :path :id)
         user-id (-> request :authenticated-entity :id)
         query (build-vocabulary-query id user-id)
         is_admin_endpoint (str/includes? (-> request :uri) "/admin/")
         db-result (jdbc/execute-one! (get-ds) query)
-        p (println ">o> result" db-result)
-
         result (if (not (nil? db-result))
                  (if is_admin_endpoint
                    (-> db-result
                        transform_ml)
                    (-> db-result
                        transform_ml
-                       sd/remove-internal-keys)))
-
-        p (println ">o> result" result)]
+                       sd/remove-internal-keys)))        ]
     (if result
       (sd/response_ok result)
       (sd/response_failed "Vocabulary could not be found!" 404))))

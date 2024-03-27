@@ -2,17 +2,9 @@
   (:require
    ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
-   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   ;[madek.api.utils.sql :as sql]
-
    [honey.sql.helpers :as sql]
    [madek.api.db.core :refer [get-ds]]
-               ;[clojure.java.jdbc :as jdbc]
    [madek.api.resources.meta-keys.meta-key :as meta-key]
-
-   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-
-         ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]))
 
 (defn get-index [meta-datum]

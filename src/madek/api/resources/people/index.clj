@@ -65,32 +65,12 @@
   "Get an index of the people. Query parameters are pending to be implemented."
   [{{query :query} :parameters params :params tx :tx :as req}]
   (debug 'query query)
-  (let [p (println ">o> params" params)
-        p (println ">o> query" query)
-
-        defaults {:page 0 :count 1000}
-        ;params (merge defaults params)
-
-        p (println ">o>>>> params.before-toInt =>" params)
-        ;params (into {} (map (fn [[k v]] [k (Integer/parseInt (str v))]) params))
-
-        ;params (parse-specific-keys params [:page :count])
+  (let [        defaults {:page 0 :count 1000}
         params (parse-specific-keys params defaults)
-
-        p (println ">o> !!! pagination-params=" params)
-
         query (-> (build-query query)
                   (pagination/sql-offset-and-limit params)
-
-                  sql-format
-                  ;(sql-format :inline false)
-                  )
-
-        p (println ">o> query" query)
-
-        people (jdbc/execute! tx query)
-
-        p (println ">o> people.count" (count people))]
+                  sql-format                  )
+        people (jdbc/execute! tx query)]
     (debug 'people people)
     {:status 200, :body {:people people}}))
 

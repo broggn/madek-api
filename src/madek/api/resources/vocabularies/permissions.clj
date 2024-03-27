@@ -22,7 +22,6 @@
   (if (nil? user-id)
     '()
     (let [query (-> (sql/select-distinct :group_id)
-                    ;(sql/modifiers :distinct)
                     (sql/from :groups_users)
                     (sql/where [:= :groups_users.user_id (to-uuid user-id)]) ; TODO??
                     sql-format)]
@@ -108,22 +107,14 @@
             p (println ">o> handle_create-vocab-user-perms")
             query (-> (sql/insert-into :vocabulary_user_permissions)
                       (sql/values [(spy ins-data)])
-                      sql-format
-                      spy)
+                      sql-format                      )
 
             ins-result (jdbc/execute! (get-ds) query)]
         (if-let [result (first ins-result)]
           (sd/response_ok result)
           (sd/response_failed "Could not create vocabulary user permission" 406))))
 
-    (catch Exception ex (sd/parsed_response_exception ex)
-                        ;(cond
-                        ;  (str/includes? (ex-message ex) "is still referenced from table") (sd/response_failed (str "References still exist") 403) ;;move
-                        ;  (str/includes? (ex-message ex) "already exists") (sd/response_failed (str "Entry already exists") 409)
-                        ;  (str/includes? (ex-message ex) "is not present in table \"users\"") (sd/response_failed (str "User entry not found") 404)
-                        ;  (str/includes? (ex-message ex) "is not present in table \"vocabularies\"") (sd/response_failed (str "Vocabulary entry not found") 404)
-                        ;  :else (sd/response_exception ex))
-           )))
+    (catch Exception ex (sd/parsed_response_exception ex)           )))
 
 (defn handle_update-vocab-user-perms [req]
   (try
@@ -135,8 +126,7 @@
                       (sql/set (spy upd-data))
                       (sql/where [:and [:= :vocabulary_id vid] [:= :user_id uid]])
                       (sql/returning :*)
-                      sql-format
-                      spy)
+                      sql-format                      )
             upd-result (jdbc/execute-one! (get-ds) query)
             p (println ">o> ??? upd-result" upd-result)]
 
@@ -194,16 +184,10 @@
                             :vocabulary_id vid
                             :group_id gid)
             query (-> (sql/insert-into :vocabulary_group_permissions)
-
                       (sql/values [(spy ins-data)])
-
-                      ;(sql/values [(spy (cast-to-hstore data))])
-
                       (sql/returning :*)
-
                       sql-format)
-            ins-result (jdbc/execute-one! (get-ds) query)
-            p (println ">o> ??????????? ins-result" ins-result)]
+            ins-result (jdbc/execute-one! (get-ds) query)            ]
         (if-let [result ins-result]
           (sd/response_ok result)
           (sd/response_failed "Could not create vocabulary group permission" 406))))
@@ -258,26 +242,15 @@
   (let [id (-> req :parameters :path :id)
         resource-perms (sd/query-eq-find-one :vocabularies :id id)]
 
-    (println ">o> id" id)
-    (println ">o> resource-perms" resource-perms)
-
     ;; Early exit if resource-perms is nil
     (if (nil? resource-perms)
-      (do
-        (println ">o> No such vocabulary.")
-        (sd/response_failed "No such vocabulary." 404))
+      (sd/response_failed "No such vocabulary." 404)
 
       (let [user-perms (sd/query-eq-find-all :vocabulary_user_permissions :vocabulary_id id)
             group-perms (sd/query-eq-find-all :vocabulary_group_permissions :vocabulary_id id)
             result {:vocabulary (select-keys resource-perms [:id :enabled_for_public_view :enabled_for_public_use])
                     :users user-perms
                     :groups group-perms}]
-
-        (println ">o> user-perms" user-perms)
-        (println ">o> group-perms" group-perms)
-        (println ">o> result" result)
-
         (sd/response_ok result)))))
-
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

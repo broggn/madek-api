@@ -60,9 +60,6 @@
 
 (defn handler
   [{user :user :as req}]
-
-  (println ">o> users.get::handler user=" user)
-
   (sd/response_ok user))
 
 (def route

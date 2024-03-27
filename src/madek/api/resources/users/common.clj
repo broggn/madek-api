@@ -42,11 +42,11 @@
                uid)
          res (-> sql-map
                  (sql/where
-                  (if (uuid/uuidable? uid)
-                    [:= :users.id uid]
-                    [:or
-                     [:= :users.login [:lower uid]]
-                     [:= [:lower :users.email] [:lower uid]]])))] res)))
+                   (if (uuid/uuidable? uid)
+                     [:= :users.id uid]
+                     [:or
+                      [:= :users.login [:lower uid]]
+                      [:= [:lower :users.email] [:lower uid]]])))] res)))
 
 (def is-admin-sub
   [:exists
@@ -63,48 +63,21 @@
 
 (defn find-user-by-uid [uid ds]
 
-  (let [p (println ">o> find-user-by-uid" uid)
-
-        res (-> base-query
+  (let [res (-> base-query
                 (where-uid uid)
                 sql-format)
-
-        p (println ">o> query=" res)
-
         res (jdbc/execute-one! ds res)
-        p (println ">o> res=" res)
-
-        p (println ">o> find-user-by-uid -------------END")] res))
+        ] res))
 
 (defn wrap-find-user [param]
   (fn [handler]
     (fn [{{uid param} :path-params ds :tx :as request}]
 
-      (let [p (println ">o> wrap-find-user =================")
-            p (println ">o> uid=" uid)
-            p (println ">o> param=" param)
-
-            p (println ">o> uid=" uid)
-            p (println ">o> uid.cl=" (class uid))
-
-            converted (convert-userid uid)
+      (let [converted (convert-userid uid)
             uid (-> converted :user-id)
-
-            ;user (find-user-by-uid uid ds)
-
-            p (println ">o> ======================")
-            p (println ">o> converted=" converted)
-            p (println ">o> uid=" uid)
-            p (println ">o> uid.cl=" (class uid))
-
-            user (find-user-by-uid uid ds)
-            p (println ">o> user=" user)
-            p (println ">o> handler=" handler)
-
-            p (println ">o> wrap-find-user -------------------END")]
+            user (find-user-by-uid uid ds)]
 
         (if (-> converted :is_userid_valid)
-          ;(if-let [user (find-user-by-uid uid ds)]
           (if user
             (handler (assoc request :user user))
             (sd/response_not_found "No such user."))

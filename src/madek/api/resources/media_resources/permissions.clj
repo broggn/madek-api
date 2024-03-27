@@ -5,7 +5,6 @@
    [logbug.catcher :as catcher]
    [logbug.debug :as debug]
    [logbug.thrown :as thrown]
-
    [madek.api.utils.rdbms :as rdbms]
 
    [madek.api.utils.sql :as sql]
@@ -56,8 +55,7 @@
       (sql/where [:= (resource-key mr-type) media-resource-id]
                  [:= :user_id user-id]
                  [:= perm-name true])
-      (sql/format)
-      spy))
+      (sql/format)))
 
 (defn- build-user-permission-get-query
   [media-resource-id mr-type user-id]
@@ -82,7 +80,6 @@
       (sql/format)))
 
 (defn- query-user-groups [user-id]
-  (println ">o> query-user-groups" user-id)
   (->> (build-user-groups-query user-id)
        (jdbc/query (rdbms/get-ds))))
 
@@ -154,14 +151,9 @@
 
 (defn- query-user-permissions
   [resource user-id perm-name mr-type]
-
-  (println ">o> query-user-permissions1" resource user-id perm-name mr-type)
-
   (let [res (->> (build-user-permissions-query
                   (:id resource) user-id perm-name mr-type)
                  (jdbc/query (rdbms/get-ds)))]
-
-    (println ">o> query-user-permissions2" res)
     res))
 
 (defn query-list-user-permissions
@@ -234,14 +226,10 @@
 
 (defn- query-group-permissions
   [resource user-id perm-name mr-type]
-
-  (println ">o> query-group-permissions1" resource user-id perm-name mr-type)
-
   (let [res (if-let [user-groups (seq (query-user-groups user-id))]
               (->> (build-group-permissions-query
                     (:id resource) (map :id user-groups) perm-name mr-type)
                    (jdbc/query (rdbms/get-ds))))]
-    (println ">o> query-group-permissions2" res)
     res))
 
 (defn query-get-group-permission
@@ -319,13 +307,6 @@
                     ;                                               perm-name mr-type))
                       )
                     boolean)]
-
-        (println ">o> permission-by-auth-entity? a1 some.." (some #(= (:responsible_delegation_id resource) %) (delegation-ids auth-entity-id)))
-        (println ">o> permission-by-auth-entity? a User/(= auth-entity.." (:responsible_user_id resource))
-        (println ">o> permission-by-auth-entity? ae1 User/(= auth-entity.." (= auth-entity-id (:responsible_user_id resource)))
-        (println ">o> permission-by-auth-entity? ae2 :responsible_user_id.." (:responsible_user_id resource))
-        (println ">o> permission-by-auth-entity? ae3 auth-entity-id.." auth-entity-id)
-        (println ">o> permission-by-auth-entity? b res=" res)
         res)))
 
 (defn edit-permissions-by-auth-entity? [resource auth-entity mr-type]

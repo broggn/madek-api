@@ -12,7 +12,6 @@
    [madek.api.resources.users.common :refer [find-user-by-uid]]
 
    [madek.api.resources.users.get :as get-user]
-   ;[madek.api.resources.users.get :refer [schema]]
    [madek.api.resources.users.get :as users-get]
 
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
@@ -27,8 +26,6 @@
    [reitit.coercion.schema]
 
    [schema.core :as s]
-
-   ;[schema.core :as s]
    [taoensso.timbre :refer [debug error info spy warn]]))
 
 ;#### create ##################################################################
@@ -36,50 +33,16 @@
 (defn handle-create-user
   [{{data :body} :parameters ds :tx :as req}]
   (try
-
-    ;(s/validate users-get/schema data)
-
-    (let [p (println ">o> data" data)
-          p (println ">o> data.sett" (:settings data))
-          p (println ">o> data.sett.cl" (class (:settings data)))
-
-          ;; TODO:
-          ;; allowed: [] OR {}
-          ;; previous: issue with settings ("{}" vs {} vs [] vs "[]") / normalization?
-          data (convert-map-if-exist data)
-
-          p (println ">o> data" data)
-          p (println ">o> data.sett" (:settings data))
-          p (println ">o> data.sett.cl" (class (:settings data)))
-
-          ;{id :id} (-> (sql/insert-into :users)
-          ;             (sql/values [data])
-          ;             sql-format
-          ;             ((partial jdbc/execute-one! ds) {:return-keys true}))
-
+    (let [data (convert-map-if-exist data)
           query (-> (sql/insert-into :users)
                     (sql/values [data])
                     (sql/returning :*)
-                    sql-format
-                    ;((partial jdbc/execute-one! ds) {:return-keys true})
-                    )
-
-          result (jdbc/execute-one! ds query)
-          ;result nil
-          ;result []
-
-          p (println ">o> result" result)]
+                    sql-format)
+          result (jdbc/execute-one! ds query)]
 
       (if result
-        (do
-          (println ">o> result-ok")
-          (sd/response_ok result 201)) ;; looses content type
-        ;(sd/response_ok "alles suppi"))
-        ;(sd/response_ok {:test "alles suppi"}))
-        ;(sd/response_ok {} 201))
-        (do
-          (println ">o> failed")
-          (sd/response_failed))))
+        (sd/response_ok result 201)
+        (sd/response_failed)))
 
     (catch Exception e
       (error "handle-create-user failed" {:request req})

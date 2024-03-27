@@ -21,21 +21,11 @@
 (defn handle-create-person
   [{{data :body} :parameters ds :tx :as req}]
   (try
-    (let [;; old version
-          {id :id} (-> (sql/insert-into :people)
+    (let [{id :id} (-> (sql/insert-into :people)
                        (sql/values [(convert-map-if-exist data)])
                        sql-format
-                       ((partial jdbc/execute-one! ds) {:return-keys true}))
-
-          ;; TODO / FIXME new version (broken)
-          ;query (-> (sql/insert-into :people)
-          ;          (sql/values [(convert-map-if-exist data)])
-          ;          (sql/returning common/people-select-keys)
-          ;          sql-format)
-          ;result (jdbc/execute-one! ds query)
-          ]
+                       ((partial jdbc/execute-one! ds) {:return-keys true}))]
       (sd/response_ok (spy (find-person-by-uid id ds)) 201))
-    ;(sd/response_ok result 201))
     (catch Exception e
       (error "handle-create-person failed" {:request req})
       (sd/parsed_response_exception e))))
@@ -74,26 +64,20 @@
 
                   ;; works
                   (sql/returning :people.created_at
-                                 :people.description
-                                 :people.external_uris
-                                 :people.id
-                                 :people.first_name
-                                 :people.institution
-                                 :people.institutional_id
-                                 :people.last_name
-                                 :people.admin_comment
-                                 :people.pseudonym
-                                 :people.subtype
-                                 :people.updated_at)
+                    :people.description
+                    :people.external_uris
+                    :people.id
+                    :people.first_name
+                    :people.institution
+                    :people.institutional_id
+                    :people.last_name
+                    :people.admin_comment
+                    :people.pseudonym
+                    :people.subtype
+                    :people.updated_at)
 
-                  sql-format
-                  spy)
-
-        p (println ">o> query" query)
-
-        result (jdbc/execute-one! (get-ds) query)
-
-        p (println "result" result)]
+                  sql-format)
+        result (jdbc/execute-one! (get-ds) query)]
 
     result))
 
