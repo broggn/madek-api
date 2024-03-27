@@ -2,18 +2,12 @@
   (:require [clojure.tools.logging :as logging]
             [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
-   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   ;[madek.api.utils.sql :as sql]
             [logbug.catcher :as catcher]
-
-;; all needed imports
             [madek.api.db.core :refer [get-ds]]
-   ;[leihs.core.db :as db]
             [madek.api.resources.shared :as sd]
             [next.jdbc :as jdbc]
 
             [reitit.coercion.schema]
-
             [schema.core :as s]))
 
 (defn build-query [query-params]
@@ -52,7 +46,6 @@
                   "\ntype: " mr-type
                   "\nmr-id: " mr-id
                   "\ncol-name: " col-name)
-
     (if-let [result (sd/query-eq-find-one :custom_urls col-name mr-id)]
       (sd/response_ok result)
       (sd/response_not_found (str "No such custom_url for " mr-type " with id: " mr-id)))))
@@ -61,17 +54,6 @@
   [req]
   (try
     (catcher/with-logging {}
-
-      ;(let [u-id (-> req :authenticated-entity :id)
-      ;      mr (-> req :media-resource)
-      ;      mr-type (-> mr :type)
-      ;      mr-id (-> mr :id str)
-      ;      data (-> req :parameters :body)
-      ;      dwid (if (= mr-type "MediaEntry")
-      ;             (assoc data :media_entry_id mr-id :creator_id u-id :updator_id u-id)
-      ;             (assoc data :collection_id mr-id :creator_id u-id :updator_id u-id))
-      ;      ins-res (jdbc/insert! (rdbms/get-ds) :custom_urls dwid)]
-
       (let [u-id (-> req :authenticated-entity :id)
             mr (-> req :media-resource)
             mr-type (-> mr :type)
@@ -101,20 +83,6 @@
   [req]
   (try
     (catcher/with-logging {}
-
-      ;(let [u-id (-> req :authenticated-entity :id)
-      ;      mr (-> req :media-resource)
-      ;      mr-type (-> mr :type)
-      ;      mr-id (-> mr :id str)
-      ;      col-name (if (= mr-type "MediaEntry")
-      ;                 :media_entry_id
-      ;                 :collection_id)
-      ;      data (-> req :parameters :body)
-      ;      dwid (if (= mr-type "MediaEntry")
-      ;             (assoc data :media_entry_id mr-id :updator_id u-id)
-      ;             (assoc data :collection_id mr-id :updator_id u-id))
-      ;      upd-result (jdbc/update! (get-ds) :custom_urls dwid (sd/sql-update-clause col-name mr-id))]
-
       (let [u-id (-> req :authenticated-entity :id)
             mr (-> req :media-resource)
             mr-type (-> mr :type)
@@ -147,7 +115,6 @@
   [req]
   (try
     (catcher/with-logging {}
-
       (let [u-id (-> req :authenticated-entity :id)
             mr (-> req :media-resource)
             mr-type (-> mr :type)
@@ -155,12 +122,6 @@
             col-name (if (= mr-type "MediaEntry")
                        :media_entry_id
                        :collection_id)]
-
-        ;(if-let [del-data (sd/query-eq-find-one :custom_urls col-name mr-id)]
-        ;  (let [del-result (jdbc/delete! (rdbms/get-ds)
-        ;                     :custom_urls
-        ;                     (sd/sql-update-clause col-name mr-id))]
-
         (if-let [del-data (sd/query-eq-find-one :custom_urls col-name mr-id)]
           (let [sql (-> (sql/delete-from :custom_urls)
                         (sql/where [:= col-name mr-id])

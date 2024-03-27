@@ -9,21 +9,13 @@
             [logbug.catcher :as catcher]
             [logbug.debug :as debug]
             [madek.api.db.core :refer [get-ds]]
-
             [madek.api.db.core :refer [get-ds]]
             [madek.api.pagination :as pagination]
             [madek.api.resources.shared :as sd]
-
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-
             [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids t f to-uuid merge-query-parts]]
-
-;[leihs.core.db :as db]
             [next.jdbc :as jdbc]
             [reitit.coercion.schema]
-
-   ;; all needed imports
-
             [schema.core :as s]
             [taoensso.timbre :refer [info warn error spy]]))
 
@@ -40,9 +32,6 @@
                      (sd/build-query-param-like query-params :text)
                      (pagination/add-offset-for-honeysql query-params)
                      sql-format)
-
-        ;db-result (jdbc/query (rdbms/get-ds) db-query)]
-
         db-result (jdbc/execute! (get-ds) db-query)]
 
     (logging/info "handle_list-full_texts:" "\nquery:\n" db-query)
@@ -108,7 +97,6 @@
     (catcher/with-logging {}
       (let [full-text (-> req :full_text)
             mr-id (:media_resource_id full-text)
-
             sql-query (-> (sql/delete-from :full_texts)
                           (sql/where [:= :media_resource_id mr-id])
                           (sql/returning :*)
@@ -133,9 +121,7 @@
 (def query-routes
   [["/full_texts"
     {:swagger {:tags ["full_texts"]}}
-
     ["/"
-
      {:get {:summary (sd/sum_usr (t "Query or list full_texts."))
             :handler handle_list-full_texts
             :coercion reitit.coercion.schema/coercion
@@ -160,9 +146,7 @@
 (def edit-routes
   [["/full_text"
     {:swagger {:tags ["admin/full_text"] :security [{"auth" []}]}}
-
     ["/"
-
      {:post {:summary (sd/sum_adm (t "Create full_texts entry????"))
              :swagger {:consumes "application/json" :produces "application/json"}
              :handler handle_create-full_texts
@@ -197,11 +181,8 @@
 ; TODO full_texts: test wrap auth for collection
 (def collection-routes
   [["/collection/:collection_id/full_text"
-
     {:swagger {:tags ["collection/full_text"]}}
-
     ["/"
-
      {:get {:summary (sd/sum_usr_pub "Get full_text.")
             :handler handle_get-full_text
             :coercion reitit.coercion.schema/coercion
@@ -240,11 +221,8 @@
 ; TODO full_texts: test wrap auth for media entry
 (def entry-routes
   [["/media-entry/:media_entry_id/full_text"
-
     {:swagger {:tags ["media-entry/full_text"]}}
-
     ["/"
-
      {:get {:summary (sd/sum_usr_pub "Get full_text.")
             :handler handle_get-full_text
             :coercion reitit.coercion.schema/coercion

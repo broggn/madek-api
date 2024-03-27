@@ -1,10 +1,7 @@
 (ns madek.api.resources.collection-media-entry-arcs
   (:require
-
-   ;[clojure.java.jdbc :as jdbco]
    ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
-
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [madek.api.db.core :refer [get-ds]]
@@ -13,8 +10,6 @@
 
    [madek.api.resources.shared :as sd]
    [madek.api.utils.rdbms :as rdbms]
-   ;[madek.api.utils.sql :as sqlo]
-   ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]))
@@ -29,7 +24,6 @@
   (let [id (-> request :parameters :path :id)
         db-query (arc-query id)
         db-result (jdbc/execute! (get-ds) db-query)]
-
     (if-let [arc (first db-result)]
       (sd/response_ok arc)
       (sd/response_not_found "No such collection-media-entry-arc"))))
@@ -54,21 +48,11 @@
    (create-col-me-arc col-id me-id data (get-ds)))
 
   ([col-id me-id data tx]
-   ;(let [ins-data (assoc data :collection_id col-id :media_entry_id me-id)
-   ;      ins-res (first (jdbc/insert! tx "collection_media_entry_arcs" ins-data))]
-
-     ;(let [ins-data (assoc data :collection_id col-id :media_entry_id me-id)
-     ;      sql-map {:insert-into :collection_media_entry_arcs
-     ;               :values [ins-data]}
-     ;      sql (-> sql-map sql-format )
-     ;      ins-res (next.jdbc/execute! tx [sql ins-data])]
-
    (let [ins-data (assoc data :collection_id col-id :media_entry_id me-id)
          sql (-> (sql/insert-into :collection_media_entry_arcs)
                  (sql/values [ins-data])
                  sql-format)
          ins-res (jdbc/execute! tx sql)]
-
      ins-res)))
 
 ; TODO logwrite
@@ -85,7 +69,7 @@
 
 (defn- sql-cls-update [col-id me-id]
   (-> (sql/where [:= :collection_id col-id]
-                 [:= :media_entry_id me-id])
+        [:= :media_entry_id me-id])
       sql-format
       (update-in [0] #(clojure.string/replace % "WHERE" ""))))
 
@@ -93,68 +77,33 @@
 (defn handle_update-col-me-arc [req]
   (try
     (catcher/with-logging {}
-      ;(let [col-id (-> req :parameters :path :collection_id)
-      ;      me-id (-> req :parameters :path :media_entry_id)
-      ;      data (-> req :parameters :body)
-      ;      whcl (sql-cls-update col-id me-id)
-      ;      result (jdbc/update! (get-ds)
-      ;                           :collection_media_entry_arcs
-      ;                           data whcl)]
-
-      ;(let [col-id (-> req :parameters :path :collection_id)
-      ;      me-id (-> req :parameters :path :media_entry_id)
-      ;      data (-> req :parameters :body)
-      ;      sql-map {:update :collection_media_entry_arcs
-      ;               :set data
-      ;               :where [:= :collection_id col-id
-      ;                       := :media_entry_id me-id]}
-      ;      sql (-> sql-map sql-format )
-      ;      result (next.jdbc/execute! (get-ds) [sql data])]
-
       (let [col-id (-> req :parameters :path :collection_id)
             me-id (-> req :parameters :path :media_entry_id)
             data (-> req :parameters :body)
             sql (-> (sql/update :collection_media_entry_arcs)
                     (sql/set data)
                     (sql/where [:= :collection_id col-id]
-                               [:= :media_entry_id me-id])
+                      [:= :media_entry_id me-id])
                     sql-format)
-              ;result (jdbc/execute! (get-ds) [sql])]
             result (jdbc/execute! (get-ds) sql)]
 
         (if (= 1 (first result))
           (sd/response_ok (sd/query-eq-find-one
-                           :collection_media_entry_arcs
-                           :collection_id col-id
-                           :media_entry_id me-id))
+                            :collection_media_entry_arcs
+                            :collection_id col-id
+                            :media_entry_id me-id))
           (sd/response_failed "Could not update collection entry arc." 422))))
     (catch Exception ex (sd/response_exception ex))))
 
 (defn handle_delete-col-me-arc [req]
   (try
     (catcher/with-logging {}
-
-      ;(let [col-id (-> req :parameters :path :collection_id)
-      ;      me-id (-> req :parameters :path :media_entry_id)
-      ;      data (-> req :col-me-arc)
-      ;      delquery (sql-cls-update col-id me-id)
-      ;      delresult (jdbc/delete! (get-ds) :collection_media_entry_arcs delquery)]
-
-;(let [col-id (-> req :parameters :path :collection_id)
-        ;      me-id (-> req :parameters :path :media_entry_id)
-        ;      data (-> req :col-me-arc)
-        ;      sql-map {:delete :collection_media_entry_arcs
-        ;               :where [:= :collection_id col-id
-        ;                       := :media_entry_id me-id]}
-        ;      sql (-> sql-map sql-format )
-        ;      delresult (jdbc/execute! (get-ds) [sql [col-id me-id]])]
-
       (let [col-id (-> req :parameters :path :collection_id)
             me-id (-> req :parameters :path :media_entry_id)
             data (-> req :col-me-arc)
             sql (-> (sql/delete :collection_media_entry_arcs)
                     (sql/where [:= :collection_id col-id]
-                               [:= :media_entry_id me-id])
+                      [:= :media_entry_id me-id])
                     sql-format)
             delresult (jdbc/execute! (get-ds) sql)]
 
@@ -165,11 +114,11 @@
 
 (defn wrap-add-col-me-arc [handler]
   (fn [request] (sd/req-find-data2
-                 request handler
-                 :collection_id :media_entry_id
-                 :collection-media-entry-arcs
-                 :collection_id :media_entry_id
-                 :col-me-arc true)))
+                  request handler
+                  :collection_id :media_entry_id
+                  :collection-media-entry-arcs
+                  :collection_id :media_entry_id
+                  :col-me-arc true)))
 
 (def schema_collection-media-entry-arc-export
   {:id s/Uuid
@@ -213,7 +162,7 @@
                ; TODO puery params
                :parameters {:query {(s/optional-key :collection_id) s/Uuid
                                     (s/optional-key :media_entry_id) s/Uuid}}
-               :responses {200 {:body s/Any}} ; TODO response coercion
+               :responses {200 {:body s/Any}}               ; TODO response coercion
                }}]
    ["/:id" {:get {:summary "Get collection media-entry arc."
                   :handler arc
@@ -221,7 +170,7 @@
                   :coercion reitit.coercion.schema/coercion
                   :parameters {:path {:id s/Str}}
                   :responses {200 {:body s/Any}
-                              404 {:body s/Any}} ; TODO response coercion
+                              404 {:body s/Any}}            ; TODO response coercion
                   }}]])
 (def collection-routes
   ["/collection/:collection_id"
@@ -239,8 +188,8 @@
     {:post
      {:summary (sd/sum_usr "Create collection media-entry arc")
       :handler handle_create-col-me-arc
-       ; TODO check: if collection edit md and relations is allowed checked
-       ; not the media entry edit md
+      ; TODO check: if collection edit md and relations is allowed checked
+      ; not the media entry edit md
       :middleware [sd/ring-wrap-add-media-resource
                    sd/ring-wrap-authorization-edit-metadata]
       :swagger {:produces "application/json" :consumes "application/json"}

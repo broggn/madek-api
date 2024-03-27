@@ -15,24 +15,15 @@
 
    [madek.api.resources.shared :as sd]
    [madek.api.resources.vocabularies.index :refer [get-index]]
-
-;[madek.api.resources.vocabularies.vocabulary :refer [transform_ml]]
-
    [madek.api.resources.vocabularies.permissions :as permissions]
    ;; all needed imports
    [madek.api.resources.vocabularies.vocabulary :refer [get-vocabulary]]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-
    [madek.api.utils.helper :refer [cast-to-hstore]]
-
-   ;[madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist f replace-java-hashmaps t v]]
    [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
-
    [madek.api.utils.helper :refer [mslurp]]
    [next.jdbc :as jdbc]
-
    [pghstore-clj.core :refer [to-hstore]]
-
    [reitit.coercion.schema]
 
    [schema.core :as s]))
@@ -122,8 +113,6 @@
                               (sql/returning :*)
                               sql-format)
                 db-result (jdbc/execute-one! (get-ds) sql-query)]
-            ;; rest of your code
-            ;(if (= 1 (::jdbc/update-count db-result))
             (if db-result
               (sd/response_ok (sd/transform_ml_map old-data))
               (sd/response_failed "Could not delete vocabulary." 406)))

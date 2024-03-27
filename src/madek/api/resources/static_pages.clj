@@ -1,22 +1,14 @@
 (ns madek.api.resources.static-pages
   (:require
-
-   ;[clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
    ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-
    [logbug.catcher :as catcher]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
-
    [madek.api.utils.helper :refer [cast-to-hstore]]
-
    [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist f replace-java-hashmaps t v]]
-
-   ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]))
@@ -49,8 +41,8 @@
             ins-res (sd/transform_ml_map ins-res)]
 
         (logging/info "handle_create-static-page:"
-                      "\ninsert data:\n" ins-data
-                      "\nresult:\n " ins-res)
+          "\ninsert data:\n" ins-data
+          "\nresult:\n " ins-res)
 
         (if ins-res
           (sd/response_ok ins-res)
@@ -74,9 +66,9 @@
             upd-result (sd/transform_ml_map upd-result)]
 
         (logging/info "handle_update-static_pages: "
-                      "\nid:\n" id
-                      "\nnew-data:\n" dwid
-                      "\nupd-result:" upd-result)
+          "\nid:\n" id
+          "\nnew-data:\n" dwid
+          "\nupd-result:" upd-result)
 
         (if upd-result
           (sd/response_ok upd-result)
@@ -88,11 +80,6 @@
     (catcher/with-logging {}
       (let [olddata (-> req :static_page)
             id (-> req :parameters :path :id)
-
-            ;delresult (jdbc/delete! (rdbms/get-ds)
-            ;                        :static_pages
-            ;                        ["id = ?" id])]
-
             sql-query (-> (sql/delete-from :static_pages)
                           (sql/where [:= :id id])
                           (sql/returning :*)
@@ -102,21 +89,18 @@
             delresult (sd/transform_ml_map delresult)]
 
         (logging/info "handle_delete-static_page: "
-                      " id: " id
-                      " result: " delresult)
-
-        ;(if (= 1 (::jdbc/update-count delresult))
+          " id: " id
+          " result: " delresult)
         (if delresult
           (sd/response_ok delresult)
           (sd/response_failed "Could not delete static page." 422))))
-
     (catch Exception e (sd/response_exception e))))
 
 (defn wwrap-find-static_page [param]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler param
-                                    :static_pages :id
-                                    :static_page true))))
+                    :static_pages :id
+                    :static_page true))))
 
 (def schema_create_static_page
   {:name s/Str
@@ -131,7 +115,7 @@
   {:id s/Uuid
    :name s/Str
    :contents sd/schema_ml_list
-   :created_at s/Any ; TODO as Inst
+   :created_at s/Any                                        ; TODO as Inst
    :updated_at s/Any})
 
 ; TODO auth admin
@@ -143,7 +127,6 @@
 
   ["/static-pages"
    {:swagger {:tags ["admin/static-pages"] :security [{"auth" []}]}}
-
    ["/"
     {:post {:summary (sd/sum_adm (t "Create static_page."))
             :handler handle_create-static_page

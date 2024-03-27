@@ -1,13 +1,10 @@
 (ns madek.api.resources.admins
   (:require
-   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
 
    ;; all needed imports
    [logbug.catcher :as catcher]
-   ;[leihs.core.db :as db]
    [madek.api.db.core :refer [get-ds]]
 
    [madek.api.resources.shared :as sd]
@@ -41,20 +38,6 @@
     (if-let [admin (-> req :admin)]
       ; already has admin
       (sd/response_ok admin)
-      ; create admin entry
-      ;(let [user (-> req :user)
-      ;      id (:id user)
-      ;      data {:user_id id}
-      ;      ins-res (jdbc/insert! (get-ds) :admins data)]
-
-      ;(let [user (-> req :user)
-      ;      id (:id user)
-      ;      data {:user_id id}
-      ;      sql-map {:insert-into :admins
-      ;               :values [data]}
-      ;      sql (-> sql-map sql-format)
-      ;      ins-res (jdbc/execute! (get-ds) [sql id])]
-
       (let [user (-> req :user)
             id (:id user)
             data {:user_id id}
@@ -62,7 +45,6 @@
                          (sql/values [data])
                          (sql/returning :*)
                          sql-format))
-            ;ins-res (spy (jdbc/execute! (get-ds) [sql])) broken
             ins-res (spy (jdbc/execute! (get-ds) sql))]
 
         (sd/logwrite req (str "handle_create-admin:" " user-id: " id " result: " ins-res))
@@ -78,8 +60,7 @@
           sql (-> (sql/delete-from :admins)
                   (sql/where [:= :id admin-id])
                   (sql/returning :*)
-                  sql-format
-                  spy)
+                  sql-format)
           del-result (spy (jdbc/execute-one! (get-ds) sql))]
 
       (if del-result

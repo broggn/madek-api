@@ -12,10 +12,6 @@
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
 
-   ;         [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   ;[clojure.java.jdbc :as jdbc]
-   ;         [madek.api.utils.sql :as sql]
-
    [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
    ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
@@ -36,7 +32,6 @@
                      (sql/from :contexts)
                      sql-format)
         db-result (jdbc/execute! (get-ds) db-query)
-
         result (map context_transform_ml db-result)]
     ;(logging/info "handle_adm-list-context" "\nquery\n" db-query "\nresult\n" result)
     (sd/response_ok result)))
@@ -67,9 +62,6 @@
   [req]
   (try
     (catcher/with-logging {}
-      ;(let [data (-> req :parameters :body)
-      ;      ins-res (jdbc/insert! (get-ds) :contexts data)]
-
       (let [data (-> req :parameters :body)
 
             sql (-> (sql/insert-into :contexts)
@@ -80,9 +72,6 @@
             res (jdbc/execute-one! (get-ds) sql)
             res (context_transform_ml res)]
 
-;(sd/logwrite req (str "handle_create-contexts: " "\nnew-data:\n" data "\nresult:\n" ins-res))
-
-        ;(if-let [result (first ins-res)]
         (if res
           ; TODO clean result
           (sd/response_ok res)
@@ -93,42 +82,17 @@
   [req]
   (try
     (catcher/with-logging {}
-
-      ;(let [data (-> req :parameters :body)
-      ;      id (-> req :parameters :path :id)
-      ;      dwid (assoc data :id id)
-      ;  ;old-data (-> req :context)
-      ;      upd-query (sd/sql-update-clause "id" (str id))
-      ;      upd-result (jdbc/update! (get-ds) :contexts dwid upd-query)]
-
       (let [data (-> req :parameters :body)
             id (-> req :parameters :path :id)
             dwid (assoc data :id id)
-
-            ;sql-map {:update :contexts
-            ;         :set dwid
-            ;         :where [:= :id id]}
-            ;sql (-> sql-map sql-format)
-            ;upd-result (jdbc/execute! (get-ds) [sql (vals dwid)])
-
             fir (-> (sql/update :contexts)
-                    ;(sql/set dwid)
                     (sql/set (cast-to-hstore dwid))
-                    ;(sql/where [:raw upd-query])
                     (sql/where [:= :id id])
                     (sql/returning :*)
                     sql-format)
-            p (println ">o> !!!!!!!!!!! sql-fir" fir)
-
             upd-result (jdbc/execute-one! (get-ds) (spy fir))]
 
-;; FIXME
-
-        ;(sd/logwrite req (str "handle_update-contexts: " id "\nnew-data:\n" dwid "\nupd-result\n" upd-result))
-
-        ;(if (= 1 (first upd-result))
         (if upd-result
-          ;(sd/response_ok (context_transform_ml (sd/query-eq-find-one :contexts :id id)))
           (sd/response_ok (context_transform_ml upd-result))
           (sd/response_failed "Could not update context." 406))))
     (catch Exception ex (sd/response_exception ex))))
@@ -146,9 +110,6 @@
                           spy)
             del-result (jdbc/execute-one! (get-ds) sql-query)]
 
-        ;(sd/logwrite req (str "handle_delete-context: " id " result: " del-result))
-
-        ;(if (= 1 (first del-result))
         (if del-result
           (sd/response_ok (context_transform_ml del-result))
           (logging/error "Could not delete context " id))))
@@ -192,7 +153,6 @@
 
   ["/contexts"
    {:swagger {:tags ["admin/contexts"]}}
-
    ["/"
     {:post {:summary (sd/sum_adm_todo (t "Create contexts."))
             :handler handle_create-contexts

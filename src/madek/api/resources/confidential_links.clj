@@ -1,19 +1,13 @@
 (ns madek.api.resources.confidential-links
   (:require [buddy.core.codecs :refer [bytes->b64u bytes->str]]
             [buddy.core.hash :as hash]
-            [clojure.java.jdbc :as jdbco]
             [clojure.tools.logging :as logging]
             ;; all needed imports
             [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
-
             [logbug.catcher :as catcher]
-            ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-            ;[madek.api.utils.sql :as sqlo]
-
             [madek.api.db.core :refer [get-ds]]
             [madek.api.resources.shared :as sd]
-                        ;[leihs.core.db :as db]
             [next.jdbc :as jdbc]
 
             [reitit.coercion.schema]
@@ -46,16 +40,6 @@
             mr-type (-> mr :type)
             data (-> req :parameters :body)
             token (create-conf-link-token)
-
-;ins-data (-> data
-            ;             (sd/try-instant-on-presence :expires_at)
-            ;             (assoc
-            ;              :user_id u-id
-            ;              :resource_type mr-type
-            ;              :resource_id mr-id
-            ;              :token token))
-            ;ins-result (jdbc/insert! (get-ds) :confidential_links ins-data)]
-
             ins-data (-> data
                          (sd/try-instant-on-presence :expires_at)
                          (assoc
@@ -67,7 +51,6 @@
                      :values [ins-data]}
             sql (-> sql-map sql-format)
             ins-result (jdbc/execute! (get-ds) [sql ins-data])]
-
         (if-let [result (first ins-result)]
           (sd/response_ok result)
           (sd/response_failed "Could not create confidential link." 406))))
@@ -95,13 +78,6 @@
   [req]
   (try
     (catcher/with-logging {}
-
-;(let [id (-> req :parameters :path :id)
-      ;      data (-> req :parameters :body)
-      ;      upd-data (sd/try-instant-on-presence data :expires_at)
-      ;      upd-clause (sd/sql-update-clause "id" id)
-      ;      upd-result (jdbc/update! (get-ds) :confidential_links upd-data upd-clause)]
-
       (let [id (-> req :parameters :path :id)
             data (-> req :parameters :body)
             upd-data (sd/try-instant-on-presence data :expires_at)
@@ -124,10 +100,6 @@
     (catcher/with-logging {}
       (let [id (-> req :parameters :path :id)]
         (if-let [del-data (sd/query-eq-find-one :confidential_links :id id)]
-
-          ;(let [del-clause (sd/sql-update-clause "id" id)
-          ;      del-result (jdbc/delete! (get-ds) :confidential_links del-clause)]
-
           (let [sql-map {:delete :confidential_links
                          :where [:= :id id]}
                 sql (-> sql-map sql-format)

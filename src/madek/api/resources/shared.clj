@@ -7,22 +7,16 @@
             [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
             [java-time.api :as jt]
-
             [logbug.catcher :as catcher]
 
             [logbug.debug :as debug]
 
             [madek.api.authorization :refer [authorized?]]
             [madek.api.constants :as mc]
-
             [madek.api.db.core :refer [get-ds]]
             [madek.api.semver :as semver]
             [madek.api.utils.helper :refer [to-uuid]]
-
-   ;[madek.api.utils.rdbms :refer [get-ds]]
-
             [next.jdbc :as jdbc]
-
             [schema.core :as s]
             [taoensso.timbre :refer [info warn error spy]]))
 
@@ -48,7 +42,6 @@
     (if (nil? pval)
       query
       (-> query (sql/where [:= param pval])))))
-;(-> query (sql/where [:= param (to-uuid pval param)])))))
 
 (defn try-instant-on-presence [data keyword]
   (try
@@ -73,16 +66,16 @@
 (defn try-parse-date-time [dt_string]
   (try
     (logging/info "try-parse-date-time "
-                  dt_string)
+      dt_string)
     (let [zoneid (java.time.ZoneId/systemDefault)
 
           parsed2 (jt/local-date-time (jt/offset-date-time dt_string) zoneid)
           pcas (.toString parsed2)]
       (logging/info "try-parse-date-time "
-                    dt_string
-                    "\n zoneid " zoneid
-                    "\n parsed " parsed2
-                    "\n result:  " pcas)
+        dt_string
+        "\n zoneid " zoneid
+        "\n parsed " parsed2
+        "\n result:  " pcas)
       pcas)
 
     (catch Exception ex
@@ -126,19 +119,15 @@
 
 (defn- sql-query-find-eq
   ([table-name col-name row-data]
-   (println ">o> ??? sql-query-find-eq table-name1" table-name)
-   (spy (-> (build-query-base table-name :*)
-            (sql/where [:= col-name (to-uuid row-data col-name table-name)])
-            sql-format
-            spy)))
+   (-> (build-query-base table-name :*)
+       (sql/where [:= col-name (to-uuid row-data col-name table-name)])
+       sql-format))
 
   ([table-name col-name row-data col-name2 row-data2]
-   (println ">o> ??? table-name2" table-name "col-name")
-   (spy (-> (build-query-base table-name :*)
-            (sql/where [:= col-name (to-uuid row-data col-name)])
-            (sql/where [:= col-name2 (to-uuid row-data2 col-name2)])
-            sql-format
-            spy))))
+   (-> (build-query-base table-name :*)
+       (sql/where [:= col-name (to-uuid row-data col-name)])
+       (sql/where [:= col-name2 (to-uuid row-data2 col-name2)])
+       sql-format)))
 
 (defn sql-update-clause
   "Generates an sql update clause"
@@ -156,37 +145,36 @@
 
 (defn query-find-all
   [table-key col-keys]
-  (let [p (println ">o> query-find-all" table-key col-keys)
-        db-query (-> (build-query-base table-key col-keys)
+  (let [db-query (-> (build-query-base table-key col-keys)
                      sql-format)
-        db-result (jdbc/execute! (get-ds) (spy db-query))]
-    (spy db-result)))
+        db-result (jdbc/execute! (get-ds) db-query)]
+    db-result))
 
 (defn query-eq-find-all
   ([table-name col-name row-data]
    (catcher/snatch {}
-                   (spy (jdbc/execute!
-                         (get-ds)
-                         (sql-query-find-eq table-name col-name row-data)))))
+     (jdbc/execute!
+       (get-ds)
+       (sql-query-find-eq table-name col-name row-data))))
 
   ([table-name col-name row-data col-name2 row-data2]
    (catcher/snatch {}
-                   (spy (jdbc/execute!
-                         (get-ds)
-                         (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))))
+     (jdbc/execute!
+       (get-ds)
+       (sql-query-find-eq table-name col-name row-data col-name2 row-data2)))))
 
 (defn query-eq-find-all-one
   ([table-name col-name row-data]
    (catcher/snatch {}
-                   (spy (jdbc/execute-one!
-                         (get-ds)
-                         (sql-query-find-eq table-name col-name row-data)))))
+     (spy (jdbc/execute-one!
+            (get-ds)
+            (sql-query-find-eq table-name col-name row-data)))))
 
   ([table-name col-name row-data col-name2 row-data2]
    (catcher/snatch {}
-                   (spy (jdbc/execute-one!
-                         (get-ds)
-                         (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))))
+     (spy (jdbc/execute-one!
+            (get-ds)
+            (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))))
 
 (defn query-eq-find-one
   ([table-name col-name row-data]
@@ -196,9 +184,9 @@
 
 #_(defn query-eq2-find-all [table-name col-name row-data col-name2 row-data2]
     (catcher/snatch {}
-                    (jdbc/query
-                     (get-ds)
-                     (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))
+      (jdbc/query
+        (get-ds)
+        (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))
 
 #_(defn query-eq2-find-one [table-name col-name row-data col-name2 row-data2]
     (first (query-eq-find-all table-name col-name row-data col-name2 row-data2)))
@@ -226,7 +214,6 @@
   ([msg status] {:status status :body {:message msg}}))
 
 (defn response_bad_request
-
   ([msg]
    {:status 400
     :body {:message (str "Bad Request: " msg)}
@@ -345,99 +332,60 @@
 (defn is-admin [user-id]
   (let [none (->
               (jdbc/execute!
-               (get-ds)
-               (spy (-> (sql/select :*)
-                        (sql/from :admins)
-                        (sql/where [:= :user_id (to-uuid user-id)])
-                        sql-format))
+                (get-ds)
+                (spy (-> (sql/select :*)
+                         (sql/from :admins)
+                         (sql/where [:= :user_id (to-uuid user-id)])
+                         sql-format))
 
                 ;["SELECT * FROM admins WHERE user_id = ? " user-id]
-               )empty?)
+                ) empty?)
         result (not none)]
     ;(logging/info "is-admin: " user-id " : " result)
     (spy result)))
 
 ; end user and other util wrappers
 
-;(ns leihs.my.back.html
-;    (:refer-clojure :exclude [keyword str])
-;    (:require
-;      [hiccup.page :refer [html5]]
-;      [honey.sql :refer [format] :rename {format sql-format}]
-;      [honey.sql.helpers :as sql]
-;      [leihs.core.http-cache-buster2 :as cache-buster]
-;      [leihs.core.json :refer [to-json]]
-;      [leihs.core.remote-navbar.shared :refer [navbar-props]]
-;      [leihs.core.shared :refer [head]]
-;      [leihs.core.url.core :as url]
-;      [leihs.my.authorization :as auth]
-;      [leihs.core.db :as db]
-;      [next.jdbc :as jdbc]))
-
 (comment
-
   (let [table-name :users
         table-name "users"
 
         res (spy (jdbc/execute-one! (get-ds)
-                                    (spy (-> (sql/select :*)
+                   (spy (-> (sql/select :*)
                             ;(sql/from [:raw table-name])
                             ;(sql/from table-name)
                             ;(sql/from [[:inline table-name]])
-                                             (sql/from (keyword table-name))
-                                             sql-format))))
+                            (sql/from (keyword table-name))
+                            sql-format))))
 
         p (println "\nres=" res)]))
 
 ; begin media resources helpers
-(defn- get-media-resource ;;here
+(defn- get-media-resource
   "First checks for collection_id, then for media_entry_id.
    If creating collection-media-entry-arc, the collection permission is checked."
   ([request]
-   (println ">o> get-media-resource[x]")
    (or (get-media-resource request :collection_id "collections" "Collection")
-       (get-media-resource request :media_entry_id "media_entries" "MediaEntry")))
+     (get-media-resource request :media_entry_id "media_entries" "MediaEntry")))
 
   ([request id-key table-name type]
-
-   (println ">o> get-media-resource[request id-key table-name type]")
-
-   (println ">o> !!! sql1 / table-name=" table-name ", id-key=" id-key ", type=" type)
-
    (try
-
-     (let [p (println ">o> table=" table-name)
-           p (println ">o> id-key=" id-key)
-           p (println ">o> id-key.cl=" (class id-key))
-
-           id (-> request :parameters :path id-key)
-           p (println ">o> id=" id)
-           p (println ">o> id.cl=" (class id))
-
-           p (println ">o> id=" (-> request :parameters :path id-key))
-           p (println ">o> id.cl=" (class (-> request :parameters :path id-key)))])
-
      (when-let [id (-> request :parameters :path id-key)]
        ;(logging/info "get-media-resource" "\nid\n" id)
        (when-let [resource (spy (jdbc/execute-one! (get-ds)
-                                                   (spy (-> (sql/select :*)
-                                                            (sql/from (keyword table-name))
-                                                            (sql/where [:= :id (to-uuid id)])
-                                                            sql-format))))]
+                                  (spy (-> (sql/select :*)
+                                           (sql/from (keyword table-name))
+                                           (sql/where [:= :id (to-uuid id)])
+                                           sql-format))))]
          (spy (assoc resource :type type :table-name table-name))))
 
      (catch Exception e
        (logging/error "ERROR: get-media-resource: " (ex-data e))
        (merge (ex-data e)
-              {:statuc 406, :body {:message (.getMessage e)}})))))
+         {:statuc 406, :body {:message (.getMessage e)}})))))
 
-(defn- ring-add-media-resource [request handler] ;;here
-
-  (let [media-resource (get-media-resource request)
-        p (println ">o> media-resource=" media-resource)])
-
+(defn- ring-add-media-resource [request handler]            ;;here
   (if-let [media-resource (get-media-resource request)]
-
     (let [request-with-media-resource (assoc request :media-resource media-resource)]
       ;(logging/info "ring-add-media-resource" "\nmedia-resource\n" media-resource)
       (handler request-with-media-resource))
@@ -451,29 +399,24 @@
   (let [id (-> request :parameters :path :meta_datum_id)]
     #_(logging/info "query-meta-datum" "\nid\n" id)
     (or
+      (jdbc/execute-one! (get-ds)
+        (-> (sql/select :*)
+            (sql/from :meta_data)
+            (sql/where [:= :id (to-uuid id)])
+            sql-format))
 
-      ;(-> (jdbc/query (get-ds)
-      ;                  [(str "SELECT * FROM meta_data "
-      ;                        "WHERE id = ? ") id])
-      ;first)
-     (jdbc/execute-one! (get-ds)
-                        (-> (sql/select :*)
-                            (sql/from :meta_data)
-                            (sql/where [:= :id (to-uuid id)])
-                            sql-format))
-
-     (throw (IllegalStateException. (str "We expected to find a MetaDatum for "
-                                         id " but did not."))))))
+      (throw (IllegalStateException. (str "We expected to find a MetaDatum for "
+                                          id " but did not."))))))
 
 (defn- query-media-resource-for-meta-datum [meta-datum]
   (or (when-let [id (:media_entry_id meta-datum)]
         (get-media-resource {:parameters {:path {:media_entry_id id}}}
-                            :media_entry_id "media_entries" "MediaEntry"))
-      (when-let [id (:collection_id meta-datum)]
-        (get-media-resource {:parameters {:path {:collection_id id}}}
-                            :collection_id "collections" "Collection"))
-      (throw (IllegalStateException. (str "Getting the resource for "
-                                          meta-datum "
+          :media_entry_id "media_entries" "MediaEntry"))
+    (when-let [id (:collection_id meta-datum)]
+      (get-media-resource {:parameters {:path {:collection_id id}}}
+        :collection_id "collections" "Collection"))
+    (throw (IllegalStateException. (str "Getting the resource for "
+                                        meta-datum "
                                           is not implemented yet.")))))
 
 (defn- ring-add-meta-datum-with-media-resource [request handler]
@@ -499,17 +442,6 @@
   ;              "\nauth entity:\n" (-> request :authenticated-entity)
   ;              "\nis-admin:\n" (-> request :is_admin)
   ;              )
-
-  (println "======================================================")
-  (println "auth-request-for-mr"
-           "\nhandler: " handler
-           "\nscope: " scope
-           "\nauth entity:\n" (-> request :authenticated-entity)
-           "\nis-admin:\n" (-> request :is_admin)
-           "\nmedia-resource:\n" (:media-resource request)
-           "\n(public? media-resource):\n" (public? (:media-resource request))
-           "\nrequest:\n" request)
-  (println "======================================================")
   (if-let [media-resource (:media-resource request)]
 
     (if (and (= scope :view) (public? media-resource))
@@ -550,14 +482,14 @@
   ;((assoc-in request [:query-params2] (-> request :parameters :query))
   (handler (assoc request :query-params
                   (->> request :query-params
-                       (map (fn [[k v]] [k (try-as-json v)]))
-                       (into {})))))
+                    (map (fn [[k v]] [k (try-as-json v)]))
+                    (into {})))))
 
 ; end json query param helpers
 
 ; begin wrappers
 
-(defn ring-wrap-add-media-resource [handler] ;;here
+(defn ring-wrap-add-media-resource [handler]
   (fn [request]
     (ring-add-media-resource request handler)))
 
@@ -597,19 +529,7 @@
 (defn wrap-check-valid-meta-key-new [param]
   (fn [handler]
     (fn [request]
-
-      (let [meta-key-id (-> request :path-params param)
-            p (println ">o> abc1.request" request)
-            p (println ">o> abc1.:path-params" (-> request :path-params))
-            p (println ">o> abc1.:parameters" (-> request :parameters))
-            p (println ">o> abc2.:query" (-> request :query))
-
-            p (println ">o> wrap-check-valid-meta-key" meta-key-id)
-            p (println ">o> wrap-check-valid-meta-key.class" (class meta-key-id))
-
-            check (re-find #"^[a-z0-9\-\_\:]+:[a-z0-9\-\_\:]+$" meta-key-id)
-            p (println ">o> check" check)]
-
+      (let [meta-key-id (-> request :path-params param)]
         (if (:and (not (nil? meta-key-id)) (re-find #"^[a-z0-9\-\_\:]+:[a-z0-9\-\_\:]+$" meta-key-id))
           (handler request)
           (response_failed (str "Wrong meta_key_id format! See documentation."

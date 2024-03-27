@@ -2,16 +2,12 @@
   (:require
    [cheshire.core :as json]
    [honey.sql :refer [format] :rename {format sql-format}]
-   ;[clojure.java.jdbc :as jdbc]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
 
    [logbug.debug :as debug]
 
-   ;[leihs.core.db :as db]
-   ;[madek.api.utils.rdbms :refer [get-ds]]
    [madek.api.db.core :refer [get-ds]]
-   ;[madek.api.db.core :refer [get-ds]]
    [madek.api.resources.keywords.keyword :as kw]
 
    [madek.api.resources.shared :as sd]
@@ -172,28 +168,12 @@
           (sd/response_failed "Could not create keyword" 406))))
     (catch Exception ex (sd/response_exception ex))))
 
-;(ns leihs.my.back.html
-;    (:refer-clojure :exclude [keyword str])
-;    (:require
-;      [hiccup.page :refer [html5]]
-;      [honey.sql :refer [format] :rename {format sql-format}]
-;      [honey.sql.helpers :as sql]
-;      [leihs.core.http-cache-buster2 :as cache-buster]
-;      [leihs.core.json :refer [to-json]]
-;      [leihs.core.remote-navbar.shared :refer [navbar-props]]
-;      [leihs.core.shared :refer [head]]
-;      [leihs.core.url.core :as url]
-;      [leihs.my.authorization :as auth]
-;      [leihs.core.db :as db]
-;      [next.jdbc :as jdbc]))
-
 (defn urls-to-custom-format [urls]
   (let [transformed-urls urls
         combined-str (str "'{" (clojure.string/join "," transformed-urls) "}'")]
     [:raw combined-str]))
 
 (comment
-
   (let [uris ["http://www.ige.ch", "http://www.example.com"]
         ;uris ["http://www.examp2le.com"]
 
@@ -204,7 +184,6 @@
               ;:external_uris [:raw "'{test/me/now/78,test/me/now/99}'"]    ;;works
               :external_uris (urls-to-custom-format uris) ;;works
               }
-
         sql-query (-> (sql/insert-into :keywords)
                       (sql/values [dwid])
                       (sql/returning :*)
@@ -215,7 +194,6 @@
         p (println ">o> ins-result" ins-result)
 
         res (adm-export-keyword ins-result)]
-
     res))
 
 (defn handle_update-keyword [req]
@@ -223,11 +201,6 @@
     (catcher/with-logging {}
       (let [id (-> req :parameters :path :id)
             data (-> req :parameters :body)
-            ;; FIXME
-            ;upd-res (jdbc/update!
-            ;          (get-ds) :keywords data
-            ;          (sd/sql-update-clause "id" id))]
-
             sql-query (-> (sql/update :keywords)
                           (sql/set (convert-map data))
                           (sql/where [:= :id id])
@@ -247,11 +220,6 @@
     (catcher/with-logging {}
       (let [id (-> req :parameters :path :id)
             old-data (-> req :keyword)
-
-            ;del-res (jdbc/delete!
-            ;          (get-ds) :keywords
-            ;          (sd/sql-update-clause "id" id))]
-
             sql-query (-> (sql/delete-from :keywords)
                           (sql/where [:= :id id])
                           sql-format)
@@ -284,10 +252,6 @@
      {:summary (sd/sum_pub (d (t "Query / list keywords.")))
       :handler handle_usr-query-keywords
       :coercion reitit.coercion.schema/coercion
-      ;:parameters {:query schema_query_keyword}
-
-      ;:parameters {:query ItemQueryParams}
-
       :parameters {:query ItemQueryParams}
 
       :swagger {:parameters [{:name "page1"
@@ -390,9 +354,6 @@
       :parameters {:path {:id s/Uuid}}
       :responses {200 {:body schema_export_keyword_adm}
                   404 {:body s/Any}
-                  ;414 {:body {
-                  ;            :message "No such entity in :keywords as :id with dda7c0b5-73e8-4f6d-bbaf-776bf0077389"
-                  ;            }}
                   406 {:body s/Any}}}}]])
 
 ;### Debug ####################################################################

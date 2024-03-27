@@ -25,15 +25,8 @@
 
 (defn handle_list-delegations_users
   [req]
-  (let [;full-data (true? (-> req :parameters :query :full-data))
-
-        delegation_id (-> req :parameters :query :delegation_id)
+  (let [        delegation_id (-> req :parameters :query :delegation_id)
         user_id (-> req :parameters :query :user_id)
-
-        full_data (-> req :parameters :query :full-data)
-        p (println ">o> full=" full_data)
-        p (println ">o> full.class=" (class full_data))
-
         col-sel (if (true? (-> req :parameters :query :full-data))
                   (sql/select :*)
                   (sql/select :user_id))
@@ -76,9 +69,8 @@
                       (sql/values [data])
                       (sql/returning :*)
                       sql-format)
-
         ins-res (jdbc/execute-one! (get-ds) sql-query)]
-    ;(if-let [ins-res (first (jdbc/execute! (get-ds) sql-query))]
+
     (if ins-res
       (sd/response_ok ins-res)
       (sd/response_failed "Could not create delegations_user." 406))))
@@ -93,10 +85,8 @@
                       (sql/where [:= :user_id user-id] [:= :delegation_id delegation-id])
                       (sql/returning :*)
                       sql-format)
-
         res (jdbc/execute-one! (get-ds) sql-query)]
 
-;(if (= 1 (first (jdbc/execute! (get-ds) sql-query)))
     (if res
       (sd/response_ok delegations_user)
       (logging/error "Failed delete delegations_user "
@@ -153,7 +143,7 @@
   ["/delegation/users"
    {:swagger {:tags ["delegation/users"]}}
    {:get
-    {:summary (sd/sum_adm "Query delegation users.????1")
+    {:summary (sd/sum_adm "Query delegation users.")
      :handler handle_list-delegations_users-by-user
      :swagger {:produces "application/json"}
      :coercion reitit.coercion.schema/coercion
@@ -166,7 +156,7 @@
   ["/delegation/:delegation_id/user"
    {:swagger {:tags ["delegation/users"]}}
    ["/"
-    {:post {:summary (sd/sum_cnv "Create delegations_user for authed user and media-entry.???")
+    {:post {:summary (sd/sum_cnv "Create delegations_user for authed user and media-entry.")
             :handler handle_create-delegations_user
             :middleware [(wwrap-find-delegation :delegation_id)
                          (wwrap-find-delegations_user-by-auth false)]
@@ -200,18 +190,14 @@
 (def admin-routes
   [["/delegation/users"
     {:swagger {:tags ["admin/delegation/users"] :security [{"auth" []}]}}
-
     ["/"
-
-     {:get
+   {:get
       {:summary (sd/sum_adm (t "Query delegations_users."))
        :handler handle_list-delegations_users
        :coercion reitit.coercion.schema/coercion
        :parameters {:query {(s/optional-key :user_id) s/Uuid
                             (s/optional-key :delegation_id) s/Uuid
                             (s/optional-key :full-data) s/Bool}}}}]
-
-    ;["/delegation/users/:delegation_id/:user_id"
     ["/:delegation_id/:user_id"
      {:post
       {:summary (sd/sum_adm (t "Create delegations_user for user and delegation."))

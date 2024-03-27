@@ -8,9 +8,6 @@
    [honey.sql.helpers :as sql]
 
    [logbug.catcher :as catcher]
-
-   [logbug.debug :as debug]
-
    [madek.api.db.core :refer [get-ds]]
 
    [madek.api.pagination :as pagination]
@@ -69,8 +66,8 @@
   [req]
   (let [req-query (-> req :parameters :query)
         db-query (-> (sql/select :id :context_id :meta_key_id
-                                 :is_required :position :length_min :length_max
-                                 :labels :hints :descriptions :documentation_urls)
+                       :is_required :position :length_min :length_max
+                       :labels :hints :descriptions :documentation_urls)
                      (sql/from :context_keys)
                      (sd/build-query-param req-query :id)
                      (sd/build-query-param req-query :context_id)
@@ -95,17 +92,6 @@
         result (dissoc context_key :admin_comment :updated_at :created_at)]
     ;(logging/info "handle_usr-get-context_key" "\nbefore\n" context_key "\nresult\n" result)
     (sd/response_ok result)))
-
-;(defn cast-to-hstore [data]
-;  (let [keys [:labels :descriptions :hints :documentation_urls]]
-;    (reduce (fn [acc key]
-;              (if (contains? acc key)
-;                (let [field-value (get acc key)
-;                      transformed-value (to-hstore field-value)] ; Assume to-hstore is defined elsewhere
-;                  (assoc acc key transformed-value))
-;                acc))
-;      data
-;      keys)))
 
 (comment
 
@@ -151,11 +137,8 @@
                                       hstore-val (when val
                                                    (str [:cast
                                                          (clojure.string/join ", "
-                                                           ;(map (fn [[k v]] (str k " => \"" v "\""))
-
-                                                                              (map (fn [[k v]] (str (name k) " => \"" v "\""))
-                                                             ;(map (fn [[k v]] (str (name k) " => '" v "'"))
-                                                                                   val))
+                                                           (map (fn [[k v]] (str (name k) " => \"" v "\""))
+                                                             val))
                                                          :hstore]))]
                                   (assoc data key hstore-val))
                                 data))]
@@ -193,7 +176,7 @@
         data {:meta_key_id "vid:vid_schwerpunkt" :term "sed-dev3" :external_uris [:raw "'{http://geonames.org/countries/DZ/}'"]}
 
         query (-> (sql/insert-into :keywords)
-                      ;(sql/values [(cast-to-hstore data)])
+                  ;(sql/values [(cast-to-hstore data)])
                   (sql/values [data])
                   (sql/returning :*)
                   sql-format
@@ -207,11 +190,7 @@
   [req]
   (try
     (catcher/with-logging {}
-
-      ;(let [data (-> req :parameters :body)
-      ;      ins-res (jdbc/insert! (get-ds) :context_keys data)]
-
-      (let [data (spy (-> req :parameters :body))
+      (let [data (-> req :parameters :body)
             sql (-> (sql/insert-into :context_keys)
                     (sql/values [(spy (cast-to-hstore data))])
                     (sql/returning :*)
@@ -219,9 +198,6 @@
                     spy)
             ins-res (jdbc/execute-one! (get-ds) sql)]
 
-        (sd/logwrite req (str "handle_create-context_keys: " "\new-data:\n" data "\nresult:\n" (spy ins-res)))
-
-        ;(if-let [result (first ins-res)]
         (if-let [result ins-res]
           (sd/response_ok (context_key_transform_ml result))
           (sd/response_failed "Could not create context_key." 406))))
@@ -231,34 +207,20 @@
   [req]
   (try
     (catcher/with-logging {}
-      ;(let [data (-> req :parameters :body)
-      ;      id (-> req :parameters :path :id)
-      ;      dwid (assoc data :id id)
-      ;      upd-query (sd/sql-update-clause "id" (str id))
-      ;      upd-result (jdbc/update! (get-ds) :context_keys dwid upd-query)]
-
       (let [data (-> req :parameters :body)
             id (-> req :parameters :path :id)
             id (to-uuid id)
             dwid (spy (assoc data :id id))
-            ;upd-query (spy (sd/sql-update-clause "id" (str id)))
-            ;upd-query (spy (sd/sql-update-clause "id" (to-uuid id))) ;TODO: revise this
 
-            ;; FIXME: this is not working
             fir (-> (sql/update :context_keys)
-                    ;(sql/set dwid)
                     (sql/set (cast-to-hstore dwid))
-                    ;(sql/where [:raw upd-query])
                     (sql/where [:= :id id])
                     sql-format)
-            p (println ">o> !!!!!!!!!!! sql-fir" fir)
-
             upd-result (jdbc/execute-one! (get-ds) (spy fir))
-            p (println ">o> res=" upd-result)]
+            ]
 
         (sd/logwrite req (str "handle_update-context_keys: " id "\nnew-data\n" dwid "\nupd-result: " upd-result))
 
-        ;(if (= 1 (first upd-result))
         (if (= 1 (::jdbc/update-count upd-result))
           (sd/response_ok (context_key_transform_ml (sd/query-eq-find-one :context_keys :id id)))
           (sd/response_failed "Could not update context_key." 406))))
@@ -268,22 +230,15 @@
   [req]
   (try
     (catcher/with-logging {}
-      ;(let [context_key (-> req :context_key)
-      ;      id (-> req :context_key :id)
-      ;      del-query (sd/sql-update-clause "id" id)
-      ;      del-result (jdbc/delete! (rdbms/get-ds) :context_keys del-query)]
-
       (let [context_key (-> req :context_key)
             id (-> req :context_key :id)
             sql (-> (sql/delete-from :context_keys)
                     (sql/where [:= :id id])
-                    sql-format
-                    spy)
-            del-result (spy (jdbc/execute-one! (get-ds) sql))]
+                    sql-format)
+            del-result (jdbc/execute-one! (get-ds) sql)]
 
-        (println ">o> HERE ???? " del-result)
         (sd/logwrite req (str "handle_delete-context_key: " id " result: " del-result))
-        (if (= 1 (spy (::jdbc/update-count del-result)))
+        (if (= 1 (::jdbc/update-count del-result))
           (sd/response_ok (context_key_transform_ml context_key))
           (logging/error "Could not delete context_key: " id))))
     (catch Exception ex (sd/response_exception ex))))
@@ -291,9 +246,9 @@
 (defn wwrap-find-context_key [param colname send404]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler
-                                    param
-                                    :context_keys colname
-                                    :context_key send404))))
+                    param
+                    :context_keys colname
+                    :context_key send404))))
 
 (def schema_import_context_keys
   {;:id s/Str
@@ -379,7 +334,6 @@
      ; context_key list / query
      :get
      {:summary (sd/sum_adm (t "Query context_keys."))
-      ;:swagger {:security [{"auth" []}]}
       :handler handle_adm-list-context_keys
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
@@ -398,7 +352,6 @@
    ["/:id"
     {:get
      {:summary (sd/sum_adm (t "Get context_key by id."))
-      ;:swagger {:security [{"auth" []}]}
       :handler handle_adm-get-context_key
       :middleware [wrap-authorize-admin!
                    (wwrap-find-context_key :id :id true)]
@@ -410,7 +363,6 @@
 
      :put
      {:summary (sd/sum_adm (t "Update context_keys with id."))
-      ;:swagger {:security [{"auth" []}]}
       :handler handle_update-context_keys
       :middleware [wrap-authorize-admin!
                    (wwrap-find-context_key :id :id true)]
@@ -423,7 +375,6 @@
 
      :delete
      {:summary (sd/sum_adm_todo (t "Delete context_key by id."))
-      ;:swagger {:security [{"auth" []}]}
       :coercion reitit.coercion.schema/coercion
       :handler handle_delete-context_key
       :middleware [wrap-authorize-admin!
@@ -442,7 +393,7 @@
      {:summary (sd/sum_pub (t "Query / List context_keys."))
       :handler handle_usr-list-context_keys
       :coercion reitit.coercion.schema/coercion
-      :parameters {:query {(spy (s/optional-key :id)) s/Uuid
+      :parameters {:query {(s/optional-key :id) s/Uuid
                            (s/optional-key :context_id) s/Str
                            (s/optional-key :meta_key_id) s/Str
                            (s/optional-key :is_required) s/Bool}}

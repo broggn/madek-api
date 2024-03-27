@@ -48,17 +48,9 @@
   "Updates app_settings and returns true if that happened and
   false otherwise"
   [data ds]
-
   (let [data (convert-map-if-exist (cast-to-hstore data))
-
-        ;p (println ">o> data=" data)
-        p (println ">o> data.edit_meta..=" (:edit_meta_data_power_users_group_id data))
-
         res (-> (sql/update :app_settings)
-
-                ;(sql/set (-> data convert-sequential-values-to-sql-arrays))
                 (sql/set data)
-
                 (sql-format :inline false)
                 (->> (jdbc/execute-one! ds))
                 :next.jdbc/update-count

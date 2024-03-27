@@ -1,24 +1,16 @@
 (ns madek.api.resources.usage-terms
   (:require
-
-   ;[clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
    ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [madek.api.db.core :refer [get-ds]]
-
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist f replace-java-hashmaps t v]]
-
-   ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
-
-;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
    [reitit.coercion.schema]
-
    [schema.core :as s]))
 
 (defn handle_list-usage_term
@@ -65,12 +57,7 @@
                           (sql/where [:= :id id])
                           (sql/returning :*)
                           sql-format)
-
-            p (println ">o> sql-query" sql-query)
-
-            upd-result (jdbc/execute-one! (get-ds) sql-query)
-
-            p (println ">o> upd-result" upd-result)]
+            upd-result (jdbc/execute-one! (get-ds) sql-query)]
 
         (logging/info "handle_update-usage_terms: " "\nid\n" id "\ndwid\n" dwid "\nupd-result:" upd-result)
 

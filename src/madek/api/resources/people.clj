@@ -1,6 +1,5 @@
 (ns madek.api.resources.people
   (:require [clj-uuid]
-            ;[clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as log]
             ;; all needed imports
             [honey.sql :refer [format] :rename {format sql-format}]
@@ -9,12 +8,8 @@
             [madek.api.db.core :refer [get-ds]]
             [madek.api.pagination :as pagination]
             [madek.api.resources.shared :as sd]
-
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-                        ;[leihs.core.db :as db]
             [next.jdbc :as jdbc]
-                        ;[madek.api.utils.rdbms :as rdbms]
-            ;[madek.api.utils.sql :as sql]
             [next.jdbc :as njdbc]
 
             reitit.coercion.schema
@@ -94,14 +89,9 @@
 
 (defn handle_query-people
   [request]
-  (let [p (println ">o> handle_query-people")
-
-        query-params (-> request :parameters :query)
+  (let [query-params (-> request :parameters :query)
         sql-query (build-index-query query-params)
-
         db-result (jdbc/execute! (get-ds) sql-query)
-        ;db-result (njdbc/execute! (get-ds) sql-query)
-
         result (map transform_export db-result)]
     ;(logging/info "handle_query-people: \n" sql-query)
     (sd/response_ok {:people result})))
@@ -199,9 +189,6 @@
             data_wid (assoc data
                             :id (or (:id data) (clj-uuid/v4))
                             :subtype (-> data :subtype str))
-
-;db-result (jdbc/insert! (get-ds) :people data_wid)]
-
             sql-query (-> (sql/insert-into :people)
                           (sql/values [data_wid])
                           sql-format)
@@ -214,14 +201,7 @@
 
 (defn handle_get-person
   [req]
-  (let [p (println ">o> handle_get-person")
-
-        ;/api/people/%5B%22fake-university.com%22%2C%22https%3A%2F%2Ffake-university.com%2Fstudents%2F12345%22%5D
-        ;/api/people/["fake-university.com","https://fake-university.com/students/12345"]
-
-        id-or-institutinal-person-id (-> req :parameters :path :id str)
-
-        p (println ">o> id-or-institutinal-person-id=" id-or-institutinal-person-id)]
+  (let [        id-or-institutinal-person-id (-> req :parameters :path :id str)]
 
     (if-let [person (db-person-get id-or-institutinal-person-id)]
       (sd/response_ok (transform_export person))
@@ -232,9 +212,6 @@
     (catcher/with-logging {}
       (let [id (-> req :parameters :path :id)]
         (if-let [old-data (db-person-get id)]
-
-          ;(let [del-result (jdbc/delete! (get-ds) :people (jdbc-id-where-clause id))]
-
           (let [sql-query (-> (sql/delete-from :people)
                               (sql/where (jdbc-id-where-clause id))
                               sql-format)
@@ -252,14 +229,11 @@
     (catcher/with-logging {}
       (let [body (get-in req [:parameters :body])
             id (-> req :parameters :path :id)
-
             sql-query (-> (sql/update :people)
                           (sql/set body)
                           (sql/where (jdbc-id-where-clause id))
                           sql-format)
             upd-result (jdbc/execute! (get-ds) sql-query)]
-
-            ;upd-result (jdbc/update! (get-ds) :people body (jdbc-id-where-clause id))]
 
         (if (= 1 (first upd-result))
           (sd/response_ok (transform_export (db-person-get id)))

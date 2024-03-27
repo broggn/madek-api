@@ -1,6 +1,5 @@
 (ns madek.api.resources.delegations
   (:require
-   [clojure.java.jdbc :as jdbco]
    [clojure.tools.logging :as logging]
    ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
@@ -9,12 +8,7 @@
 
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
-   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   ;[madek.api.utils.sql :as sqlo]
-
    [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
-
-;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
 
    [reitit.coercion.schema]
@@ -46,15 +40,6 @@
       (sd/response_ok (first ins-res))
       (sd/response_failed "Could not create delegation." 406))))
 
-;(let [data (-> req :parameters :body)
-;      ; or TODO data with id
-;      ]
-;      ; create delegation entry
-;  (if-let [ins_res (jdbc/insert! (get-ds) :delegations data)]
-;      ; TODO clean result
-;    (sd/response_ok (first ins_res))
-;    (sd/response_failed "Could not create delegation." 406))))
-
 (defn handle_update-delegations
   [req]
   (let [data (-> req :parameters :body)
@@ -80,21 +65,10 @@
         (sd/response_ok new-data))
       (sd/response_failed "Could not update delegation." 406))))
 
-;(if-let [ins-res (jdbc/update! (get-ds) :delegations dwid upd-query)]
-;    ; TODO clean result
-;  ;(if (= 1 ins-res)
-;  (let [new-data (sd/query-eq-find-one :delegations :id id)]
-;    (logging/info "handle_update-delegations:" "\nnew-data\n" new-data)
-;    (sd/response_ok new-data))
-;   ; (sd/response_failed "Could not update delegation." 406)
-;   ; )
-;  (sd/response_failed "Could not update delegation." 406))))
-
 (defn handle_delete-delegation
   [req]
   (try
     (catcher/with-logging {}
-
       (if-let [_ (sd/query-eq-find-one :delegation :id (-> req :delegation :id))]
 
         (let [delegation (-> req :delegation)
@@ -157,7 +131,6 @@
             :parameters {:body schema_import_delegations}
             :responses {200 {:body schema_export_delegations}
                         406 {:body s/Any}}}
-     ; delegation list / query
      :get {:summary (sd/sum_adm (t "List delegations."))
            :handler handle_list-delegations
            :coercion reitit.coercion.schema/coercion

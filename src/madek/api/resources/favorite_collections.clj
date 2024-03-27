@@ -5,22 +5,13 @@
             [logbug.catcher :as catcher]
             [logbug.debug :as debug]
             [madek.api.authorization :as authorization]
-
-            ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
             [madek.api.db.core :refer [get-ds]]
-
             [madek.api.resources.shared :as sd]
-
-;; all needed imports
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
             [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids t f to-uuid merge-query-parts]]
-
-;[leihs.core.db :as db]
             [next.jdbc :as jdbc]
             [reitit.coercion.schema]
-
             [schema.core :as s]
-
             [taoensso.timbre :refer [info warn error spy]]))
 
 (def res-req-name :favorite_collection)
@@ -32,9 +23,7 @@
   (let [col-sel (if (true? (-> req :parameters :query :full_data))
                   :*
                   :user_id)
-        ;db-result (sd/query-find-all :favorite_collections :*)]
         db-result (sd/query-find-all :favorite_collections col-sel)]
-    ;(logging/info "handle_list-favorite_collection" "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
 (defn handle_list-favorite_collection-by-user
@@ -74,7 +63,6 @@
   [req]
   (try
     (catcher/with-logging {}
-
       (let [favorite_collection (-> req res-req-name)
             user-id (:user_id favorite_collection)
             collection-id (res-col-name favorite_collection)
@@ -173,11 +161,8 @@
 ; TODO tests
 (def admin-routes
   [["/favorite/collections"
-
     {:swagger {:tags ["admin/favorite/collections"] :security [{"auth" []}]}}
-
     ["/"
-
      {:get
       {:summary (sd/sum_adm (f (t "List favorite_collection users.") "pagination?"))
        :handler handle_list-favorite_collection

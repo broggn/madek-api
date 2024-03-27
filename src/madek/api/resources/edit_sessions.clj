@@ -9,31 +9,19 @@
    [madek.api.authorization :as authorization]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.pagination :as pagination]
-
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids t f to-uuid merge-query-parts]]
-
-   ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
-
-;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   ;[madek.api.utils.sql :as sqlo]
-
    [reitit.coercion.schema]
 
    [schema.core :as s]
    [taoensso.timbre :refer [info warn error spy]]))
 
 (defn build-query [query-params]
-  (let [p (println ">o> :full_data? val=" (-> query-params :full_data))
-        p (println ">o> :full_data? val.class=" (class (-> query-params :full_data)))
-        p (println ">o> :full_data? true?=" (true? (-> query-params :full_data)))
-        col-sel (if (true? (-> query-params :full_data))
+  (let [        col-sel (if (true? (-> query-params :full_data))
                   (sql/select :*)
-                  (sql/select :id))
-
-        p (println ">o> col-sel?? = " col-sel)]
+                  (sql/select :id))]
     (-> col-sel
         (sql/from :edit_sessions)
         (sd/build-query-param query-params :id)
@@ -41,8 +29,7 @@
         (sd/build-query-param query-params :collection_id)
         (sd/build-query-param query-params :media_entry_id)
         (pagination/add-offset-for-honeysql query-params)
-        sql-format
-        spy)))
+        sql-format)))
 
 (defn handle_adm_list-edit-sessions
   [req]
@@ -54,12 +41,9 @@
 (defn handle_usr_list-edit-sessions
   [req]
   (let [req-query (-> req :parameters :query)
-        ;full_data (true? (-> req :parameters :query :full_data))
         user-id (-> req :authenticated-entity :id)
-        p (println ">o> user-id" user-id)
         usr-query (assoc req-query :user_id user-id)
         db-query (build-query usr-query)
-        p (println ">o> db-query" db-query)
         db-result (jdbc/execute! (get-ds) db-query)]
     ;(logging/info "handle_usr_list-edit-sessions" "\ndb-query\n" db-query "\nresult\n" db-result)
     (sd/response_ok db-result)))
@@ -122,36 +106,14 @@
           (sd/response_failed "Could not create edit session." 406))))
     (catch Exception ex (sd/response_exception ex))))
 
-;(defn handle_adm_delete-edit-sessions
-;  [req]
-;  (try
-;    (catcher/with-logging {}
-;      (let [id (-> req :parameters :path :id)]
-;        (if-let [del-data (sd/query-eq-find-one :edit_sessions :id id)]
-;          (let [del-clause (sd/sql-update-clause "id" id)
-;                sql-query (-> (sql/delete-from :edit_sessions) (sql/where [:= :id id]) sql-format)]
-;            (sd/logwrite req (str "handle_adm_delete-edit-sessions:" "\ndelete data: " del-data "\nresult: " del-result))
-;
-;            (if-let [del-result (first (jdbc/execute! (get-ds) sql-query))]
-;              (if (= 1 del-result)
-;                (sd/response_ok del-data)
-;                (sd/response_failed (str "Failed delete edit_session: " id) 406)))
-;            (sd/response_failed (str "No such edit_session : " id) 404))))
-;      (catch Exception ex (sd/response_exception ex)))))
-
 (defn handle_adm_delete-edit-sessions
   [req]
   (try
     (catcher/with-logging {}
       (let [id (-> req :parameters :path :id)]
         (if-let [del-data (sd/query-eq-find-one :edit_sessions :id id)]
-
-          ;(let [del-clause (sd/sql-update-clause "id" id)
-          ;      del-result (jdbc/delete! (rdbms/get-ds) :edit_sessions del-clause)]
-
           (let [;del-clause (sd/sql-update-clause "id" id)
                 sql-query (-> (sql/delete-from :edit_sessions)
-                              ;(sql/where [:= :id (to-uuid id)])
                               (sql/where [:= :id id])
                               (sql/returning :*)
                               sql-format)
@@ -159,7 +121,6 @@
 
             (sd/logwrite req (str "handle_adm_delete-edit-sessions:" "\ndelete data: " del-data "\nresult: " del-result))
 
-            ;(if (= 1 (first del-result))
             (if del-result
               (sd/response_ok del-result)
               (sd/response_failed (str "Failed delete edit_session: " id) 406)))

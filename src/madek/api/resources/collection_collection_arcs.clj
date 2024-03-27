@@ -1,20 +1,12 @@
 (ns madek.api.resources.collection-collection-arcs
   (:require
-
-   ;[clojure.java.jdbc :as jdbco]
    ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
-
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [madek.api.db.core :refer [get-ds]]
-
    [madek.api.pagination :as pagination]
-
    [madek.api.resources.shared :as sd]
-   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   ;[madek.api.utils.sql :as sqlo]
-   ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]))
@@ -62,47 +54,27 @@
 (defn handle_create-col-col-arc [req]
   (try
     (catcher/with-logging {}
-
-      ;(let [parent-id (-> req :parameters :path :parent_id)
-      ;      child-id (-> req :parameters :path :child_id)
-      ;
-      ;      data (-> req :parameters :body)
-      ;      ins-data (assoc data :parent_id parent-id :child_id child-id)]
-      ;
-      ;  (if-let [ins-res (jdbc/insert! (get-ds) :collection_collection_arcs ins-data)]
-
       (let [parent-id (-> req :parameters :path :parent_id)
             child-id (-> req :parameters :path :child_id)
             data (-> req :parameters :body)
             ins-data (assoc data :parent_id parent-id :child_id child-id)
             sql-map {:insert-into :collection_collection_arcs
                      :values [ins-data]}
-
             sql (-> sql-map sql-format)]
         (if-let [ins-res (next.jdbc/execute! (get-ds) [sql ins-data])]
-
           (sd/response_ok ins-res)
           (sd/response_failed "Could not create collection-collection-arc" 406))))
     (catch Exception e (sd/response_exception e))))
 
 (defn- sql-cls-update [parent-id child-id]
   (-> (sql/where [:= :parent_id parent-id]
-                 [:= :child_id child-id])
+        [:= :child_id child-id])
       sql-format
       (update-in [0] #(clojure.string/replace % "WHERE" ""))))
 
 (defn handle_update-arc [req]
   (try
     (catcher/with-logging {}
-
-      ;(let [parent-id (-> req :parameters :path :parent_id)
-      ;      child-id (-> req :parameters :path :child_id)
-      ;      data (-> req :parameters :body)
-      ;      whcl (sql-cls-update parent-id child-id)
-      ;      result (jdbc/update! (get-ds)
-      ;                           :collection_collection_arcs
-      ;                           data whcl)]
-
       (let [parent-id (-> req :parameters :path :parent_id)
             child-id (-> req :parameters :path :child_id)
             data (-> req :parameters :body)
@@ -115,31 +87,21 @@
 
         (if (= 1 (first result))
           (sd/response_ok (sd/query-eq-find-one
-                           :collection_collection_arcs
-                           :parent_id parent-id
-                           :child_id child-id))
+                            :collection_collection_arcs
+                            :parent_id parent-id
+                            :child_id child-id))
           (sd/response_failed "Could not update collection collection arc." 406))))
     (catch Exception e (sd/response_exception e))))
 
 (defn handle_delete-arc [req]
   (try
     (catcher/with-logging {}
-
-      ;(let [parent-id (-> req :parameters :path :parent_id)
-      ;      child-id (-> req :parameters :path :child_id)
-      ;      olddata (sd/query-eq-find-one
-      ;               :collection_collection_arcs
-      ;               :parent_id parent-id
-      ;               :child_id child-id)
-      ;      delquery (sql-cls-update parent-id child-id)
-      ;      delresult (jdbc/delete! (get-ds) :collection_collection_arcs delquery)]
-
       (let [parent-id (-> req :parameters :path :parent_id)
             child-id (-> req :parameters :path :child_id)
             olddata (sd/query-eq-find-one
-                     :collection_collection_arcs
-                     :parent_id parent-id
-                     :child_id child-id)
+                      :collection_collection_arcs
+                      :parent_id parent-id
+                      :child_id child-id)
             sql-map {:delete :collection_collection_arcs
                      :where [:= :parent_id parent-id
                              := :child_id child-id]}
@@ -193,9 +155,9 @@
                            (s/optional-key :parent_id) s/Uuid
                            (s/optional-key :page) s/Int
                            (s/optional-key :count) s/Int}}
-      :responses {200 {:body s/Any}} ; TODO response coercion
+      :responses {200 {:body s/Any}}                        ; TODO response coercion
       }}]
-; TODO rename param to collection_id
+   ; TODO rename param to collection_id
    ; TODO add permission checks
    ["/:id"
     {:get
@@ -205,7 +167,7 @@
       :coercion reitit.coercion.schema/coercion
       :parameters {:path {:id s/Str}}
       :responses {200 {:body s/Any}
-                  404 {:body s/Any}} ; TODO response coercion
+                  404 {:body s/Any}}                        ; TODO response coercion
       }}]])
 ; TODO rename param use middleware for permissions
 (def collection-routes
@@ -242,7 +204,7 @@
       :parameters {:path {:parent_id s/Uuid
                           :child_id s/Uuid}}
       :responses {200 {:body s/Any}
-                  404 {:body s/Any}} ; TODO response coercion
+                  404 {:body s/Any}}                        ; TODO response coercion
       }
 
      ; TODO col col arc update tests

@@ -2,11 +2,8 @@
   (:require
    [clojure.tools.logging :as logging]
    [logbug.debug :as debug]
-
    [madek.api.resources.roles.role :as role]
-
    [madek.api.resources.shared :as sd]
-
    [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist f replace-java-hashmaps t v]]
    [madek.api.utils.validation :refer [positive-number-1-to-1000-validation positive-number-0-to-100-validation positive-number-1-to-100-validation email-validation positive-number-with-max-100-validation positive-number-with-max-validation json-and-json-str-validation json-and-json-str-validation vector-or-hashmap-validation]]
    [reitit.coercion.schema]
@@ -74,9 +71,6 @@
                :description "Get list of roles."
                :handler role/get-index
                :swagger {:produces "application/json"}
-
-               ;:parameters {:query {(s/required-key :page) positive-number-with-max-100-validation
-               ;                     (s/required-key :count) positive-number-with-max-100-validation}}
 
                ;; TODO: use swagger-definition with preset values & infos
                ;; Main problem: no validation within swagger-ui, no additional infos

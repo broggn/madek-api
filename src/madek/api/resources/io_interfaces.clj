@@ -1,23 +1,15 @@
 (ns madek.api.resources.io-interfaces
   (:require
-   ;[clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
             ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-   [logbug.debug :as debug]
-
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-
    [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
-
-;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
-
-                ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
    [reitit.coercion.schema]
    [schema.core :as s]
 
@@ -27,10 +19,7 @@
 
 (defn handle_list-io_interface
   [req]
-  (let [p (println ">o> ??? handle_list-io_interface")
-        p (println ">o> quer" (-> req :parameters :query))
-        full_data (true? (-> req :parameters :query :full_data))
-        p (println ">o> full_data" full_data)
+  (let [        full_data (true? (-> req :parameters :query :full_data))
         qd (if (true? full_data) :* :io_interfaces.id)
         db-result (sd/query-find-all :io_interfaces qd)]
 
@@ -39,9 +28,7 @@
 
 (defn handle_get-io_interface
   [req]
-  (let [io_interface (-> req :io_interface)
-
-        p (println ">o> io_interface" io_interface)]
+  (let [io_interface (-> req :io_interface)]
     ;(logging/info "handle_get-io_interface" io_interface)
     (sd/response_ok io_interface)))
 
@@ -49,8 +36,7 @@
   [req]
   (try
     (catcher/with-logging {}
-      (let [p (println ">o> ???1 handle_create-io_interfaces")
-            data (-> req :parameters :body)
+      (let [data (-> req :parameters :body)
             sql-query (-> (sql/insert-into :io_interfaces)
                           (sql/values [data])
                           (sql/returning :*)
@@ -71,12 +57,6 @@
       (let [data (-> req :parameters :body)
             id (-> req :parameters :path :id)
             dwid (assoc data :id id)
-        ;old-data (-> req :io_interface)
-        ;    upd-query (sd/sql-update-clause "id" (str id))
-        ;    upd-result (jdbc/update! (get-ds)
-        ;                             :io_interfaces
-        ;                             dwid upd-query)]
-
             sql-query (-> (sql/update :io_interfaces)
                           (sql/set dwid)
                           (sql/where [:= :id id])
@@ -92,15 +72,10 @@
 
 (defn handle_delete-io_interface
   [req]
-  (println ">o> ??? wrap-find-io_interface")
   (try
     (catcher/with-logging {}
       (let [io_interface (-> req :io_interface)
             id (-> req :parameters :path :id)
-
-            ;del-result (jdbc/delete! (get-ds)
-            ;                         :io_interfaces
-            ;                         ["id = ?" id])]
             sql-query (-> (sql/delete-from :io_interfaces)
                           (sql/where [:= :id id])
                           sql-format
@@ -113,7 +88,6 @@
     (catch Exception e (sd/response_exception e))))
 
 (defn wrap-find-io_interface [handler]
-  (println ">o> ??? wrap-find-io_interface")
   (fn [request] (sd/req-find-data request handler :id
                                   :io_interfaces
                                   :id :io_interface true)))

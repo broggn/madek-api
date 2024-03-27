@@ -7,9 +7,6 @@
 
    ;; all needed imports
    [madek.api.resources.shared :as sd]
-   ;[leihs.core.db :as db]
-   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-
    [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids t f to-uuid merge-query-parts]]
 
    [next.jdbc :as jdbc]
@@ -36,10 +33,7 @@
         query (cond-> base-query
                 delegation_id (sql/where [:= :delegation_id delegation_id])
                 group_id (sql/where [:= :group_id group_id]))
-        db-result (jdbc/execute! (get-ds) (sql-format query))
-
-;db-result (sd/query-find-all :delegations_groups col-sel)
-        ]
+        db-result (jdbc/execute! (get-ds) (sql-format query))        ]
     ;(->> db-result (map :id) set)
     (logging/info "handle_list-delegations_group" "\nresult\n" db-result)
     (sd/response_ok db-result)))
@@ -86,10 +80,8 @@
                       (sql/where [:= :group_id group-id] [:= :delegation_id delegation-id])
                       (sql/returning :*)
                       sql-format)
-
         result (jdbc/execute-one! (get-ds) sql-query)]
 
-;(if (= 1 (first (jdbc/execute! (get-ds) sql-query)))
     (if result
       (sd/response_ok delegations_group)
       (logging/error "Failed delete delegations_group "
@@ -158,7 +150,6 @@
 (def admin-routes
   [["/delegation/groups"
     {:swagger {:tags ["admin/delegation/groups"] :security [{"auth" []}]}}
-
     ["/"
      {:get
       {:summary (sd/sum_adm (t "Query delegations_groups."))

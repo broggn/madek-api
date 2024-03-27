@@ -5,7 +5,6 @@
    [madek.api.resources.media-resources.permissions :as mr-permissions]
 
    [madek.api.resources.shared :as sd]
-
    [madek.api.resources.vocabularies.permissions :as voc-perms]
    [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
    [reitit.coercion.schema]
@@ -360,7 +359,6 @@
 (def media-entry-routes
   ["/media-entry/:media_entry_id/perms"
    {:swagger {:tags ["media-entry/perms"]}}
-
    ["/"
     {:get
      {:summary (sd/sum_usr_pub (t "List media-entry permissions."))
@@ -381,8 +379,6 @@
     ; TODO beware to let not update perm fields in media-entry or collection patch/update
 
    ["/resources"
-    ;{:swagger {:tags ["admin/resources/permission??"] :security [{"auth" []}]}}
-    ;{:swagger {:tags ["media-entry"] :security [{"auth" []}]}}
     {:get
      {:summary "Query media-entry permissions."
       :swagger {:produces "application/json"}
@@ -482,7 +478,6 @@
            :responses {200 {:body schema_export-media-entry-user-permission}}}}]
 
    ["/groups"
-    ;{:swagger {:tags ["admin/delegation/groups2"] :security [{"auth" []}]}}
     {:get
      {:summary "Query media-entry group permissions."
       :swagger {:produces "application/json"}
@@ -495,8 +490,6 @@
       :responses {200 {:body [schema_export-media-entry-group-permission]}}}}]
 
    ["/group/:group_id"
-    ;{:swagger {:tags ["admin/delegation/group"] :security [{"auth" []}]}}
-    ;{:swagger {:tags ["admin/delegation/group"] }}
     {:get {:summary "Get media-entry group permissions."
            :swagger {:produces "application/json"}
            :content-type "application/json"
@@ -549,7 +542,6 @@
 (def collection-routes
   ["/collection/:collection_id/perms"
    {:swagger {:tags ["collection/perms"]}}
-
    ["/"
     {:get
      {:summary (t "Query collection permissions.")
