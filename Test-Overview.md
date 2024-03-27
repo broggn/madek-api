@@ -1,72 +1,51 @@
 
-
-
-Overview spec-tests
+TODO: 18 Files to fix
 --
-- authentication ok
-- rv ok 0tests
-- resource
-  - admin ok
-  - collection ok
-  - media-file ok
-  - media_entries ok
-  - collections ok
-  - meta-data ok
-  - meta-keys ok
-  - preview ok
-  - roles ok
-  - vocabularies ok
-  - people ok
-  - users ok
-  - groups ok  (upsert) ./spec/resources/groups/users/update_spec.rb:42
-  
-    - media-entry 4fail
-  
-  - basic
-    - app-settings ok
-    - context-key ok
-    - keywords ok
-    - media-entry ok
-    - meta-key ok
-    - person ok
-    - role ok
-    - root ok
-- meta ok
-- management ok
+Test-Overview.md
+deps.edn
+src/madek/api/resources/delegations_users.clj
+src/madek/api/resources/edit_sessions.clj
+src/madek/api/resources/media_entries.cl
+src/madek/api/resources/media_entries/advanced_filter/media_files.clj
+src/madek/api/resources/media_entries/advanced_filter/meta_data.clj
+src/madek/api/resources/media_entries/advanced_filter/permissions.clj
+src/madek/api/resources/media_entries/index.cli
+src/madek/api/resources/media_entries/media_entry.cli
+src/madek/api/resources/media_files.cl
+src/madek/api/resources/media_files/authorization.cl
+src/madek/api/resources/media_files/media_file.cli
+src/madek/api/resources/media_resources/permissions.clj
+src/madek/api/resources/meta_data.cl
+src/madek/api/resources/meta_data/index.clj
+src/madek/api/resources/meta_data/meta_datum.clj
+src/madek/api/resources/meta_keys.clj
+src/madek/api/resources/meta_keys/index.clj
+src/madek/api/resources/meta_keys/meta_key.clj
 
 
-Spec-Tests
---
 
-| Scope          | Count of Fails | Prio |
-|----------------|----------------|------|
-| collections    | 5              |      |
-| groups         | 4              |      |
-| media-entry    | 11             |      |
-| media_entries  | 12             |      |
-| users          | 3              |      |
-| meta-data      | 97             |      |
-| meta-keys      | 2              |      |
-| people         | 5              |      |
-| preview        | 2              |      |
-| roles          | 2              |      |
-| vocabularies   | 2              |      |
-| **Total**      | **145**        |      |
-
-
-```bash
-Finished in 6 minutes 19 seconds (files took 1.92 seconds to load)
-749 examples, 129 failures, 17 pending
+Broken tests
+---
+```bash 
+Finished in 6 minutes 35 seconds (files took 1.96 seconds to load)
+804 examples, 127 failures
 
 Failed examples:
 
-rspec ./spec/resources/collections/filter/collection_filter_spec.rb:42 # filtering collections by collection_id combined with other filter option
-rspec ./spec/resources/collections/filter/permissions_filter_spec.rb:45 # filtering collections by me_ permissons me_get_metadata_and_previews for a user 200 for public permissions
-rspec ./spec/resources/collections/filter/permissions_filter_spec.rb:58 # filtering collections by me_ permissons me_get_metadata_and_previews for a user 200 for responsible user
-rspec ./spec/resources/collections/filter/permissions_filter_spec.rb:72 # filtering collections by me_ permissons me_get_metadata_and_previews for a user 200 for user permission
-rspec ./spec/resources/collections/filter/permissions_filter_spec.rb:88 # filtering collections by me_ permissons me_get_metadata_and_previews for a user 200 for group permission
-
-rspec ./spec/resources/media_entries/filter/advanced_filter_spec.rb:48 # advanced filtering of media entries searching a string through all meta data returns 200 with correct result
+rspec ./spec/resources/media-entry/edit_permissions_spec.rb:52 # Getting a media-entry resource with authentication check_allowed_if_responsible_user is allowed 200
+rspec ./spec/resources/media-entry/edit_permissions_spec.rb:106 # Getting a media-entry resource with authentication check_allowed_if_user_permission is allowed 200
+rspec ./spec/resources/media-entry/edit_permissions_spec.rb:133 # Getting a media-entry resource with authentication check_not_allowed_if_updated_user_permission is not allowed 403
+rspec ./spec/resources/media-entry/edit_permissions_spec.rb:160 # Getting a media-entry resource with authentication check_not_allowed_if_deleted_user_permission is not allowed 403
+rspec ./spec/resources/media-entry/edit_permissions_spec.rb:186 # Getting a media-entry resource with authentication check_allowed_if_group_permission is allowed 200
+rspec ./spec/resources/media-entry/edit_permissions_spec.rb:219 # Getting a media-entry resource with authentication check_not_allowed_if_updated_group_permission is not allowed 403
+rspec ./spec/resources/media-entry/edit_permissions_spec.rb:251 # Getting a media-entry resource with authentication check_not_allowed_if_deleted_group_permission is not allowed 403
+rspec ./spec/resources/media-entry/edit_permissions_spec.rb:273 # Getting a media-entry resource with authentication check_download_allowed_if_user_permission download is allowed 200
+rspec ./spec/resources/media-entry/edit_permissions_spec.rb:297 # Getting a media-entry resource with authentication check_edit_permissions_allowed_if_user_permission edit resource perms is allowed 200
+rspec ./spec/resources/media-entry/edit_permissions_spec.rb:304 # Getting a media-entry resource with authentication check_edit_permissions_allowed_if_user_permission edit user perms is allowed 200
+rspec ./spec/resources/media-entry/edit_permissions_spec.rb:311 # Getting a media-entry resource with authentication check_edit_permissions_allowed_if_user_permission edit group perms is allowed 200
+rspec ./spec/resources/media_entries/filter/advanced_filter_spec.rb:18 # advanced filtering of media entries applying a combined filter returns 200 with correct result
+rspec ./spec/resources/media_entries/filter/advanced_filter_spec.rb:41 # advanced filtering of media entries searching a string through all meta data returns 200 with correct result
+rspec ./spec/resources/media_entries/filter/search_in_not_public_meta_data_spec.rb:17 # search for media entries with meta data from not public vocabulary applying a meta data filter returns 200 with empty result
 rspec ./spec/resources/media_entries/index-order-by_spec.rb[1:3:9:1] # ordering media entries created_at madek_core:title ascending order
 rspec ./spec/resources/media_entries/index-order-by_spec.rb[1:3:9:2] # ordering media entries created_at madek_core:title descending order
 rspec ./spec/resources/media_entries/index-order-by_spec.rb:54 # ordering media entries created_at madek_core:title returns 30 media entries for ascending order
@@ -78,7 +57,6 @@ rspec ./spec/resources/media_entries/index-order-by_spec.rb[1:4:4:2:1] # orderin
 rspec ./spec/resources/media_entries/index-order-by_spec.rb[1:4:4:2:2] # ordering media entries ordering media-entries in a particular set ordering by order param madek_core:title descending order
 rspec ./spec/resources/media_entries/index-order-by_spec.rb:331 # ordering media entries ordering media-entries in a particular set ordering by order param stored_in_collection when collection has title ASC sorting ascending order
 rspec ./spec/resources/media_entries/index-order-by_spec.rb:337 # ordering media entries ordering media-entries in a particular set ordering by order param stored_in_collection when collection has title DESC sorting descending order
-
 rspec ./spec/resources/meta-data/by-media-resource/meta-datum-json_spec.rb[1:1:1:1:1:1:1] # generated runs ROUND 1 meta_datum_json_for_random_resource_type authenticated_json_client with creator is authed user the meta-datum resource status 200
 rspec ./spec/resources/meta-data/by-media-resource/meta-datum-json_spec.rb[1:1:1:1:1:1:2] # generated runs ROUND 1 meta_datum_json_for_random_resource_type authenticated_json_client with creator is authed user the meta-datum resource holds the proper json value
 rspec ./spec/resources/meta-data/by-media-resource/meta-datum-json_spec.rb[1:2:1:1:1:1:1] # generated runs ROUND 2 meta_datum_json_for_random_resource_type authenticated_json_client with creator is authed user the meta-datum resource status 200
@@ -175,27 +153,11 @@ rspec ./spec/resources/meta-data/edit/meta-datum-text_spec.rb:93 # generated run
 rspec ./spec/resources/meta-data/edit/meta-datum-text_spec.rb:97 # generated runs ROUND 1 edit meta-data-text for random_resource_type authenticated_json_client with creator is authed user update the meta-datum resource holds the proper value
 rspec ./spec/resources/meta-data/edit/meta-datum-text_spec.rb:112 # generated runs ROUND 1 edit meta-data-text for random_resource_type authenticated_json_client with creator is authed user delete the meta-datum resource status 200
 rspec ./spec/resources/meta-data/edit/meta-datum-text_spec.rb:116 # generated runs ROUND 1 edit meta-data-text for random_resource_type authenticated_json_client with creator is authed user delete the meta-datum resource holds the proper value
-rspec ./spec/resources/meta-data/meta-datum-roles_spec.rb[1:2:1:1:1:1:2:2:1] # generated runs ROUND 2 meta_datum_roles_for_random_resource_type authenticated_json_client with random public view permission the meta-data resource if the response is 200 MetaDatum::Role resource provides valid relations
+rspec ./spec/resources/meta-data/meta-datum-roles_spec.rb[1:1:1:1:1:1:2:2:1] # generated runs ROUND 1 meta_datum_roles_for_random_resource_type authenticated_json_client with random public view permission the meta-data resource if the response is 200 MetaDatum::Role resource provides valid relations
 rspec ./spec/resources/meta-data/meta-datum-roles_spec.rb[1:3:1:1:1:1:2:2:1] # generated runs ROUND 3 meta_datum_roles_for_random_resource_type authenticated_json_client with random public view permission the meta-data resource if the response is 200 MetaDatum::Role resource provides valid relations
-
 rspec ./spec/resources/meta-keys/index_spec.rb:24 # index when user is authenticated when view permission is true returns meta key in collection through the user permissions
 rspec ./spec/resources/meta-keys/index_spec.rb:39 # index when user is authenticated when view permission is true returns meta key in collection through the group permissions
-
-rspec ./spec/resources/people/get_person_spec.rb:46 # people admin user a institunal person (with naughty institutional_id) can be retrieved by the pair [institution, institutional_id]
-
-rspec ./spec/resources/people/index_spec.rb:37 # people admin user get an unfiltered people list as an admin responses with 200
-rspec ./spec/resources/people/index_spec.rb:41 # people admin user get an unfiltered people list as an admin returns the count of requested items
-rspec ./spec/resources/people/index_spec.rb:54 # people admin user filter people by their institution returns excaclty the people with the proper oraganization
-rspec ./spec/resources/people/index_spec.rb:68 # people admin user filter people by their subtype returns excaclty the people with the proper sybtype
-
 rspec ./spec/resources/preview/user_authorization_spec.rb:69 # Getting a preview resource with authentication check_allowed_if_user_permission is allowed 200
 rspec ./spec/resources/preview/user_authorization_spec.rb:84 # Getting a preview resource with authentication check_allowed_if_group_permission is allowed 200
-
-rspec ./spec/resources/users/get_spec.rb:71 # users admin user a user (with a naughty email) can be retrieved by the email_address
-rspec ./spec/resources/users/index_spec.rb:27 # users admin user get users responses with 200
-rspec ./spec/resources/users/index_spec.rb:31 # users admin user get users returns some data but less than created because we paginate
-
-rspec ./spec/resources/vocabularies/index_spec.rb:22 # index when user is authenticated when view permission is true returns vocabulary in collection through the user permissions
-rspec ./spec/resources/vocabularies/index_spec.rb:41 # index when user is authenticated when view permission is true returns vocabulary in collection through the group permissions
 
 ```

@@ -13,12 +13,15 @@
 ;##############################################################################
 
 (defn- query-media-file [media-file-id]
+  (println ">o> query-media-file query-media-file-1")
   (sd/query-eq-find-one :media_files :id media-file-id))
 
 (defn query-media-file-by-media-entry-id [media-entry-id]
+  (println ">o> query-media-file-by-media-entry-id query-media-file-2")
   (sd/query-eq-find-one :media_files :media_entry_id media-entry-id))
 
 (defn query-media-files-by-media-entry-id [media-entry-id]
+  (println ">o> query-media-files-by-media-entry-id query-media-file-3")
   (sd/query-eq-find-all :media_files :media_entry_id media-entry-id))
 
 (defn wrap-find-and-add-media-file

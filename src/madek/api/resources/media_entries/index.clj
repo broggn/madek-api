@@ -3,12 +3,15 @@
   (:require
    [cheshire.core :as json]
    [clojure.core.match :refer [match]]
-   [clojure.java.jdbc :as jdbc]
    [clojure.set :refer [rename-keys]]
    [clojure.string :as str :refer [blank?]]
    [clojure.tools.logging :as logging]
+   ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [logbug.debug :as debug :refer [I> I>> identity-with-logging]]
+   [madek.api.db.core :refer [get-ds]]
    [madek.api.pagination :as pagination]
    [madek.api.resources.media-entries.advanced-filter :as advanced-filter]
    [madek.api.resources.media-entries.advanced-filter.permissions :as permissions :refer [filter-by-query-params]]
@@ -17,8 +20,11 @@
    [madek.api.resources.meta-data.index :as meta-data.index]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.core :refer [str keyword]]
-   [madek.api.utils.rdbms :as rdbms]
-   [madek.api.utils.sql :as sql]))
+
+   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
+         ;[leihs.core.db :as db]
+   [next.jdbc :as jdbc]))
 
 ;### collection_id ############################################################
 
@@ -26,10 +32,10 @@
   (if-not collection_id
     sqlmap
     (-> sqlmap
-        (sql/merge-join [:collection_media_entry_arcs :arcs]
-                        [:= :arcs.media_entry_id :media_entries.id])
-        (sql/merge-where [:= :arcs.collection_id collection_id])
-        (sql/merge-select
+        (sql/join [:collection_media_entry_arcs :arcs]
+                  [:= :arcs.media_entry_id :media_entries.id])
+        (sql/where [:= :arcs.collection_id collection_id])
+        (sql/select
          [:arcs.created_at :arc_created_at]
          [:arcs.order :arc_order]
          [:arcs.position :arc_position]
@@ -54,15 +60,15 @@
         is-pub (:is_published me-query)
         where1 (if (nil? is-pub)
                  sel
-                 (sql/merge-where sel [:= :media_entries.is_published (= true is-pub)]))
+                 (sql/where sel [:= :media_entries.is_published (= true is-pub)]))
         creator-id (:creator_id me-query)
         where2 (if (blank? creator-id) ; or not uuid
                  where1
-                 (sql/merge-where where1 [:= :media_entries.creator_id creator-id]))
+                 (sql/where where1 [:= :media_entries.creator_id creator-id]))
         ru-id (:responsible_user_id me-query)
         where3 (if (blank? ru-id) ; or not uuid
                  where2
-                 (sql/merge-where where2 [:= :media_entries.responsible_user_id ru-id]))
+                 (sql/where where2 [:= :media_entries.responsible_user_id ru-id]))
 
         ; TODO updated/created after
         from (sql/from where3 :media_entries)
@@ -86,7 +92,7 @@
                        [:created_at :desc] [:media-entries.created_at :desc :nulls-last]
                        [:created_at _] [:media-entries.created_at]
                        [:edit_session_updated_at _] [:media_entries.edit_session_updated_at])]
-    (sql/merge-order-by query order-by-arg)))
+    (sql/order-by query order-by-arg)))
 
 (defn- order-by-arc-attribute [query [attribute order]]
   (let [order-by-arg (match [(keyword attribute) (keyword order)]
@@ -96,7 +102,7 @@
                        [:position :desc] [:arcs.position :desc :nulls-last]
                        [:created_at :desc] [:arcs.created_at :desc :nulls-last]
                        [:created_at _] [:arcs.created_at])]
-    (sql/merge-order-by query order-by-arg)))
+    (sql/order-by query order-by-arg)))
 
 (defn- order-by-meta-datum-text [query [meta-key-id order]]
   (let [from-name (-> meta-key-id
@@ -104,15 +110,15 @@
                       clojure.string/lower-case
                       (#(str "meta-data-" %)))]
     (-> query
-        (sql/merge-left-join [:meta_data from-name]
-                             [:= (keyword (str from-name ".meta_key_id")) meta-key-id])
-        (sql/merge-order-by [(-> from-name (str ".string") keyword)
-                             (case (keyword order)
-                               :asc :asc
-                               :desc :desc
-                               :asc)
-                             :nulls-last])
-        (sql/merge-where [:= (keyword (str from-name ".media_entry_id")) :media_entries.id]))))
+        (sql/left-join [:meta_data from-name]
+                       [:= (keyword (str from-name ".meta_key_id")) meta-key-id])
+        (sql/order-by [(-> from-name (str ".string") keyword)
+                       (case (keyword order)
+                         :asc :asc
+                         :desc :desc
+                         :asc)
+                       :nulls-last])
+        (sql/where [:= (keyword (str from-name ".media_entry_id")) :media_entries.id]))))
 
 (defn- order-reducer [query [scope & more]]
   (case scope
@@ -128,7 +134,7 @@
   (let [query {:select [:sorting]
                :from [:collections]
                :where [:= :collections.id collection-id]}]
-    (:sorting (first (jdbc/query (rdbms/get-ds) (-> query sql/format))))))
+    (:sorting (jdbc/execute-one! (get-ds) (-> query sql-format)))))
 
 (defn- handle-missing-collection-id [collection-id code-to-run]
   (if (or (not collection-id) (nil? collection-id))
@@ -176,7 +182,7 @@
                                                   {:status 422})))
           (seq? order) (reduce order-reducer query order)
           :else (default-order query)))
-      (sql/merge-order-by :media_entries.id)))
+      (sql/order-by :media_entries.id)))
 
 ; example queries
 ;{"meta_data": [{"key": "madek_core:title", "match": "Bildshirmfoto"}],
@@ -214,7 +220,7 @@
                                                           authenticated-entity)
                       (advanced-filter/filter-by filter-by)
                       (pagination/add-offset-for-honeysql query-params)
-                      sql/format)]
+                      sql-format)]
 ;    (logging/info "build-query" 
 ;                  "\nquery-params:\n" query-params
 ;                  "\nfilter-by json:\n" filter-by
@@ -222,7 +228,7 @@
     query-res))
 
 (defn- query-index-resources [request]
-  (jdbc/query (rdbms/get-ds) (build-query request)))
+  (jdbc/execute! (get-ds) (build-query request)))
 
 ;### index ####################################################################
 

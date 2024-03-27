@@ -1,6 +1,5 @@
 (ns madek.api.resources.delegations-users
   (:require
-   [clojure.java.jdbc :as jdbco]
    [clojure.tools.logging :as logging]
    ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
@@ -11,7 +10,6 @@
 
    [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids t f to-uuid merge-query-parts]]
    ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   ;[madek.api.utils.sql :as sqlo]
    ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]
 
