@@ -224,7 +224,7 @@
                     (filter-by-collection-id query-params)  ;;ok
                     (permissions/filter-by-query-params query-params ;;ok
                       authenticated-entity)
-                    ;(advanced-filter/filter-by filter-by)
+                    (advanced-filter/filter-by filter-by)
 
                     (pagination/add-offset-for-honeysql query-params) ;;ok
                     sql-format)
