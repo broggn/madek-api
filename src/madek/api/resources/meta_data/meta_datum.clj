@@ -7,6 +7,9 @@
    [logbug.debug :as debug]
    [madek.api.resources.keywords.index :as keywords]
    [madek.api.resources.shared :as sd]
+
+   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
    [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
    [madek.api.utils.sql :as sql]
    [ring.util.response :as ring-response]))
@@ -42,7 +45,7 @@
   (let [query (-> (sql/select :meta_data_roles.*)
                   (sql/from :meta_data_roles)
                   (sql/merge-where
-                   [:= :meta_data_roles.meta_datum_id (:id meta-datum)])
+                   [:= :meta_data_roles.meta_datum_id (:id (to-uuid meta-datum))])
                   (sql/format))]
     (jdbc/query (get-ds) query)))
 

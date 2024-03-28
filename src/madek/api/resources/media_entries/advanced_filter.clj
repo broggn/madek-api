@@ -8,6 +8,9 @@
    [madek.api.resources.media-entries.advanced-filter.permissions :as permissions]))
 
 (defn filter-by [sqlmap filter-map]
+
+   (println ">o> filter-map" filter-map)
+
   (let [query (-> sqlmap
                   (media-files/sql-filter-by (:media_files filter-map))
                   (permissions/sql-filter-by (:permissions filter-map))

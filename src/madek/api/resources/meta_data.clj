@@ -9,6 +9,10 @@
             [madek.api.utils.rdbms :as rdbms]
             [madek.api.utils.sql :as sql]
             [reitit.coercion.schema]
+
+
+            [madek.api.utils.helper :refer [convert-map-if-exist array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
             [reitit.coercion.spec]
             [schema.core :as s]))
 
@@ -71,7 +75,10 @@
 (defn- db-create-meta-data
   ([db meta-data]
    (logging/info "db-create-meta-data: " meta-data)
-   (if-let [result (first (jdbc/insert! db :meta_data meta-data))]
+
+   (println ">o> db-create-meta-data ????" meta-data)
+
+   (if-let [result (first (jdbc/insert! db :meta_data (convert-map-if-exist meta-data)))]
      result
      nil))
 

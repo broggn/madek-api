@@ -157,6 +157,7 @@
       (modify-if-exists :creator_id #(if (contains? m :creator_id) (to-uuid %)))
       (modify-if-exists :person_id #(if (contains? m :person_id) (to-uuid %)))
       (modify-if-exists :user_id #(if (contains? m :user_id) (to-uuid %)))
+      (modify-if-exists :created_by_id #(if (contains? m :created_by_id) (to-uuid %)))
       (modify-if-exists :accepted_usage_terms_id #(if (contains? m :accepted_usage_terms_id) (to-uuid %)))
 
       ;; jsonb / character varying

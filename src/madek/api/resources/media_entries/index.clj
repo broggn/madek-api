@@ -3,12 +3,15 @@
   (:require
    [cheshire.core :as json]
    [clojure.core.match :refer [match]]
-   [clojure.java.jdbc :as jdbc]
    [clojure.set :refer [rename-keys]]
    [clojure.string :as str :refer [blank?]]
    [clojure.tools.logging :as logging]
+   ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [logbug.debug :as debug :refer [I> I>> identity-with-logging]]
+   [madek.api.db.core :refer [get-ds]]
    [madek.api.pagination :as pagination]
    [madek.api.resources.media-entries.advanced-filter :as advanced-filter]
    [madek.api.resources.media-entries.advanced-filter.permissions :as permissions :refer [filter-by-query-params]]
@@ -17,8 +20,11 @@
    [madek.api.resources.meta-data.index :as meta-data.index]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.core :refer [str keyword]]
-   [madek.api.utils.rdbms :as rdbms]
-   [madek.api.utils.sql :as sql]))
+
+   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
+   ;[leihs.core.db :as db]
+   [next.jdbc :as jdbc]))
 
 ;### collection_id ############################################################
 
@@ -26,59 +32,59 @@
   (if-not collection_id
     sqlmap
     (-> sqlmap
-        (sql/merge-join [:collection_media_entry_arcs :arcs]
-                        [:= :arcs.media_entry_id :media_entries.id])
-        (sql/merge-where [:= :arcs.collection_id collection_id])
-        (sql/merge-select
-         [:arcs.created_at :arc_created_at]
-         [:arcs.order :arc_order]
-         [:arcs.position :arc_position]
-         [:arcs.created_at :arc_created_at]
-         [:arcs.updated_at :arc_updated_at]
-         [:arcs.id :arc_id]))))
+        (sql/join [:collection_media_entry_arcs :arcs]
+          [:= :arcs.media_entry_id :media_entries.id])
+        (sql/where [:= :arcs.collection_id (to-uuid collection_id)])
+        (sql/select
+          [:arcs.created_at :arc_created_at]
+          [:arcs.order :arc_order]
+          [:arcs.position :arc_position]
+          [:arcs.created_at :arc_created_at]
+          [:arcs.updated_at :arc_updated_at]
+          [:arcs.id :arc_id]))))
 
 ;### query ####################################################################
 
 (defn ^:private base-query [me-query]
   ; TODO make full-data selectable
   (let [sel (sql/select [:media_entries.id :media_entry_id]
-                        [:media_entries.created_at :media_entry_created_at]
-                        [:media_entries.updated_at :media_entry_updated_at]
-                        [:media_entries.edit_session_updated_at :media_entry_edit_session_updated_at]
-                        [:media_entries.meta_data_updated_at :media_entry_meta_data_updated_at]
-                        [:media_entries.is_published :media_entry_is_published]
-                        [:media_entries.get_metadata_and_previews :media_entry_get_metadata_and_previews]
-                        [:media_entries.get_full_size :media_entry_get_full_size]
-                        [:media_entries.creator_id :media_entry_creator_id]
-                        [:media_entries.responsible_user_id :media_entry_responsible_user_id])
+              [:media_entries.created_at :media_entry_created_at]
+              [:media_entries.updated_at :media_entry_updated_at]
+              [:media_entries.edit_session_updated_at :media_entry_edit_session_updated_at]
+              [:media_entries.meta_data_updated_at :media_entry_meta_data_updated_at]
+              [:media_entries.is_published :media_entry_is_published]
+              [:media_entries.get_metadata_and_previews :media_entry_get_metadata_and_previews]
+              [:media_entries.get_full_size :media_entry_get_full_size]
+              [:media_entries.creator_id :media_entry_creator_id]
+              [:media_entries.responsible_user_id :media_entry_responsible_user_id])
         is-pub (:is_published me-query)
         where1 (if (nil? is-pub)
                  sel
-                 (sql/merge-where sel [:= :media_entries.is_published (= true is-pub)]))
+                 (sql/where sel [:= :media_entries.is_published (= true is-pub)]))
         creator-id (:creator_id me-query)
-        where2 (if (blank? creator-id) ; or not uuid
+        where2 (if (blank? creator-id)                      ; or not uuid
                  where1
-                 (sql/merge-where where1 [:= :media_entries.creator_id creator-id]))
+                 (sql/where where1 [:= :media_entries.creator_id creator-id]))
         ru-id (:responsible_user_id me-query)
-        where3 (if (blank? ru-id) ; or not uuid
+        where3 (if (blank? ru-id)                           ; or not uuid
                  where2
-                 (sql/merge-where where2 [:= :media_entries.responsible_user_id ru-id]))
+                 (sql/where where2 [:= :media_entries.responsible_user_id ru-id]))
 
         ; TODO updated/created after
         from (sql/from where3 :media_entries)
-;        orig-query (-> (sql/select [:media_entries.id :media_entry_id]
-;                                   [:media_entries.created_at :media_entry_created_at])
-;                       (sql/from :media_entries))
+        ;        orig-query (-> (sql/select [:media_entries.id :media_entry_id]
+        ;                                   [:media_entries.created_at :media_entry_created_at])
+        ;                       (sql/from :media_entries))
         ]
-;    (logging/info "base-query"
-;                  "\nme-query:\n" me-query
-;                  "\nfrom:\n" sel
-;                  "\nwhere1:\n" where1
-;                  "\nwhere2:\n" where2
-;                  "\nwhere3:\n" where3
-;                  "\nresult:\n" from
-;                  ;"\norig:\n" orig-query
-;                  )
+    ;    (logging/info "base-query"
+    ;                  "\nme-query:\n" me-query
+    ;                  "\nfrom:\n" sel
+    ;                  "\nwhere1:\n" where1
+    ;                  "\nwhere2:\n" where2
+    ;                  "\nwhere3:\n" where3
+    ;                  "\nresult:\n" from
+    ;                  ;"\norig:\n" orig-query
+    ;                  )
     from))
 
 (defn- order-by-media-entry-attribute [query [attribute order]]
@@ -86,7 +92,7 @@
                        [:created_at :desc] [:media-entries.created_at :desc :nulls-last]
                        [:created_at _] [:media-entries.created_at]
                        [:edit_session_updated_at _] [:media_entries.edit_session_updated_at])]
-    (sql/merge-order-by query order-by-arg)))
+    (sql/order-by query order-by-arg)))
 
 (defn- order-by-arc-attribute [query [attribute order]]
   (let [order-by-arg (match [(keyword attribute) (keyword order)]
@@ -96,7 +102,7 @@
                        [:position :desc] [:arcs.position :desc :nulls-last]
                        [:created_at :desc] [:arcs.created_at :desc :nulls-last]
                        [:created_at _] [:arcs.created_at])]
-    (sql/merge-order-by query order-by-arg)))
+    (sql/order-by query order-by-arg)))
 
 (defn- order-by-meta-datum-text [query [meta-key-id order]]
   (let [from-name (-> meta-key-id
@@ -104,15 +110,15 @@
                       clojure.string/lower-case
                       (#(str "meta-data-" %)))]
     (-> query
-        (sql/merge-left-join [:meta_data from-name]
-                             [:= (keyword (str from-name ".meta_key_id")) meta-key-id])
-        (sql/merge-order-by [(-> from-name (str ".string") keyword)
-                             (case (keyword order)
-                               :asc :asc
-                               :desc :desc
-                               :asc)
-                             :nulls-last])
-        (sql/merge-where [:= (keyword (str from-name ".media_entry_id")) :media_entries.id]))))
+        (sql/left-join [:meta_data from-name]
+          [:= (keyword (str from-name ".meta_key_id")) meta-key-id])
+        (sql/order-by [(-> from-name (str ".string") keyword)
+                       (case (keyword order)
+                         :asc :asc
+                         :desc :desc
+                         :asc)
+                       :nulls-last])
+        (sql/where [:= (keyword (str from-name ".media_entry_id")) :media_entries.id]))))
 
 (defn- order-reducer [query [scope & more]]
   (case scope
@@ -128,7 +134,7 @@
   (let [query {:select [:sorting]
                :from [:collections]
                :where [:= :collections.id collection-id]}]
-    (:sorting (first (jdbc/query (rdbms/get-ds) (-> query sql/format))))))
+    (:sorting (jdbc/execute-one! (get-ds) (-> query sql-format)))))
 
 (defn- handle-missing-collection-id [collection-id code-to-run]
   (if (or (not collection-id) (nil? collection-id))
@@ -146,21 +152,21 @@
     "manual_desc" (handle-missing-collection-id collection-id (order-by-arc-attribute query [:position :desc]))))
 
 (def ^:private available-sortings '("desc" "asc" "title_asc" "title_desc"
-                                           "last_change" "manual_asc" "manual_desc"))
+                                    "last_change" "manual_asc" "manual_desc"))
 
 (defn- default-order [query]
   (sql/order-by query [:media_entries.created_at :asc]))
 
 (defn- order-by-collection-sorting [query collection-id]
   (handle-missing-collection-id collection-id
-                                (if-let [sorting (find-collection-default-sorting collection-id)]
-                                  (let [prepared-sorting (->> (str/split (str/replace sorting "created_at " "") #" ") (str/join "_") str/lower-case)]
-                                    (order-by-string query prepared-sorting collection-id))
-                                  (sql/order-by query [:media_entries.created_at :asc]))))
+    (if-let [sorting (find-collection-default-sorting collection-id)]
+      (let [prepared-sorting (->> (str/split (str/replace sorting "created_at " "") #" ") (str/join "_") str/lower-case)]
+        (order-by-string query prepared-sorting collection-id))
+      (sql/order-by query [:media_entries.created_at :asc]))))
 
 (def ^:private not-allowed-order-param-message
   (str "only the following values are allowed as order parameter: "
-       (str/join ", " available-sortings) " and stored_in_collection"))
+    (str/join ", " available-sortings) " and stored_in_collection"))
 
 (defn- set-order [query query-params]
   (-> (let [qorder (-> query-params :order)
@@ -173,10 +179,10 @@
                             (some #(= order %) available-sortings) (order-by-string query order collection-id)
                             (= order "stored_in_collection") (order-by-collection-sorting query collection-id)
                             :else (throw (ex-info not-allowed-order-param-message
-                                                  {:status 422})))
+                                           {:status 422})))
           (seq? order) (reduce order-reducer query order)
           :else (default-order query)))
-      (sql/merge-order-by :media_entries.id)))
+      (sql/order-by :media_entries.id)))
 
 ; example queries
 ;{"meta_data": [{"key": "madek_core:title", "match": "Bildshirmfoto"}],
@@ -203,72 +209,84 @@
 ; TODO test query and paging
 (defn- build-query [request]
   (let [query-params (-> request :parameters :query)
+        p (println ">o> entries >>>" query-params)
         filter-by (json/decode (:filter_by query-params) true)
+        p (println ">o> entries >>>" filter-by)
         props-by (:media_entry filter-by)
+        p (println ">o> entries >>>" props-by)
         authenticated-entity (:authenticated-entity request)
+
+        p (println ">o> entries >>>" authenticated-entity)
         query-res (I> identity-with-logging
-                      (base-query props-by)
-                      (set-order query-params)
-                      (filter-by-collection-id query-params)
-                      (permissions/filter-by-query-params query-params
-                                                          authenticated-entity)
-                      (advanced-filter/filter-by filter-by)
-                      (pagination/add-offset-for-honeysql query-params)
-                      sql/format)]
-;    (logging/info "build-query" 
-;                  "\nquery-params:\n" query-params
-;                  "\nfilter-by json:\n" filter-by
-;                  "\nquery-res:\n" query-res)
+                    (base-query props-by)                   ;;ok
+                    (set-order query-params)                ;;ok
+
+                    (filter-by-collection-id query-params)  ;;ok
+                    (permissions/filter-by-query-params query-params ;;ok
+                      authenticated-entity)
+                    ;(advanced-filter/filter-by filter-by)
+
+                    (pagination/add-offset-for-honeysql query-params) ;;ok
+                    sql-format)
+
+
+        p (println ">o> after query-res >>>" query-res)
+
+        ]
+    ;    (logging/info "build-query"
+    ;                  "\nquery-params:\n" query-params
+    ;                  "\nfilter-by json:\n" filter-by
+    ;                  "\nquery-res:\n" query-res)
     query-res))
 
 (defn- query-index-resources [request]
-  (jdbc/query (rdbms/get-ds) (build-query request)))
+  (jdbc/execute! (get-ds) (build-query request)))
 
 ;### index ####################################################################
 
 (defn- get-me-list [full-data data]
   (let [me-list (if (true? full-data)
                   (->> data
-                       (map #(select-keys % [:media_entry_id
-                                             :media_entry_created_at
-                                             :media_entry_updated_at
-                                             :media_entry_edit_session_updated_at
-                                             :media_entry_meta_data_updated_at
-                                             :media_entry_creator_id
-                                             :media_entry_responsible_user_id
-                                             :media_entry_is_published
-                                             :media_entry_get_metadata_and_previews
-                                             :media_entry_get_full_size]))
-                       (map #(rename-keys % {:media_entry_id :id
-                                             :media_entry_created_at :created_at
-                                             :media_entry_updated_at :updated_at
-                                             :media_entry_edit_session_updated_at :edit_session_updated_at
-                                             :media_entry_meta_data_updated_at :meta_data_updated_at
-                                             :media_entry_creator_id :creator_id
-                                             :media_entry_responsible_user_id :responsible_user_id
-                                             :media_entry_is_published :is_published
-                                             :media_entry_get_metadata_and_previews :get_metadata_and_previews
-                                             :media_entry_get_full_size :get_full_size})))
-                    ; else get only ids
+                    (map #(select-keys % [:media_entry_id
+                                          :media_entry_created_at
+                                          :media_entry_updated_at
+                                          :media_entry_edit_session_updated_at
+                                          :media_entry_meta_data_updated_at
+                                          :media_entry_creator_id
+                                          :media_entry_responsible_user_id
+                                          :media_entry_is_published
+                                          :media_entry_get_metadata_and_previews
+                                          :media_entry_get_full_size]))
+                    (map #(rename-keys % {:media_entry_id :id
+                                          :media_entry_created_at :created_at
+                                          :media_entry_updated_at :updated_at
+                                          :media_entry_edit_session_updated_at :edit_session_updated_at
+                                          :media_entry_meta_data_updated_at :meta_data_updated_at
+                                          :media_entry_creator_id :creator_id
+                                          :media_entry_responsible_user_id :responsible_user_id
+                                          :media_entry_is_published :is_published
+                                          :media_entry_get_metadata_and_previews :get_metadata_and_previews
+                                          :media_entry_get_full_size :get_full_size})))
+                  ; else get only ids
                   (->> data
-                       (map #(select-keys % [:media_entry_id]))
-                       (map #(rename-keys % {:media_entry_id :id}))))]
+                    (map #(select-keys % [:media_entry_id]))
+                    (map #(rename-keys % {:media_entry_id :id}))))]
     ;(logging/info "get-me-list: fd: " full-data " list:" me-list)
     me-list))
 
 (defn get-arc-list [data]
   (->> data
-       (map #(select-keys % [:arc_id
-                             :media_entry_id
-                             :arc_order
-                             :arc_position
-                             :arc_created_at
-                             :arc_updated_at]))
-       (map #(rename-keys % {:arc_id :id
-                             :arc_order :order
-                             :arc_position :position
-                             :arc_created_at :created_at
-                             :arc_updated_at :updated_at}))))
+    (map #(select-keys % [:arc_id
+                          :media_entry_id
+                          :arc_order
+                          :arc_position
+                          :arc_created_at
+                          :arc_updated_at]))
+    (map #(rename-keys % {:arc_id :id
+                          :arc_order :order
+                          :arc_position :position
+                          :arc_created_at :created_at
+                          :arc_updated_at :updated_at}))))
 
 (defn- get-files4me-list [melist auth-entity]
   (let [auth-list (remove nil? (map #(when (true? (media-entry-perms/downloadable-by-auth-entity? % auth-entity))
@@ -279,7 +297,7 @@
 (defn get-preview-list [melist auth-entity]
   (let [auth-list (map #(when (true? (media-entry-perms/viewable-by-auth-entity? % auth-entity))
                           (sd/query-eq-find-all :previews :media_file_id
-                                                (:id (media-files/query-media-file-by-media-entry-id (:id %))))) melist)]
+                            (:id (media-files/query-media-file-by-media-entry-id (:id %))))) melist)]
     ;(logging/info "get-preview-list" auth-list)
     auth-list))
 
@@ -292,9 +310,9 @@
 (defn build-result [collection-id full-data data]
   (let [me-list (get-me-list full-data data)
         result (merge
-                {:media_entries me-list}
-                (when collection-id
-                  {:col_arcs (get-arc-list data)}))]
+                 {:media_entries me-list}
+                 (when collection-id
+                   {:col_arcs (get-arc-list data)}))]
     result))
 
 (defn build-result-related-data
@@ -310,34 +328,34 @@
         me-md (get-md4me-list me-list auth-entity)
         col-md (meta-data.index/get-collection-meta-data collection-id user-id)
         result (merge
-                {:media_entries result-me-list
-                 ; TODO add only on demand
-                 :meta_data me-md
-                 :media_files files
-                 :previews previews}
+                 {:media_entries result-me-list
+                  ; TODO add only on demand
+                  :meta_data me-md
+                  :media_files files
+                  :previews previews}
 
-                (when collection-id
-                  {:col_meta_data col-md
-                   :col_arcs (get-arc-list data)}))]
+                 (when collection-id
+                   {:col_meta_data col-md
+                    :col_arcs (get-arc-list data)}))]
     result))
 
 (defn get-index [{{{collection-id :collection_id full-data :full_data} :query} :parameters :as request}]
-    ;(try
+  ;(try
   (catcher/with-logging {}
     (let [data (query-index-resources request)
           result (build-result collection-id full-data data)]
       (sd/response_ok result)))
-      ;(catch Exception e (sd/response_exception e)))
+  ;(catch Exception e (sd/response_exception e)))
   )
 
 (defn get-index_related_data [{{{collection-id :collection_id full-data :full_data} :query} :parameters :as request}]
-   ;(try 
+  ;(try
   (catcher/with-logging {}
     (let [auth-entity (-> request :authenticated-entity)
           data (query-index-resources request)
           result (build-result-related-data collection-id auth-entity full-data data)]
       (sd/response_ok result)))
-     ;(catch Exception e (sd/response_exception e)))
+  ;(catch Exception e (sd/response_exception e)))
   )
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)
