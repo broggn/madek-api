@@ -68,6 +68,7 @@
    (println ">o> to-uuid[key value] cl: " value (class value))
    (println ">o> to-uuid[key value] cl: " key (class key))
    (println ">o> to-uuid[key value] castingAllowed?: " (and (contains? keys-to-cast-to-uuid key) (instance? String value)))
+
    (try
      ;(if (and (contains? keys-to-cast-to-uuid key) (instance? String value))
      (if (and (contains? keys-to-cast-to-uuid (keyword key)) (instance? String value))

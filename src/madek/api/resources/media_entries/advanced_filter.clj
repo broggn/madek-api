@@ -30,14 +30,20 @@
         ;                                            sql-format
         ;                                            ))
 
+        p (println ">o> NOW!!!=" (-> (sql/select :*)
+                                     (sql/from [:media_entries "fake_table"])
+                                     (meta-data/sql-filter-by (:meta_data filter-map))
+                                     sql-format
+                                     ))
+
         ])
 
 
 
   (let [query (-> sqlmap
-                  (media-files/sql-filter-by (:media_files filter-map))
-                  ;(permissions/sql-filter-by (:permissions filter-map))
-                  ;(meta-data/sql-filter-by (:meta_data filter-map))
+                  (media-files/sql-filter-by (:media_files filter-map)) ;;ok
+                  (permissions/sql-filter-by (:permissions filter-map)) ;;ok
+                  (meta-data/sql-filter-by (:meta_data filter-map))
                   ;(meta-data/sql-search-through-all (:search filter-map))
                   )
 

@@ -21,11 +21,11 @@
         (sql/where [:in :delegations_groups.group_id (->
                                                       (sql/select :group_id)
                                                       (sql/from :groups_users)
-                                                      (sql/where [:= :groups_users.user_id user_id]))]))
+                                                      (sql/where [:= :groups_users.user_id (to-uuid user_id)]))]))
 
     (-> (sql/select :delegation_id)
         (sql/from :delegations_users)
-        (sql/where [:= :delegations_users.user_id user_id]))]})
+        (sql/where [:= :delegations_users.user_id (to-uuid user_id)]))]})
 
 ;(defn- api-client-authorized-condition [perm id]
 ;  [:or
@@ -41,14 +41,14 @@
                (sql/from [:media_entry_group_permissions :megp])
                (sql/where [:= :megp.media_entry_id :media_entries.id])
                (sql/where [:= (keyword (str "megp." perm)) true])
-               (sql/where [:= :megp.group_id id]))])
+               (sql/where [:= :megp.group_id (to-uuid id)]))])
 
 (defn- user-permission-exists-condition [perm id]
   [:exists (-> (sql/select true)
                (sql/from [:media_entry_user_permissions :meup])
                (sql/where [:= :meup.media_entry_id :media_entries.id])
                (sql/where [:= (keyword (str "meup." perm)) true])
-               (sql/where [:= :meup.user_id id]))])
+               (sql/where [:= :meup.user_id (to-uuid id)]))])
 
 (defn- group-permission-for-user-exists-condition [perm id]
   [:exists (-> (sql/select true)
@@ -59,13 +59,13 @@
                          [:= :groups.id :megp.group_id])
                (sql/join [:groups_users :gu]
                          [:= :gu.group_id :groups.id])
-               (sql/where [:= :gu.user_id id]))])
+               (sql/where [:= :gu.user_id (to-uuid id)]))])
 
 (defn- user-authorized-condition [perm id]
   ; (println (sql/format (delegation-ids-subquery id)))
   [:or
    [:= (keyword (str "media_entries." perm)) true]
-   [:= :media_entries.responsible_user_id id]
+   [:= :media_entries.responsible_user_id (to-uuid id)]
    [:in :media_entries.responsible_delegation_id (delegation-ids-subquery id)]
    (user-permission-exists-condition perm id)
    (group-permission-for-user-exists-condition perm id)])
@@ -74,7 +74,7 @@
   ; (println (sql/format (delegation-ids-subquery id)))
   [:or
    ;[:= (keyword (str "media_entries." perm)) true]
-   [:= :media_entries.responsible_user_id id]
+   [:= :media_entries.responsible_user_id (to-uuid id)]
    [:in :media_entries.responsible_delegation_id (delegation-ids-subquery id)]
    (user-permission-exists-condition perm id)
    (group-permission-for-user-exists-condition perm id)])
@@ -83,7 +83,7 @@
   ; (println (sql/format (delegation-ids-subquery id)))
   [:or
    ;[:= (keyword (str "media_entries." perm)) true]
-   [:= :media_entries.responsible_user_id id]
+   [:= :media_entries.responsible_user_id (to-uuid id)]
    [:in :media_entries.responsible_delegation_id (delegation-ids-subquery id)]
    (user-permission-exists-condition perm id)
    ;(group-permission-for-user-exists-condition perm id)
@@ -154,7 +154,7 @@
     (-> sqlmap
         (sql/where [:=
                     :media_entries.responsible_user_id
-                    (:value permission-spec)]))
+                    (to-uuid (:value (to-uuid permission-spec)))]))
 
     "entrusted_to_user"
     (-> sqlmap
