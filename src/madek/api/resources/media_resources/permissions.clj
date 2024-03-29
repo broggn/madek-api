@@ -260,12 +260,40 @@
 
 (defn query-get-group-permission
   [resource mr-type group-id]
-  (first (jdbc/query (rdbms/get-ds)
-           (build-group-permission-get-query
-             (:media_entry_id resource) mr-type group-id))))
+
+  (let [
+
+        p (println ">o> query-get-group-permission: 1a resource= " resource)
+        p (println ">o> query-get-group-permission: 1b resource= " group-id mr-type)
+
+        query (build-group-permission-get-query
+                ;(:media_entry_id resource) mr-type group-id)))) ;;fixme
+                (:id resource) mr-type group-id)
+        p (println ">o> query-get-group-permission: 1query= " query)
+
+        res (jdbc/query (rdbms/get-ds) query)
+        p (println ">o> query-get-group-permission:1 res=" res)
+
+        res (first res)
+        p (println ">o> query-get-group-permission:2 res=" res)
+
+        ]
+    res)
+
+
+  ;(first (jdbc/query (rdbms/get-ds)
+  ;         (build-group-permission-get-query
+  ;           ;(:media_entry_id resource) mr-type group-id)))) ;;fixme
+  ;           (:id resource) mr-type group-id)))
+
+)
 
 (defn query-list-group-permissions
   [resource mr-type]
+
+   (println ">o> query-list-group-permissions" resource)
+   (println ">o> query-list-group-permissions" mr-type)
+
   (->> (build-group-permission-list-query
          (:id resource) mr-type)
     (jdbc/query (rdbms/get-ds))))
