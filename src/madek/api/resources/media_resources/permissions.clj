@@ -73,11 +73,20 @@
       (sql/format)))
 
 (defn- build-user-groups-query [user-id]
-  (-> (sql/select :groups.*)
-      (sql/from :groups)
-      (sql/merge-join :groups_users [:= :groups.id :groups_users.group_id])
-      (sql/where [:= :groups_users.user_id user-id])
-      (sql/format)))
+
+  (let [query  (-> (sql/select :groups.*)
+                   (sql/from :groups)
+                   (sql/merge-join :groups_users [:= :groups.id :groups_users.group_id])
+                   (sql/where [:= :groups_users.user_id user-id])
+                   (sql/format))
+
+        p (println ">o> build-user-groups-query: query=" query)
+
+
+
+        ]query)
+
+ )
 
 (defn- query-user-groups [user-id]
   (->> (build-user-groups-query user-id)
@@ -85,10 +94,13 @@
 
 (defn- build-group-permissions-query
   [media-resource-id group-ids perm-name mr-type]
+
+  (println ">o> ??? build-group-permissions-query, group-ids=" group-ids)
+
   (-> (sql/select :*)
       (sql/from (group-table mr-type))
       (sql/where [:= (resource-key mr-type) media-resource-id]
-        [:in :group_id group-ids]
+        [:in :group_id group-ids]                           ;;broken?
         [:= perm-name true])
       (sql/format)))
 
@@ -241,7 +253,9 @@
         p (println ">o> query-group-permissions: 1a resource= " resource)
         p (println ">o> query-group-permissions: 1b resource= " user-id perm-name mr-type)
 
-            user-groups (seq (query-user-groups user-id))
+        user-groups (seq (query-user-groups user-id))
+        p (println ">o> query-group-permissions: userHasGroups => " user-id "(" user-groups ")")
+        ;; TODO, HERE
         query (build-group-permissions-query
                 (:id resource) (map :id user-groups) perm-name mr-type)
         p (println ">o> query-user-permissions: 1query= " query)
@@ -286,13 +300,13 @@
   ;           ;(:media_entry_id resource) mr-type group-id)))) ;;fixme
   ;           (:id resource) mr-type group-id)))
 
-)
+  )
 
 (defn query-list-group-permissions
   [resource mr-type]
 
-   (println ">o> query-list-group-permissions" resource)
-   (println ">o> query-list-group-permissions" mr-type)
+  (println ">o> query-list-group-permissions" resource)
+  (println ">o> query-list-group-permissions" mr-type)
 
   (->> (build-group-permission-list-query
          (:id resource) mr-type)
