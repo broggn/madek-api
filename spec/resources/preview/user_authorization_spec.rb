@@ -67,7 +67,7 @@ describe 'Getting a preview resource with authentication' do
     end
 
     it 'is allowed 200' do
-      binding.pry
+      # binding.pry
       expect(response.status).to be == 200
     end
   end
@@ -83,7 +83,8 @@ describe 'Getting a preview resource with authentication' do
     end
 
     it 'is allowed 200' do
-      binding.pry
+      # binding.pry
+      #    body={"message"=>"Not authorized for media-resource"},
       expect(response.status).to be == 200
     end
   end

@@ -152,7 +152,7 @@
 (defn- query-user-permissions
   [resource user-id perm-name mr-type]
   (let [res (->> (build-user-permissions-query
-                  (:id resource) user-id perm-name mr-type)
+                  (:media_entry_id resource) user-id perm-name mr-type)
                  (jdbc/query (rdbms/get-ds)))]
     res))
 
@@ -236,7 +236,7 @@
   [resource mr-type group-id]
   (first (jdbc/query (rdbms/get-ds)
                      (build-group-permission-get-query
-                      (:id resource) mr-type group-id))))
+                      (:media_entry_id resource) mr-type group-id))))
 
 (defn query-list-group-permissions
   [resource mr-type]
