@@ -56,6 +56,7 @@ describe 'MediaFile Resource' do
 
         describe 'the status ' do
           it 'is 200 OK' do
+            binding.pry
             expect(response.status).to be == 200
           end
         end

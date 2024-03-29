@@ -63,16 +63,25 @@
   ([value key]
    (def keys-to-cast-to-uuid #{:user_id :id :group_id :person_id :collection_id :media_entry_id :accepted_usage_terms_id :delegation_id
                                :uploader_id :created_by_id
+                               :keyword_id
                                })
    (println ">o> to-uuid[key value]: " value key)
    (println ">o> to-uuid[key value] cl: " value (class value))
    (println ">o> to-uuid[key value] cl: " key (class key))
-   (println ">o> to-uuid[key value] castingAllowed?: " (and (contains? keys-to-cast-to-uuid key) (instance? String value)))
+   (println ">o> to-uuid[key value] castingAllowed?: " (and (contains? keys-to-cast-to-uuid (keyword key)) (instance? String value)))
+
+
+
+   (println "------------------------------------")
 
    (try
      ;(if (and (contains? keys-to-cast-to-uuid key) (instance? String value))
      (if (and (contains? keys-to-cast-to-uuid (keyword key)) (instance? String value))
-       (UUID/fromString value)
+       (do
+         (UUID/fromString value)
+         (println ">o> to-uuid[key value] castingDONE!!!!")
+
+         )
        value)
      (catch Exception e
        (logging/warn ">>> DEV-ERROR in to-uuid[value key], value=" value ", key=" key " exception=" (.getMessage e))

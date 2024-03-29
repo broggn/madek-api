@@ -42,8 +42,8 @@
 
 (defn build-meta-key-query [id]
   (-> (sql/select :*)
-      (sql/from :meta-keys)
-      (sql/merge-where [:= :meta-keys.id id])
+      (sql/from :meta_keys)
+      (sql/merge-where [:= :meta_keys.id id])
       (sql/format)))
 
 ;(defn get-meta-key [request]

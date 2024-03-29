@@ -47,6 +47,11 @@
       (throw (ex-info "Forbidden" {:status 403}))))
 
 (defn authorized? [auth-entity resource scope]
+
+  (println ">o> authorized? auth-entity=" auth-entity)
+  (println ">o> authorized? resource=" resource)
+  (println ">o> authorized? scope=" scope)
+
   (let [auth-res (case scope
                    :view (authorized-view? auth-entity resource)
                    :download (authorized-download? auth-entity resource)
