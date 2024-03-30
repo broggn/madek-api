@@ -74,18 +74,23 @@
 
    (println "------------------------------------")
 
-   (try
+   (let [
+
+   res (try
      ;(if (and (contains? keys-to-cast-to-uuid key) (instance? String value))
      (if (and (contains? keys-to-cast-to-uuid (keyword key)) (instance? String value))
        (do
-         (UUID/fromString value)
          (println ">o> to-uuid[key value] castingDONE!!!!")
+         (UUID/fromString value)
 
          )
        value)
      (catch Exception e
        (logging/warn ">>> DEV-ERROR in to-uuid[value key], value=" value ", key=" key " exception=" (.getMessage e))
-       value)))
+       value))
+         ]res)
+
+   )
 
   ([value key table]
    (println ">o> to-uuid[key value table]: " value key table)

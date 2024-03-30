@@ -119,15 +119,26 @@
 
 (defn- sql-query-find-eq
   ([table-name col-name row-data]
+
+   (println ">o> sql-query-find-eq1" table-name col-name row-data)
    (-> (build-query-base table-name :*)
        (sql/where [:= col-name (to-uuid row-data col-name table-name)])
-       sql-format))
+       sql-format
+       spy
+       ))
 
   ([table-name col-name row-data col-name2 row-data2]
+   (println ">o> sql-query-find-eq2" table-name col-name row-data col-name2 row-data2)
+   (println ">o> sql-query-find-eq2" (-> (build-query-base table-name :*)
+                                         (sql/where [:= col-name (to-uuid row-data col-name)])
+                                         (sql/where [:= col-name2 (to-uuid row-data2 col-name2)])
+                                         sql-format))
    (-> (build-query-base table-name :*)
        (sql/where [:= col-name (to-uuid row-data col-name)])
        (sql/where [:= col-name2 (to-uuid row-data2 col-name2)])
-       sql-format)))
+       sql-format
+       spy
+       )))
 
 (defn sql-update-clause
   "Generates an sql update clause"
@@ -178,9 +189,9 @@
 
 (defn query-eq-find-one
   ([table-name col-name row-data]
-   (spy (spy (query-eq-find-all-one table-name col-name row-data))))
+   (spy (query-eq-find-all-one table-name col-name row-data)))
   ([table-name col-name row-data col-name2 row-data2]
-   (spy (spy (query-eq-find-all-one table-name col-name row-data col-name2 row-data2)))))
+    (spy (query-eq-find-all-one table-name col-name row-data col-name2 row-data2))))
 
 #_(defn query-eq2-find-all [table-name col-name row-data col-name2 row-data2]
     (catcher/snatch {}
@@ -316,10 +327,17 @@
    If it exists it is associated with the request as reqkey"
   [request handler path-param path-param2 db_table db_col_name db_col_name2 reqkey send404]
   (let [search (-> request :parameters :path path-param str)
-        search2 (-> request :parameters :path path-param2 str)]
+        search2 (-> request :parameters :path path-param2 str)
+        res (query-eq-find-one db_table db_col_name search db_col_name2 search2)
+
+        p (println ">o> req-find-data2.path-param=" db_table db_col_name  db_col_name2 )
+        p (println ">o> req-find-data2.search=" search)
+        p (println ">o> req-find-data2.search2=" search2)
+        p (println ">o> req-find-data2.res=" res)
+        ]
 
     ;(logging/info "req-find-data2" "\nc1: " db_col_name "\ns1: " search "\nc2: " db_col_name2 "\ns2: " search2)
-    (if-let [result-db (query-eq-find-one db_table db_col_name search db_col_name2 search2)]
+    (if-let [result-db res]
       (handler (assoc request reqkey result-db))
       (if (= true send404)
         (response_not_found (str "No such entity in " db_table " as " db_col_name " with " search " and " db_col_name2 " with " search2))

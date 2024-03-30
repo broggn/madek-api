@@ -42,7 +42,7 @@ describe 'generated runs' do
                 authenticated_json_client.get(url)
               end
 
-              binding.pry
+              # binding.pry
               it 'status 200' do
                 expect(response.status).to be == 200
               end

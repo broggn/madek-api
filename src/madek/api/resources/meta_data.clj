@@ -100,9 +100,17 @@
 (defn- handle-delete-meta-data [req]
   (let [mr (-> req :media-resource)
         meta-data (-> req :meta-data)
+
+        p (println ">o> mr=" mr)
+        p (println ">o> meta-data=" meta-data)
+
         meta-key-id (:meta_key_id meta-data)
         del-clause (sql-cls-upd-meta-data mr meta-key-id)
-        del-result (jdbc/delete! (rdbms/get-ds) :meta_data del-clause)]
+        del-result (jdbc/delete! (rdbms/get-ds) :meta_data del-clause)
+
+        p (println ">o> del-result=" del-clause)
+        p (println ">o> del-result=" del-result)
+        ]
     (if (= 1 (first del-result))
       (sd/response_ok meta-data)
       (sd/response_failed "Could not delete meta_data." 406))))
@@ -830,7 +838,7 @@
                             sd/ring-wrap-authorization-view
                             wrap-col-add-meta-data]
                :coercion reitit.coercion.schema/coercion
-               :parameters {:path {:collection_id s/Str
+               :parameters {:path {:collection_id s/Uuid
                                    :meta_key_id s/Str}}
                :responses {200 {:body s/Any}}}}]
 

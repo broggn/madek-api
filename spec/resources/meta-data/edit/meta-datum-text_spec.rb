@@ -114,6 +114,7 @@ describe 'generated runs' do
               end
 
               it 'holds the proper value' do
+                # binding.pry
                 expect(response.body['string']).to eq(create_data)
               end
             end
