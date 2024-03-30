@@ -60,7 +60,7 @@
                   (media-files/sql-filter-by (:media_files filter-map)) ;;ok
                   (permissions/sql-filter-by (:permissions filter-map)) ;;ok
 
-                  ;(meta-data/sql-filter-by (:meta_data filter-map)) ;; TODO: broken
+                  (meta-data/sql-filter-by (:meta_data filter-map)) ;; TODO: broken
 
                   (meta-data/sql-search-through-all (:search filter-map)) ;;ok
                   )

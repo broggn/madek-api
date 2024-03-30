@@ -135,6 +135,8 @@
 res))
 
 (defn- order-reducer [query [scope & more]]
+  (println ">o> order-reducer" query)
+  (println ">o> order-reducer" scope)
   (case scope
     "media_entry" (order-by-media-entry-attribute query more)
     "arc" (order-by-arc-attribute query more)
@@ -206,6 +208,7 @@ my-order
 
             p (println ">o> qorder=" qorder)
             p (println ">o> order=" order)
+            p (println ">o> order.seq?=" (seq? order))
             p (println ">o> collection-id=" collection-id)
 
 
@@ -334,18 +337,31 @@ my-order
     me-list))
 
 (defn get-arc-list [data]
-  (->> data
-    (map #(select-keys % [:arc_id
-                          :media_entry_id
-                          :arc_order
-                          :arc_position
-                          :arc_created_at
-                          :arc_updated_at]))
-    (map #(rename-keys % {:arc_id :id
-                          :arc_order :order
-                          :arc_position :position
-                          :arc_created_at :created_at
-                          :arc_updated_at :updated_at}))))
+
+
+  (let [
+  p (println ">o> data in, data=" data)
+        res (->> data
+              (map #(select-keys % [:arc_id
+                                    :media_entry_id
+                                    :arc_order
+                                    :arc_position
+                                    :arc_created_at
+                                    :arc_updated_at]))
+              (map #(rename-keys % {:arc_id :id
+                                    :arc_order :order
+                                    :arc_position :position
+                                    :arc_created_at :created_at
+                                    :arc_updated_at :updated_at})))
+  p (println ">o> data out, data=" res)
+
+        ]res)
+
+
+
+
+
+  )
 
 (defn- get-files4me-list [melist auth-entity]
   (let [auth-list (remove nil? (map #(when (true? (media-entry-perms/downloadable-by-auth-entity? % auth-entity))
