@@ -75,6 +75,10 @@
         ;        orig-query (-> (sql/select [:media_entries.id :media_entry_id]
         ;                                   [:media_entries.created_at :media_entry_created_at])
         ;                       (sql/from :media_entries))
+
+
+        p (println ">o> ??? from" from)
+
         ]
     ;    (logging/info "base-query"
     ;                  "\nme-query:\n" me-query
@@ -108,17 +112,27 @@
   (let [from-name (-> meta-key-id
                       (clojure.string/replace #"\W+" "_")
                       clojure.string/lower-case
-                      (#(str "meta-data-" %)))]
-    (-> query
-        (sql/left-join [:meta_data from-name]
-          [:= (keyword (str from-name ".meta_key_id")) meta-key-id])
-        (sql/order-by [(-> from-name (str ".string") keyword)
-                       (case (keyword order)
-                         :asc :asc
-                         :desc :desc
-                         :asc)
-                       :nulls-last])
-        (sql/where [:= (keyword (str from-name ".media_entry_id")) :media_entries.id]))))
+                      (#(str "meta_data_" %)))
+
+        keyword1 (keyword (str from-name ".meta_key_id"))
+        keyword2 (keyword (str from-name ".media_entry_id"))
+        p (println ">o> meta-key-id=" meta-key-id)
+        p (println ">o> from-name=" from-name)
+        p (println ">o> keyword1=" keyword1)
+        p (println ">o> keyword2=" keyword2)
+
+        res     (-> query
+                    (sql/left-join [:meta_data from-name]
+                      [:= keyword1 meta-key-id]) ;;here FIXME
+                    (sql/order-by [(-> from-name (str ".string") keyword)
+                                   (case (keyword order)
+                                     :asc :asc
+                                     :desc :desc
+                                     :asc)
+                                   :nulls-last])
+                    (sql/where [:= keyword2 :media_entries.id]))
+        ]
+res))
 
 (defn- order-reducer [query [scope & more]]
   (case scope
@@ -127,8 +141,12 @@
     "MetaDatum::Text" (order-by-meta-datum-text query more)))
 
 (defn- order-by-title [query order]
-  (let [direction (-> (str/split order #"_") (last))]
-    (reduce order-reducer [query ["MetaDatum::Text" "madek_core:title" direction]])))
+  (let [direction (-> (str/split order #"_") (last))
+        reducer (reduce order-reducer [query ["MetaDatum::Text" "madek_core:title" direction]])
+        ]
+    reducer
+
+    ))
 
 (defn- find-collection-default-sorting [collection-id]
   (let [query {:select [:sorting]
@@ -158,10 +176,22 @@
   (sql/order-by query [:media_entries.created_at :asc]))
 
 (defn- order-by-collection-sorting [query collection-id]
+
+   (println ">o> order-by-collection-sorting")
   (handle-missing-collection-id collection-id
     (if-let [sorting (find-collection-default-sorting collection-id)]
-      (let [prepared-sorting (->> (str/split (str/replace sorting "created_at " "") #" ") (str/join "_") str/lower-case)]
-        (order-by-string query prepared-sorting collection-id))
+      (let [prepared-sorting (->> (str/split (str/replace sorting "created_at " "") #" ") (str/join "_") str/lower-case)
+
+            p (println ">o>>>> prepared-sorting=" prepared-sorting)
+            p (println ">o>>>> sorting=" sorting)
+            my-order         (order-by-string query prepared-sorting collection-id)
+            p (println ">o>>>> my-order=" my-order)
+
+
+            ] ;;here
+
+my-order
+        )
       (sql/order-by query [:media_entries.created_at :asc]))))
 
 (def ^:private not-allowed-order-param-message
@@ -171,17 +201,31 @@
 (defn- set-order [query query-params]
   (-> (let [qorder (-> query-params :order)
             order (sd/try-as-json qorder)
-            collection-id (-> query-params :collection_id)]
+            collection-id (-> query-params :collection_id)
+
+
+            p (println ">o> qorder=" qorder)
+            p (println ">o> order=" order)
+            p (println ">o> collection-id=" collection-id)
+
+
+            injected-query query
+            p (println ">o> injected-query=" injected-query)
+
+            ;; TODO: this is broken???
+            my-cond (cond
+                      (nil? order) (default-order query)
+                      (string? order) (cond
+                                        (some #(= order %) available-sortings) (order-by-string query order collection-id)
+                                        (= order "stored_in_collection") (order-by-collection-sorting query collection-id)
+                                        :else (throw (ex-info not-allowed-order-param-message
+                                                       {:status 422})))
+                      (seq? order) (reduce order-reducer query order)
+                      :else (default-order query))
+            p (println ">o> my-cond=" my-cond)
+            ]
         (logging/info "set-order" "\norder\n" order)
-        (cond
-          (nil? order) (default-order query)
-          (string? order) (cond
-                            (some #(= order %) available-sortings) (order-by-string query order collection-id)
-                            (= order "stored_in_collection") (order-by-collection-sorting query collection-id)
-                            :else (throw (ex-info not-allowed-order-param-message
-                                           {:status 422})))
-          (seq? order) (reduce order-reducer query order)
-          :else (default-order query)))
+        my-cond)
       (sql/order-by :media_entries.id)))
 
 ; example queries
@@ -210,6 +254,7 @@
 (defn- build-query [request]
   (let [query-params (-> request :parameters :query)
         p (println ">o> entries >>>" query-params)
+        p (println ">o> --------->>>>><<<<<<-----------")
         filter-by (json/decode (:filter_by query-params) true)
         p (println ">o> entries >>>" filter-by)
         props-by (:media_entry filter-by)
@@ -217,6 +262,20 @@
         authenticated-entity (:authenticated-entity request)
 
         p (println ">o> entries >>>" authenticated-entity)
+
+        ;p (println ">o> identity-with-logging 1 >>>" identity-with-logging)
+
+        ;p (println ">o> identity-with-logging 2 >>>" (I> identity-with-logging (base-query props-by)))
+        p (println ">o> --------------------------")
+
+
+        p (println ">o> identity-with-logging 3 >>>" (I> identity-with-logging (base-query props-by) (set-order query-params)))
+        ;p (println ">o> identity-with-logging 4 >>>" (I> identity-with-logging (base-query props-by) (set-order query-params) (filter-by-collection-id query-params)))
+        ;p (println ">o> identity-with-logging 5 >>>" (I> identity-with-logging (base-query props-by) (set-order query-params) (filter-by-collection-id query-params) (permissions/filter-by-query-params query-params ;;ok
+        ;                                                                                                                                                               authenticated-entity)))
+
+        ;p (println ">o> identity-with-logging 6 >>>" (I> identity-with-logging (advanced-filter/filter-by filter-by)))
+
         query-res (I> identity-with-logging
                     (base-query props-by)                   ;;ok
                     (set-order query-params)                ;;ok
@@ -224,7 +283,7 @@
                     (filter-by-collection-id query-params)  ;;ok
                     (permissions/filter-by-query-params query-params ;;ok
                       authenticated-entity)
-                    (advanced-filter/filter-by filter-by)
+                    (advanced-filter/filter-by filter-by)   ;;tofix within filter-by
 
                     (pagination/add-offset-for-honeysql query-params) ;;ok
                     sql-format)
@@ -336,7 +395,9 @@
 
                  (when collection-id
                    {:col_meta_data col-md
-                    :col_arcs (get-arc-list data)}))]
+                    :col_arcs (get-arc-list data)}))
+        p (println ">o> build-result-related-data.res=" build-result-related-data)
+        ]
     result))
 
 (defn get-index [{{{collection-id :collection_id full-data :full_data} :query} :parameters :as request}]

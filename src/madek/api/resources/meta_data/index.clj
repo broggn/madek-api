@@ -81,7 +81,13 @@
 
 (defn get-collection-meta-data [id user-id]
   (let [mdq (sql/format (meta-data-query-for-collection id user-id))
-        result (jdbc/query (get-ds) mdq)]
+
+        p (println ">o> get-collection-meta-data1 ")
+        p (println ">o> get-collection-meta-data1.query= " mdq)
+        result (jdbc/query (get-ds) mdq)
+        p (println ">o> get-collection-meta-data1.result= " result)
+
+        ]
     ;(logging/info "get-collection-meta-data:"
     ;              "\n col id: " id
     ;              "\n user id: " user-id
