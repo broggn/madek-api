@@ -260,7 +260,11 @@
                 (:id resource) (map :id user-groups) perm-name mr-type)
         p (println ">o> query-user-permissions: 1query= " query)
 
-        res (jdbc/query (rdbms/get-ds) query)
+        ;res (jdbc/query (rdbms/get-ds) query)
+        ;p (println ">o> query-user-permissions: res=" res)
+
+        res (if-let [user-groups user-groups]
+          (jdbc/query (rdbms/get-ds) query))
         p (println ">o> query-user-permissions: res=" res)
 
 
@@ -270,7 +274,10 @@
         ;             (:id resource) (map :id user-groups) perm-name mr-type)
         ;        (jdbc/query (rdbms/get-ds))))
         ]
-    res))
+
+
+    res
+    ))
 
 (defn query-get-group-permission
   [resource mr-type group-id]
