@@ -254,17 +254,19 @@
         p (println ">o> query-group-permissions: 1b resource= " user-id perm-name mr-type)
 
         user-groups (seq (query-user-groups user-id))
-        p (println ">o> query-group-permissions: userHasGroups => " user-id "(" user-groups ")")
-        ;; TODO, HERE
-        query (build-group-permissions-query
-                (:id resource) (map :id user-groups) perm-name mr-type)
-        p (println ">o> query-user-permissions: 1query= " query)
+        p (println ">o> MONITORING query-group-permissions: userHasGroups => " user-id "(" user-groups ")")
+
+        ;;; TODO, HERE
+        ;query (build-group-permissions-query
+        ;        (:id resource) (map :id user-groups) perm-name mr-type)
+        ;p (println ">o> query-user-permissions: 1query= " query)
 
         ;res (jdbc/query (rdbms/get-ds) query)
         ;p (println ">o> query-user-permissions: res=" res)
 
         res (if-let [user-groups user-groups]
-          (jdbc/query (rdbms/get-ds) query))
+          (jdbc/query (rdbms/get-ds) (build-group-permissions-query
+                                       (:id resource) (map :id user-groups) perm-name mr-type)))
         p (println ">o> query-user-permissions: res=" res)
 
 
