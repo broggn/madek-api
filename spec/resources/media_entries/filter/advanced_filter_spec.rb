@@ -31,7 +31,7 @@ describe 'advanced filtering of media entries' do
       fetched_media_entries = \
         get_media_entries('filter_by' => filter.deep_stringify_keys.to_json)
 
-      # binding.pry
+      binding.pry
 
       expect(fetched_media_entries.size).to be == 1
       expect(fetched_media_entries.first['id']).to be == media_entry.id

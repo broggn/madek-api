@@ -76,6 +76,7 @@
         column (str (get-in match-columns
                       [related-meta-data-table :resource]) "_id")
         full-column (str related-meta-data-alias "." column)
+        full-column (keyword (str related-meta-data-alias "." column))
         p (println ">o> sql-merge-where-with-value, focus on:" full-column)
         ]
     (-> sqlmap
