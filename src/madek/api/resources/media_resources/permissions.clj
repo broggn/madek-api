@@ -4,6 +4,9 @@
    ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
+
+   [madek.api.utils.helper :refer [ array-to-map convert-map-if-exist map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
    [madek.api.db.core :refer [get-ds]]
 
    ;[leihs.core.db :as db]
@@ -138,7 +141,8 @@
 ; TODO try catch logwrite
 (defn update-resource-permissions
   [resource perm-data]
-  (let [mr-id (-> resource :id str)
+  (let [
+        mr-id (-> resource :id)
         tname (case (:type resource)
                 "MediaEntry" :media_entries
                 "Collection" :collections)
@@ -147,9 +151,9 @@
         ;         (update-in [0] #(clojure.string/replace % "WHERE" "")))
 
         update-stmt (-> (sql/update tname)
-                        (sql/set perm-data)
+                        (sql/set (convert-map-if-exist perm-data))
                         ;(sql/where (sql-format whcl))
-                        (sql/where [:= :id mr-id])
+                        (sql/where [:= :id (to-uuid mr-id)])
                         sql-format)
         upd-result (jdbc/execute! (get-ds) update-stmt)]
 

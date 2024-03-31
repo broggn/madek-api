@@ -5,6 +5,9 @@
             [clojure.tools.logging :as logging]
             [honey.sql :refer [format] :rename {format sql-format}]
 
+            [madek.api.utils.helper :refer [ array-to-map convert-map-if-exist  map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
+
             [honey.sql.helpers :as sql]
             [madek.api.authorization :as authorization]
             [madek.api.constants :refer [FILE_STORAGE_DIR]]
@@ -14,7 +17,6 @@
    ;[madek.api.utils.rdbms :as rdbms]
             [madek.api.resources.media-entries.media-entry :refer [get-media-entry]]
             [madek.api.resources.shared :as sd]
-            [madek.api.utils.helper :refer [to-uuid]]
             [next.jdbc :as jdbc] ;[pantomime.mime :refer [mime-type-of]]
 
    ;; all needed imports
@@ -106,6 +108,8 @@
 
             ;dresult (jdbc/update! (rdbms/get-ds) :media_entries data ["id = ?" eid])]
 
+            eid (to-uuid eid)
+
             sql-query (-> (sql/update :media_entries)
                           (sql/set data)
                           (sql/where [:= :id eid])
@@ -186,7 +190,7 @@
                   :creator_id (str user-id)
                   :is_published false}
           sql-query (-> (sql/insert-into :media_entries)
-                        (sql/values [new-me])
+                        (sql/values [(convert-map-if-exist new-me)])
                         sql-format)
           new-mer (jdbc/execute! (get-ds) sql-query)]
       (if new-mer
@@ -196,7 +200,7 @@
               new-mf (assoc mf :media_entry_id me-id)
 
               sql-query (-> (sql/insert-into :media_files)
-                            (sql/values [new-mf])
+                            (sql/values [(convert-map-if-exist new-mf)])
                             sql-format)
               new-mfr (jdbc/execute-one! tx sql-query)
 
