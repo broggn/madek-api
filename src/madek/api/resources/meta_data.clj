@@ -9,6 +9,8 @@
             [madek.api.db.core :refer [get-ds]]
             [madek.api.resources.meta-data.index :as meta-data.index]
 
+   [madek.api.utils.helper :refer [convert-map-if-exist array-to-map  map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
    ;; all needed imports
             [madek.api.resources.meta-data.meta-datum :as meta-datum]
 
@@ -30,21 +32,28 @@
 (defn- assoc-media-resource-typed-id [mr ins-data]
   (assoc ins-data
          (col-key-for-mr-type mr)
-         (str (-> mr :id))))
+         (-> mr :id)))
+         ;(str (-> mr :id))))
 
 (defn- sql-cls-upd-meta-data [mr mk-id]
-  (let [md-sql (-> (sql/where [:and
+  (let [
+        colomn (col-key-for-mr-type mr)
+
+        md-sql (-> (sql/where [:and
                                [:= :meta_key_id mk-id]
-                               [:= (col-key-for-mr-type mr) (str (-> mr :id))]])
+                               [:= colomn (to-uuid (-> mr :id) colomn)]])
                    sql-format
                    sd/hsql-upd-clause-format)]
     md-sql))
 
 (defn- sql-cls-upd-meta-data-typed-id [mr mk-id md-type]
-  (let [md-sql (-> (sql/where [:and
+  (let [
+        colomn (col-key-for-mr-type mr)
+
+        md-sql (-> (sql/where [:and
                                [:= :meta_key_id mk-id]
                                [:= :type md-type]
-                               [:= (col-key-for-mr-type mr) (str (-> mr :id))]])
+                               [:= colomn (to-uuid (-> mr :id) colomn)]])
                    sql-format
                    sd/hsql-upd-clause-format)]
     md-sql))
@@ -53,7 +62,7 @@
   [mr meta-key-id md-type user-id]
   (let [data {:meta_key_id meta-key-id
               :type md-type
-              :created_by_id user-id}]
+              :created_by_id (to-uuid user-id)}]
     (assoc-media-resource-typed-id mr data)))
 
 (defn db-get-meta-data
@@ -64,11 +73,12 @@
   ([mr mk-id md-type db]
    (let [mr-id (str (-> mr :id))
          mr-key (col-key-for-mr-type mr)
+         p (println ">o> mr-key=" mr-key)
          db-query (-> (sql/select :*)
                       (sql/from :meta_data)
                       (sql/where [:and
                                   [:= :meta_key_id mk-id]
-                                  [:= mr-key mr-id]])
+                                  [:= mr-key (to-uuid mr-id mr-key)]])
                       sql-format)
          db-result (jdbc/execute-one! db db-query)
          db-type (:type db-result)]
@@ -83,7 +93,7 @@
    (let [;result (first (jdbc/insert! db :meta_data meta-data))
 
          sql-query (-> (sql/insert-into :meta_data)
-                       (sql/values [meta-data])
+                       (sql/values [(convert-map-if-exist meta-data)])
                        sql-format)
          result (jdbc/execute-one! db sql-query)]
 
@@ -136,7 +146,7 @@
             ;upd-result (jdbc/update! (get-ds) :meta_data upd-data upd-clause)
 
             sql-query (-> (sql/update :meta_data)
-                          (sql/set upd-data)
+                          (sql/set (convert-map-if-exist upd-data))
                           (sql/where upd-clause)
                           sql-format)
             upd-result (jdbc/execute-one! (get-ds) sql-query)
@@ -582,7 +592,7 @@
   (try
     (catcher/with-logging {}
       (let [mr (-> req :media-resource)
-            user-id (-> req :authenticated-entity :id str)
+            user-id (-> req :authenticated-entity :id)
             meta-key-id (-> req :parameters :path :meta_key_id)
             role-id (-> req :parameters :path :role_id)
             person-id (-> req :parameters :path :person_id)
@@ -1025,7 +1035,7 @@
              :coercion reitit.coercion.schema/coercion
              :parameters {:path {:collection_id s/Str
                                  :meta_key_id s/Str
-                                 :person_id s/Str}}
+                                 :person_id s/Uuid}}
              :responses {200 {:body s/Any}}}
 
       :delete {:summary "Delete meta-data people for collection."
@@ -1034,7 +1044,7 @@
                             sd/ring-wrap-add-media-resource
                             sd/ring-wrap-authorization-edit-metadata]
                :coercion reitit.coercion.schema/coercion
-               :parameters {:path {:collection_id s/Str
+               :parameters {:path {:collection_id s/Uuid
                                    :meta_key_id s/Str
                                    :person_id s/Str}}
                :responses {200 {:body s/Any}}}}]
@@ -1046,9 +1056,9 @@
                           sd/ring-wrap-add-media-resource
                           sd/ring-wrap-authorization-edit-metadata]
              :coercion reitit.coercion.schema/coercion
-             :parameters {:path {:collection_id s/Str
+             :parameters {:path {:collection_id s/Uuid
                                  :meta_key_id s/Str
-                                 :role_id s/Str}}
+                                 :role_id s/Uuid}}
              :responses {200 {:body s/Any}}}}]]])
 
 (def media-entry-routes
@@ -1060,7 +1070,7 @@
            :middleware [sd/ring-wrap-add-media-resource
                         sd/ring-wrap-authorization-view]
            :coercion reitit.coercion.schema/coercion
-           :parameters {:path {:media_entry_id s/Str}
+           :parameters {:path {:media_entry_id s/Uuid}
                         :query {(s/optional-key :updated_after) s/Inst
                                 (s/optional-key :meta_keys) s/Str}}
            :responses {200 {:body s/Any}}}}]
@@ -1071,7 +1081,7 @@
            :middleware [sd/ring-wrap-add-media-resource
                         sd/ring-wrap-authorization-view]
            :coercion reitit.coercion.schema/coercion
-           :parameters {:path {:media_entry_id s/Str}
+           :parameters {:path {:media_entry_id s/Uuid}
                         :query {(s/optional-key :updated_after) s/Inst
                                 (s/optional-key :meta_keys) s/Str}}
            :responses {200 {:body s/Any}}}}]
@@ -1085,7 +1095,7 @@
                          sd/ring-wrap-add-media-resource
                          sd/ring-wrap-authorization-view]
             :coercion reitit.coercion.schema/coercion
-            :parameters {:path {:media_entry_id s/Str
+            :parameters {:path {:media_entry_id s/Uuid
                                 :meta_key_id s/Str}}
             :responses {200 {:body s/Any}}}
 
@@ -1096,7 +1106,7 @@
                     sd/ring-wrap-authorization-view
                     wrap-me-add-meta-data]
        :coercion reitit.coercion.schema/coercion
-       :parameters {:path {:media_entry_id s/Str
+       :parameters {:path {:media_entry_id s/Uuid
                            :meta_key_id s/Str}}
        :responses {200 {:body s/Any}}}}]
 
@@ -1106,7 +1116,7 @@
              :middleware [sd/ring-wrap-add-media-resource
                           sd/ring-wrap-authorization-edit-metadata]
              :coercion reitit.coercion.schema/coercion
-             :parameters {:path {:media_entry_id s/Str
+             :parameters {:path {:media_entry_id s/Uuid
                                  :meta_key_id s/Str}
                           :body {:string s/Str}}
              :responses {200 {:body s/Any}}}
@@ -1116,7 +1126,7 @@
             :middleware [sd/ring-wrap-add-media-resource
                          sd/ring-wrap-authorization-edit-metadata]
             :coercion reitit.coercion.schema/coercion
-            :parameters {:path {:media_entry_id s/Str
+            :parameters {:path {:media_entry_id s/Uuid
                                 :meta_key_id s/Str}
                          :body {:string s/Str}}
             :responses {200 {:body s/Any}}}}]
@@ -1127,7 +1137,7 @@
              :middleware [sd/ring-wrap-add-media-resource
                           sd/ring-wrap-authorization-edit-metadata]
              :coercion reitit.coercion.schema/coercion
-             :parameters {:path {:media_entry_id s/Str
+             :parameters {:path {:media_entry_id s/Uuid
                                  :meta_key_id s/Str}
                           :body {:string s/Str}}
              :responses {200 {:body s/Any}}}
@@ -1136,7 +1146,7 @@
             :middleware [sd/ring-wrap-add-media-resource
                          sd/ring-wrap-authorization-edit-metadata]
             :coercion reitit.coercion.schema/coercion
-            :parameters {:path {:media_entry_id s/Str
+            :parameters {:path {:media_entry_id s/Uuid
                                 :meta_key_id s/Str}
                          :body {:string s/Str}}
             :responses {200 {:body s/Any}}}}]
@@ -1147,7 +1157,7 @@
              :middleware [sd/ring-wrap-add-media-resource
                           sd/ring-wrap-authorization-edit-metadata]
              :coercion reitit.coercion.schema/coercion
-             :parameters {:path {:media_entry_id s/Str
+             :parameters {:path {:media_entry_id s/Uuid
                                  :meta_key_id s/Str}
                           :body {:json s/Any}}
              :responses {200 {:body s/Any}}}
@@ -1157,7 +1167,7 @@
             :middleware [sd/ring-wrap-add-media-resource
                          sd/ring-wrap-authorization-edit-metadata]
             :coercion reitit.coercion.schema/coercion
-            :parameters {:path {:media_entry_id s/Str
+            :parameters {:path {:media_entry_id s/Uuid
                                 :meta_key_id s/Str}
                          :body {:json s/Any}}
             :responses {200 {:body s/Any}}}}]
@@ -1169,7 +1179,7 @@
                          sd/ring-wrap-add-media-resource
                          sd/ring-wrap-authorization-view]
             :coercion reitit.coercion.schema/coercion
-            :parameters {:path {:media_entry_id s/Str
+            :parameters {:path {:media_entry_id s/Uuid
                                 :meta_key_id s/Str}}
             :responses {200 {:body s/Any}}}}]
 
@@ -1181,7 +1191,7 @@
                           sd/ring-wrap-add-media-resource
                           sd/ring-wrap-authorization-edit-metadata]
              :coercion reitit.coercion.schema/coercion
-             :parameters {:path {:media_entry_id s/Str
+             :parameters {:path {:media_entry_id s/Uuid
                                  :meta_key_id s/Str
                                  :keyword_id s/Str}}
              :responses {200 {:body s/Any}}}
@@ -1192,7 +1202,7 @@
                             sd/ring-wrap-add-media-resource
                             sd/ring-wrap-authorization-edit-metadata]
                :coercion reitit.coercion.schema/coercion
-               :parameters {:path {:media_entry_id s/Str
+               :parameters {:path {:media_entry_id s/Uuid
                                    :meta_key_id s/Str
                                    :keyword_id s/Str}}
                :responses {200 {:body s/Any}}}}]
@@ -1204,7 +1214,7 @@
                          sd/ring-wrap-add-media-resource
                          sd/ring-wrap-authorization-view]
             :coercion reitit.coercion.schema/coercion
-            :parameters {:path {:media_entry_id s/Str
+            :parameters {:path {:media_entry_id s/Uuid
                                 :meta_key_id s/Str}}
             :responses {200 {:body s/Any}}}}]
 
@@ -1216,9 +1226,9 @@
                           sd/ring-wrap-authorization-edit-metadata
                           wrap-me-add-meta-data]
              :coercion reitit.coercion.schema/coercion
-             :parameters {:path {:media_entry_id s/Str
+             :parameters {:path {:media_entry_id s/Uuid
                                  :meta_key_id s/Str
-                                 :person_id s/Str}}
+                                 :person_id s/Uuid}}
              :responses {200 {:body s/Any}}}
 
       :delete {:summary "Delete meta-data people for media-entry"
@@ -1227,9 +1237,9 @@
                             sd/ring-wrap-add-media-resource
                             sd/ring-wrap-authorization-edit-metadata]
                :coercion reitit.coercion.schema/coercion
-               :parameters {:path {:media_entry_id s/Str
+               :parameters {:path {:media_entry_id s/Uuid
                                    :meta_key_id s/Str
-                                   :person_id s/Str}}
+                                   :person_id s/Uuid}}
                :responses {200 {:body s/Any}}}}]
     ; TODO meta-data roles
     ["/:meta_key_id/role"
@@ -1238,7 +1248,7 @@
             :middleware [sd/ring-wrap-add-media-resource
                          sd/ring-wrap-authorization-view]
             :coercion reitit.coercion.schema/coercion
-            :parameters {:path {:media_entry_id s/Str
+            :parameters {:path {:media_entry_id s/Uuid
                                 :meta_key_id s/Str}}
             :responses {200 {:body s/Any}}}}]
 
@@ -1250,7 +1260,7 @@
                             sd/ring-wrap-add-media-resource
                             sd/ring-wrap-authorization-edit-metadata]
                :coercion reitit.coercion.schema/coercion
-               :parameters {:path {:media_entry_id s/Str
+               :parameters {:path {:media_entry_id s/Uuid
                                    :meta_key_id s/Str
                                    :role_id s/Uuid
                                    :person_id s/Uuid}}
@@ -1264,7 +1274,7 @@
                           sd/ring-wrap-add-media-resource
                           sd/ring-wrap-authorization-edit-metadata]
              :coercion reitit.coercion.schema/coercion
-             :parameters {:path {:media_entry_id s/Str
+             :parameters {:path {:media_entry_id s/Uuid
                                  :meta_key_id s/Str
                                  :role_id s/Uuid
                                  :person_id s/Uuid
