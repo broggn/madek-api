@@ -131,7 +131,6 @@ describe 'Getting a media-entry resource with authentication' do
     end
 
     it 'is not allowed 403' do
-      binding.pry
       expect(response.status).to be == 403
     end
   end

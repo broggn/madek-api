@@ -155,7 +155,7 @@
                         ;(sql/where (sql-format whcl))
                         (sql/where [:= :id (to-uuid mr-id)])
                         sql-format)
-        upd-result (jdbc/execute! (get-ds) update-stmt)]
+        upd-result (jdbc/execute-one! (get-ds) update-stmt)]
 
     (logging/info "update resource permissions"
       "\ntable\n" tname
@@ -233,7 +233,7 @@
   ;  (catcher/with-logging {}
   (let [mr-id (:id resource)
         tname (user-table mr-type)
-        delquery (sql-cls-resource-and mr-type mr-id :user_id user-id)
+        ;delquery (sql-cls-resource-and mr-type mr-id :user_id user-id)
 
         ;delresult (jdbc/delete! (rdbms/get-ds) tname delquery)]
 
@@ -241,10 +241,10 @@
                         ;(sql/where (sql-format delquery))
                         (sql-cls-resource-and-new mr-type mr-id :user_id user-id)
                         sql-format)
-        delresult (jdbc/execute! (get-ds) delete-stmt)]
+        delresult (jdbc/execute-one! (get-ds) delete-stmt)]
 
     (logging/info "delete-user-permissions: " mr-id user-id delresult)
-    (if (= 1 (first delresult))
+    (if (= 1 (::jdbc/update-count delresult))
       true
       false)))
 ;(catch Exception ex
@@ -270,7 +270,7 @@
                         ;(sql/where (sql-format whcl))
                         (sql-cls-resource-and-new mr-type mr-id :user_id user-id)
                         sql-format)
-        result (jdbc/execute! (get-ds) update-stmt)]
+        result (jdbc/execute-one! (get-ds) update-stmt)]
 
     (logging/info "update user permissions"
       "\ntable\n" tname
@@ -313,10 +313,12 @@
         ;insresult (jdbc/insert! (rdbms/get-ds) tname insdata)]
 
         insert-stmt (-> (sql/insert-into tname)
-                        (sql/values [insdata])
+                        (sql/values [(convert-map-if-exist insdata)])
                         (sql/returning :*)
                         sql-format)
-        insresult (jdbc/execute! (get-ds) insert-stmt)]
+        insresult (jdbc/execute-one! (get-ds) insert-stmt)
+        p (println ">o> insresult=" insresult)
+        ]
 
     (logging/info "create-group-permissions" mr-id mr-type group-id tname insdata)
     (if-let [result insresult]
@@ -331,12 +333,14 @@
   ;  (catcher/with-logging {}
   (let [mr-id (:id resource)
         tname (group-table mr-type)
-        delquery (sql-cls-resource-and mr-type mr-id :group_id group-id)
+        ;delquery (sql-cls-resource-and mr-type mr-id :group_id group-id)
 
         ;delresult (jdbc/delete! (rdbms/get-ds) tname delquery)]
 
         delete-stmt (-> (sql/delete-from tname)
-                        (sql/where (sql-format delquery))
+                        ;(sql/where (sql-format delquery))
+                        (sql-cls-resource-and-new mr-type mr-id :group_id group-id)
+
                         sql-format)
         delresult (jdbc/execute-one! (get-ds) delete-stmt)]
 
@@ -364,7 +368,7 @@
                         ;(sql/where (sql-format whcl))
                         (sql-cls-resource-and-new mr-type mr-id :group_id group-id)
                         sql-format)
-        result (jdbc/execute! (get-ds) update-stmt)]
+        result (jdbc/execute-one! (get-ds) update-stmt)]
 
     (logging/info "update group permissions"
       "\ntable\n" tname
