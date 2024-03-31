@@ -90,17 +90,21 @@
   ; we need to pass 'english' because it was also used
   ; when creating indexes
 
-
+  ;2024-03-31 13:42:31.693 CEST [94472] ERROR:  argument of AND must be type boolean, not type character varying at character 731
   ;(str "to_tsvector('english', " column ")"
   ;                                      " @@ plainto_tsquery('english', '" search-string "')")
 
 
 
 
-  [:raw (str "to_tsvector('english', "
-             column
+  ;[:raw [:inline (str "to_tsvector('english', "
+  ;           column
+  ;        ") @@ plainto_tsquery('english', '" search-string "')")]]
 
-          ") @@ plainto_tsquery('english', '" search-string "')")]
+  ;; ./spec/resources/media_entries/filter/advanced_filter_spec.rb:44
+  [[:raw (str "to_tsvector('english', "
+             column
+          ") @@ plainto_tsquery('english', '" search-string "')")]]
 
 
   )
@@ -331,7 +335,11 @@
             (interleave meta-data-specs
               (iterate inc 1))))
 
-        ;(sql/select-distinct) ;; TODO: causes error/duplicate selects
+        ;(sql/select-distinct)
+
+        ;; TODO: causes error/duplicate selects
+        ;https://github.com/nilenso/honeysql-postgres
+        ;https://github.com/seancorfield/honeysql/issues/1
         )
 
     ;(sql/modifiers :distinct))
