@@ -50,6 +50,7 @@ describe 'Getting a media-entry resource with authentication' do
     end
 
     it 'is allowed 200' do
+      binding.pry
       expect(response.status).to be == 200
     end
   end

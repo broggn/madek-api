@@ -1,13 +1,20 @@
 (ns madek.api.resources.meta-keys.meta-key
   (:require
-   [clojure.java.jdbc :as jdbc]
-   [clojure.tools.logging :as logging]
+   ;; all needed imports
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
    [logbug.debug :as debug]
+   [madek.api.db.core :refer [get-ds]]
+   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
+
    [madek.api.resources.locales :refer [add-field-for-default-locale]]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.config :as config :refer [get-config]]
-   [madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-   [madek.api.utils.sql :as sql]))
+
+   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
+   ;[leihs.core.db :as db]
+   [next.jdbc :as jdbc]))
 
 (defn add-fields-for-default-locale
   [result]
@@ -20,10 +27,9 @@
   [id]
   (let [query (-> (sql/select :key_map, :io_interface_id)
                   (sql/from :io_mappings)
-                  (sql/where
-                   [:= :io_mappings.meta_key_id id])
-                  (sql/format))]
-    (jdbc/query (rdbms/get-ds) query)))
+                  (sql/where [:= :io_mappings.meta_key_id id])
+                  (sql-format))]
+    (jdbc/execute! (get-ds) query)))
 
 (defn- prepare-io-mappings-from
   [io-mappings]
@@ -42,9 +48,9 @@
 
 (defn build-meta-key-query [id]
   (-> (sql/select :*)
-      (sql/from :meta_keys)
-      (sql/merge-where [:= :meta_keys.id id])
-      (sql/format)))
+      (sql/from :meta-keys)
+      (sql/where [:= :meta-keys.id id])
+      (sql-format)))
 
 ;(defn get-meta-key [request]
 ;  (let [id (-> request :parameters :path :id)
