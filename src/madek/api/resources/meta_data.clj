@@ -9,7 +9,7 @@
             [madek.api.db.core :refer [get-ds]]
             [madek.api.resources.meta-data.index :as meta-data.index]
 
-   [madek.api.utils.helper :refer [convert-map-if-exist array-to-map  map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+            [madek.api.utils.helper :refer [convert-map-if-exist array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
 
    ;; all needed imports
             [madek.api.resources.meta-data.meta-datum :as meta-datum]
@@ -33,7 +33,7 @@
   (assoc ins-data
          (col-key-for-mr-type mr)
          (-> mr :id)))
-         ;(str (-> mr :id))))
+;(str (-> mr :id))))
 
 (defn- sql-cls-upd-meta-data [mr mk-id]
   (let [
@@ -92,10 +92,15 @@
    (logging/info "db-create-meta-data: " meta-data)
    (let [;result (first (jdbc/insert! db :meta_data meta-data))
 
+         p (println ">o> meta-data=" meta-data)
+
          sql-query (-> (sql/insert-into :meta_data)
                        (sql/values [(convert-map-if-exist meta-data)])
+                       (sql/returning :*)
                        sql-format)
-         result (jdbc/execute-one! db sql-query)]
+         result (jdbc/execute-one! db sql-query)
+         p (println ">o> abc" result)
+         ]
 
      (if result
        result
@@ -115,6 +120,49 @@
      ;              "MD: " meta-data
      ;              "MD-new: " md)
      (db-create-meta-data db md))))
+
+
+
+(comment
+
+  (let [
+        ;meta-data= {:meta_key_id test:json, :type MetaDatum::JSON, :created_by_id #uuid "51dbe6fe-3b4a-46b6-a38d-5b00cb1e7198", :media_entry_id #uuid "01624c98-2fee-4b26-8cf0-2b4e9221de25", :json {some_boolean true, zero_point -273.15, seq [1 2 nil]}}
+
+        data {:meta-key-id "test:eins"
+              :type "MetaDatum::JSON"
+              :created-by-id (java.util.UUID/fromString "67ce2f2f-441d-48aa-b1bb-a8625a37dded")
+              :media-entry-id (java.util.UUID/fromString "8ab7f7c2-26da-4e19-8c65-e5bc6f2b2cb1")
+
+              ;; fails because of missing jsonb-cast
+              ;:json "{'some-boolean': true,
+              ;      'zero-point': -273.15,
+              ;      'seq': [1, 2, 3]}"
+
+              ;; TODO: move this to helper
+              :json [:cast "{\"some-boolean\": true,
+                    \"zero-point\": -273.15,
+                    \"seq\": [1, 2, 3]}" :jsonb]
+              }
+
+
+        data (convert-map-if-exist data)
+        p (println ">o> data" data)
+
+        query (-> (sql/insert-into :meta_data)
+                  (sql/values [data])
+                  (sql/returning :*)
+                  sql-format)
+
+        p (println ">o> query" query)
+        result (jdbc/execute-one! (get-ds) query)
+
+        p (println "result" result)
+        ]
+    result
+    )
+  )
+
+
 
 (defn- handle-delete-meta-data [req]
   (let [mr (-> req :media-resource)
@@ -465,14 +513,14 @@
           ;                       "meta-key: " meta-key-id
           ;                       "person-id:" person-id
           ;                       "result: " result))
-          (sd/response_ok result) ;)
+          (sd/response_ok result)                           ;)
           (if-let [retryresult (create_md_and_people mr meta-key-id person-id user-id)]
             ;((sd/logwrite req (str "handle_create-meta-data-people:"
             ;                       "mr-id: " (:id mr)
             ;                       "meta-key: " meta-key-id
             ;                       "person-id:" person-id
             ;                       "result: " retryresult))
-            (sd/response_ok retryresult) ;)
+            (sd/response_ok retryresult)                    ;)
             (sd/response_failed "Could not create md people" 406)))))
     (catch Exception ex (sd/response_exception ex))))
 

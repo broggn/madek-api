@@ -57,6 +57,7 @@ describe 'generated runs' do
               end
 
               it 'status 200' do
+                binding.pry
                 expect(response.status).to be == 200
               end
 
