@@ -116,9 +116,17 @@
 
 
         id (cond
-             (= res-type "MediaEntry") (:media_entry_id resource)
-             (= res-type "Collection") (:id resource)
-             :else nil)
+             (= res-type "MediaEntry") (do
+                                         (println ">o> isMediaEntry?" res-type " vs " (= res-type "MediaEntry") " _> " (:media_entry_id resource))
+                                         (:media_entry_id resource))
+             (= res-type "Collection") (do
+                                         (println ">o> Collection?" res-type " vs " (= res-type "Collection") " _> " (:id resource))
+                                         (:id resource))
+             :else (do
+
+                     (println ">o> default :(" res-type " _> " (:id resource))
+
+                     (:id resource)))
 
 
         p (println ">o> get-id-by-mr-type=" id)
@@ -239,10 +247,23 @@
   (println ">o> user-perm 1/ mr-type=" mr-type)
   (println ">o> user-perm 1/ (:type resource)=" (:type resource))
 
-  (->> (build-user-permissions-query
-         (get-id-by-mr-type mr-type resource) user-id perm-name mr-type)
-    ;(:media_entry_id resource) user-id perm-name mr-type)
-    (jdbc/execute! (get-ds))))
+  (println ">o> user-perm 1/query=" (->> (build-user-permissions-query (:id resource) user-id perm-name mr-type)))
+
+
+
+    (->> (build-user-permissions-query (:id resource) user-id perm-name mr-type)
+
+    ;(->> (build-user-permissions-query
+    ;     (get-id-by-mr-type mr-type resource) user-id perm-name mr-type)
+    ;;(:media_entry_id resource) user-id perm-name mr-type)
+    ;(:id resource) user-id perm-name mr-type)               ;; master-version
+  (jdbc/execute! (get-ds))))
+
+
+;(defn- query-user-permissions
+;  [resource user-id perm-name mr-type]
+;  (->> (build-user-permissions-query (:id resource) user-id perm-name mr-type)
+;    (jdbc/query (rdbms/get-ds))))
 
 
 (defn query-list-user-permissions
@@ -261,9 +282,14 @@
   (println ">o> user-perm 2/ mr-type=" mr-type)
   (println ">o> user-perm 2/ (:type resource)=" (:type resource))
 
-  (jdbc/execute-one! (get-ds)
-    (build-user-permission-get-query
-      (get-id-by-mr-type mr-type resource) mr-type user-id)))
+  ;(jdbc/execute-one! (get-ds)
+  ;  (build-user-permission-get-query
+  ;    (get-id-by-mr-type mr-type resource) mr-type user-id)))
+
+
+(jdbc/execute-one! (get-ds)
+           (build-user-permission-get-query
+             (:id resource) mr-type user-id)))             ;; master-version
 
 ;(:id resource) mr-type user-id)))
 
@@ -391,6 +417,7 @@
   (println ">o> user-perm 3/ resource=" resource)
   (println ">o> user-perm 3/ mr-type=" mr-type)
   (println ">o> user-perm 3/ (:type resource)=" (:type resource))
+  (println ">o> user-perm 3/ groups=" (seq (query-user-groups user-id)))
 
 
   (if-let [user-groups (seq (query-user-groups user-id))]
@@ -398,12 +425,17 @@
 
     (->> (build-group-permissions-query
            ;(:media_entry_id resource) (map :id user-groups) perm-name mr-type)
-           (get-id-by-mr-type mr-type resource) (map :id user-groups) perm-name mr-type)
-      ;(:id resource) (map :id user-groups) perm-name mr-type)
+           ;(get-id-by-mr-type mr-type resource) (map :id user-groups) perm-name mr-type)
+           (:id resource) (map :id user-groups) perm-name mr-type) ;; master-version
       (jdbc/execute! (get-ds)))))
+
+
 
 (defn query-get-group-permission
   [resource mr-type group-id]
+
+  (println ">o> query-get-group-permission")
+
   (first (jdbc/execute! (get-ds)
            (build-group-permission-get-query
              (:id resource) mr-type group-id))))
