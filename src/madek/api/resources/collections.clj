@@ -43,13 +43,27 @@
         (let [req-data (-> req :parameters :body)
 ;; TODO: CAUTION
               ;; FIX OF BROKEN LOGIC - DB-CONSTRAINT ALLOWS ONLY ONE UUID FOR responsible_user_id OR responsible_delegation_id
-              ins-data (assoc req-data :creator_id auth-id)
+
+              ;ins-data (assoc req-data :creator_id auth-id)
+              ins-data (assoc req-data :creator_id auth-id :responsible_user_id auth-id)
+
               ins-data (convert-map-if-exist ins-data)
-              sql-map {:insert-into :collections
-                       :values [ins-data]
-                       :returning :*}
-              sql (-> sql-map sql-format)
-              ins-result (jdbc/execute! (get-ds) sql)]
+
+              ;sql-map {:insert-into :collections
+              ;         :values [ins-data]
+              ;         :returning :*}
+              ;sql (-> sql-map
+              ;
+              ;
+              ;
+              ;        sql-format)
+
+              query (spy (-> (sql/insert-into :collections)
+                           (sql/values [ins-data])
+                           (sql/returning :*)
+                           sql-format))
+
+              ins-result (jdbc/execute! (get-ds) query)]
 
           (sd/logwrite req (str "handle_create-collection: " ins-result))
           (if-let [result (first ins-result)]

@@ -85,6 +85,23 @@
   (->> (build-user-groups-query user-id)
     (jdbc/execute! (get-ds))))
 
+
+;; TODO: this should not be needed, different handling for MediaEntry and Collection needed
+(defn get-id-by-mr-type [type resource]
+  (let [
+        p (println ">o> type=" type)
+        p (println ">o> resource=" resource)
+
+        id (if (= type "MediaEntry")
+             (:media_entry_id resource)
+             (:id resource)
+             )
+
+        p (println ">o> get-id-by-mr-type=" id)
+
+        ] id)
+  )
+
 (defn- build-group-permissions-query
   [media-resource-id group-ids perm-name mr-type]
 
@@ -182,12 +199,13 @@
 (defn- query-user-permissions
   [resource user-id perm-name mr-type]
 
-
   (println ">o> user-perm / resource=" resource)
 
   (->> (build-user-permissions-query
-         (:media_entry_id resource) user-id perm-name mr-type)
+         (get-id-by-mr-type mr-type resource) user-id perm-name mr-type)
+         ;(:media_entry_id resource) user-id perm-name mr-type)
     (jdbc/execute! (get-ds))))
+
 
 (defn query-list-user-permissions
   [resource mr-type]
@@ -199,7 +217,10 @@
   [resource mr-type user-id]
   (jdbc/execute-one! (get-ds)
     (build-user-permission-get-query
-      (:id resource) mr-type user-id)))
+      (get-id-by-mr-type mr-type resource) mr-type user-id)))
+
+      ;(:id resource) mr-type user-id)))
+
 
 ;; TODO
 (defn- sql-cls-resource-and
@@ -296,6 +317,9 @@
       "\nresult:\n" result)
     result))
 
+
+
+
 (defn- query-group-permissions
   [resource user-id perm-name mr-type]
 
@@ -314,12 +338,13 @@
   ;      p (println ">o> query-group-permissions, result=" result)
   ;      ])
 
-        (println ">o> resource=" resource)
+  (println ">o> resource=" resource)
 
   (if-let [user-groups (seq (query-user-groups user-id))]
     (->> (build-group-permissions-query
-           (:media_entry_id resource) (map :id user-groups) perm-name mr-type)
-           ;(:id resource) (map :id user-groups) perm-name mr-type)
+           ;(:media_entry_id resource) (map :id user-groups) perm-name mr-type)
+           (get-id-by-mr-type mr-type resource) (map :id user-groups) perm-name mr-type)
+      ;(:id resource) (map :id user-groups) perm-name mr-type)
       (jdbc/execute! (get-ds)))))
 
 (defn query-get-group-permission
@@ -413,6 +438,13 @@
       "\nresult\n" result)
     result))
 
+
+(defn pr [str fnc]
+  (println ">o> PR str" str)
+
+  fnc
+  )
+
 (defn permission-by-auth-entity? [resource auth-entity perm-name mr-type]
   (or (perm-name resource)
     (let [auth-entity-id (:id auth-entity)
@@ -445,15 +477,25 @@
             )
           boolean))))
 
+
+
+
+
 (defn edit-permissions-by-auth-entity? [resource auth-entity mr-type]
-  (let [auth-entity-id (:id auth-entity)]
+  (let [auth-entity-id (:id auth-entity)
+
+        p (println ">o> auth-entity-id.resource=" resource)
+        p (println ">o> auth-entity-id.mr-type=" mr-type)
+        p (println ">o> auth-entity-id.id=" auth-entity-id)
+        p (println ">o> auth-entity-id::type auth-entity=" (:type auth-entity))
+        ]
     (-> (case (:type auth-entity)
-          "User" (or (= auth-entity-id (:responsible_user_id resource))
-                   (some #(= (:responsible_delegation_id resource) %) (delegation-ids auth-entity-id))
-                   (seq (query-user-permissions resource
-                          auth-entity-id
-                          :edit_permissions
-                          mr-type))))
+          "User" (or (pr "UserX1" (= auth-entity-id (:responsible_user_id resource)))
+                   (pr "UserX2" (some #(= (:responsible_delegation_id resource) %) (delegation-ids auth-entity-id)))
+                   (pr "UserX3" (seq (query-user-permissions resource
+                                       auth-entity-id
+                                       :edit_permissions
+                                       mr-type)))))
         boolean)))
 
 (defn viewable-by-auth-entity? [resource auth-entity mr-type]

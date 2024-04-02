@@ -404,7 +404,11 @@
 
 (defn- ring-add-media-resource [request handler]            ;;here
   (if-let [media-resource (get-media-resource request)]
-    (let [request-with-media-resource (assoc request :media-resource media-resource)]
+    (let [request-with-media-resource (assoc request :media-resource media-resource)
+
+          p (println ">o> ring-add-media-resource.media-resource" media-resource)
+          p (println ">o> ring-add-media-resource.request-with-media-resource" request-with-media-resource)
+          ]
       ;(logging/info "ring-add-media-resource" "\nmedia-resource\n" media-resource)
       (handler request-with-media-resource))
     {:status 404}))
