@@ -6,6 +6,10 @@
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [logbug.debug :as debug]
+
+   [madek.api.pagination :refer [add-offset-for-honeysql]]
+
+
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
    [madek.api.resources.shared :as shared]
@@ -38,26 +42,74 @@
 
 (defn- base-query
   [user-id scope]
-  (-> (sql/select :*) ; :meta_keys.id :meta_keys.vocabulary_id)
+  (-> (sql/select :meta_keys.*) ; :meta_keys.id :meta_keys.vocabulary_id)
       (sql/from :meta_keys)
       (sql/join :vocabularies
                 [:= :meta_keys.vocabulary_id :vocabularies.id])
       (sql/where (where-clause user-id scope))))
 
+
+(defn get-pagination-params [request]
+
+
+  (let [
+
+        qparams (-> request :parameters :query)
+        query-params (-> request :query-params)
+
+        params (if (or (contains? qparams :page) (contains? qparams :count))
+                 qparams
+                 query-params
+          )
+
+
+        p (println ">o> qparams=" qparams)
+        p (println ">o> query-params=" query-params)
+        p (println ">o> pagination-params=" params)
+
+        ;offset (str-to-int (params :page) 0)
+        ;p (println ">o> offset" offset)
+        ;p (println ">o> offset.class" (class offset))
+        ;
+        ;count (str-to-int (params :count) 100)
+        ;
+        ;params {:page offset :limit count}
+
+        ] params ))
+
+;(defn set-pagination [stmt request]
+;  (let [pagination-params (get-pagination-params request)
+;
+;        query (-> stmt
+;                  (sql/offset (:offset pagination-params))
+;                  (sql/limit (:limit pagination-params)) ;; TODO: FIXME / TEST-IT
+;                  )
+;
+;        ] query ))
+
+
+
 (defn- build-query [request]
   (let [qparams (-> request :parameters :query)
+
+        pagination-params (get-pagination-params request)
+
+
         scope (or (:scope qparams) "view")
         user-id (-> request :authenticated-entity :id)
 
-        p (println ">o> qparams" qparams)
+        p (println ">o> pagination-params=" pagination-params)
+        ;
+        ;offset (str-to-int (pagination-params :page) 1)
+        ;p (println ">o> offset" offset)
+        ;p (println ">o> offset.class" (class offset))
+        ;
+        ;size (str-to-int (pagination-params :count) 5)
+        ;p (println ">o> :size" size)
+        ;p (println ">o> :size.class" (class size))
 
-        offset (str-to-int (qparams :page) 1)
-        p (println ">o> offset" offset)
-        p (println ">o> offset.class" (class offset))
 
-        size (str-to-int (qparams :count) 5)
-        p (println ">o> :size" size)
-        p (println ">o> :size.class" (class size))]
+        ]
 
     (-> (base-query user-id scope)
         (sd/build-query-param qparams :vocabulary_id)
@@ -68,8 +120,10 @@
 
         (sql/order-by :meta_keys.id)
 
-        (sql/offset offset)
-        (sql/limit size) ;; TODO: FIXME / TEST-IT
+        (add-offset-for-honeysql pagination-params)
+
+        ;(sql/offset (:offset pagination-params))
+        ;(sql/limit (:limit pagination-params)) ;; TODO: FIXME / TEST-IT
 
         sql-format)))
 

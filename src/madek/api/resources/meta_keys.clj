@@ -82,7 +82,12 @@
 
 (defn handle_usr-query-meta-keys [req]
   (let [db-result (mkindex/db-query-meta-keys req)
-        result (map user-export-meta-key-list db-result)]
+        result (map user-export-meta-key-list db-result)
+
+        p (println ">o> handle_usr-query-meta-keys.db-result=" db-result)
+
+        p (println ">o> handle_usr-query-meta-keys.result=" result)
+        ]
     (sd/response_ok {:meta-keys result})))
 
 (defn handle_adm-get-meta-key [req]
