@@ -47,6 +47,17 @@
                    sd/hsql-upd-clause-format)]
     md-sql))
 
+(defn- sql-cls-upd-meta-data-new [stmt mr mk-id]
+  (let [
+        colomn (col-key-for-mr-type mr)
+
+        md-sql (-> stmt
+                   (sql/where [:and
+                               [:= :meta_key_id mk-id]
+                               [:= colomn (to-uuid (-> mr :id) colomn)]]))
+        ]
+    md-sql))
+
 (defn- sql-cls-upd-meta-data-typed-id [mr mk-id md-type]
   (let [
         colomn (col-key-for-mr-type mr)
@@ -196,13 +207,14 @@
   (let [mr (-> req :media-resource)
         meta-data (-> req :meta-data)
         meta-key-id (:meta_key_id meta-data)
-        del-clause (sql-cls-upd-meta-data mr meta-key-id)
+        ;del-clause (sql-cls-upd-meta-data mr meta-key-id)
 
         ;    del-result (jdbc/delete! (get-ds) :meta_data del-clause)]
         ;(if (= 1 (first del-result))
 
         sql-query (-> (sql/delete-from :meta_data)
-                      (sql/where del-clause)
+                      ;(sql/where del-clause)
+                      (sql-cls-upd-meta-data-new mr meta-key-id)
                       sql-format)
         del-result (jdbc/execute-one! (get-ds) sql-query)]
     (if (= 1 (::jdbc/update-count del-result))
