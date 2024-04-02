@@ -1,5 +1,6 @@
 (ns madek.api.utils.helper
-  (:require [clojure.tools.logging :as logging]
+  (:require [cheshire.core :as json]
+            [clojure.tools.logging :as logging]
             [pghstore-clj.core :refer [to-hstore]]
 
             [taoensso.timbre :refer [debug info warn error spy]]
@@ -179,6 +180,7 @@
       (modify-if-exists :layout #(if (contains? m :layout) [:cast % :public.collection_layout]))
       (modify-if-exists :default_resource_type #(if (contains? m :default_resource_type) [:cast % :public.collection_default_resource_type]))
       (modify-if-exists :sorting #(if (contains? m :sorting) [:cast % :public.collection_sorting]))
+      (modify-if-exists :json #(if (contains? m :json) [:cast (json/generate-string %) :jsonb]))
 
       ;; uuid
       (modify-if-exists :id #(if (contains? m :id) (to-uuid % :id)))

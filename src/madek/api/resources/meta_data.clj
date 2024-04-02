@@ -5,6 +5,7 @@
             [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
+            [cheshire.core :as json]
    ;[madek.api.utils.rdbms :as rdbms]
             [madek.api.db.core :refer [get-ds]]
             [madek.api.resources.meta-data.index :as meta-data.index]
@@ -128,7 +129,7 @@
   (let [
         ;meta-data= {:meta_key_id test:json, :type MetaDatum::JSON, :created_by_id #uuid "51dbe6fe-3b4a-46b6-a38d-5b00cb1e7198", :media_entry_id #uuid "01624c98-2fee-4b26-8cf0-2b4e9221de25", :json {some_boolean true, zero_point -273.15, seq [1 2 nil]}}
 
-        data {:meta-key-id "test:eins"
+        data {:meta-key-id "test:zwei"
               :type "MetaDatum::JSON"
               :created-by-id (java.util.UUID/fromString "67ce2f2f-441d-48aa-b1bb-a8625a37dded")
               :media-entry-id (java.util.UUID/fromString "8ab7f7c2-26da-4e19-8c65-e5bc6f2b2cb1")
@@ -139,17 +140,32 @@
               ;      'seq': [1, 2, 3]}"
 
               ;; TODO: move this to helper
-              :json [:cast "{\"some-boolean\": true,
-                    \"zero-point\": -273.15,
-                    \"seq\": [1, 2, 3]}" :jsonb]
+              ;; Solution #1
+              ;:json [:cast "{\"some-boolean\": true,
+              ;      \"zero-point\": -273.15,
+              ;      \"seq\": [1, 2, 3]}" :jsonb]
+
+              ;; Solution #2, use helper::convert-map-if-exist, works
+              :json {:some_boolean true, :zero_point -273.15, :seq [1 2 nil]}
+
+
+              ;; Solution #3, wont work - cast missing
+              ;;   (jdbc/execute! db-spec ["INSERT INTO your_table (jsonb_column_name) VALUES (?::jsonb)" jsonb-data]))
+              ;:json (json/generate-string  {:some_boolean true, :zero_point -273.15, :seq [1 2 nil]})
+
               }
 
 
         data (convert-map-if-exist data)
         p (println ">o> data" data)
 
-        query (-> (sql/insert-into :meta_data)
+        _query (-> (sql/insert-into :meta_data)
                   (sql/values [data])
+                  (sql/returning :*)
+                  sql-format)
+
+        query (-> (sql/insert-into :meta_data)
+                  (sql/values [(convert-map-if-exist data)])
                   (sql/returning :*)
                   sql-format)
 
