@@ -46,6 +46,8 @@ Known issue
 10. Endpoints not in use (search for 'not in use')
     1. people
     2. groups
+11. Transaction needs additional default-config, otherwise class-prefix will be added 
+    1. https://cljdoc.org/d/seancorfield/next.jdbc/1.2.659/api/next.jdbc.result-set#as-unqualified-lower-maps
 
    
 
