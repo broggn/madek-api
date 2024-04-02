@@ -187,9 +187,9 @@
         p (println ">o> data" data)
 
         _query (-> (sql/insert-into :meta_data)
-                  (sql/values [data])
-                  (sql/returning :*)
-                  sql-format)
+                   (sql/values [data])
+                   (sql/returning :*)
+                   sql-format)
 
         query (-> (sql/insert-into :meta_data)
                   (sql/values [(convert-map-if-exist data)])
@@ -398,7 +398,7 @@
         ;result (jdbc/delete! db :meta_data_keywords query)]
 
         sql-query (-> (sql/delete-from :meta_data_keywords)
-                      (sql/where [:= :meta_datum_id md-id] [:= :keyword_id kw-id] )
+                      (sql/where [:= :meta_datum_id md-id] [:= :keyword_id kw-id])
                       sql-format)
         result (jdbc/execute-one! db sql-query)
         p (println ">o> result=" result)
@@ -421,7 +421,7 @@
   (try
     (catcher/with-logging {}
       (jdbc/with-transaction [tx (get-ds)]
-      ;(jdbc/with-transaction [tx get-ds]
+        ;(jdbc/with-transaction [tx get-ds]
 
 
         (let [
@@ -458,7 +458,7 @@
             user-id (-> req :authenticated-entity :id)
 
 
-            p (println ">o> handle_create-meta-data-keyword.mr=" mr )
+            p (println ">o> handle_create-meta-data-keyword.mr=" mr)
             p (println ">o> handle_create-meta-data-keyword.meta=" meta-key-id)
             p (println ">o> handle_create-meta-data-keyword.kw=" kw-id)
             p (println ">o> handle_create-meta-data-keyword.user-id=" user-id)
@@ -531,16 +531,20 @@
 
 (defn- db-create-meta-data-people
   [db md-id person-id user-id]
-  (let [data {:meta_datum_id md-id
+  (let [data {:meta_datum_id (to-uuid md-id)
               :person_id person-id
               :created_by_id user-id}
+
+
+        p (println ">o> db-create-meta-data-people.data=" data)
 
         ;result (jdbc/insert! db :meta_data_people data)]
 
         sql-query (-> (sql/insert-into :meta_data_people)
                       (sql/values [data])
+                      (sql/returning :*)
                       sql-format)
-        result (jdbc/execute! db sql-query)]
+        result (jdbc/execute-one! db sql-query)]
 
     ;(logging/info "db-create-meta-data-people" "\npeople-data\n" data "\nresult\n" result)
     result))
@@ -557,17 +561,25 @@
       (jdbc/with-transaction [tx (get-ds)]
         (if-let [meta-data (db-get-meta-data mr meta-key-id nil tx)]
           ; already has meta-data
-          (if-let [result (db-create-meta-data-people tx (:id meta-data) person-id user-id)]
-            {:meta_data meta-data
-             MD_KEY_PEOPLE_DATA result}
-            nil)
+          (do
+             (println ">o> meta-data1=" meta-data)
+            (if-let [result (db-create-meta-data-people tx (:id meta-data) person-id user-id)]
+              (do
+                 (println ">o> result2" result)
+                {:meta_data meta-data
+                 MD_KEY_PEOPLE_DATA result})
+              nil))
 
           ; create meta-data and md-people
           (if-let [mdins-result (db-create-meta-data tx mr meta-key-id MD_TYPE_PEOPLE user-id)]
-            (if-let [ip-result (db-create-meta-data-people tx (-> mdins-result :id str) person-id user-id)]
-              {:meta_data mdins-result
-               MD_KEY_PEOPLE_DATA ip-result}
-              nil)
+            (do
+              (println ">o> mdins-result3=" mdins-result)
+              (if-let [ip-result (db-create-meta-data-people tx (-> mdins-result :id str) person-id user-id)]
+                (do
+                  (println ">o> ip-result4=" ip-result)
+                  {:meta_data mdins-result
+                   MD_KEY_PEOPLE_DATA ip-result})
+                nil))
             nil))))
     (catch Exception _
       (logging/error "Could not create md people" _)
@@ -581,7 +593,9 @@
       (let [mr (-> req :media-resource)
             meta-key-id (-> req :parameters :path :meta_key_id)
             person-id (-> req :parameters :path :person_id)
-            user-id (-> req :authenticated-entity :id str)]
+            user-id (-> req :authenticated-entity :id)
+
+            ]
 
         (if-let [result (create_md_and_people mr meta-key-id person-id user-id)]
           ;((sd/logwrite req (str "handle_create-meta-data-people:"
@@ -637,19 +651,19 @@
                                       [:= :meta_datum_id md-id]
                                       [:= :person_id person-id]])
                           sql-format)
-            del-result (jdbc/execute! (get-ds) sql-query)]
+            del-result (jdbc/execute-one! (get-ds) sql-query)]
 
         ;mdr-clause ["meta_datum_id = ? AND person_id = ?" md-id person-id]
         ;del-result (jdbc/delete! (get-ds) :meta_data_people mdr-clause)]
 
-        (sd/logwrite req (str "handle_delete-meta-data-people:"
-                              " mr-id: " (:id mr)
+        (sd/logwrite req (str "\nhandle_delete-meta-data-people:"
+                              "\nmr-id: " (:id mr)
                                          " meta-key: " meta-key-id
                                          " person-id: " person-id
                                          ;" upd-cls: " mdr-clause
                                          " result: " del-result))
 
-        (if (= 1 (first del-result))
+        (if (= 1 (:next.jdbc/update-count del-result))
           (sd/response_ok {:meta_data md
                            MD_KEY_PEOPLE_DATA (db-get-meta-data-people md-id)})
           (sd/response_failed {:message "Failed to delete meta data people"} 406))))
