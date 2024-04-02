@@ -392,14 +392,17 @@
 
 (defn- db-delete-meta-data-keyword
   [db md-id kw-id]
-  (let [query ["meta_datum_id = ? AND keyword_id = ?" md-id kw-id]
+  (let [
+        ;query ["meta_datum_id = ? AND keyword_id = ?" md-id kw-id]
 
         ;result (jdbc/delete! db :meta_data_keywords query)]
 
         sql-query (-> (sql/delete-from :meta_data_keywords)
-                      (sql/where query)
+                      (sql/where [:= :meta_datum_id md-id] [:= :keyword_id kw-id] )
                       sql-format)
-        result (jdbc/execute! db sql-query)]
+        result (jdbc/execute-one! db sql-query)
+        p (println ">o> result=" result)
+        ]
 
     (logging/info "db-delete-meta-data-keyword"
       "\nmd-id\n" md-id
@@ -520,7 +523,7 @@
                                         "keyword-id: " kw-id
                                         "result: " delete-result))
 
-        (if (= 1 (first delete-result))
+        (if (= 1 (:next.jdbc/update-count delete-result))
           (sd/response_ok {:meta_data md
                            MD_KEY_KW_DATA mdr})
           (sd/response_failed "Could not delete md keyword." 406))))
