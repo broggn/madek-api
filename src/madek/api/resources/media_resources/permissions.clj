@@ -5,7 +5,7 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
 
-   [madek.api.utils.helper :refer [ array-to-map convert-map-if-exist map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+   [madek.api.utils.helper :refer [array-to-map convert-map-if-exist map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
 
    [madek.api.db.core :refer [get-ds]]
 
@@ -90,12 +90,25 @@
 
   (println ">o> ??? build-group-permissions-query, group-ids=" group-ids)
 
+  (let [
+        result (-> (sql/select :*)
+                   (sql/from (group-table mr-type))
+                   (sql/where [:= (resource-key mr-type) media-resource-id]
+                     [:in :group_id group-ids]              ;;broken?
+                     [:= perm-name true])
+                   (sql-format))
+
+        p (println ">o> ??? build-group-permissions-query, result=" result)
+        ])
+
   (-> (sql/select :*)
       (sql/from (group-table mr-type))
       (sql/where [:= (resource-key mr-type) media-resource-id]
         [:in :group_id group-ids]                           ;;broken?
         [:= perm-name true])
-      (sql-format)))
+      (sql-format))
+
+  )
 
 (defn- build-group-permission-get-query
   [media-resource-id mr-type group-id]
@@ -168,8 +181,12 @@
 
 (defn- query-user-permissions
   [resource user-id perm-name mr-type]
+
+
+  (println ">o> user-perm / resource=" resource)
+
   (->> (build-user-permissions-query
-         (:id resource) user-id perm-name mr-type)
+         (:media_entry_id resource) user-id perm-name mr-type)
     (jdbc/execute! (get-ds))))
 
 (defn query-list-user-permissions
@@ -281,9 +298,28 @@
 
 (defn- query-group-permissions
   [resource user-id perm-name mr-type]
+
+  ;(let [
+  ;
+  ;
+  ;      user-groups (seq (query-user-groups user-id))
+  ;      p (println ">o> query-group-permissions, user-groups=" user-groups)
+  ;
+  ;      query (build-group-permissions-query (:id resource) (map :id user-groups) perm-name mr-type)
+  ;
+  ;      p (println ">o> query-group-permissions, query=" query)
+  ;
+  ;      result (jdbc/execute! (get-ds) query)
+  ;
+  ;      p (println ">o> query-group-permissions, result=" result)
+  ;      ])
+
+        (println ">o> resource=" resource)
+
   (if-let [user-groups (seq (query-user-groups user-id))]
     (->> (build-group-permissions-query
-           (:id resource) (map :id user-groups) perm-name mr-type)
+           (:media_entry_id resource) (map :id user-groups) perm-name mr-type)
+           ;(:id resource) (map :id user-groups) perm-name mr-type)
       (jdbc/execute! (get-ds)))))
 
 (defn query-get-group-permission
