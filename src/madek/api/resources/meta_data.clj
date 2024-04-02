@@ -59,6 +59,18 @@
                    sd/hsql-upd-clause-format)]
     md-sql))
 
+(defn- sql-cls-upd-meta-data-typed-id-new [stmt mr mk-id md-type]
+  (let [
+        colomn (col-key-for-mr-type mr)
+
+        md-sql (-> stmt
+                   (sql/where [:and
+                               [:= :meta_key_id mk-id]
+                               [:= :type md-type]
+                               [:= colomn (to-uuid (-> mr :id) colomn)]]))
+        ]
+    md-sql))
+
 (defn- fabric-meta-data
   [mr meta-key-id md-type user-id]
   (let [data {:meta_key_id meta-key-id
@@ -205,24 +217,33 @@
       (let [mr (-> req :media-resource)
             ;upd-data2 (assoc upd-data (col-key-for-mr-type mr) (:id mr))
             meta-key-id (-> req :parameters :path :meta_key_id)
-            upd-clause (sql-cls-upd-meta-data-typed-id mr meta-key-id md-type)
+            ;upd-clause (sql-cls-upd-meta-data-typed-id-new mr meta-key-id md-type)
 
             ;upd-result (jdbc/update! (get-ds) :meta_data upd-data upd-clause)
 
+            p (println ">o> upd-data=" upd-data)
+            ;p (println ">o> upd-clause=" upd-clause)
+
+
+
             sql-query (-> (sql/update :meta_data)
                           (sql/set (convert-map-if-exist upd-data))
-                          (sql/where upd-clause)
+                          ;(sql/where upd-clause)
+                          (sql-cls-upd-meta-data-typed-id-new mr meta-key-id md-type)
                           sql-format)
             upd-result (jdbc/execute-one! (get-ds) sql-query)
 
-            result-data (db-get-meta-data mr meta-key-id md-type)]
+            result-data (db-get-meta-data mr meta-key-id md-type)
+            p (println ">o> upd-result=" upd-result)
+            p (println ">o> result-data=" result-data)
+            ]
 
         (sd/logwrite req (str "handle_update-meta-data-text-base:"
                               " mr-id: " (:id mr)
                                          " mr-type: " (:type mr)
                                          " md-type: " md-type
                                          " meta-key-id: " meta-key-id
-                                         " upd-clause: " upd-clause
+                                         ;" upd-clause: " upd-clause
                                          " upd-result: " upd-result))
 
         (if (= 1 (::jdbc/update-count upd-result))
