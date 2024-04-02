@@ -68,6 +68,9 @@ describe 'generated runs' do
               end
 
               it 'holds the new keywords value' do
+
+                # binding.pry
+
                 response.body['md_keywords'].each do |md_keyword|
                   expect(keywords_data_ids).to include md_keyword['keyword_id']
                 end

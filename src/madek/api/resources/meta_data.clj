@@ -375,10 +375,15 @@
 
         ;result (jdbc/insert! db :meta_data_keywords data)]
 
+        p (println ">o> data=" data)
+
         sql-query (-> (sql/insert-into :meta_data_keywords)
                       (sql/values [data])
+                      (sql/returning :*)
                       sql-format)
-        result (jdbc/execute! db sql-query builder-fn-options-default)]
+        result (jdbc/execute! db sql-query builder-fn-options-default)
+        p (println ">o> result=" result)
+        ]
 
     (logging/info "db-create-meta-data-keyword"
       "\nkw-data\n" data
