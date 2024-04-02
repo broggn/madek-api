@@ -12,6 +12,17 @@
 (defn ring-wrap-find-and-add-preview
   ([handler] #(ring-wrap-find-and-add-preview % handler))
   ([request handler]
+
+   (let [
+         preview-id (-> request :parameters :path :preview_id)
+
+         p (println ">o> preview-id=" preview-id)
+
+         preview (first (sd/query-eq-find-all :previews :id preview-id))
+         p (println ">o> preview=" preview)
+
+         ])
+
    (when-let [preview-id (-> request :parameters :path :preview_id)]
      ;(logging/info "ring-wrap-find-and-add-preview" "\npreview-id\n" preview-id)
      (when-let [preview (first (sd/query-eq-find-all :previews :id preview-id))]

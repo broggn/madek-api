@@ -5,9 +5,9 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
 
-   [madek.api.utils.helper :refer [array-to-map convert-map-if-exist map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-
    [madek.api.db.core :refer [get-ds]]
+
+   [madek.api.utils.helper :refer [convert-map-if-exist to-uuid]]
 
    ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]))
@@ -52,12 +52,25 @@
 
 (defn- build-user-permissions-query
   [media-resource-id user-id perm-name mr-type]
-  (-> (sql/select :*)
-      (sql/from (user-table mr-type))
-      (sql/where [:= (resource-key mr-type) media-resource-id]
-        [:= :user_id user-id]
-        [:= perm-name true])
-      (sql-format)))
+
+
+  (let [
+
+        p (println ">o> build-user-permissions-query.media-resource-id=" media-resource-id)
+        p (println ">o> build-user-permissions-query.user-id=" user-id)
+        p (println ">o> build-user-permissions-query.perm-name=" perm-name)
+        p (println ">o> build-user-permissions-query.mr-type=" mr-type)
+
+        query (-> (sql/select :*)
+                  (sql/from (user-table mr-type))
+                  (sql/where [:= (resource-key mr-type) media-resource-id]
+                    [:= :user_id user-id]
+                    [:= perm-name true])
+                  (sql-format))
+        p (println ">o> build-user-permissions-query.query=" query)
+        ] query)
+
+  )
 
 (defn- build-user-permission-get-query
   [media-resource-id mr-type user-id]
@@ -89,18 +102,41 @@
 ;; TODO: this should not be needed, different handling for MediaEntry and Collection needed
 (defn get-id-by-mr-type [type resource]
   (let [
-        p (println ">o> type=" type)
-        p (println ">o> resource=" resource)
+        ;p (println ">o> type=" type)
 
-        id (if (= type "MediaEntry")
-             (:media_entry_id resource)
-             (:id resource)
-             )
+        res-type (:type resource)
+        p (println ">o> res-type=" res-type)
+        p (println ">o> res-type.cl=" (class res-type))
+        p (println ">o> resource=" resource)
+        p (println ">o> resource.cl=" (class resource))
+
+
+        p (println "\n>o> resource.med=" (:media_entry_id resource))
+        p (println "\n>o> resource.id=" (:id resource))
+
+
+        id (cond
+             (= res-type "MediaEntry") (:media_entry_id resource)
+             (= res-type "Collection") (:id resource)
+             :else nil)
+
 
         p (println ">o> get-id-by-mr-type=" id)
 
         ] id)
   )
+
+
+(comment
+
+  (let [
+        res (get-id-by-mr-type nil {:type "MediaEntry" :media_entry_id #uuid "6a1f6f8d-6578-466b-8372-19a38a8e1bf6"
+                                    :id "94309db1-f23b-44a8-9e45-5567dab70d62"})
+        ]
+    res
+    )
+  )
+
 
 (defn- build-group-permissions-query
   [media-resource-id group-ids perm-name mr-type]
@@ -199,11 +235,13 @@
 (defn- query-user-permissions
   [resource user-id perm-name mr-type]
 
-  (println ">o> user-perm / resource=" resource)
+  (println ">o> user-perm 1/ resource=" resource)
+  (println ">o> user-perm 1/ mr-type=" mr-type)
+  (println ">o> user-perm 1/ (:type resource)=" (:type resource))
 
   (->> (build-user-permissions-query
          (get-id-by-mr-type mr-type resource) user-id perm-name mr-type)
-         ;(:media_entry_id resource) user-id perm-name mr-type)
+    ;(:media_entry_id resource) user-id perm-name mr-type)
     (jdbc/execute! (get-ds))))
 
 
@@ -215,11 +253,19 @@
 
 (defn query-get-user-permission
   [resource mr-type user-id]
+
+  (println ">o> query-get-user-permission")
+
+
+  (println ">o> user-perm 2/ resource=" resource)
+  (println ">o> user-perm 2/ mr-type=" mr-type)
+  (println ">o> user-perm 2/ (:type resource)=" (:type resource))
+
   (jdbc/execute-one! (get-ds)
     (build-user-permission-get-query
       (get-id-by-mr-type mr-type resource) mr-type user-id)))
 
-      ;(:id resource) mr-type user-id)))
+;(:id resource) mr-type user-id)))
 
 
 ;; TODO
@@ -340,7 +386,16 @@
 
   (println ">o> resource=" resource)
 
+  (println ">o> query-group-permissions5")
+
+  (println ">o> user-perm 3/ resource=" resource)
+  (println ">o> user-perm 3/ mr-type=" mr-type)
+  (println ">o> user-perm 3/ (:type resource)=" (:type resource))
+
+
   (if-let [user-groups (seq (query-user-groups user-id))]
+
+
     (->> (build-group-permissions-query
            ;(:media_entry_id resource) (map :id user-groups) perm-name mr-type)
            (get-id-by-mr-type mr-type resource) (map :id user-groups) perm-name mr-type)
