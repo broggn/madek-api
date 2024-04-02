@@ -10,6 +10,8 @@
    [madek.api.resources.keywords.index :as keywords]
    [madek.api.resources.shared :as sd]
 
+   [madek.api.utils.helper :refer [convert-map-if-exist array-to-map  map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+
    [next.jdbc :as jdbc]
 
    [ring.util.response :as ring-response]))
@@ -27,7 +29,7 @@
                   (sql/from :people)
                   (sql/join :meta_data_people [:= :meta_data_people.person_id :people.id])
                   (sql/where [:= :meta_data_people.meta_datum_id (:id meta-datum)])
-                  (sql-format))]
+                  sql-format)]
     (jdbc/execute! (get-ds) query)))
 
 ;### meta-datum ###############################################################
@@ -42,16 +44,16 @@
   (let [query (-> (sql/select :meta_data_roles.*)
                   (sql/from :meta_data_roles)
                   (sql/where [:= :meta_data_roles.meta_datum_id (:id meta-datum)])
-                  (sql-format))]
+                  sql-format)]
     (jdbc/execute! (get-ds) query)))
 
 (defn- find-meta-datum-role
   [id]
   (let [query (-> (sql/select :meta_data_roles.*)
                   (sql/from :meta_data_roles)
-                  (sql/where [:= :meta_data_roles.id id])
-                  (sql-format))]
-    (first (jdbc/execute! (get-ds) query))))
+                  (sql/where [:= :meta_data_roles.id (to-uuid id)])
+                  sql-format)]
+    (jdbc/execute-one! (get-ds) query)))
 
 (defn- prepare-meta-datum [meta-datum]
   (merge (select-keys meta-datum [:id :meta_key_id :type])

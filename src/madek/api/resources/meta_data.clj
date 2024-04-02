@@ -646,6 +646,9 @@
             md (db-get-meta-data mr meta-key-id MD_TYPE_PEOPLE)
             md-id (-> md :id)
 
+            p (println ">o> md-id=" md-id)
+            p (println ">o> person-id=" person-id)
+
             sql-query (-> (sql/delete-from :meta_data_people)
                           (sql/where [:and
                                       [:= :meta_datum_id md-id]
@@ -1184,7 +1187,7 @@
                :coercion reitit.coercion.schema/coercion
                :parameters {:path {:collection_id s/Uuid
                                    :meta_key_id s/Str
-                                   :person_id s/Str}}
+                                   :person_id s/Uuid}}
                :responses {200 {:body s/Any}}}}]
     ; TODO meta-data roles
     ["/:meta_key_id/role/:role_id"
