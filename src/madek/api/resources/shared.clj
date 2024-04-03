@@ -120,25 +120,29 @@
 (defn- sql-query-find-eq
   ([table-name col-name row-data]
 
-   (println ">o> sql-query-find-eq1" table-name col-name row-data)
-   (-> (build-query-base table-name :*)
-       (sql/where [:= col-name (to-uuid row-data col-name table-name)])
-       sql-format
-       spy
-       ))
+   (let [
+         p (println ">o> sql-query-find-eq1" table-name col-name row-data)
+         query (-> (build-query-base table-name :*)
+                   (sql/where [:= col-name (to-uuid row-data col-name table-name)])
+                   sql-format
+                   )
+
+         ] query)
+   )
+
+
 
   ([table-name col-name row-data col-name2 row-data2]
-   (println ">o> sql-query-find-eq2" table-name col-name row-data col-name2 row-data2)
-   (println ">o> sql-query-find-eq2" (-> (build-query-base table-name :*)
-                                         (sql/where [:= col-name (to-uuid row-data col-name)])
-                                         (sql/where [:= col-name2 (to-uuid row-data2 col-name2)])
-                                         sql-format))
-   (-> (build-query-base table-name :*)
-       (sql/where [:= col-name (to-uuid row-data col-name)])
-       (sql/where [:= col-name2 (to-uuid row-data2 col-name2)])
-       sql-format
-       spy
-       )))
+
+   (let [
+         p (println ">o> sql-query-find-eq2" table-name col-name row-data col-name2 row-data2)
+         query (-> (build-query-base table-name :*)
+                   (sql/where [:= col-name (to-uuid row-data col-name)])
+                   (sql/where [:= col-name2 (to-uuid row-data2 col-name2)])
+                   sql-format
+                   )
+         ] query)
+   ))
 
 (defn sql-update-clause
   "Generates an sql update clause"
@@ -191,7 +195,7 @@
   ([table-name col-name row-data]
    (spy (query-eq-find-all-one table-name col-name row-data)))
   ([table-name col-name row-data col-name2 row-data2]
-    (spy (query-eq-find-all-one table-name col-name row-data col-name2 row-data2))))
+   (spy (query-eq-find-all-one table-name col-name row-data col-name2 row-data2))))
 
 #_(defn query-eq2-find-all [table-name col-name row-data col-name2 row-data2]
     (catcher/snatch {}
@@ -330,7 +334,7 @@
         search2 (-> request :parameters :path path-param2 str)
         res (query-eq-find-one db_table db_col_name search db_col_name2 search2)
 
-        p (println ">o> req-find-data2.path-param=" db_table db_col_name  db_col_name2 )
+        p (println ">o> req-find-data2.path-param=" db_table db_col_name db_col_name2)
         p (println ">o> req-find-data2.search=" search)
         p (println ">o> req-find-data2.search2=" search2)
         p (println ">o> req-find-data2.res=" res)
