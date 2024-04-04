@@ -20,7 +20,7 @@
 
         p (println ">o> preview-id=" preview-id)
 
-        query (-> (sql/select :*)
+        query (-> (sql/select :media_entries.*)
                   (sql/from :media_entries)
                   (sql/join :media_files [:= :media_entries.id :media_files.media_entry_id])
                   (sql/join :previews [:= :media_files.id :previews.media_file_id])

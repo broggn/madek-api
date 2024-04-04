@@ -64,16 +64,14 @@ describe 'Getting a preview resource with authentication' do
         FactoryBot.create(:media_entry_user_permission,
                           get_metadata_and_previews: true,
                           user: @entity)
+
+      puts ">> @media_entry.user_permissions: #{@media_entry.user_permissions.to_json}"
+      puts "\n>> @media_entry: #{@media_entry.to_json}"
+
     end
 
     it 'is allowed 200' do
-      binding.pry
-
-      # method=:get,
-      #   body={"message"=>"Not authorized for media-resource"},
-      #   url=#<URI::HTTP http://localhost:3104/api/previews/04355218-83a5-44c6-8734-0222ba203c29>,
-
-      expect(response.status).to be == 200
+     expect(response.status).to be == 200
     end
   end
 
@@ -88,12 +86,6 @@ describe 'Getting a preview resource with authentication' do
     end
 
     it 'is allowed 200' do
-      binding.pry
-
-      # method=:get,
-      #   body={"message"=>"Not authorized for media-resource"},
-      #   url=#<URI::HTTP http://localhost:3104/api/previews/3496c938-2812-452c-aac9-fe0c0b47aae0>,
-
       #    body={"message"=>"Not authorized for media-resource"},
       expect(response.status).to be == 200
     end

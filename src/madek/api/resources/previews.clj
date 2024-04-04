@@ -3,7 +3,7 @@
    [clojure.tools.logging :as logging]
    [madek.api.resources.media-entries.media-entry :refer [get-media-entry-for-preview]]
    [madek.api.resources.media-files :as media-files]
-    ;[logbug.debug :as debug]
+   ;[logbug.debug :as debug]
    [madek.api.resources.previews.preview :as preview]
    [madek.api.resources.shared :as sd]
    [reitit.coercion.schema]
@@ -16,10 +16,10 @@
    (let [
          preview-id (-> request :parameters :path :preview_id)
 
-         p (println ">o> preview-id=" preview-id)
+         p (println ">o> !!! preview-id=" preview-id)
 
          preview (first (sd/query-eq-find-all :previews :id preview-id))
-         p (println ">o> preview=" preview)
+         p (println ">o> !!! preview=" preview)
 
          ])
 
@@ -50,6 +50,7 @@
   (fn [request] (add-preview-for-media-file handler request)))
 
 (defn- ring-add-media-resource-preview [request handler]
+  (println ">o> !!! media-resource=" (get-media-entry-for-preview request))
   (if-let [media-resource (get-media-entry-for-preview request)]
     (let [mmr (assoc media-resource :type "MediaEntry" :table-name "media_entries")
           request-with-media-resource (assoc request :media-resource mmr)
@@ -110,7 +111,7 @@
     {:get {:summary "Get preview for media-entry id."
            :handler handle_get-preview
            :middleware [media-files/wrap-find-and-add-media-file-by-media-entry-id
-           ;            media-files.authorization/ring-wrap-authorize-metadata-and-previews
+                        ;            media-files.authorization/ring-wrap-authorize-metadata-and-previews
                         ]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Str}
@@ -123,7 +124,7 @@
            :handler preview/get-preview-file-data-stream
            :middleware [media-files/wrap-find-and-add-media-file-by-media-entry-id
                         wrap-add-preview-for-media-file
-          ;             media-files.authorization/ring-wrap-authorize-metadata-and-previews
+                        ;             media-files.authorization/ring-wrap-authorize-metadata-and-previews
                         ]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Str}
