@@ -468,6 +468,25 @@
   ;              "\nauth entity:\n" (-> request :authenticated-entity)
   ;              "\nis-admin:\n" (-> request :is_admin)
   ;              )
+
+
+  (let [
+        p (println ">oo> scope=" scope)
+
+        media-resource (:media-resource request)
+        p (println ">oo> media-resource=" media-resource)
+
+        viewable-if-public (and (= scope :view) (public? media-resource))
+        p (println ">oo> viewable-if-public=" viewable-if-public)
+
+        auth-entity (-> request :authenticated-entity)
+        do-all-as-admin (and (-> request :is_admin true?) auth-entity)
+        p (println ">oo> do-all-as-admin=" do-all-as-admin)
+
+        not-admin-check-user-auth (and (-> request :is_admin true?) (not auth-entity))
+        p (println ">oo> not-admin-check-user-auth=" not-admin-check-user-auth)
+        ])
+
   (if-let [media-resource (:media-resource request)]
 
     (if (and (= scope :view) (public? media-resource))
