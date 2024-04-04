@@ -5,6 +5,10 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
 
+
+   [taoensso.timbre :refer [info warn error spy]]
+
+
    [madek.api.db.core :refer [get-ds]]
 
    [madek.api.utils.helper :refer [convert-map-if-exist to-uuid]]
@@ -397,8 +401,7 @@
 
   (let [
 
-
-p  (println ">o> resource=" resource)
+        p (println ">o> resource=" resource)
 
         p (println ">o> query-group-permissions5")
 
@@ -528,39 +531,115 @@ p  (println ">o> resource=" resource)
   fnc
   )
 
+;(defn permission-by-auth-entity? [resource auth-entity perm-name mr-type]
+;  (or (perm-name resource)
+;    (let [auth-entity-id (:id auth-entity)
+;
+;
+;          p (println ">o> ================================")
+;          p (println ">o> User0, (=auth-entity-id.." (= auth-entity-id (:responsible_user_id resource)))
+;          p (println ">o> User1, some=" (some #(= (:responsible_delegation_id resource) %) (delegation-ids auth-entity-id)))
+;          p (println ">o> User2, query-user-permissions=" (seq (query-user-permissions resource
+;                                                                 auth-entity-id
+;                                                                 perm-name mr-type)))
+;
+;          p (println ">o> User3, query-group-permissions=" (seq (query-group-permissions resource
+;                                                                  auth-entity-id
+;                                                                  perm-name mr-type)))
+;
+;          ]
+;      (-> (case (:type auth-entity)
+;            "User" (or (= auth-entity-id (:responsible_user_id resource))
+;                     (some #(= (:responsible_delegation_id resource) %) (delegation-ids auth-entity-id))
+;                     (seq (query-user-permissions resource
+;                            auth-entity-id
+;                            perm-name mr-type))
+;                     (seq (query-group-permissions resource
+;                            auth-entity-id
+;                            perm-name mr-type)))
+;            ;"ApiClient" (seq (query-api-client-permissions resource
+;            ;                                               auth-entity-id
+;            ;                                               perm-name mr-type))
+;            )
+;          boolean))))
+
+
+;; debug1
 (defn permission-by-auth-entity? [resource auth-entity perm-name mr-type]
-  (or (perm-name resource)
-    (let [auth-entity-id (:id auth-entity)
+  (println ">o> permission-by-auth-entity? or (perm-name resource)=" (perm-name resource))
+  ;(println ">o> permission-by-auth-entity? (:type auth-entity)=" (:type auth-entity)) (or (perm-name resource)
+
+  (let [auth-entity-id (:id auth-entity)
+
+        p (println ">o> permission-by-auth-entity? IS THIS CALLED????" mr-type)
 
 
-          p (println ">o> ================================")
-          p (println ">o> User0, (=auth-entity-id.." (= auth-entity-id (:responsible_user_id resource)))
-          p (println ">o> User1, some=" (some #(= (:responsible_delegation_id resource) %) (delegation-ids auth-entity-id)))
-          p (println ">o> User2, query-user-permissions=" (seq (query-user-permissions resource
-                                                                 auth-entity-id
-                                                                 perm-name mr-type)))
+        p (println ">o>a auth-entity-id=" auth-entity-id)
+        p (println ">o>b :responsible_user_id=" (:responsible_user_id resource))
+        p (println ">o>c (= a b)" (= auth-entity-id (:responsible_user_id resource)))
+        p (println ">o>c (= a b) fixed?" (= (str auth-entity-id) (:responsible_user_id resource)))
 
-          p (println ">o> User3, query-group-permissions=" (seq (query-group-permissions resource
-                                                                  auth-entity-id
-                                                                  perm-name mr-type)))
+        p (println ">o> ================================")
+        p (println ">o> User0, (=auth-entity-id.." (= auth-entity-id (:responsible_user_id resource)))
+        p (println ">o> User1, some=" (some #(= (:responsible_delegation_id resource) %) (delegation-ids auth-entity-id)))
+        p (println ">o> User2, query-user-permissions=" (seq (query-user-permissions resource
+                                                               auth-entity-id
+                                                               perm-name mr-type)))
 
-          ]
-      (-> (case (:type auth-entity)
-            "User" (or (= auth-entity-id (:responsible_user_id resource))
-                     (some #(= (:responsible_delegation_id resource) %) (delegation-ids auth-entity-id))
-                     (seq (query-user-permissions resource
-                            auth-entity-id
-                            perm-name mr-type))
-                     (seq (query-group-permissions resource
-                            auth-entity-id
-                            perm-name mr-type)))
-            ;"ApiClient" (seq (query-api-client-permissions resource
-            ;                                               auth-entity-id
-            ;                                               perm-name mr-type))
-            )
-          boolean))))
+        p (println ">o> User3, query-group-permissions=" (seq (query-group-permissions resource
+                                                                auth-entity-id
+                                                                perm-name mr-type)))
 
 
+        p (println ">o> raw result " (case (:type auth-entity)
+                                       "User" (or (spy (= auth-entity-id (:responsible_user_id resource)))
+                                                (spy (some #(= (:responsible_delegation_id resource) %) (delegation-ids auth-entity-id)))
+                                                (spy (seq (query-user-permissions resource
+                                                            auth-entity-id
+                                                            perm-name mr-type)))
+                                                (spy (seq (query-group-permissions resource
+                                                            auth-entity-id
+                                                            perm-name mr-type))))
+                                       ))
+
+        p (println ">o> ================================")
+
+
+
+        res (-> (case (:type auth-entity)
+                  "User" (or (spy (= auth-entity-id (:responsible_user_id resource)))
+                           (spy (some #(= (:responsible_delegation_id resource) %) (delegation-ids auth-entity-id)))
+
+
+                           ;./bin/rspec ./spec/resources/preview/user_authorization_spec.rb:69
+
+                           ; >o> User2, query-user-permissions= ({:updator_id #uuid "5e716406-0533-4a66-94f8-f3b2fcc1946d", :edit_metadata false,
+                           ;:media_entry_id #uuid "d75403d8-9124-4b9e-91a1-16d4ec29f6de", :get_full_size false, :updated_at #object[java.time.Instant 0x29809dc8 2024-03-29T01:01:42.944711Z],
+                           ;:id #uuid "5cf63e99-1e3b-469a-b70c-44cec3fc4c48", :get_metadata_and_previews true, :delegation_id nil, :user_id #uuid "f72a5257-e504-4ec1-8f31-6b6dad6d6ccb",
+                           ;:created_at #object[java.time.Instant 0x44367b8e 2024-03-29T01:01:42.937519Z], :edit_permissions false})
+                           (spy (seq (query-user-permissions resource
+                                       auth-entity-id
+                                       perm-name mr-type)))
+
+
+                           (spy (seq (query-group-permissions resource
+                                       auth-entity-id
+                                       perm-name mr-type))))
+                  ;"ApiClient" (seq (query-api-client-permissions resource
+                  ;                                               auth-entity-id
+                  ;                                               perm-name mr-type))
+                  )
+                ;pr
+                boolean)
+        p (println ">o> res=" res)
+        ]
+    (println ">o> permission-by-auth-entity? a1 some.." (some #(= (:responsible_delegation_id resource) %) (delegation-ids auth-entity-id)))
+    (println ">o> permission-by-auth-entity? a User/(= auth-entity.." (:responsible_user_id resource))
+    (println ">o> permission-by-auth-entity? a User/(= auth-entity.." (= auth-entity-id (:responsible_user_id resource)))
+    (println ">o> permission-by-auth-entity? b res=" res)
+    res
+
+    ))
 
 
 
