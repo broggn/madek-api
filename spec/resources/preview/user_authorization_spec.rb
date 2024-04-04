@@ -62,16 +62,12 @@ describe 'Getting a preview resource with authentication' do
     before :example do
       @media_entry.user_permissions << \
         FactoryBot.create(:media_entry_user_permission,
-                          get_metadata_and_previews: true,
-                          user: @entity)
-
-      puts ">> @media_entry.user_permissions: #{@media_entry.user_permissions.to_json}"
-      puts "\n>> @media_entry: #{@media_entry.to_json}"
-
+                           get_metadata_and_previews: true,
+                           user: @entity)
     end
 
     it 'is allowed 200' do
-     expect(response.status).to be == 200
+      expect(response.status).to be == 200
     end
   end
 
@@ -86,7 +82,6 @@ describe 'Getting a preview resource with authentication' do
     end
 
     it 'is allowed 200' do
-      #    body={"message"=>"Not authorized for media-resource"},
       expect(response.status).to be == 200
     end
   end

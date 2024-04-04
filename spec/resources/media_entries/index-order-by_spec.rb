@@ -106,7 +106,6 @@ describe 'ordering media entries' do
         context "response of ordering by the order attribute of the arc descending" do
           def resource(query)
             #media_entries_relation.get('order' => order)
-            puts ">>> query: #{query}"
             client.get('/api/media-entries', query)
           end
 
@@ -129,7 +128,7 @@ describe 'ordering media entries' do
             end
 
             let :arcs_before_first_order_nil do
-              arcs.reverse.take_while{|a| a[:order]}.reverse
+              arcs.take_while{|a| a[:order]}
             end
 
             it "are present" do
@@ -137,12 +136,8 @@ describe 'ordering media entries' do
             end
 
             it "nils come last" do
-              # arcs_tail_order_nils = arcs.reverse.take_while{|a| a[:order].nil?}.reverse
-              arcs_tail_order_nils = arcs.take_while{|a| a[:order].nil?}
-              # binding.pry
-
-              expect(arcs.length).to be== (arcs_tail_order_nils + arcs_before_first_order_nil).length
-              expect(arcs).to be== arcs_tail_order_nils + arcs_before_first_order_nil
+              arcs_tail_order_nils = arcs.reverse.take_while{|a| a[:order].nil?}.reverse
+              expect(arcs).to be== arcs_before_first_order_nil + arcs_tail_order_nils
             end
 
             it "non order nil arcs are ordered descending" do

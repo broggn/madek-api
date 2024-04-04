@@ -87,7 +87,6 @@ context 'admin keywords' do
     include_context :json_client_for_authenticated_admin_user do
 
       context 'get' do
-
         it 'responds 400 with bad formatted uuid' do
           badid = Faker::Internet.slug(words: nil, glue: '-')
           response = client.get("/api/admin/keywords/#{badid}")

@@ -75,28 +75,27 @@ describe 'generated runs' do
                   end
                 end
 
-                # context 'sorting of keywords' do
-                #   include_context :datalayer_terms_for_sorting
-                #
-                #   let(:meta_datum_keywords) do
-                #     meta_key = FactoryBot.create(:meta_key_keywords,
-                #                                  keywords_alphabetical_order: true)
-                #     keywords = terms.reverse.map do |term|
-                #       FactoryBot.create(:keyword, term: term, meta_key: meta_key)
-                #     end
-                #     FactoryBot.create(:meta_datum_keywords,
-                #                       Hash[:keywords, keywords,
-                #                            media_resource.model_name.singular, media_resource])
-                #   end
-                #
-                #   # TODO json roa remove: meta-datum-keywords: alphabet. order fix: check faraday json?
-                #   it 'the collection is sorted if meta_key.keywords_alphabetical_order true' do
-                #     if response.status == 200 and value
-                #       expect(value.map { |v| Keyword.find(v['id']).term }).to be == terms
-                #     end
-                #   end
-                # end
+                context 'sorting of keywords' do
+                  include_context :datalayer_terms_for_sorting
 
+                  let(:meta_datum_keywords) do
+                    meta_key = FactoryBot.create(:meta_key_keywords,
+                                                  keywords_alphabetical_order: true)
+                    keywords = terms.reverse.map do |term|
+                      FactoryBot.create(:keyword, term: term, meta_key: meta_key)
+                    end
+                    FactoryBot.create(:meta_datum_keywords,
+                                       Hash[:keywords, keywords,
+                                            media_resource.model_name.singular, media_resource])
+                  end
+
+                  # TODO json roa remove: meta-datum-keywords: alphabet. order fix: check faraday json?
+                  it 'the collection is sorted if meta_key.keywords_alphabetical_order true' do
+                    if response.status == 200 and value
+                      expect(value.map { |v| Keyword.find(v['id']).term }).to be == terms
+                    end
+                  end
+                end
               end
             end
           end

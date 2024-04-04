@@ -13,7 +13,6 @@ context 'app-settings admin' do
     it 'responds with 403' do
       expect(plain_json_response.status).to be == 403
     end
-
   end
 
   context 'resource with user auth' do
@@ -22,7 +21,6 @@ context 'app-settings admin' do
       it 'responds with 403' do
         expect(client.get("/api/admin/app-settings/").status).to be == 403
       end
-
     end
   end
 
@@ -47,10 +45,8 @@ context 'app-settings admin' do
           ).to eq(
                  @settings.attributes.with_indifferent_access
                           .except(:created_at, :updated_at)
-
                )
         end
-
       end
 
       context 'update' do
