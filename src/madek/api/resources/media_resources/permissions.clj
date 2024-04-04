@@ -525,11 +525,7 @@
     result))
 
 
-(defn pr [str fnc]
-  (println ">o> PR str" str)
 
-  fnc
-  )
 
 ;(defn permission-by-auth-entity? [resource auth-entity perm-name mr-type]
 ;  (or (perm-name resource)
@@ -641,7 +637,18 @@
 
     ))
 
+(defn pr
 
+  ([d]
+   (println ">o>? " d)
+   d)
+
+  ([str fnc]
+   (println ">oo> HELPER / " str)
+   fnc
+   )
+
+  )
 
 (defn edit-permissions-by-auth-entity? [resource auth-entity mr-type]
   (let [auth-entity-id (:id auth-entity)
@@ -650,15 +657,27 @@
         p (println ">o> auth-entity-id.mr-type=" mr-type)
         p (println ">o> auth-entity-id.id=" auth-entity-id)
         p (println ">o> auth-entity-id::type auth-entity=" (:type auth-entity))
+
+
+        res (case (:type auth-entity)
+              "User" (or (pr (= auth-entity-id (:responsible_user_id resource)))
+                       (pr (some #(= (:responsible_delegation_id resource) %) (delegation-ids auth-entity-id)))
+                       (pr (seq (query-user-permissions resource
+                                  auth-entity-id
+                                  :edit_permissions
+                                  mr-type)))))
+        p (println ">o> raw-res=" res)
+
+        res (-> res
+                boolean)
+
+        p (println ">o> res=" res)
         ]
-    (-> (case (:type auth-entity)
-          "User" (or (pr "UserX1" (= auth-entity-id (:responsible_user_id resource)))
-                   (pr "UserX2" (some #(= (:responsible_delegation_id resource) %) (delegation-ids auth-entity-id)))
-                   (pr "UserX3" (seq (query-user-permissions resource
-                                       auth-entity-id
-                                       :edit_permissions
-                                       mr-type)))))
-        boolean)))
+
+
+    res
+
+    ))
 
 (defn viewable-by-auth-entity? [resource auth-entity mr-type]
   (permission-by-auth-entity? resource
