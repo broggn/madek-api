@@ -65,13 +65,15 @@
         p (println ">o> build-user-permissions-query.perm-name=" perm-name)
         p (println ">o> build-user-permissions-query.mr-type=" mr-type)
 
+;p        (throw (Exception. "Superorsch"))
+
         query (-> (sql/select :*)
                   (sql/from (user-table mr-type))
                   (sql/where [:= (resource-key mr-type) media-resource-id]
                     [:= :user_id user-id]
                     [:= perm-name true])
                   (sql-format))
-        p (println ">o> build-user-permissions-query.query=" query)
+        p (println ">o> HERE build-user-permissions-query.query=" query)
         ] query)
 
   )
@@ -103,40 +105,40 @@
     (jdbc/execute! (get-ds))))
 
 
-;; TODO: this should not be needed, different handling for MediaEntry and Collection needed
-(defn get-id-by-mr-type [type resource]
-  (let [
-        ;p (println ">o> type=" type)
-
-        res-type (:type resource)
-        p (println ">o> res-type=" res-type)
-        p (println ">o> res-type.cl=" (class res-type))
-        p (println ">o> resource=" resource)
-        p (println ">o> resource.cl=" (class resource))
-
-
-        p (println "\n>o> resource.med=" (:media_entry_id resource))
-        p (println "\n>o> resource.id=" (:id resource))
-
-
-        id (cond
-             (= res-type "MediaEntry") (do
-                                         (println ">o> isMediaEntry?" res-type " vs " (= res-type "MediaEntry") " _> " (:media_entry_id resource))
-                                         (:media_entry_id resource))
-             (= res-type "Collection") (do
-                                         (println ">o> Collection?" res-type " vs " (= res-type "Collection") " _> " (:id resource))
-                                         (:id resource))
-             :else (do
-
-                     (println ">o> default :(" res-type " _> " (:id resource))
-
-                     (:id resource)))
-
-
-        p (println ">o> get-id-by-mr-type=" id)
-
-        ] id)
-  )
+;;; TODO: this should not be needed, different handling for MediaEntry and Collection needed
+;(defn get-id-by-mr-type [type resource]
+;  (let [
+;        ;p (println ">o> type=" type)
+;
+;        res-type (:type resource)
+;        p (println ">o> res-type=" res-type)
+;        p (println ">o> res-type.cl=" (class res-type))
+;        p (println ">o> resource=" resource)
+;        p (println ">o> resource.cl=" (class resource))
+;
+;
+;        p (println "\n>o> resource.med=" (:media_entry_id resource))
+;        p (println "\n>o> resource.id=" (:id resource))
+;
+;
+;        id (cond
+;             (= res-type "MediaEntry") (do
+;                                         (println ">o> isMediaEntry?" res-type " vs " (= res-type "MediaEntry") " _> " (:media_entry_id resource))
+;                                         (:media_entry_id resource))
+;             (= res-type "Collection") (do
+;                                         (println ">o> Collection?" res-type " vs " (= res-type "Collection") " _> " (:id resource))
+;                                         (:id resource))
+;             :else (do
+;
+;                     (println ">o> default :(" res-type " _> " (:id resource))
+;
+;                     (:id resource)))
+;
+;
+;        p (println ">o> get-id-by-mr-type=" id)
+;
+;        ] id)
+;  )
 
 
 (comment
@@ -233,7 +235,14 @@
                         ;(sql/where (sql-format whcl))
                         (sql/where [:= :id (to-uuid mr-id)])
                         sql-format)
-        upd-result (jdbc/execute-one! (get-ds) update-stmt)]
+        upd-result (jdbc/execute-one! (get-ds) update-stmt)
+
+
+
+        p (println ">oo> !!! update-resource-permissions" update-stmt)
+        p (println ">oo> !!! update-resource-permissions, tname=" tname )
+        p (println ">oo> !!! update-resource-permissions, insdata="  perm-data)
+        ]
 
     (logging/info "update resource permissions"
       "\ntable\n" tname
@@ -247,7 +256,7 @@
 (defn- query-user-permissions
   [resource user-id perm-name mr-type]
 
-  (println ">o> user-perm 1/ resource=" resource)
+  (println ">ooo> user-perm 1/ resource=" resource)
   (println ">o> user-perm 1/ mr-type=" mr-type)
   (println ">o> user-perm 1/ (:type resource)=" (:type resource))
 
@@ -328,7 +337,13 @@
                         (sql/values [insdata])
                         (sql/returning :*)
                         sql-format)
-        ins-result (jdbc/execute-one! (get-ds) insert-stmt)]
+        ins-result (jdbc/execute-one! (get-ds) insert-stmt)
+
+        p (println ">oo> !!! create-user-permissions" ins-result)
+        p (println ">oo> !!! create-user-permissions, tname=" tname )
+        p (println ">oo> !!! create-user-permissions, insdata="  insdata)
+
+        ]
 
     ;ins-result (jdbc/insert! (rdbms/get-ds) tname insdata)]
 
@@ -384,7 +399,14 @@
                         ;(sql/where (sql-format whcl))
                         (sql-cls-resource-and-new mr-type mr-id :user_id user-id)
                         sql-format)
-        result (jdbc/execute-one! (get-ds) update-stmt)]
+        result (jdbc/execute-one! (get-ds) update-stmt)
+
+
+        p (println ">oo> !!! update-user-permissions" update-stmt)
+        p (println ">oo> !!! update-user-permissions, tname=" tname )
+        p (println ">oo> !!! update-user-permissions, insdata="  perm-data)
+
+        ]
 
     (logging/info "update user permissions"
       "\ntable\n" tname
@@ -629,9 +651,24 @@
                 boolean)
         p (println ">o> res=" res)
         ]
+    (println ">o> permission-by-auth-entity? a0 some.." (:type auth-entity))
+    (println ">o> permission-by-auth-entity? -------")
     (println ">o> permission-by-auth-entity? a1 some.." (some #(= (:responsible_delegation_id resource) %) (delegation-ids auth-entity-id)))
-    (println ">o> permission-by-auth-entity? a User/(= auth-entity.." (:responsible_user_id resource))
-    (println ">o> permission-by-auth-entity? a User/(= auth-entity.." (= auth-entity-id (:responsible_user_id resource)))
+    (println ">o> permission-by-auth-entity? a2 some.." (boolean (some #(= (:responsible_delegation_id resource) %) (delegation-ids auth-entity-id))))
+    (println ">o> permission-by-auth-entity? -------")
+    (println ">o> permission-by-auth-entity? user-perm" (seq (query-user-permissions resource
+                                                               auth-entity-id
+                                                               perm-name mr-type)))
+
+    (println ">o> permission-by-auth-entity? -------")
+    (println ">o> permission-by-auth-entity? group-perm" (spy (seq (query-group-permissions resource
+                                                                     auth-entity-id
+                                                                     perm-name mr-type))))
+    (println ">o> permission-by-auth-entity? -------")
+    (println ">o> permission-by-auth-entity? a.1 User/(= auth-entity.." (:responsible_user_id resource))
+    (println ">o> permission-by-auth-entity? a.2 User/(= auth-entity.." auth-entity-id)
+    (println ">o> permission-by-auth-entity? a User/(= auth-entity.. ??" (= auth-entity-id (:responsible_user_id resource)))
+    (println ">o> permission-by-auth-entity? -------")
     (println ">o> permission-by-auth-entity? b res=" res)
     res
 

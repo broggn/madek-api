@@ -13,8 +13,11 @@
 (defn db-get-preview [id]
   (let [query (-> (sql/select :*)
                   (sql/from :previews)
-                  (sql/where [:= :id id])
-                  sql-format)]
+                  (sql/where [:= :previews.id id])
+                  sql-format)
+
+        p (println ">oo> db-get-preview.preview" query)
+        ]
     (jdbc/execute-one! (get-ds) query)))
 
 (defn get-preview [request]

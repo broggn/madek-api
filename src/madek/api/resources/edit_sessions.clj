@@ -95,10 +95,15 @@
             dwid (if (= mr-type "MediaEntry")
                    (assoc data :media_entry_id mr-id)
                    (assoc data :collection_id mr-id))
-            sql-query (-> (sql/insert-into :edit_sessions) (sql/values [dwid]) sql-format)]
+            sql-query (-> (sql/insert-into :edit_sessions) (sql/values [dwid]) sql-format)
+
+            ins-result  (jdbc/execute-one! (get-ds) sql-query)
+            p (println ">o> ins-result" ins-result)
+            p (println ">o> ?????????????????????")
+            ]
         (sd/logwrite req (str "handle_create-edit-session:" "\nnew-data: " dwid))
 
-        (if-let [ins-result (first (jdbc/execute! (get-ds) sql-query))]
+        (if-let [ins-result ins-result]
           (sd/response_ok ins-result)
           (sd/response_failed "Could not create edit session." 406))))
     (catch Exception ex (sd/response_exception ex))))
