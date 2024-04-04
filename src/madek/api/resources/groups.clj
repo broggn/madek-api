@@ -28,11 +28,11 @@
                  (or params {})
                  (assoc params :id (or (:id params) (clj-uuid/v4))))]
     {:body (dissoc
-             (->> (jdbc/execute-one! (get-ds) (-> (sql/insert-into :groups)
-                                                  (sql/values [params])
-                                                  (sql/returning :*)
-                                                  sql-format)))
-             :previous_id :searchable)
+            (->> (jdbc/execute-one! (get-ds) (-> (sql/insert-into :groups)
+                                                 (sql/values [params])
+                                                 (sql/returning :*)
+                                                 sql-format)))
+            :previous_id :searchable)
      :status 201}))
 
 ;### get group ################################################################
@@ -40,7 +40,7 @@
 (defn get-group [id-or-institutional-group-id]
   (if-let [group (groups/find-group id-or-institutional-group-id)]
     {:body (dissoc group :previous_id :searchable)}
-    {:status 404 :body "No such group found"}))             ; TODO: toAsk 204 No Content
+    {:status 404 :body "No such group found"})) ; TODO: toAsk 204 No Content
 
 ;### delete group ##############################################################
 
@@ -53,7 +53,7 @@
         update-count (get res :next.jdbc/update-count)]
 
     (if (= 1 update-count)
-      {:status 204 :content-type "application/json"}        ;TODO / FIXME: repsonse is of type octet-stream
+      {:status 204 :content-type "application/json"} ;TODO / FIXME: repsonse is of type octet-stream
       {:status 404})))
 
 ;### patch group ##############################################################
@@ -135,7 +135,7 @@
 (def schema_export-group
   {:id s/Uuid
    (s/optional-key :name) s/Str
-   (s/optional-key :type) s/Str                             ; TODO enum
+   (s/optional-key :type) s/Str ; TODO enum
    (s/optional-key :created_by_user_id) (s/maybe s/Uuid)
    (s/optional-key :created_at) s/Any
    (s/optional-key :updated_at) s/Any
@@ -282,8 +282,7 @@
 
                               404 {:description "Not Found."
                                    :schema s/Str
-                                   :examples {"application/json" {:message "No such group found"}}}
-                              }}
+                                   :examples {"application/json" {:message "No such group found"}}}}}
 
             :delete {:summary (f (t "Deletes a group by id"))
                      :description "Delete a group by id"
@@ -311,8 +310,8 @@
                   :coercion reitit.coercion.schema/coercion
                   :parameters {:path {:id s/Uuid}
                                :body schema_update-group}
-                  :responses {200 {:body s/Any}             ;groups/schema_export-group}
-                              404 {:body s/Any}}}}]         ; TODO error handling
+                  :responses {200 {:body s/Any} ;groups/schema_export-group}
+                              404 {:body s/Any}}}}] ; TODO error handling
 
    ; groups-users/ring-routes
    ["/:group-id/users/" {:get {:summary (t "Get group users by id")

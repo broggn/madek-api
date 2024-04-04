@@ -57,7 +57,7 @@
                        transform_ml)
                    (-> db-result
                        transform_ml
-                       sd/remove-internal-keys)))        ]
+                       sd/remove-internal-keys)))]
     (if result
       (sd/response_ok result)
       (sd/response_failed "Vocabulary could not be found!" 404))))

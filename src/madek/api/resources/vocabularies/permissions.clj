@@ -107,14 +107,14 @@
             p (println ">o> handle_create-vocab-user-perms")
             query (-> (sql/insert-into :vocabulary_user_permissions)
                       (sql/values [(spy ins-data)])
-                      sql-format                      )
+                      sql-format)
 
             ins-result (jdbc/execute! (get-ds) query)]
         (if-let [result (first ins-result)]
           (sd/response_ok result)
           (sd/response_failed "Could not create vocabulary user permission" 406))))
 
-    (catch Exception ex (sd/parsed_response_exception ex)           )))
+    (catch Exception ex (sd/parsed_response_exception ex))))
 
 (defn handle_update-vocab-user-perms [req]
   (try
@@ -126,7 +126,7 @@
                       (sql/set (spy upd-data))
                       (sql/where [:and [:= :vocabulary_id vid] [:= :user_id uid]])
                       (sql/returning :*)
-                      sql-format                      )
+                      sql-format)
             upd-result (jdbc/execute-one! (get-ds) query)
             p (println ">o> ??? upd-result" upd-result)]
 
@@ -187,7 +187,7 @@
                       (sql/values [(spy ins-data)])
                       (sql/returning :*)
                       sql-format)
-            ins-result (jdbc/execute-one! (get-ds) query)            ]
+            ins-result (jdbc/execute-one! (get-ds) query)]
         (if-let [result ins-result]
           (sd/response_ok result)
           (sd/response_failed "Could not create vocabulary group permission" 406))))

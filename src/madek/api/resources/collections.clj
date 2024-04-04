@@ -1,25 +1,25 @@
 (ns madek.api.resources.collections
   (:require
-            [clojure.tools.logging :as logging]
+   [clojure.tools.logging :as logging]
    ;; all needed imports
-            [honey.sql :refer [format] :rename {format sql-format}]
-            [honey.sql.helpers :as sql]
-            [logbug.catcher :as catcher]
-            [madek.api.authorization :as authorization]
+   [honey.sql :refer [format] :rename {format sql-format}]
+   [honey.sql.helpers :as sql]
+   [logbug.catcher :as catcher]
+   [madek.api.authorization :as authorization]
 
-            [madek.api.db.core :refer [get-ds]]
+   [madek.api.db.core :refer [get-ds]]
 
-            [madek.api.resources.collections.index :refer [get-index]]
-            [madek.api.resources.shared :as sd]
+   [madek.api.resources.collections.index :refer [get-index]]
+   [madek.api.resources.shared :as sd]
 
-            [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
 
-            [madek.api.utils.helper :refer [mslurp]]
-            [madek.api.utils.rdbms :as rdbms]
-            [next.jdbc :as jdbc]
-            [reitit.coercion.schema]
-            [schema.core :as s]
-            [taoensso.timbre :refer [debug info warn error spy]]))
+   [madek.api.utils.helper :refer [mslurp]]
+   [madek.api.utils.rdbms :as rdbms]
+   [next.jdbc :as jdbc]
+   [reitit.coercion.schema]
+   [schema.core :as s]
+   [taoensso.timbre :refer [debug info warn error spy]]))
 
 (defn handle_get-collection [request]
   (let [collection (:media-resource request)
@@ -59,9 +59,9 @@
               ;        sql-format)
 
               query (spy (-> (sql/insert-into :collections)
-                           (sql/values [ins-data])
-                           (sql/returning :*)
-                           sql-format))
+                             (sql/values [ins-data])
+                             (sql/returning :*)
+                             sql-format))
 
               ins-result (jdbc/execute! (get-ds) query)]
 
@@ -110,7 +110,7 @@
         res (->> (jdbc/execute-one! (get-ds) (-> (sql/insert-into :collections)
                                                  (sql/values [params])
                                                  (sql/returning :*)
-                                                 sql-format                                                 )))]
+                                                 sql-format)))]
     res))
 
 (defn handle_update-collection [req]

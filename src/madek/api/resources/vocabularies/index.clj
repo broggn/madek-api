@@ -56,10 +56,9 @@
         offset (str-to-int page 0)
         size (str-to-int count 100)
 
-        query (base-query user-id size offset request)
-        ]
+        query (base-query user-id size offset request)]
 
-    ;(logging/info "query-index-resources: " query)
+;(logging/info "query-index-resources: " query)
     (jdbc/execute! (get-ds) query)))
 
 (defn transform_ml [vocab]
@@ -70,7 +69,7 @@
 (defn get-index [request]
   (catcher/with-logging {}
     (let [db-result (query-index-resources request)
-          result (map transform_ml db-result)          ]
+          result (map transform_ml db-result)]
 
       (sd/response_ok {:vocabularies result}))))
 

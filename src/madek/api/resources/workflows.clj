@@ -1,5 +1,5 @@
 (ns madek.api.resources.workflows
-  (:require             [clojure.tools.logging :as logging]
+  (:require [clojure.tools.logging :as logging]
             ;; all needed imports
             [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]

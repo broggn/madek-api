@@ -13,15 +13,12 @@
   ([handler] #(ring-wrap-find-and-add-preview % handler))
   ([request handler]
 
-   (let [
-         preview-id (-> request :parameters :path :preview_id)
+   (let [preview-id (-> request :parameters :path :preview_id)
 
          p (println ">o> !!! preview-id=" preview-id)
 
          preview (first (sd/query-eq-find-all :previews :id preview-id))
-         p (println ">o> !!! preview=" preview)
-
-         ])
+         p (println ">o> !!! preview=" preview)])
 
    (when-let [preview-id (-> request :parameters :path :preview_id)]
      (logging/info "ring-wrap-find-and-add-preview" "\npreview-id\n" preview-id)
@@ -56,8 +53,7 @@
           request-with-media-resource (assoc request :media-resource mmr)
 
           p (println ">o> mmr=" mmr)
-          p (println ">o> request-with-media-resource=" request-with-media-resource)
-          ]
+          p (println ">o> request-with-media-resource=" request-with-media-resource)]
       (handler request-with-media-resource))
     (sd/response_not_found "No media-resource for preview")))
 

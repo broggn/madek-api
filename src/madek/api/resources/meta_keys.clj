@@ -6,20 +6,19 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
 
-
-   [madek.api.utils.helper :refer [mslurp]]
    [logbug.debug :as debug]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.meta-keys.index :as mkindex]
    [madek.api.resources.meta-keys.meta-key :as mk]
-
    ;; all needed imports
    [madek.api.resources.shared :as sd]
 
    [madek.api.resources.shared :as sd]
-   [madek.api.utils.auth :refer [wrap-authorize-admin!]]
 
+   [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist f replace-java-hashmaps t v]]
+
+   [madek.api.utils.helper :refer [mslurp]]
    [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
 
    [next.jdbc :as jdbc]
@@ -86,14 +85,13 @@
 
         p (println ">o> handle_usr-query-meta-keys.db-result=" db-result)
 
-        p (println ">o> handle_usr-query-meta-keys.result=" result)
-        ]
+        p (println ">o> handle_usr-query-meta-keys.result=" result)]
     (sd/response_ok {:meta-keys result})))
 
 (defn handle_adm-get-meta-key [req]
   (let [mk (-> req :meta_key)
         result (mk/include-io-mappings
-                 (adm-export-meta-key mk) (:id mk))]
+                (adm-export-meta-key mk) (:id mk))]
     (sd/response_ok result)))
 
 (defn handle_usr-get-meta-key [req]
@@ -101,7 +99,7 @@
         p (println ">o> handle_usr-get-meta-key!!!! mk=" mk)
         p (println ">o> handle_usr-get-meta-key!!!! mk.class=" (class mk))
         result (mk/include-io-mappings
-                 (user-export-meta-key mk) (:id mk))]
+                (user-export-meta-key mk) (:id mk))]
     (sd/response_ok result)))
 
 (comment
@@ -229,8 +227,8 @@
         p (println ">o> db-result=" db-result)]
 
     (logging/info "handle_update_meta-key:"
-      "\nid: " id
-      "\ndwid\n" dwid)
+                  "\nid: " id
+                  "\ndwid\n" dwid)
     ;(if-let [db-result (jdbc/update! (get-ds)
     ;                                 :meta_keys dwid ["id = ?" id])]
 
@@ -240,7 +238,7 @@
       (do
         (logging/info "handle_update_meta-key:"
           ;"\ndb-result:\n" db-result
-          "\nnew-data:\n" db-result)
+                      "\nnew-data:\n" db-result)
         (sd/response_ok db-result))
       (sd/response_failed "Could not update meta_key." 406))))
 
@@ -298,11 +296,11 @@
   {:id s/Str
    :is_extensible_list s/Bool
    :meta_datum_object_type (s/enum "MetaDatum::Text"
-                             "MetaDatum::TextDate"
-                             "MetaDatum::JSON"
-                             "MetaDatum::Keywords"
-                             "MetaDatum::People"
-                             "MetaDatum::Roles")
+                                   "MetaDatum::TextDate"
+                                   "MetaDatum::JSON"
+                                   "MetaDatum::Keywords"
+                                   "MetaDatum::People"
+                                   "MetaDatum::Roles")
    (s/optional-key :keywords_alphabetical_order) s/Bool
    (s/optional-key :position) s/Int
    :is_enabled_for_media_entries s/Bool
@@ -400,9 +398,9 @@
 (defn wwrap-find-meta_key [param colname send404]
   (fn [handler]
     (fn [request] (sd/req-find-data-new request handler
-                    param
-                    :meta_keys colname
-                    :meta_key send404))))
+                                        param
+                                        :meta_keys colname
+                                        :meta_key send404))))
 
 ;; TODO: move to shared
 (defn generate-swagger-pagination-params []
@@ -482,10 +480,7 @@
                              :schema s/Str
                              :examples {"application/json" {:msg "ERROR: new row for relation \"meta_keys\" violates check constraint \"meta_key_id_chars\"\n  Detail: Failing row contains (copyright-test_me_now10, t, MetaDatum::TextDate, t, 0, t, t, copyright, string, {People}, line, Keyword, \"de\"=>\"string\", \"en\"=>\"string\", \"de\"=>\"string\", \"en\"=>\"string\", \"de\"=>\"string\", \"en\"=>\"string\", \"de\"=>\"string\", \"en\"=>\"string\")."}}}
 
-                        406 {:body s/Any}}}
-
-
-     }]
+                        406 {:body s/Any}}}}]
 
    ["/:id"
     {:get {:summary (sd/sum_adm (t "Get meta-key by id"))

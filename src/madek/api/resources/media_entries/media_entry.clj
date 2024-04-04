@@ -28,9 +28,7 @@
                   (sql-format))
         dbresult (jdbc/execute-one! (get-ds) query)
 
-
-        te_p (println ">o> !!!! dbresult=" dbresult)
-        ]
+        te_p (println ">o> !!!! dbresult=" dbresult)]
     ;(logging/info "get-media-entry-for-preview" "\npreview-id\n" preview-id "\ndbresult\n" dbresult)
     dbresult))
 

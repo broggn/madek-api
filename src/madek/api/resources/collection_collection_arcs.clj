@@ -68,7 +68,7 @@
 
 (defn- sql-cls-update [parent-id child-id]
   (-> (sql/where [:= :parent_id parent-id]
-        [:= :child_id child-id])
+                 [:= :child_id child-id])
       sql-format
       (update-in [0] #(clojure.string/replace % "WHERE" ""))))
 
@@ -87,9 +87,9 @@
 
         (if (= 1 (first result))
           (sd/response_ok (sd/query-eq-find-one
-                            :collection_collection_arcs
-                            :parent_id parent-id
-                            :child_id child-id))
+                           :collection_collection_arcs
+                           :parent_id parent-id
+                           :child_id child-id))
           (sd/response_failed "Could not update collection collection arc." 406))))
     (catch Exception e (sd/response_exception e))))
 
@@ -99,9 +99,9 @@
       (let [parent-id (-> req :parameters :path :parent_id)
             child-id (-> req :parameters :path :child_id)
             olddata (sd/query-eq-find-one
-                      :collection_collection_arcs
-                      :parent_id parent-id
-                      :child_id child-id)
+                     :collection_collection_arcs
+                     :parent_id parent-id
+                     :child_id child-id)
             sql-map {:delete :collection_collection_arcs
                      :where [:= :parent_id parent-id
                              := :child_id child-id]}
@@ -155,7 +155,7 @@
                            (s/optional-key :parent_id) s/Uuid
                            (s/optional-key :page) s/Int
                            (s/optional-key :count) s/Int}}
-      :responses {200 {:body s/Any}}                        ; TODO response coercion
+      :responses {200 {:body s/Any}} ; TODO response coercion
       }}]
    ; TODO rename param to collection_id
    ; TODO add permission checks
@@ -167,7 +167,7 @@
       :coercion reitit.coercion.schema/coercion
       :parameters {:path {:id s/Str}}
       :responses {200 {:body s/Any}
-                  404 {:body s/Any}}                        ; TODO response coercion
+                  404 {:body s/Any}} ; TODO response coercion
       }}]])
 ; TODO rename param use middleware for permissions
 (def collection-routes
@@ -204,7 +204,7 @@
       :parameters {:path {:parent_id s/Uuid
                           :child_id s/Uuid}}
       :responses {200 {:body s/Any}
-                  404 {:body s/Any}}                        ; TODO response coercion
+                  404 {:body s/Any}} ; TODO response coercion
       }
 
      ; TODO col col arc update tests

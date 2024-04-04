@@ -5,18 +5,17 @@
             [clojure.tools.logging :as logging]
             [honey.sql :refer [format] :rename {format sql-format}]
 
-            [madek.api.utils.helper :refer [ array-to-map convert-map-if-exist  map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-
-
             [honey.sql.helpers :as sql]
+
             [madek.api.authorization :as authorization]
             [madek.api.constants :refer [FILE_STORAGE_DIR]]
             [madek.api.db.core :refer [get-ds]]
             [madek.api.resources.media-entries.index :refer [get-index
                                                              get-index_related_data]]
-   ;[madek.api.utils.rdbms :as rdbms]
+            ;[madek.api.utils.rdbms :as rdbms]
             [madek.api.resources.media-entries.media-entry :refer [get-media-entry]]
             [madek.api.resources.shared :as sd]
+            [madek.api.utils.helper :refer [array-to-map convert-map-if-exist map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
             [next.jdbc :as jdbc] ;[pantomime.mime :refer [mime-type-of]]
 
    ;; all needed imports
@@ -58,11 +57,11 @@
         dresult (jdbc/execute! (get-ds) sql-query-entries)]
 
     (logging/info "handle_delete_media_entry"
-      "\n eid: \n" eid
+                  "\n eid: \n" eid
       ;"\n fclause: \n" fclause
-      "\n fresult: \n" fresult
+                  "\n fresult: \n" fresult
       ;"\n dclause: \n" dclause
-      "\n dresult: \n" dresult)
+                  "\n dresult: \n" dresult)
     (if (= 1 (first dresult))
       (sd/response_ok {:deleted mr})
       (sd/response_failed {:message "Failed to delete media entry"} 406))))
@@ -70,7 +69,7 @@
 (defn- get-context-keys-4-context [contextId]
   (map :meta_key_id
     ;(sd/query-eq-find-all :context_keys :context_id contextId)))
-    (sd/query-eq-find-all :context_keys :context_id (to-uuid contextId))))
+       (sd/query-eq-find-all :context_keys :context_id (to-uuid contextId))))
 
 (defn- check-has-meta-data-for-context-key [meId mkId]
   ;(let [md (sd/query-eq-find-one :meta_data :media_entry_id (str meId) :meta_key_id mkId)
@@ -97,12 +96,12 @@
         publishable (reduce (fn [tfresult tfval] (and tfresult (first tfval))) [true] tf)]
 
     (logging/info "handle_try-publish-media-entry"
-      "\n eid: \n" eid
-      "\n validationContexts: \n" validationContexts
-      "\n contextKeys: \n" contextKeys
-      "\n hasMetaData: \n" hasMetaData
-      "\n tf: \n" tf
-      "\n publishable: \n" publishable)
+                  "\n eid: \n" eid
+                  "\n validationContexts: \n" validationContexts
+                  "\n contextKeys: \n" contextKeys
+                  "\n hasMetaData: \n" hasMetaData
+                  "\n tf: \n" tf
+                  "\n publishable: \n" publishable)
     (if (true? publishable)
       (let [data {:is_published true}
 
@@ -117,8 +116,8 @@
             dresult (jdbc/execute-one! (get-ds) sql-query)]
 
         (logging/info "handle_try-publish-media-entry"
-          "\n published: entry_id: \n" eid
-          "\n dresult: \n" dresult)
+                      "\n published: entry_id: \n" eid
+                      "\n dresult: \n" dresult)
 
         (if (= 1 (::jdbc/update-count dresult))
           (sd/response_ok (sd/query-eq-find-one :media_entries :id eid))
@@ -247,12 +246,12 @@
         auth (-> req :authenticated-entity)]
 
     (logging/info "handle_create-media-entry"
-      "\nauth\n" (:id auth)
-      "\ncopy_md\n" copy-md-id
-      "\ncollection-id\n" collection-id
-      "\nfile\n" file
-      "\n content: " file-content-type
-      "\ntemppath\n" temppath)
+                  "\nauth\n" (:id auth)
+                  "\ncopy_md\n" copy-md-id
+                  "\ncollection-id\n" collection-id
+                  "\nfile\n" file
+                  "\n content: " file-content-type
+                  "\ntemppath\n" temppath)
 
     (let [;mime (or file-content-type (mime-type-of temppath) )
           mime file-content-type]

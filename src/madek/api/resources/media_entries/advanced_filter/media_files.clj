@@ -18,35 +18,28 @@
 
 (defn- sql-merge-where-media-file-spec [sqlmap media-file-spec]
 
-
-
-  (let [
-        key (:key media-file-spec)
+  (let [key (:key media-file-spec)
         key-prefixed (keyword (str "media_files." key))
         val (:value media-file-spec)
         p (println ">o> val.cl before" (class val))
         val (to-uuid val key)
-        p (println ">o> val.cl after" (class val))
-        ]
+        p (println ">o> val.cl after" (class val))]
 
     (println ">o> sql-merge-where-media-file-spec???? key=" key-prefixed)
     (println ">o> sql-merge-where-media-file-spec???? val=" val)
     (println ">o> --------------------------------------")
 
     (-> sqlmap
-        (sql/where [:= key-prefixed val]))
-    )
-
-  )
+        (sql/where [:= key-prefixed val]))))
 
 (defn sql-filter-by [sqlmap media-file-specs]
   (if-not (empty? media-file-specs)
     (reduce sql-merge-where-media-file-spec
-      (-> sqlmap
-          (sql/join
-            :media_files
-            [:= :media_files.media_entry_id :media_entries.id]))
-      media-file-specs)
+            (-> sqlmap
+                (sql/join
+                 :media_files
+                 [:= :media_files.media_entry_id :media_entries.id]))
+            media-file-specs)
     ;(convert-map-if-exist media-file-specs))
     sqlmap))
 

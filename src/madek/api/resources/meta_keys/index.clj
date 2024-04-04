@@ -7,19 +7,16 @@
    [logbug.catcher :as catcher]
    [logbug.debug :as debug]
 
-   [madek.api.pagination :refer [add-offset-for-honeysql]]
-
-
    [madek.api.db.core :refer [get-ds]]
+
+   [madek.api.pagination :refer [add-offset-for-honeysql]]
    [madek.api.resources.shared :as sd]
    [madek.api.resources.shared :as shared]
    [madek.api.resources.vocabularies.permissions :as permissions]
    [madek.api.utils.helper :refer [array-to-map convert-to-raw-set map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts str-to-int]]
    [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
 
-
-
-   ;[madek.api.utils.rdbms :as rdbms]
+;[madek.api.utils.rdbms :as rdbms]
    [madek.api.utils.helper :refer [str-to-int]]
 
    ;[leihs.core.db :as db]
@@ -48,20 +45,14 @@
                 [:= :meta_keys.vocabulary_id :vocabularies.id])
       (sql/where (where-clause user-id scope))))
 
-
 (defn get-pagination-params [request]
 
-
-  (let [
-
-        qparams (-> request :parameters :query)
+  (let [qparams (-> request :parameters :query)
         query-params (-> request :query-params)
 
         params (if (or (contains? qparams :page) (contains? qparams :count))
                  qparams
-                 query-params
-          )
-
+                 query-params)
 
         p (println ">o> qparams=" qparams)
         p (println ">o> query-params=" query-params)
@@ -74,8 +65,7 @@
         ;count (str-to-int (params :count) 100)
         ;
         ;params {:page offset :limit count}
-
-        ] params ))
+        ]params))
 
 ;(defn set-pagination [stmt request]
 ;  (let [pagination-params (get-pagination-params request)
@@ -87,13 +77,10 @@
 ;
 ;        ] query ))
 
-
-
 (defn- build-query [request]
   (let [qparams (-> request :parameters :query)
 
         pagination-params (get-pagination-params request)
-
 
         scope (or (:scope qparams) "view")
         user-id (-> request :authenticated-entity :id)
@@ -107,10 +94,7 @@
         ;size (str-to-int (pagination-params :count) 5)
         ;p (println ">o> :size" size)
         ;p (println ">o> :size.class" (class size))
-
-
         ]
-
     (-> (base-query user-id scope)
         (sd/build-query-param qparams :vocabulary_id)
         (sd/build-query-param-like qparams :id :meta_keys.id)

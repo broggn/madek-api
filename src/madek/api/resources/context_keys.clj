@@ -66,8 +66,8 @@
   [req]
   (let [req-query (-> req :parameters :query)
         db-query (-> (sql/select :id :context_id :meta_key_id
-                       :is_required :position :length_min :length_max
-                       :labels :hints :descriptions :documentation_urls)
+                                 :is_required :position :length_min :length_max
+                                 :labels :hints :descriptions :documentation_urls)
                      (sql/from :context_keys)
                      (sd/build-query-param req-query :id)
                      (sd/build-query-param req-query :context_id)
@@ -137,8 +137,8 @@
                                       hstore-val (when val
                                                    (str [:cast
                                                          (clojure.string/join ", "
-                                                           (map (fn [[k v]] (str (name k) " => \"" v "\""))
-                                                             val))
+                                                                              (map (fn [[k v]] (str (name k) " => \"" v "\""))
+                                                                                   val))
                                                          :hstore]))]
                                   (assoc data key hstore-val))
                                 data))]
@@ -216,8 +216,7 @@
                     (sql/set (cast-to-hstore dwid))
                     (sql/where [:= :id id])
                     sql-format)
-            upd-result (jdbc/execute-one! (get-ds) (spy fir))
-            ]
+            upd-result (jdbc/execute-one! (get-ds) (spy fir))]
 
         (sd/logwrite req (str "handle_update-context_keys: " id "\nnew-data\n" dwid "\nupd-result: " upd-result))
 
@@ -246,9 +245,9 @@
 (defn wwrap-find-context_key [param colname send404]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler
-                    param
-                    :context_keys colname
-                    :context_key send404))))
+                                    param
+                                    :context_keys colname
+                                    :context_key send404))))
 
 (def schema_import_context_keys
   {;:id s/Str

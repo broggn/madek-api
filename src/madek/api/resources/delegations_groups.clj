@@ -33,7 +33,7 @@
         query (cond-> base-query
                 delegation_id (sql/where [:= :delegation_id delegation_id])
                 group_id (sql/where [:= :group_id group_id]))
-        db-result (jdbc/execute! (get-ds) (sql-format query))        ]
+        db-result (jdbc/execute! (get-ds) (sql-format query))]
     ;(->> db-result (map :id) set)
     (logging/info "handle_list-delegations_group" "\nresult\n" db-result)
     (sd/response_ok db-result)))

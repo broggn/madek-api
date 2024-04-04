@@ -16,8 +16,7 @@
                   (sql/where [:= :previews.id id])
                   sql-format)
 
-        p (println ">oo> db-get-preview.preview" query)
-        ]
+        p (println ">oo> db-get-preview.preview" query)]
     (jdbc/execute-one! (get-ds) query)))
 
 (defn get-preview [request]

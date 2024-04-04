@@ -10,7 +10,7 @@
    [madek.api.resources.keywords.index :as keywords]
    [madek.api.resources.shared :as sd]
 
-   [madek.api.utils.helper :refer [convert-map-if-exist array-to-map  map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+   [madek.api.utils.helper :refer [convert-map-if-exist array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
 
    [next.jdbc :as jdbc]
 

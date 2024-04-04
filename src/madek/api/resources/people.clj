@@ -201,7 +201,7 @@
 
 (defn handle_get-person
   [req]
-  (let [        id-or-institutinal-person-id (-> req :parameters :path :id str)]
+  (let [id-or-institutinal-person-id (-> req :parameters :path :id str)]
 
     (if-let [person (db-person-get id-or-institutinal-person-id)]
       (sd/response_ok (transform_export person))

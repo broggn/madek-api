@@ -41,8 +41,8 @@
             ins-res (sd/transform_ml_map ins-res)]
 
         (logging/info "handle_create-static-page:"
-          "\ninsert data:\n" ins-data
-          "\nresult:\n " ins-res)
+                      "\ninsert data:\n" ins-data
+                      "\nresult:\n " ins-res)
 
         (if ins-res
           (sd/response_ok ins-res)
@@ -66,9 +66,9 @@
             upd-result (sd/transform_ml_map upd-result)]
 
         (logging/info "handle_update-static_pages: "
-          "\nid:\n" id
-          "\nnew-data:\n" dwid
-          "\nupd-result:" upd-result)
+                      "\nid:\n" id
+                      "\nnew-data:\n" dwid
+                      "\nupd-result:" upd-result)
 
         (if upd-result
           (sd/response_ok upd-result)
@@ -89,8 +89,8 @@
             delresult (sd/transform_ml_map delresult)]
 
         (logging/info "handle_delete-static_page: "
-          " id: " id
-          " result: " delresult)
+                      " id: " id
+                      " result: " delresult)
         (if delresult
           (sd/response_ok delresult)
           (sd/response_failed "Could not delete static page." 422))))
@@ -99,8 +99,8 @@
 (defn wwrap-find-static_page [param]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler param
-                    :static_pages :id
-                    :static_page true))))
+                                    :static_pages :id
+                                    :static_page true))))
 
 (def schema_create_static_page
   {:name s/Str
@@ -115,7 +115,7 @@
   {:id s/Uuid
    :name s/Str
    :contents sd/schema_ml_list
-   :created_at s/Any                                        ; TODO as Inst
+   :created_at s/Any ; TODO as Inst
    :updated_at s/Any})
 
 ; TODO auth admin

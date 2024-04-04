@@ -65,11 +65,11 @@
   "Get an index of the people. Query parameters are pending to be implemented."
   [{{query :query} :parameters params :params tx :tx :as req}]
   (debug 'query query)
-  (let [        defaults {:page 0 :count 1000}
+  (let [defaults {:page 0 :count 1000}
         params (parse-specific-keys params defaults)
         query (-> (build-query query)
                   (pagination/sql-offset-and-limit params)
-                  sql-format                  )
+                  sql-format)
         people (jdbc/execute! tx query)]
     (debug 'people people)
     {:status 200, :body {:people people}}))

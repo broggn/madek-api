@@ -28,7 +28,7 @@
         limit (page-count params)]
     (-> query
         (sql/offset off)
-        (sql/limit limit))    ))
+        (sql/limit limit))))
 
 (comment
   (let [page 1

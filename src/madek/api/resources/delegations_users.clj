@@ -21,7 +21,7 @@
 
 (defn handle_list-delegations_users
   [req]
-  (let [        delegation_id (-> req :parameters :query :delegation_id)
+  (let [delegation_id (-> req :parameters :query :delegation_id)
         user_id (-> req :parameters :query :user_id)
         col-sel (if (true? (-> req :parameters :query :full-data))
                   (sql/select :*)
@@ -187,7 +187,7 @@
   [["/delegation/users"
     {:swagger {:tags ["admin/delegation/users"] :security [{"auth" []}]}}
     ["/"
-   {:get
+     {:get
       {:summary (sd/sum_adm (t "Query delegations_users."))
        :handler handle_list-delegations_users
        :coercion reitit.coercion.schema/coercion

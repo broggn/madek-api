@@ -42,11 +42,11 @@
                uid)
          res (-> sql-map
                  (sql/where
-                   (if (uuid/uuidable? uid)
-                     [:= :users.id uid]
-                     [:or
-                      [:= :users.login [:lower uid]]
-                      [:= [:lower :users.email] [:lower uid]]])))] res)))
+                  (if (uuid/uuidable? uid)
+                    [:= :users.id uid]
+                    [:or
+                     [:= :users.login [:lower uid]]
+                     [:= [:lower :users.email] [:lower uid]]])))] res)))
 
 (def is-admin-sub
   [:exists
@@ -66,8 +66,7 @@
   (let [res (-> base-query
                 (where-uid uid)
                 sql-format)
-        res (jdbc/execute-one! ds res)
-        ] res))
+        res (jdbc/execute-one! ds res)] res))
 
 (defn wrap-find-user [param]
   (fn [handler]

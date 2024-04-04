@@ -19,22 +19,21 @@
 (defn handle-email-clause [thread-obj params]
   (if-let [email (:email params)]
     (-> thread-obj
-        (sql/where [:= :email email])        )
+        (sql/where [:= :email email]))
     thread-obj))
 
 (defn handler
   "Get an index of the users. Query parameters are pending to be implemented."
   [{params :params tx :tx :as req}]
 
-  (let [ query (-> common/base-query
+  (let [query (-> common/base-query
                   (pagination/sql-offset-and-limit params)
                   (handle-email-clause params)
                   (sql-format :inline false))
         res (->> query
                  (jdbc/execute! tx)
                  (assoc {} :users))
-        res (sd/transform_ml_map res)        ]
-
+        res (sd/transform_ml_map res)]
 
     (sd/response_ok res)))
 

@@ -19,7 +19,7 @@
 
 (defn handle_list-io_interface
   [req]
-  (let [        full_data (true? (-> req :parameters :query :full_data))
+  (let [full_data (true? (-> req :parameters :query :full_data))
         qd (if (true? full_data) :* :io_interfaces.id)
         db-result (sd/query-find-all :io_interfaces qd)]
 

@@ -16,7 +16,7 @@
    [taoensso.timbre :refer [info warn error spy]]))
 
 (defn build-query [query-params]
-  (let [        col-sel (if (true? (-> query-params :full_data))
+  (let [col-sel (if (true? (-> query-params :full_data))
                   (sql/select :*)
                   (sql/select :id))]
     (-> col-sel
@@ -97,10 +97,9 @@
                    (assoc data :collection_id mr-id))
             sql-query (-> (sql/insert-into :edit_sessions) (sql/values [dwid]) sql-format)
 
-            ins-result  (jdbc/execute-one! (get-ds) sql-query)
+            ins-result (jdbc/execute-one! (get-ds) sql-query)
             p (println ">o> ins-result" ins-result)
-            p (println ">o> ?????????????????????")
-            ]
+            p (println ">o> ?????????????????????")]
         (sd/logwrite req (str "handle_create-edit-session:" "\nnew-data: " dwid))
 
         (if-let [ins-result ins-result]

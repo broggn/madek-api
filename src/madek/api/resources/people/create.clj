@@ -64,17 +64,17 @@
 
                   ;; works
                   (sql/returning :people.created_at
-                    :people.description
-                    :people.external_uris
-                    :people.id
-                    :people.first_name
-                    :people.institution
-                    :people.institutional_id
-                    :people.last_name
-                    :people.admin_comment
-                    :people.pseudonym
-                    :people.subtype
-                    :people.updated_at)
+                                 :people.description
+                                 :people.external_uris
+                                 :people.id
+                                 :people.first_name
+                                 :people.institution
+                                 :people.institutional_id
+                                 :people.last_name
+                                 :people.admin_comment
+                                 :people.pseudonym
+                                 :people.subtype
+                                 :people.updated_at)
 
                   sql-format)
         result (jdbc/execute-one! (get-ds) query)]

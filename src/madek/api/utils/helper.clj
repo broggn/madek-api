@@ -1,13 +1,10 @@
 (ns madek.api.utils.helper
   (:require [cheshire.core :as json]
             [clojure.tools.logging :as logging]
+            [clojure.walk :refer [postwalk]] ; Add this line
             [pghstore-clj.core :refer [to-hstore]]
 
-            [taoensso.timbre :refer [debug info warn error spy]]
-
-            [clojure.walk :refer [postwalk]]                ; Add this line
-
-            )
+            [taoensso.timbre :refer [debug info warn error spy]])
   (:import (java.util UUID)))
 
 (def LOAD-SWAGGER-DESCRIPTION-FROM-FILE true)
@@ -64,34 +61,25 @@
   ([value key]
    (def keys-to-cast-to-uuid #{:user_id :id :group_id :person_id :collection_id :media_entry_id :accepted_usage_terms_id :delegation_id
                                :uploader_id :created_by_id
-                               :keyword_id
-                               })
+                               :keyword_id})
    (println ">o> to-uuid[key value]: " value key)
    (println ">o> to-uuid[key value] cl: " value (class value))
    (println ">o> to-uuid[key value] cl: " key (class key))
    (println ">o> to-uuid[key value] castingAllowed?: " (and (contains? keys-to-cast-to-uuid (keyword key)) (instance? String value)))
 
-
-
    (println "------------------------------------")
 
-   (let [
-
-   res (try
+   (let [res (try
      ;(if (and (contains? keys-to-cast-to-uuid key) (instance? String value))
-     (if (and (contains? keys-to-cast-to-uuid (keyword key)) (instance? String value))
-       (do
-         (println ">o> to-uuid[key value] castingDONE!!!!")
-         (UUID/fromString value)
+               (if (and (contains? keys-to-cast-to-uuid (keyword key)) (instance? String value))
+                 (do
+                   (println ">o> to-uuid[key value] castingDONE!!!!")
+                   (UUID/fromString value))
 
-         )
-       value)
-     (catch Exception e
-       (logging/warn ">>> DEV-ERROR in to-uuid[value key], value=" value ", key=" key " exception=" (.getMessage e))
-       value))
-         ]res)
-
-   )
+                 value)
+               (catch Exception e
+                 (logging/warn ">>> DEV-ERROR in to-uuid[value key], value=" value ", key=" key " exception=" (.getMessage e))
+                 value))] res))
 
   ([value key table]
    (println ">o> to-uuid[key value table]: " value key table)
@@ -110,8 +98,8 @@
         ;p (println "\nquery ok1" (class (to-uuid "123e4567-e89b-12d3-a456-426614174000" :user_id)))
         ;
 
-        k "123e4567-e89b-12d3-a456-426614174000"            ;ok
-        k "123e"                                            ;error - return val
+        k "123e4567-e89b-12d3-a456-426614174000" ;ok
+        k "123e" ;error - return val
         ;k 123                                               ;ok - return val
 
         p (println "\nquery result=" (to-uuid k))
@@ -153,7 +141,7 @@
   (-> map
       (update :external_uris #(if (nil? %)
                                 [:raw "'{}'"]
-                                (convert-to-raw-set %)))    ;;rename to convert-to-raw-set
+                                (convert-to-raw-set %))) ;;rename to convert-to-raw-set
 
       (update :creator_id #(if (contains? map :creator_id) (to-uuid % :creator_id)))
 
@@ -195,8 +183,7 @@
       (modify-if-exists :uploader_id #(if (contains? m :uploader_id) (to-uuid %)))
       (modify-if-exists :media_entry_id #(if (contains? m :media_entry_id) (to-uuid %)))
 
-
-      ;; jsonb / character varying
+;; jsonb / character varying
       (modify-if-exists :settings #(if (nil? %) [:raw "'{}'"] (convert-to-raw-set %)))
       (modify-if-exists :external_uris #(if (nil? %) [:raw "'{}'"] (convert-to-raw-set %)))
       (modify-if-exists :sitemap #(if (nil? %) [:raw "'{}'"] (convert-to-raw-set %)))
@@ -217,13 +204,6 @@
       (modify-if-exists :copyright_notice_templates #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))
       (modify-if-exists :allowed_people_subtypes #(if (nil? %) [:raw "'[]'"] (convert-to-raw-set %)))))
 
-
-
-
-
-
-
-
 ;; deprecated
 (defn convert-filter-values [filters]
   (let [key-set (set [:uploader_id :created_by_id :media_entry_id])
@@ -240,21 +220,17 @@
                                 (if (contains? key-set (keyword (:key acc)))
                                   ;(to-uuid2 v k)
                                   (to-uuid v)
-                                  v)))]                     ; Pass the key to to-uuid
+                                  v)))] ; Pass the key to to-uuid
     (postwalk (fn [item]
                 (if (map? item)
                   (reduce-kv (fn [acc k v] (assoc acc k (transform-if-needed k v acc)))
-                    {}
-                    item)
+                             {}
+                             item)
                   item))
-      filters)))
-
-
-
+              filters)))
 
 (comment
-  (let [
-        ;filters {:meta_data [{:key "test:string", :match "partial"}
+  (let [;filters {:meta_data [{:key "test:string", :match "partial"}
         ;                     {:key "filter:il5r6pws2e1xnhdlgp2b", :value "585d4a10-65ee-42a2-b6e4-abdc2b741c5c"}
         ;                     {:key "test:licenses"}
         ;                     {:not_key "filter:quzcjitujl5lrs24xst5"}
@@ -278,24 +254,12 @@
                                {:key :entrusted_to_user, :value "3b6261be-cfca-4977-9070-a188c37e2dbd"}
                                {:key :entrusted_to_group, :value "f1146649-d0f9-4cec-8ba3-e4f5857bfd87"}]}
 
-
         p (println ">o> " filters)
 
         res (convert-filter-values filters)
 
-        p (println ">o> " res)
-        ]
-    res)
-
-  )
-
-
-
-
-
-
-
-
+        p (println ">o> " res)]
+    res))
 
 (comment
   (let [m {:layout "list"
@@ -324,8 +288,8 @@
                       transformed-value (to-hstore field-value)] ; Assume to-hstore is defined elsewhere
                   (assoc acc key transformed-value))
                 acc))
-      data
-      keys)))
+            data
+            keys)))
 
 (defn array-to-map [arr]
   (zipmap arr (range (count arr))))
@@ -348,23 +312,23 @@
 (defn replace-java-hashmaps [m]
   (reduce-kv (fn [acc k v]
                (assoc acc k (replace-java-hashmap v)))
-    {}
-    m))
+             {}
+             m))
 
 (def email-regex #"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$")
 
 ; [madek.api.utils.helper :refer [convert-groupid-userid]]
 (defn convert-groupid-userid [group-id user-id]
   (let [is_uuid (boolean (re-matches
-                           #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-                           group-id))
+                          #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+                          group-id))
         group-id (if is_uuid (to-uuid group-id) group-id)
 
         ;is_email (re-matches #"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" user-id)
         is_email (re-matches email-regex user-id)
         is_uuid (boolean (re-matches
-                           #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-                           user-id))
+                          #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+                          user-id))
         user-id (if is_uuid (to-uuid user-id) user-id)
 
         is_userid_valid (or is_email is_uuid)
@@ -386,8 +350,8 @@
         p (println ">o> is_email_VALID?" is_email)
 
         is_uuid (boolean (re-matches
-                           #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-                           user-id))
+                          #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+                          user-id))
         p (println ">o> is_uuid_VALID?" is_uuid)
 
         user-id (if is_uuid (to-uuid user-id) user-id)
@@ -423,8 +387,8 @@
 ; [madek.api.utils.helper :refer [convert-groupid]]
 (defn convert-groupid [group-id]
   (let [is_uuid (boolean (re-matches
-                           #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-                           group-id))
+                          #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+                          group-id))
         group-id (if is_uuid (to-uuid group-id) group-id)
 
         res {:group-id group-id}
@@ -449,11 +413,11 @@
 ; [madek.api.utils.helper :refer [parse-specific-keys]]
 (defn parse-specific-keys [params defaults]
   (into {}
-    (map (fn [[k v]]
-           [k (if (contains? defaults k)
-                (parse-to-int v (defaults k))
-                v)])
-      params)))
+        (map (fn [[k v]]
+               [k (if (contains? defaults k)
+                    (parse-to-int v (defaults k))
+                    v)])
+             params)))
 
 (comment
   (let [;res (parse-specific-keys {:page "1" :count "100" :foo "bar"} [:page :count])
