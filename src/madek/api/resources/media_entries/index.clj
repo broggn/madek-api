@@ -91,18 +91,18 @@
 
 (defn- order-by-media-entry-attribute [query [attribute order]]
   (let [order-by-arg (match [(keyword attribute) (keyword order)]
-                       [:created_at :desc] [:media-entries.created_at :desc :nulls-last]
+                       [:created_at :desc] [:media-entries.created_at :desc-nulls-last]
                        [:created_at _] [:media-entries.created_at]
                        [:edit_session_updated_at _] [:media_entries.edit_session_updated_at])]
     (sql/order-by query order-by-arg)))
 
 (defn- order-by-arc-attribute [query [attribute order]]
   (let [order-by-arg (match [(keyword attribute) (keyword order)]
-                       [:order :desc] [:arcs.order :desc :nulls-last]
+                       [:order :desc] [:arcs.order :desc-nulls-last]
                        [:order _] [:arcs.order]
                        [:position :asc] [:arcs.position :asc]
-                       [:position :desc] [:arcs.position :desc :nulls-last]
-                       [:created_at :desc] [:arcs.created_at :desc :nulls-last]
+                       [:position :desc] [:arcs.position :desc-nulls-last]
+                       [:created_at :desc] [:arcs.created_at :desc-nulls-last]
                        [:created_at _] [:arcs.created_at])]
     (sql/order-by query order-by-arg)))
 
@@ -119,15 +119,17 @@
         p (println ">o> keyword1=" keyword1)
         p (println ">o> keyword2=" keyword2)
 
+
+        ;https://github.com/seancorfield/honeysql/blob/develop/doc/differences-from-1-x.md
         res (-> query
                 (sql/left-join [:meta_data from-name]
-                  [:= keyword1 meta-key-id])                ;;here FIXME
+                  [:= keyword1 meta-key-id])                ;;here FIXME: :asc-nulls-last, ..
                 (sql/order-by [(-> from-name (str ".string") keyword)
                                (case (keyword order)
-                                 :asc :asc
-                                 :desc :desc
-                                 :asc)
-                               :nulls-last])
+                                 :asc :asc-nulls-last
+                                 :desc :desc-nulls-last
+                                 :asc-nulls-last)
+                               ])
                 (sql/where [:= keyword2 :media_entries.id]))]
     res))
 
@@ -242,6 +244,13 @@
 ;                     {"key":"entrusted_to_user","value":"73fbb710-eedc-481d-a411-692705decd09"},
 ;                     {"key":"entrusted_to_group","value":"e8b962f6-df73-4b6f-b2b6-3f71230cd0aa"}]}
 
+
+
+(defn modified-query [query] (-> query
+                        (assoc :select-distinct (get query :select)) ;; Copy the select fields to select-distinct
+                        (dissoc :select))) ;; Remove the old select key
+
+
 ; TODO test query and paging
 (defn- build-query [request]
   (let [query-params (-> request :parameters :query)
@@ -277,9 +286,14 @@
                     (advanced-filter/filter-by filter-by)   ;;tofix within filter-by
 
                     (pagination/add-offset-for-honeysql query-params) ;;ok
-                    sql-format)
+                    )
 
-        p (println ">o> after query-res >>>" query-res)]
+        p (println ">o> HERE!! after query-res >>>" query-res)
+        p (println ">o> HERE!! after query-res class >>>" (class query-res))
+        ;query-res (-> query-res modified-query sql-format)
+        query-res (-> query-res  sql-format)
+
+        p (println ">o> HERE!! after query-res >>>" query-res)]
 
     ;    (logging/info "build-query"
     ;                  "\nquery-params:\n" query-params
@@ -407,14 +421,13 @@
   (catcher/with-logging {}
     (let [data (query-index-resources request)
 
-          p (println ">o> get-index.data=" data)
-
-          p (println ">o> ?? collection-id=" collection-id)
-          p (println ">o> ?? full-data=" full-data)
+          p (println ">o> ?? get-index.data=" data)
+          p (println ">o> ?? get-index.collection-id=" collection-id)
+          p (println ">o> ?? get-index.full-data=" full-data)
 
           result (build-result collection-id full-data data)
 
-          p (println ">o> 11 get-index.result=" result)
+          p (println ">o> 11 final get-index.result=" result)
           ]
       (sd/response_ok result)))
   ;(catch Exception e (sd/response_exception e)))

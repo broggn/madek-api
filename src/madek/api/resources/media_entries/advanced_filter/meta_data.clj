@@ -308,10 +308,15 @@
               (str "Invalid meta data filter: " meta-datum-spec)
               {:status 422})))))
 
-(defn updated-query [query]
-  (-> query
-      (dissoc :select) ; Remove :select
-      (assoc :select-distinct [:*]))) ; Add :select-distinct
+;(defn updated-query [query]
+;  (-> query
+;      (dissoc :select) ; Remove :select
+;      (assoc :select-distinct [:*]))) ; Add :select-distinct
+
+
+(defn modified-query [query] (-> query
+                                 (assoc :select-distinct (get query :select)) ;; Copy the select fields to select-distinct
+                                 (dissoc :select))) ;; Remove the old select key
 
 (defn sql-filter-by [sqlmap meta-data-specs]
 
@@ -326,7 +331,9 @@
         ;(update-in [0] #(clojure.string/replace % "SELECT" "SELECT DISTINCT"))
 
         ;(sql/select-distinct)
-        updated-query
+        ;updated-query
+
+        modified-query
 
         ;; TODO: causes error/duplicate selects
         ;https://github.com/nilenso/honeysql-postgres
