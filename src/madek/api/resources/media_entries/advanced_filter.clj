@@ -23,29 +23,34 @@
   (let [;filter-map (convert-map-if-exist filter-map)
         ;filter-map (convert-filter-values filter-map)
 
-        p (println ">o> filter-map" filter-map)
+        ;p (println ">o> filter-map" filter-map)
         ;p (println ">o> filter-map / !!!! debug=" (-> (media-files/sql-filter-by (:media_files filter-map))
         ;                                            sql-format
         ;                                            ))
 
-        p (println ">o> NOW0!!!=" (-> (sql/select :*)
-                                      (sql/from [:media_entries "fake_table1"])
-                                      (media-files/sql-filter-by (:media_files filter-map))
-                                      sql-format))
+        ;p (println ">o> NOW0!!!=" (-> (sql/select :*)
+        ;                              (sql/from [:media_entries "fake_table1"])
+        ;                              (media-files/sql-filter-by (:media_files filter-map))
+        ;                              sql-format))
 
-        p (println ">o> NOW1!!!=" (-> (sql/select :*)
-                                      (sql/from [:media_entries "fake_table1"])
-                                      (meta-data/sql-filter-by (:meta_data filter-map))
-                                      sql-format))
 
-        p (println ">o> NOW2!!!=" (-> (sql/select :*)
-                                      (sql/from [:media_entries "fake_table2"])
-                                      (meta-data/sql-search-through-all (:search filter-map))
-                                      sql-format))
+        query (-> (sql/select :*)
+                  (sql/from [:media_entries "media_entries"])
+                  (meta-data/sql-filter-by (:meta_data filter-map))
+                  sql-format)
+        p (println ">o> NOW1!!!=" query)
 
-        p (println ">o> NOW23!!!=" sqlmap)
+        res (jdbc/execute! (get-ds) query)
+        p (println ">o> NOW1a!!!=" res)
 
-        p (println ">o> NOW2a2!!!=" (:meta_data filter-map))
+        ;p (println ">o> NOW2!!!=" (-> (sql/select :*)
+        ;                              (sql/from [:media_entries "fake_table2"])
+        ;                              (meta-data/sql-search-through-all (:search filter-map))
+        ;                              sql-format))
+        ;
+        ;p (println ">o> NOW23!!!=" sqlmap)
+        ;
+        ;p (println ">o> NOW2a2!!!=" (:meta_data filter-map))
 
 ;p (println ">o> NOW2a2 !!!!! HERE !!!=" (meta-data/sql-filter-by [] (:meta_data filter-map)))
         ])

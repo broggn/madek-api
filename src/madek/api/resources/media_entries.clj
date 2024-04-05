@@ -402,7 +402,7 @@
       :middleware [sd/ring-wrap-parse-json-query-parameters]
       :coercion reitit.coercion.schema/coercion
       :parameters {:query schema_query_media_entries}
-      :responses {200 {:body schema_query_media_entries_result}
+      :responses {200 {:body s/Any}
                   422 {:body s/Any}}}}]
    ["media-entries-related-data"
     {:get
@@ -441,7 +441,7 @@
                         sd/ring-wrap-authorization-view]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Uuid}}
-           :responses {200 {:body schema_export_media_entry}
+           :responses {200 {:body s/Any}
                        404 {:body s/Any}}}
 
      ; TODO Frage: wer kann einen Eintrag löschen

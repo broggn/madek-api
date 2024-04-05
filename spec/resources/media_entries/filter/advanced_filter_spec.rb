@@ -30,6 +30,8 @@ describe 'advanced filtering of media entries' do
 
       fetched_media_entries = \
         get_media_entries('filter_by' => filter.deep_stringify_keys.to_json)
+
+      binding.pry
       expect(fetched_media_entries.size).to be == 1
       expect(fetched_media_entries.first['id']).to be == media_entry.id
     end
@@ -49,6 +51,7 @@ describe 'advanced filtering of media entries' do
       fetched_media_entries = \
         get_media_entries('filter_by' => filter.deep_stringify_keys.to_json)
 
+      binding.pry
       media_entries.each do |me|
         expect(fetched_media_entries.map { |me| me['id'] }).to include me.id
       end
