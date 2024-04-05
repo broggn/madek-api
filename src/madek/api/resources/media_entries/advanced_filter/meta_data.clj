@@ -313,7 +313,6 @@
 ;      (dissoc :select) ; Remove :select
 ;      (assoc :select-distinct [:*]))) ; Add :select-distinct
 
-
 (defn modified-query [query] (-> query
                                  (assoc :select-distinct (get query :select)) ;; Copy the select fields to select-distinct
                                  (dissoc :select))) ;; Remove the old select key

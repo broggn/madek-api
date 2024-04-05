@@ -33,7 +33,6 @@
         ;                              (media-files/sql-filter-by (:media_files filter-map))
         ;                              sql-format))
 
-
         query (-> (sql/select :*)
                   (sql/from [:media_entries "media_entries"])
                   (meta-data/sql-filter-by (:meta_data filter-map))
