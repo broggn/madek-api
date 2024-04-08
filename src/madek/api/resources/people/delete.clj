@@ -3,16 +3,12 @@
    [clj-uuid :as uuid]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [logbug.debug :as debug]
-
    [madek.api.resources.shared :as sd]
-
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.helper :refer [array-to-map t convert-map-if-exist map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+   [madek.api.utils.helper :refer [t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-   [schema.core :as s]
-   [taoensso.timbre :refer [debug error info spy warn]]))
+   [schema.core :as s]))
 
 (defn delete-person
   "Delete a person by its id and returns true if delete was succesfull
@@ -45,11 +41,9 @@
    :content-type "application/json"
    :parameters {:path {:id s/Uuid}}
    :responses {204 {:description "No Content." :body nil}
-
                403 {:description "Forbidden."
                     :schema s/Str
                     :examples {"application/json" {:message "Violation of constraints."}}}
-
                404 {:description "Not found."
                     :schema s/Str
                     :examples {"application/json" {:message "Person not found."}}}}})

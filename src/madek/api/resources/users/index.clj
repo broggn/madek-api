@@ -2,19 +2,15 @@
   (:require
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [logbug.debug :as debug]
    [madek.api.resources.shared :as sd]
    [madek.api.resources.users.common :as common]
    [madek.api.resources.users.get :as get-user]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
+   [madek.api.utils.helper :refer [f t]]
    [madek.api.utils.pagination :as pagination]
-
    [next.jdbc :as jdbc]
-
    [reitit.coercion.schema]
-   [schema.core :as s]
-   [taoensso.timbre :refer [debug error info spy warn]]))
+   [schema.core :as s]))
 
 (defn handle-email-clause [thread-obj params]
   (if-let [email (:email params)]
@@ -25,7 +21,6 @@
 (defn handler
   "Get an index of the users. Query parameters are pending to be implemented."
   [{params :params tx :tx :as req}]
-
   (let [query (-> common/base-query
                   (pagination/sql-offset-and-limit params)
                   (handle-email-clause params)
@@ -34,7 +29,6 @@
                  (jdbc/execute! tx)
                  (assoc {} :users))
         res (sd/transform_ml_map res)]
-
     (sd/response_ok res)))
 
 (def query-schema

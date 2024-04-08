@@ -1,32 +1,17 @@
 (ns madek.api.resources.users.create
   (:require
-   [clj-uuid :as uuid]
-   [clojure.data.json :as json]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [logbug.debug :as debug]
-   [madek.api.authorization :as authorization]
-   [madek.api.db.core :refer [get-ds]]
-
    [madek.api.resources.shared :as sd]
-   [madek.api.resources.users.common :refer [find-user-by-uid]]
-
-   [madek.api.resources.users.get :as get-user]
-   [madek.api.resources.users.get :as users-get]
-
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
+   [madek.api.utils.helper :refer [convert-map-if-exist f t]]
    [madek.api.utils.helper :refer [convert-map-if-exist]]
    [madek.api.utils.helper :refer [mslurp]]
-   [madek.api.utils.logging :as logging]
-   [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
-   [madek.api.utils.validation :refer [email-validation json-and-json-str-validation json-and-json-str-validation vector-or-hashmap-validation]]
+   [madek.api.utils.validation :refer [email-validation vector-or-hashmap-validation]]
    [next.jdbc :as jdbc]
-
    [reitit.coercion.schema]
-
    [schema.core :as s]
-   [taoensso.timbre :refer [debug error info spy warn]]))
+   [taoensso.timbre :refer [error]]))
 
 ;#### create ##################################################################
 
@@ -39,11 +24,9 @@
                     (sql/returning :*)
                     sql-format)
           result (jdbc/execute-one! ds query)]
-
       (if result
         (sd/response_ok result 201)
         (sd/response_failed)))
-
     (catch Exception e
       (error "handle-create-user failed" {:request req})
       (sd/parsed_response_exception e))))
@@ -68,9 +51,7 @@
    :coercion reitit.coercion.schema/coercion
    :content-type "application/json"
    ;:description "Create user."
-
    :description (mslurp "./md/admin-users-post.md")
-
    :handler handle-create-user
    :middleware [wrap-authorize-admin!]
    :parameters {:body schema}

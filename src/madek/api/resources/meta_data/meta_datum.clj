@@ -2,18 +2,13 @@
   (:require
    [cheshire.core :as json]
    [clojure.tools.logging :as logging]
-   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.keywords.index :as keywords]
    [madek.api.resources.shared :as sd]
-
-   [madek.api.utils.helper :refer [convert-map-if-exist array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-
+   [madek.api.utils.helper :refer [to-uuid]]
    [next.jdbc :as jdbc]
-
    [ring.util.response :as ring-response]))
 
 ;### people ###################################################################

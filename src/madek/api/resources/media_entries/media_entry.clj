@@ -1,6 +1,5 @@
 (ns madek.api.resources.media-entries.media-entry
   (:require
-   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [madek.api.db.core :refer [get-ds]]
@@ -17,18 +16,13 @@
 
 (defn get-media-entry-for-preview [request]
   (let [preview-id (or (-> request :params :preview_id) (-> request :parameters :path :preview_id))
-
-        p (println ">o> preview-id=" preview-id)
-
         query (-> (sql/select :media_entries.*)
                   (sql/from :media_entries)
                   (sql/join :media_files [:= :media_entries.id :media_files.media_entry_id])
                   (sql/join :previews [:= :media_files.id :previews.media_file_id])
                   (sql/where [:= :previews.id (to-uuid preview-id)])
                   (sql-format))
-        dbresult (jdbc/execute-one! (get-ds) query)
-
-        te_p (println ">o> !!!! dbresult=" dbresult)]
+        dbresult (jdbc/execute-one! (get-ds) query)]
     ;(logging/info "get-media-entry-for-preview" "\npreview-id\n" preview-id "\ndbresult\n" dbresult)
     dbresult))
 

@@ -1,25 +1,20 @@
 (ns madek.api.resources.people.index
   (:require
-   [cuerdas.core :as string :refer [empty-or-nil?]]
+   [cuerdas.core :refer [empty-or-nil?]]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [logbug.debug :as debug]
-
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.people.common :as common]
-
    [madek.api.resources.people.get :as get-person]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   ;[madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
-   [madek.api.utils.helper :refer [parse-specific-keys t f]]
-
+   [madek.api.utils.helper :refer [parse-specific-keys t]]
    [madek.api.utils.pagination :as pagination]
-   [madek.api.utils.validation :refer [greater-zero-validation greater-equal-zero-validation]]
+   [madek.api.utils.validation :refer [greater-equal-zero-validation greater-zero-validation]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
-   [taoensso.timbre :refer [debug error info spy warn]]))
+   [taoensso.timbre :refer [debug spy]]))
 
 (defn subtype-filter [query {subtype :subtype}]
   (if (empty-or-nil? subtype)

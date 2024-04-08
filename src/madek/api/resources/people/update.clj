@@ -1,22 +1,18 @@
 (ns madek.api.resources.people.update
   (:require
-   [clj-uuid :as uuid :refer [as-uuid]]
+   [clj-uuid :refer [as-uuid]]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [logbug.debug :as debug]
-   [madek.api.resources.people.common :as people-common :refer [find-person-by-uid]]
+   [madek.api.resources.people.common :refer [find-person-by-uid]]
    [madek.api.resources.people.create :as create]
    [madek.api.resources.people.get :as get-person]
    [madek.api.resources.shared :as sd]
-
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-
-   [madek.api.utils.helper :refer [array-to-map t convert-map-if-exist map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+   [madek.api.utils.helper :refer [t]]
    [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-   [schema.core :as s]
-   [taoensso.timbre :refer [debug error info spy warn]]))
+   [schema.core :as s]))
 
 (defn update-person
   "Updates and returns true if that happened and false otherwise"
@@ -54,7 +50,6 @@
    :handler update-person-handler
    :middleware [wrap-authorize-admin!]
    :responses {200 {:body get-person/schema}
-
                404 {:description "Not found."
                     :schema s/Str
                     :examples {"application/json" {:message "Person not found."}}}

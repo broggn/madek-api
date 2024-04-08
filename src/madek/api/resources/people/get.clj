@@ -1,18 +1,13 @@
 (ns madek.api.resources.people.get
   (:require
    [honey.sql :refer [format] :rename {format sql-format}]
-   [logbug.debug :as debug]
-   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.people.common :refer [person-query]]
-
    [madek.api.resources.shared :as sd]
-
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
-
+   [madek.api.utils.helper :refer [t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
-   [taoensso.timbre :refer [debug error info spy warn]]))
+   [taoensso.timbre :refer [debug spy]]))
 
 (def schema
   {:created_at s/Any
@@ -49,11 +44,8 @@
    :swagger {:produces "application/json"}
    :coercion reitit.coercion.schema/coercion
    :content-type "application/json"
-
    :parameters {:path {:id s/Str}}
-
    :responses {200 {:body schema}
-
                404 {:description "Not found."
                     :schema s/Str
                     :examples {"application/json" {:message "No such person found."}}}}})

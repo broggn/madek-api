@@ -1,6 +1,5 @@
 (ns madek.api.resources.keywords.index
   (:require
-   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [madek.api.db.core :refer [get-ds]]

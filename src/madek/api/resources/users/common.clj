@@ -5,12 +5,8 @@
    [honey.sql.helpers :as sql]
    [logbug.debug :as debug]
    [madek.api.resources.shared :as sd]
-
    [madek.api.utils.helper :refer [convert-userid]]
-
-   [next.jdbc :as jdbc]
-   [schema.core :as s]
-   [taoensso.timbre :refer [debug error info spy warn]]))
+   [next.jdbc :as jdbc]))
 
 ;;; schema ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -39,14 +35,14 @@
   ([sql-map uid]
    (let [uid (if (and (uuid/uuidable? uid) (not (instance? java.util.UUID uid)))
                (uuid/as-uuid uid)
-               uid)
-         res (-> sql-map
-                 (sql/where
-                  (if (uuid/uuidable? uid)
-                    [:= :users.id uid]
-                    [:or
-                     [:= :users.login [:lower uid]]
-                     [:= [:lower :users.email] [:lower uid]]])))] res)))
+               uid)]
+     (-> sql-map
+                   (sql/where
+                     (if (uuid/uuidable? uid)
+                       [:= :users.id uid]
+                       [:or
+                        [:= :users.login [:lower uid]]
+                        [:= [:lower :users.email] [:lower uid]]]))))))
 
 (def is-admin-sub
   [:exists
@@ -65,17 +61,15 @@
 
   (let [res (-> base-query
                 (where-uid uid)
-                sql-format)
-        res (jdbc/execute-one! ds res)] res))
+                sql-format)]
+    (jdbc/execute-one! ds res)))
 
 (defn wrap-find-user [param]
   (fn [handler]
     (fn [{{uid param} :path-params ds :tx :as request}]
-
       (let [converted (convert-userid uid)
             uid (-> converted :user-id)
             user (find-user-by-uid uid ds)]
-
         (if (-> converted :is_userid_valid)
           (if user
             (handler (assoc request :user user))

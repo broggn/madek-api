@@ -4,10 +4,7 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-   [logbug.debug :as debug]
-
    [madek.api.db.core :refer [get-ds]]
-
    [madek.api.resources.shared :as sd]
    [madek.api.resources.vocabularies.permissions :as permissions]
    [madek.api.utils.helper :refer [str-to-int]]
@@ -23,7 +20,6 @@
        [:in :vocabularies.id vocabulary-ids]])))
 
 (defn- base-query
-  ;; TODO: should be depr, because of is_admin_endpoint-feature
   ([user-id size offset]
    (-> (sql/select :*)
        (sql/from :vocabularies)
@@ -37,7 +33,6 @@
          select (if is_admin_endpoint
                   (sql/select :*)
                   (sql/select :id :admin_comment :position :labels :descriptions))]
-
      (-> select
          (sql/from :vocabularies)
          (sql/where (where-clause user-id))
@@ -70,8 +65,7 @@
   (catcher/with-logging {}
     (let [db-result (query-index-resources request)
           result (map transform_ml db-result)]
-
       (sd/response_ok {:vocabularies result}))))
 
 ;### Debug ####################################################################
-(debug/debug-ns *ns*)
+;(debug/debug-ns *ns*)

@@ -5,9 +5,7 @@
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [madek.api.db.core :refer [get-ds]]
-
    [madek.api.resources.shared :as sd]
-
    [madek.api.utils.helper :refer [to-uuid]]
    [next.jdbc :as jdbc]
    [taoensso.timbre :refer [spy]]))
@@ -23,7 +21,7 @@
     '()
     (let [query (-> (sql/select-distinct :group_id)
                     (sql/from :groups_users)
-                    (sql/where [:= :groups_users.user_id (to-uuid user-id)]) ; TODO??
+                    (sql/where [:= :groups_users.user_id (to-uuid user-id)])
                     sql-format)]
       (map :group_id (execute-query query)))))
 
@@ -81,8 +79,8 @@
                 :vocabulary_user_permissions
                 :vocabulary_id id)]
     (sd/response_ok result
-      ;{:vocabulary_id id
-      ; :vocabulary_user_permissions result}
+     ;{:vocabulary_id id
+     ; :vocabulary_user_permissions result}
                     )))
 
 (defn handle_get-vocab-user-perms [req]
@@ -104,16 +102,13 @@
             ins-data (assoc data
                             :vocabulary_id vid
                             :user_id uid)
-            p (println ">o> handle_create-vocab-user-perms")
             query (-> (sql/insert-into :vocabulary_user_permissions)
                       (sql/values [(spy ins-data)])
                       sql-format)
-
             ins-result (jdbc/execute! (get-ds) query)]
         (if-let [result (first ins-result)]
           (sd/response_ok result)
           (sd/response_failed "Could not create vocabulary user permission" 406))))
-
     (catch Exception ex (sd/parsed_response_exception ex))))
 
 (defn handle_update-vocab-user-perms [req]
@@ -127,9 +122,7 @@
                       (sql/where [:and [:= :vocabulary_id vid] [:= :user_id uid]])
                       (sql/returning :*)
                       sql-format)
-            upd-result (jdbc/execute-one! (get-ds) query)
-            p (println ">o> ??? upd-result" upd-result)]
-
+            upd-result (jdbc/execute-one! (get-ds) query)]
         (if upd-result
           (sd/response_ok upd-result)
           (sd/response_failed "Could not update vocabulary user permission" 406))))
@@ -146,10 +139,8 @@
                            :user_id uid)]
           (let [del-clause (sd/sql-update-clause "vocabulary_id" vid "user_id" uid)
                 query (-> (sql/delete-from :vocabulary_user_permissions)
-                          ;(sql/where del-clause)
                           (sql/where [:= :vocabulary_id vid] [:= :user_id uid])
-                          sql-format
-                          spy)
+                          sql-format                          )
                 del-result (jdbc/execute-one! (get-ds) query)]
             (if (= 1 (::jdbc/update-count del-result))
               (sd/response_ok old-data)
@@ -204,13 +195,11 @@
                            :group_id gid)]
           (let [upd-data (-> req :parameters :body)
                 query (-> (sql/update :vocabulary_group_permissions)
-                          (sql/set (spy upd-data))
+                          (sql/set  upd-data)
                           (sql/where [:= :vocabulary_id vid] [:= :group_id gid])
                           (sql/returning :*)
                           sql-format)
-
-                upd-result (jdbc/execute-one! (get-ds) (spy query))]
-
+                upd-result (jdbc/execute-one! (get-ds)  query)]
             (if upd-result
               (sd/response_ok upd-result)
               (sd/response_failed "Could not update vocabulary group permission" 406)))
@@ -231,7 +220,6 @@
                           (sql/returning :*)
                           sql-format)
                 del-result (jdbc/execute-one! (get-ds) query)]
-
             (if del-result
               (sd/response_ok del-result)
               (sd/response_failed "Could not delete vocabulary group permission" 406)))
@@ -245,7 +233,6 @@
     ;; Early exit if resource-perms is nil
     (if (nil? resource-perms)
       (sd/response_failed "No such vocabulary." 404)
-
       (let [user-perms (sd/query-eq-find-all :vocabulary_user_permissions :vocabulary_id id)
             group-perms (sd/query-eq-find-all :vocabulary_group_permissions :vocabulary_id id)
             result {:vocabulary (select-keys resource-perms [:id :enabled_for_public_view :enabled_for_public_use])

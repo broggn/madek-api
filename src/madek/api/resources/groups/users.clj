@@ -96,7 +96,6 @@
     (sd/response_ok {:users (group-users group-id nil)})
     (let [group (groups/find-group group-id)
           user (find-user user-id)]
-
       (if-not (and group user)
         (sd/response_not_found "No such user or group.")
         (do (jdbc/execute! (get-ds)

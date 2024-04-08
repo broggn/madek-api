@@ -1,6 +1,5 @@
 (ns madek.api.resources.media-entries.advanced-filter.media-files
   (:require
-   ;; all needed imports
    [honey.sql.helpers :as sql]
    [madek.api.utils.helper :refer [to-uuid]]))
 

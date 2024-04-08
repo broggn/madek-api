@@ -1,15 +1,12 @@
 (ns madek.api.resources.vocabularies.vocabulary
   (:require
    [clojure.string :as str]
-   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.locales :refer [add-field-for-default-locale]]
    [madek.api.resources.shared :as sd]
    [madek.api.resources.vocabularies.permissions :as permissions]
-
    [next.jdbc :as jdbc]))
 
 (defn transform_ml [vocab]
@@ -44,6 +41,7 @@
       (sql/where (where-clause id user-id))
       (sql-format)))
 
+; TODO for admin do not remove internal keys (admin_comment)
 ; TODO add flag for default locale
 (defn get-vocabulary [request]
   (let [id (-> request :parameters :path :id)

@@ -1,16 +1,13 @@
 (ns madek.api.resources.roles.role
   (:require
-   ;[clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
-   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.pagination :as pagination]
    [madek.api.resources.shared :as sd]
-
-   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
+   [madek.api.utils.helper :refer [cast-to-hstore]]
    [next.jdbc :as jdbc]))
 
 (defn export-role [db-role]

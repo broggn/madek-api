@@ -1,22 +1,11 @@
 (ns madek.api.resources.meta-data.index
   (:require
-   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [logbug.catcher :as catcher]
-   [logbug.debug :as debug]
-    ;[madek.api.pagination :as pagination]
-
-;[madek.api.authorization :as authorization]
    [madek.api.constants :as constants]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
-
    [madek.api.resources.vocabularies.permissions :as permissions]
-
-   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-
-   ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]))
 
 ; TODO error if user-id is undefined (public)

@@ -1,25 +1,13 @@
 (ns madek.api.resources.users.get
   (:require
    [clojure.data.json :as json]
-   [honey.sql :refer [format] :rename {format sql-format}]
-   [honey.sql.helpers :as sql]
-   [logbug.debug :as debug]
-   [madek.api.authorization :as authorization]
-   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
-
    [madek.api.resources.users.common :refer [wrap-find-user]]
-
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
-
-   [madek.api.utils.logging :as logging]
-   [madek.api.utils.validation :refer [email-validation json-and-json-str-validation json-and-json-str-validation vector-or-hashmap-validation]]
-   [next.jdbc :as jdbc]
+   [madek.api.utils.helper :refer [t]]
+   [madek.api.utils.validation :refer [vector-or-hashmap-validation]]
    [reitit.coercion.schema]
-   [schema.core :as s]
-   [taoensso.timbre :refer [debug error info spy warn]]))
+   [schema.core :as s]))
 
 (s/defn valid-email?
   [email]
@@ -73,7 +61,6 @@
    :content-type "application/json"
    :parameters {:path {:id s/Str}}
    :responses {200 {:body schema}
-
                404 {:description "Not Found."
                     :schema s/Str
                     :examples {"application/json" {:message "No such user."}}}}})

@@ -1,7 +1,6 @@
 (ns madek.api.resources.previews.preview
   (:require
    [clojure.tools.logging :as logging]
-   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
@@ -14,9 +13,7 @@
   (let [query (-> (sql/select :*)
                   (sql/from :previews)
                   (sql/where [:= :previews.id id])
-                  sql-format)
-
-        p (println ">oo> db-get-preview.preview" query)]
+                  sql-format)]
     (jdbc/execute-one! (get-ds) query)))
 
 (defn get-preview [request]

@@ -1,21 +1,12 @@
 (ns madek.api.resources.meta-keys.meta-key
   (:require
-   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [logbug.debug :as debug]
    [madek.api.db.core :refer [get-ds]]
-   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
-
    [madek.api.resources.locales :refer [add-field-for-default-locale]]
-   [madek.api.resources.shared :as sd]
-   [madek.api.utils.config :as config :refer [get-config]]
-
-   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-
-   ;[leihs.core.db :as db]
    [next.jdbc :as jdbc]))
 
+;; TODO: not in use
 (defn add-fields-for-default-locale
   [result]
   (add-field-for-default-locale

@@ -53,8 +53,7 @@
     sql-query))
 
 (defn- query-index-resources [request]
-  (let [query (build-query request)
-        res (jdbc/execute! (get-ds) query)] res))
+  (jdbc/execute! (get-ds) (build-query request)))
 
 ;### index ####################################################################
 
