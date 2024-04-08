@@ -2,9 +2,7 @@
   (:require
    [api-test-data :as td]
    [api-test-utils :as tu]
-   [clj-http.client :as client]
-
-   [clojure.test :refer [deftest is run-tests run-all-tests]]))
+   [clojure.test :refer [deftest is run-all-tests]]))
 
 (deftest dev-create-user
   (tu/init-db td/dburltest)

@@ -2,16 +2,10 @@
   (:require
    [api-test-data :as td]
    [honey.sql :refer [format] :rename {format sql-format}]
-
-   ;; all needed imports
    [honey.sql.helpers :as sql]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.utils.helper :refer [convert-map-if-exist to-uuid]]
-
    [madek.api.utils.rdbms :as rdbms]
-
-   ;[leihs.core.db :as db]
-   ;[clojure.java.jdbc :as jdbc]
    [next.jdbc :as jdbc]))
 
 ;; TODO: FIXME: use get-ds

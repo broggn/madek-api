@@ -1,20 +1,14 @@
 (ns madek.api.web
   (:require
-   [clj-yaml.core :as yaml]
-   [clojure.walk :refer [keywordize-keys]]
    [environ.core :refer [env]]
-   [logbug.catcher :as catcher]
-   [logbug.debug :as debug :refer [I> I>>]]
    [logbug.thrown :as thrown]
    [madek.api.authentication :as authentication]
    [madek.api.db.core :as db]
    [madek.api.http.server :as http-server]
    [madek.api.json-protocol]
-   [madek.api.management :as management]
    [madek.api.resources]
    [madek.api.resources.auth-info :as auth-info]
    [madek.api.utils.cli :refer [long-opt-for-key]]
-   [madek.api.utils.config :refer [get-config]]
    [madek.api.utils.helper :refer [mslurp]]
    [madek.api.utils.logging :as logging]
    [muuntaja.core :as m]
@@ -22,7 +16,6 @@
    [reitit.coercion.spec]
    [reitit.ring :as rr]
    [reitit.ring.coercion :as rrc]
-   [reitit.ring.middleware.exception :as re]
    [reitit.ring.middleware.multipart :as multipart]
    [reitit.ring.middleware.muuntaja :as muuntaja]
    [reitit.ring.middleware.parameters :as rmp]
@@ -33,7 +26,7 @@
    [ring.middleware.defaults :as ring-defaults]
    [ring.middleware.json]
    [ring.middleware.reload :refer [wrap-reload]]
-   [taoensso.timbre :refer [debug error info spy warn]]))
+   [taoensso.timbre :refer [debug error warn]]))
 
 ; changing DEBUG to true will wrap each middleware defined in this file with
 ; extended debug logging; this will increase LOGGING OUTPUT IMMENSELY and might
@@ -126,8 +119,8 @@
    [auth-info-route
     madek.api.resources/user-routes
     madek.api.resources/admin-routes
-     ;management/api-routes
-     ;test-routes
+    ;management/api-routes
+    ;test-routes
     swagger-routes]
    (filterv some?)))
 
@@ -135,8 +128,8 @@
   (->>
    [auth-info-route
     madek.api.resources/user-routes
-     ;management/api-routes
-     ;test-routes
+    ;management/api-routes
+    ;test-routes
     swagger-routes]
    (filterv some?)))
 
@@ -144,8 +137,8 @@
   (->>
    [auth-info-route
     madek.api.resources/admin-routes
-     ;management/api-routes
-     ;test-routes
+    ;management/api-routes
+    ;test-routes
     swagger-routes]
    (filterv some?)))
 
