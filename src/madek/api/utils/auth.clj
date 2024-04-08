@@ -1,13 +1,9 @@
 (ns madek.api.utils.auth
   (:require
    [clj-uuid]
-   [clojure.tools.logging :as logging]
-   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [logbug.debug :as debug]
    [madek.api.db.core :refer [get-ds]]
-   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
    [next.jdbc :as jdbc]))
 
 ;### admin check ##############################################################

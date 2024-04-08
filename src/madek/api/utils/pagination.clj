@@ -1,11 +1,8 @@
 (ns madek.api.utils.pagination
   (:require
    [clojure.walk :refer [keywordize-keys]]
-   [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [logbug.debug :as debug]
-   [madek.api.utils.helper :refer [parse-specific-keys]]
-   [taoensso.timbre :refer [debug error info spy warn]]))
+   [madek.api.utils.helper :refer [parse-specific-keys]]))
 
 (def DEFAULT_LIMIT 1000)
 
@@ -21,7 +18,7 @@
   (* (page-count params) (page-number params)))
 
 (defn sql-offset-and-limit [query params] "Caution: zero-based page numbers"
-  (let [defaults {:page 0 :count 1000}
+  (let [defaults {:page 0 :count DEFAULT_LIMIT}
         params (merge defaults params)
         params (parse-specific-keys params defaults)
         off (compute-offset params)
@@ -29,15 +26,6 @@
     (-> query
         (sql/offset off)
         (sql/limit limit))))
-
-(comment
-  (let [page 1
-        page 0
-        count 2
-        params {:page page :count count}
-
-        res (sql-offset-and-limit nil params)]
-    res))
 
 (defn next-page-query-query-params [query-params]
   (let [query-params (keywordize-keys query-params)
