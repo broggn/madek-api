@@ -34,7 +34,6 @@
   (try
     (Integer/parseInt (str s))
     (catch NumberFormatException e
-      (println "NumberFormatException: Failed to parse string to int:" s)
       nil)
     (catch Exception e
       nil)))

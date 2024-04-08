@@ -60,19 +60,7 @@
      value
      (to-uuid value key))))
 
-;[madek.api.utils.helper :refer [to-uuids]]
-(defn to-uuids [ids] (map (fn [id] (if (instance? String id) (UUID/fromString id) id)) ids))
-
-; [madek.api.utils.helper :refer [merge-query-parts]]
-(defn merge-query-parts "DEPR" [query-parts]
-  (let [placeholder-count (reduce + 0 (map #(count (re-seq #"\?" %)) query-parts))
-        required-entries (- (count query-parts) placeholder-count)
-        merged (vector (apply str (interpose " " (take required-entries query-parts))))
-        remaining (drop required-entries query-parts)]
-    (concat merged remaining)))
-
 (defn format-uris [uris]
-  (println ">o> format-uris =>" format-uris)
   (clojure.string/join "" (map #(str "{" % "}") uris)))
 
 ; [madek.api.utils.helper :refer [urls-to-custom-format]]
@@ -88,7 +76,6 @@
       (update :external_uris #(if (nil? %)
                                 [:raw "'{}'"]
                                 (convert-to-raw-set %))) ;;rename to convert-to-raw-set
-
       (update :creator_id #(if (contains? map :creator_id) (to-uuid % :creator_id)))      ))
 
 (defn modify-if-exists [m k f]
@@ -146,7 +133,7 @@
     (reduce (fn [acc key]
               (if (contains? acc key)
                 (let [field-value (get acc key)
-                      transformed-value (to-hstore field-value)] ; Assume to-hstore is defined elsewhere
+                      transformed-value (to-hstore field-value)]
                   (assoc acc key transformed-value))
                 acc))
             data
@@ -182,19 +169,15 @@
                           #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
                           group-id))
         group-id (if is_uuid (to-uuid group-id) group-id)
-
-        ;is_email (re-matches #"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" user-id)
         is_email (re-matches email-regex user-id)
         is_uuid (boolean (re-matches
                           #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
                           user-id))
         user-id (if is_uuid (to-uuid user-id) user-id)
-
         is_userid_valid (or is_email is_uuid)
         res {:group-id group-id
              :user-id user-id
-             :is_userid_valid is_userid_valid}
-        p (println ">o> convert-groupid-userid, result:" res)]
+             :is_userid_valid is_userid_valid}]
     res))
 
 ; [madek.api.utils.helper :refer [convert-userid]]
@@ -217,9 +200,7 @@
                           #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
                           group-id))
         group-id (if is_uuid (to-uuid group-id) group-id)
-
-        res {:group-id group-id}
-        p (println ">o> convert-groupid, result:" res)]
+        res {:group-id group-id}]
     res))
 
 (defn parse-to-int [value default-value]
@@ -228,9 +209,7 @@
           value (if (instance? java.lang.Integer value) (str value) value)]
       (Integer/parseInt value))
     (catch Exception e
-      (do
-        (println ">o>>>> failed to parse-to-int: value=>" value ", set default-value=>" default-value)
-        default-value))))
+      default-value)))
 
 ; [madek.api.utils.helper :refer [parse-specific-keys]]
 (defn parse-specific-keys [params defaults]

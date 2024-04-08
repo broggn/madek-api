@@ -4,7 +4,6 @@
    [cider-ci.open-session.bcrypt :refer [checkpw]]
    [clojure.tools.logging :as logging]
    [clojure.walk :refer [keywordize-keys]]
-   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [inflections.core :refer :all]
@@ -62,7 +61,7 @@
   (if-let [entity (get-entity-by-login-or-email login-or-email)]
     (if-let [asuser (get-auth-systems-user (:id entity))]
       (if-not (checkpw password (:data asuser))
-        ;(if-not (checkpw password (:password_digest entity)); if there is an entity the password must match
+      ;(if-not (checkpw password (:password_digest entity)); if there is an entity the password must match
         {:status 401 :body (str "Password mismatch for "
                                 {:login-or-email-address login-or-email})}
 
@@ -86,7 +85,7 @@
   * carry on by adding :authenticated-entity to the request."
   (let [{username :username password :password} (extract request)]
     (if-not username
-      (handler request)                                     ; carry on without authenticated entity
+      (handler request); carry on without authenticated entity
       (if-let [user-token (token-authentication/find-user-token-by-some-secret [username password])]
         (token-authentication/authenticate user-token handler request)
         (user-password-authentication username password handler request)))))

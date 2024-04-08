@@ -1,11 +1,8 @@
 (ns madek.api.authentication.token
   (:require
    [clojure.walk :refer [keywordize-keys]]
-   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [logbug.debug :as debug]
-   [logbug.thrown :as thrown]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
    [next.jdbc :as jdbc]

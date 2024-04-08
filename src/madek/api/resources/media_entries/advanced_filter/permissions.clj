@@ -52,7 +52,6 @@
                (sql/where [:= :gu.user_id (to-uuid id)]))])
 
 (defn- user-authorized-condition [perm id]
-  ; (println (sql/format (delegation-ids-subquery id)))
   [:or
    [:= (keyword (str "media_entries." perm)) true]
    [:= :media_entries.responsible_user_id (to-uuid id)]
@@ -61,7 +60,6 @@
    (group-permission-for-user-exists-condition perm id)])
 
 (defn- user-authorized-condition-edit-md [perm id]
-  ; (println (sql/format (delegation-ids-subquery id)))
   [:or
    ;[:= (keyword (str "media_entries." perm)) true]
    [:= :media_entries.responsible_user_id (to-uuid id)]
@@ -70,7 +68,6 @@
    (group-permission-for-user-exists-condition perm id)])
 
 (defn- user-authorized-condition-edit-perms [perm id]
-  ; (println (sql/format (delegation-ids-subquery id)))
   [:or
    ;[:= (keyword (str "media_entries." perm)) true]
    [:= :media_entries.responsible_user_id (to-uuid id)]

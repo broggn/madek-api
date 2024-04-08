@@ -1,6 +1,5 @@
 (ns madek.api.resources.collections.index
   (:require
-   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
@@ -47,9 +46,6 @@
                                                           authenticated-entity)
                       (pagination/add-offset-for-honeysql query-params)
                       sql-format)]
-    ;(logging/info "build-query"
-    ;              "\nquery\n" query-params
-    ;              "\nsql query:\n" sql-query)
     sql-query))
 
 (defn- query-index-resources [request]

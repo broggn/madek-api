@@ -17,13 +17,11 @@
              :admins.*
              :admins.id)
         db-result (sd/query-find-all :admins qd)]
-    ;(logging/info "handle_list-admin" "\nqd\n" qd "\nresult\n" db-result)
     (sd/response_ok {:admins db-result})))
 
 (defn handle_get-admin
   [req]
   (let [admin (-> req :admin)]
-    ;(logging/info "handle_get-admin" admin)
     (sd/response_ok admin)))
 
 (defn handle_create-admin

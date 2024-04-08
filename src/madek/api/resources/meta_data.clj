@@ -405,10 +405,8 @@
         (if-let [meta-data (db-get-meta-data mr meta-key-id nil tx)]
           ; already has meta-data
           (do
-            (println ">o> meta-data1=" meta-data)
             (if-let [result (db-create-meta-data-people tx (:id meta-data) person-id user-id)]
               (do
-                (println ">o> result2" result)
                 {:meta_data meta-data
                  MD_KEY_PEOPLE_DATA result})
               nil))
@@ -416,10 +414,8 @@
           ; create meta-data and md-people
           (if-let [mdins-result (db-create-meta-data tx mr meta-key-id MD_TYPE_PEOPLE user-id)]
             (do
-              (println ">o> mdins-result3=" mdins-result)
               (if-let [ip-result (db-create-meta-data-people tx (-> mdins-result :id str) person-id user-id)]
                 (do
-                  (println ">o> ip-result4=" ip-result)
                   {:meta_data mdins-result
                    MD_KEY_PEOPLE_DATA ip-result})
                 nil))
