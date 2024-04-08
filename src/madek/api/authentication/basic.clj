@@ -21,37 +21,39 @@
   (:import
    [java.util Base64]))
 
-  ;; TODO
+;; TODO
 (defn- get-by-login [table-name login]
-  (->> (jdbc/execute! (get-ds)
-                      [(str "SELECT * FROM " table-name " WHERE login = ?") login])
-       (map #(assoc % :type (-> table-name ->PascalCase singular)))
-       (map #(clojure.set/rename-keys % {:email :email_address}))
-       first))
+  (->> (jdbc/execute! (get-ds) (-> (sql/select :*) (sql/from table-name) (sql/where [:= :login login]) sql-format))
+    ;[(str "SELECT * FROM " table-name " WHERE login = ?") login])
+    (map #(assoc % :type (-> table-name ->PascalCase singular)))
+    (map #(clojure.set/rename-keys % {:email :email_address}))
+    first))
 
 (defn- get-api-client-by-login [login]
-  (->> (jdbc/execute! (get-ds)
-                      [(str "SELECT * FROM api_clients WHERE login = ?") login])
-       (map #(assoc % :type "ApiClient"))
-       first))
+  (->> (jdbc/execute! (get-ds) (-> (sql/select :*) (sql/from :api_clients) (sql/where [:= :login login]) sql-format))
+    ;[(str "SELECT * FROM api_clients WHERE login = ?") login])
+    (map #(assoc % :type "ApiClient"))
+    first))
 
 (defn- get-user-by-login-or-email-address [login-or-email]
-  (->> (jdbc/execute! (get-ds)
-                      [(str "SELECT * FROM users WHERE login = ? OR email = ?")
-                       login-or-email login-or-email])
-       (map #(assoc % :type "User"))
-       (map #(clojure.set/rename-keys % {:email :email_address}))
-       first))
+  (->> (jdbc/execute! (get-ds) (-> (sql/select :*) (sql/from :users) (sql/where [:or [:= :login login-or-email] [:= :email login-or-email]]) sql-format))
+    ;[(str "SELECT * FROM users WHERE login = ? OR email = ?")
+    ; login-or-email login-or-email])
+    (map #(assoc % :type "User"))
+    (map #(clojure.set/rename-keys % {:email :email_address}))
+    first))
 
 (defn get-entity-by-login-or-email [login-or-email]
   (or (get-api-client-by-login login-or-email)
-      (get-user-by-login-or-email-address login-or-email)))
+    (get-user-by-login-or-email-address login-or-email)))
 
 (defn- get-auth-systems-user [userId]
-  (->> (jdbc/execute! (get-ds)
-                      [(str "SELECT * FROM auth_systems_users WHERE auth_system_id = ? AND user_id = ? ")
-                       "password" userId])
-       first))
+  ;(->>
+  (jdbc/execute-one! (get-ds) (-> (sql/select :*) (sql/from :auth_systems_users) (sql/where [:= :user_id userId]) sql-format))
+  ;[(str "SELECT * FROM auth_systems_users WHERE auth_system_id = ? AND user_id = ? ")
+  ; "password" userId])
+  ;first)
+  )
 
 (defn base64-decode [^String encoded]
   (String. (.decode (Base64/getDecoder) encoded)))
@@ -70,7 +72,7 @@
   (if-let [entity (get-entity-by-login-or-email login-or-email)]
     (if-let [asuser (get-auth-systems-user (:id entity))]
       (if-not (checkpw password (:data asuser))
-      ;(if-not (checkpw password (:password_digest entity)); if there is an entity the password must match
+        ;(if-not (checkpw password (:password_digest entity)); if there is an entity the password must match
         {:status 401 :body (str "Password mismatch for "
                                 {:login-or-email-address login-or-email})}
 
@@ -94,7 +96,7 @@
   * carry on by adding :authenticated-entity to the request."
   (let [{username :username password :password} (extract request)]
     (if-not username
-      (handler request); carry on without authenticated entity
+      (handler request)                                     ; carry on without authenticated entity
       (if-let [user-token (token-authentication/find-user-token-by-some-secret [username password])]
         (token-authentication/authenticate user-token handler request)
         (user-password-authentication username password handler request)))))

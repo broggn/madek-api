@@ -24,8 +24,12 @@
   (-> (get-config) :madek_master_secret))
 
 (defn- get-user [user-id]
-  (when-let [user (jdbc/execute-one! (get-ds)
-                                     ["SELECT * FROM users WHERE id = ? " user-id])]
+  (when-let [user (jdbc/execute-one! (get-ds) (-> (sql/select :*)
+                                                  (sql/from :users)
+                                                 (sql/where :id user-id)
+                                                  sql-format))
+                                     ;["SELECT * FROM users WHERE id = ? " user-id])
+             ]
 
     (assoc user :type "User")))
 
