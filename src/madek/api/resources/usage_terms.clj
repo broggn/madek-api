@@ -1,6 +1,5 @@
 (ns madek.api.resources.usage-terms
   (:require
-   [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
@@ -10,7 +9,8 @@
    [madek.api.utils.helper :refer [t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-   [schema.core :as s]))
+   [schema.core :as s]
+   [taoensso.timbre :refer [info]]))
 
 (defn handle_list-usage_term
   [req]
@@ -18,13 +18,13 @@
         qd (if (true? full-data) :usage_terms.* :usage_terms.id)
         db-result (sd/query-find-all :usage_terms qd)]
     ;(->> db-result (map :id) set)
-    ;(logging/info "handle_list-usage_term" "\nqd\n" qd "\nresult\n" db-result)
+    ;(info "handle_list-usage_term" "\nqd\n" qd "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
 (defn handle_get-usage_term
   [req]
   (let [usage_term (-> req :usage_term)]
-    ;(logging/info "handle_get-usage_term" usage_term)
+    ;(info "handle_get-usage_term" usage_term)
     ; TODO hide some fields
     (sd/response_ok usage_term)))
 
@@ -38,7 +38,7 @@
                           sql-format)
             ins-res (jdbc/execute-one! (get-ds) sql-query)]
 
-        (logging/info "handle_create-usage_term: " "\ndata:\n" data "\nresult:\n" ins-res)
+        (info "handle_create-usage_term: " "\ndata:\n" data "\nresult:\n" ins-res)
 
         (if ins-res
           (sd/response_ok ins-res)
@@ -58,7 +58,7 @@
                           sql-format)
             upd-result (jdbc/execute-one! (get-ds) sql-query)]
 
-        (logging/info "handle_update-usage_terms: " "\nid\n" id "\ndwid\n" dwid "\nupd-result:" upd-result)
+        (info "handle_update-usage_terms: " "\nid\n" id "\ndwid\n" dwid "\nupd-result:" upd-result)
 
         (if upd-result
           (sd/response_ok upd-result)

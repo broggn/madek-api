@@ -1,6 +1,5 @@
 (ns madek.api.resources.delegations-users
   (:require
-   [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [madek.api.db.core :refer [get-ds]]
@@ -8,7 +7,8 @@
    [madek.api.utils.helper :refer [t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-   [schema.core :as s]))
+   [schema.core :as s]
+   [taoensso.timbre :refer [error info]]))
 
 (def res-req-name :delegation_user)
 (def res-table-name "delegations_users")
@@ -28,7 +28,7 @@
         db-result (jdbc/execute! (get-ds) (sql-format query))]
 
 ;(->> db-result (map :id) set)
-    (logging/info "handle_list-delegations_user" "\nresult\n" db-result)
+    (info "handle_list-delegations_user" "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
 (defn handle_list-delegations_users-by-user
@@ -37,7 +37,7 @@
         user-id (-> req :authenticated-entity :id)
         db-result (sd/query-eq-find-all :delegations_users :user_id user-id)
         id-set (map :delegation_id db-result)]
-    (logging/info "handle_list-delegations_user" "\nresult\n" db-result "\nid-set\n" id-set)
+    (info "handle_list-delegations_user" "\nresult\n" db-result "\nid-set\n" id-set)
     (sd/response_ok {:delegation_ids id-set})
     ;(if full-data (sd/response_ok db-result) (sd/response_ok {:delegation_ids id-set})) 
     ))
@@ -45,7 +45,7 @@
 (defn handle_get-delegations_user
   [req]
   (let [favorite_collection (-> req res-req-name)]
-    ;(logging/info "handle_get-favorite_collection" favorite_collection)
+    ;(info "handle_get-favorite_collection" favorite_collection)
     ; TODO hide some fields
     (sd/response_ok favorite_collection)))
 
@@ -75,7 +75,7 @@
         res (jdbc/execute-one! (get-ds) sql-query)]
     (if res
       (sd/response_ok delegations_user)
-      (logging/error "Failed delete delegations_user "
+      (error "Failed delete delegations_user "
                      "user-id: " user-id "delegation-id: " delegation-id))))
 
 (defn wwrap-find-delegations_user [send404]
@@ -94,7 +94,7 @@
     (fn [request]
       (let [user-id (-> request :authenticated-entity :id str)
             del-id (-> request :parameters :path :delegation_id str)]
-        (logging/info "uid\n" user-id "del-id\n" del-id)
+        (info "uid\n" user-id "del-id\n" del-id)
         (sd/req-find-data-search2
          request handler
          user-id del-id

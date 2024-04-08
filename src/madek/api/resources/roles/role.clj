@@ -1,6 +1,5 @@
 (ns madek.api.resources.roles.role
   (:require
-   [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
@@ -8,7 +7,8 @@
    [madek.api.pagination :as pagination]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.helper :refer [cast-to-hstore]]
-   [next.jdbc :as jdbc]))
+   [next.jdbc :as jdbc]
+   [taoensso.timbre :refer [info]]))
 
 (defn export-role [db-role]
   (select-keys db-role [:id :meta_key_id :labels :created_at]))
@@ -72,7 +72,7 @@
             ins-res (jdbc/execute-one! (get-ds) insert-stmt)
             ins-res (transform-ml-role ins-res)]
 
-        (logging/info "handle_create-role: " "\new-data:\n" data "\nresult:\n" ins-res)
+        (info "handle_create-role: " "\new-data:\n" data "\nresult:\n" ins-res)
 
         (if ins-res
           (sd/response_ok ins-res)
@@ -94,7 +94,7 @@
                             sql-format)
             upd-result (jdbc/execute-one! (get-ds) update-stmt)]
 
-        (logging/info "handle_update-role: " id "\nnew-data\n" dwid "\nupd-result\n" upd-result)
+        (info "handle_update-role: " id "\nnew-data\n" dwid "\nupd-result\n" upd-result)
 
         (if upd-result
           (sd/response_ok (transform-ml-role
@@ -116,7 +116,7 @@
                 del-result (jdbc/execute-one! (get-ds) delete-stmt)
                 del-result (transform-ml-role del-result)]
 
-            (logging/info "handle_delete-role: " id " result: " del-result)
+            (info "handle_delete-role: " id " result: " del-result)
             (if del-result
               (sd/response_ok del-result)
               (sd/response_failed "Could not delete role." 406)))

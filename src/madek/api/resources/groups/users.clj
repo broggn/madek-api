@@ -1,19 +1,17 @@
 (ns madek.api.resources.groups.users
   (:require
    [clj-uuid]
-   [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.pagination :as pagination]
    [madek.api.resources.groups.shared :as groups]
-   ; all needed imports
    [madek.api.resources.shared :as sd]
-
    [madek.api.utils.helper :refer [convert-groupid-userid]]
    [madek.api.utils.helper :refer [to-uuid]]
    [next.jdbc :as jdbc]
-   [schema.core :as s]))
+   [schema.core :as s]
+   [taoensso.timbre :refer [info]]))
 
 ;;; temporary users stuff ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -91,7 +89,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn add-user [group-id user-id]
-  (logging/info "add-user" group-id ":" user-id)
+  (info "add-user" group-id ":" user-id)
   (if-let [user (find-group-user group-id user-id)]
     (sd/response_ok {:users (group-users group-id nil)})
     (let [group (groups/find-group group-id)
@@ -161,11 +159,11 @@
           ins-users (clojure.set/difference target-group-users-ids current-group-users-ids)
           del-query (update-delete-query group-id del-users)
           ins-query (update-insert-query group-id ins-users)]
-      ;(logging/info "update-group-users" "\ncurr\n" current-group-users-ids "\ntarget\n" target-group-users-ids )
-      ;(logging/info "update-group-users" "\ndel-u\n" del-users)
-      ;(logging/info "update-group-users" "\nins-u\n" ins-users)
-      ;(logging/info "update-group-users" "\ndel-q\n" del-query)
-      ;(logging/info "update-group-users" "\nins-q\n" ins-query)
+      ;(info "update-group-users" "\ncurr\n" current-group-users-ids "\ntarget\n" target-group-users-ids )
+      ;(info "update-group-users" "\ndel-u\n" del-users)
+      ;(info "update-group-users" "\nins-u\n" ins-users)
+      ;(info "update-group-users" "\ndel-q\n" del-query)
+      ;(info "update-group-users" "\nins-q\n" ins-query)
       (when (first del-users)
         (jdbc/execute!
          tx
@@ -216,13 +214,13 @@
         group-id (-> converted :group-id)
         user-id (-> converted :user-id)]
 
-    (logging/info "handle_get-group-user" "\ngroup-id\n" group-id "\nuser-id\n" user-id)
+    (info "handle_get-group-user" "\ngroup-id\n" group-id "\nuser-id\n" user-id)
     (get-group-user group-id user-id)))
 
 (defn handle_delete-group-user [req]
   (let [group-id (-> req :parameters :path :group-id)
         user-id (-> req :parameters :path :user-id)]
-    (logging/info "handle_delete-group-user" "\ngroup-id\n" group-id "\nuser-id\n" user-id)
+    (info "handle_delete-group-user" "\ngroup-id\n" group-id "\nuser-id\n" user-id)
     (remove-user group-id user-id)))
 
 (defn handle_get-group-users [request]
@@ -232,7 +230,7 @@
 (defn handle_update-group-users [req]
   (let [id (-> req :parameters :path :group-id)
         data (-> req :parameters :body)]
-    (logging/info "handle_update-group-users" "\nid\n" id "\ndata\n" data)
+    (info "handle_update-group-users" "\nid\n" id "\ndata\n" data)
     (update-group-users id data)))
 
 (defn handle_add-group-user [req]

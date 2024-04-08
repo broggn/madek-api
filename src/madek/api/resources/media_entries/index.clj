@@ -5,7 +5,6 @@
    [clojure.core.match :refer [match]]
    [clojure.set :refer [rename-keys]]
    [clojure.string :as str :refer [blank?]]
-   [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
@@ -20,7 +19,8 @@
    [madek.api.resources.shared :as sd]
    [madek.api.utils.core :refer [keyword str]]
    [madek.api.utils.helper :refer [to-uuid]]
-   [next.jdbc :as jdbc]))
+   [next.jdbc :as jdbc]
+   [taoensso.timbre :refer [info]]))
 
 ;### collection_id ############################################################
 
@@ -72,7 +72,7 @@
 ;                                   [:media_entries.created_at :media_entry_created_at])
 ;                       (sql/from :media_entries))
         ]
-;    (logging/info "base-query"
+;    (info "base-query"
 ;                  "\nme-query:\n" me-query
 ;                  "\nfrom:\n" sel
 ;                  "\nwhere1:\n" where1
@@ -178,7 +178,7 @@
                                                               {:status 422})))
                       (seq? order) (reduce order-reducer query order)
                       :else (default-order query))]
-        (logging/info "set-order" "\norder\n" order)
+        (info "set-order" "\norder\n" order)
         my-cond)
       (sql/order-by :media_entries.id)))
 
@@ -220,7 +220,7 @@
                       (pagination/add-offset-for-honeysql query-params))
         query-res (-> query-res sql-format)]
 
-;    (logging/info "build-query"
+;    (info "build-query"
 ;                  "\nquery-params:\n" query-params
 ;                  "\nfilter-by json:\n" filter-by
 ;                  "\nquery-res:\n" query-res)
@@ -258,7 +258,7 @@
                   (->> data
                        (map #(select-keys % [:media_entry_id]))
                        (map #(rename-keys % {:media_entry_id :id}))))]
-    ;(logging/info "get-me-list: fd: " full-data " list:" me-list)
+    ;(info "get-me-list: fd: " full-data " list:" me-list)
     me-list))
 
 (defn get-arc-list [data]
@@ -278,14 +278,14 @@
 (defn- get-files4me-list [melist auth-entity]
   (let [auth-list (remove nil? (map #(when (true? (media-entry-perms/downloadable-by-auth-entity? % auth-entity))
                                        (media-files/query-media-file-by-media-entry-id (:id %))) melist))]
-    ;(logging/info "get-files4me-list: \n" auth-list)
+    ;(info "get-files4me-list: \n" auth-list)
     auth-list))
 
 (defn get-preview-list [melist auth-entity]
   (let [auth-list (map #(when (true? (media-entry-perms/viewable-by-auth-entity? % auth-entity))
                           (sd/query-eq-find-all :previews :media_file_id
                                                 (:id (media-files/query-media-file-by-media-entry-id (:id %))))) melist)]
-    ;(logging/info "get-preview-list" auth-list)
+    ;(info "get-preview-list" auth-list)
     auth-list))
 
 (defn get-md4me-list [melist auth-entity]

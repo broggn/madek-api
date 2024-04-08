@@ -30,7 +30,7 @@
   [req]
   (let [db-query (build-query (-> req :parameters :query))
         db-result (jdbc/execute! (get-ds) db-query)]
-    ;(logging/info "handle_list-edit-sessions" "\ndb-query\n" db-query "\nresult\n" db-result)
+    ;(info "handle_list-edit-sessions" "\ndb-query\n" db-query "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
 (defn handle_usr_list-edit-sessions
@@ -40,7 +40,7 @@
         usr-query (assoc req-query :user_id user-id)
         db-query (build-query usr-query)
         db-result (jdbc/execute! (get-ds) db-query)]
-    ;(logging/info "handle_usr_list-edit-sessions" "\ndb-query\n" db-query "\nresult\n" db-result)
+    ;(info "handle_usr_list-edit-sessions" "\ndb-query\n" db-query "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
 (defn handle_adm_get-edit-session
@@ -64,7 +64,7 @@
         mr-type (-> mr :type)
         mr-id (-> mr :id str)
         col-key (if (= mr-type "MediaEntry") :media_entry_id :collection_id)]
-    ;(logging/info "handle_get-edit-sessions" "\ntype\n" mr-type "\nmr-id\n" mr-id "\ncol-name\n" col-name)
+    ;(info "handle_get-edit-sessions" "\ntype\n" mr-type "\nmr-id\n" mr-id "\ncol-name\n" col-name)
     (if-let [result (sd/query-eq-find-all :edit_sessions col-key mr-id)]
       (sd/response_ok result)
       (sd/response_not_found (str "No such edit_session for " mr-type " with id: " mr-id)))))
@@ -76,7 +76,7 @@
         mr-type (-> mr :type)
         mr-id (-> mr :id str)
         col-key (if (= mr-type "MediaEntry") :media_entry_id :collection_id)]
-    ;(logging/info "handle_get-edit-sessions" "\ntype\n" mr-type "\nmr-id\n" mr-id "\ncol-name\n" col-name)
+    ;(info "handle_get-edit-sessions" "\ntype\n" mr-type "\nmr-id\n" mr-id "\ncol-name\n" col-name)
     (if-let [result (sd/query-eq-find-all :edit_sessions col-key mr-id :user_id u-id)]
       (sd/response_ok result)
       (sd/response_not_found (str "No such edit_session for " mr-type " with id: " mr-id)))))

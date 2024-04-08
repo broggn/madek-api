@@ -1,6 +1,5 @@
 (ns madek.api.resources.favorite-collections
-  (:require [clojure.tools.logging :as logging]
-            [honey.sql :refer [format] :rename {format sql-format}]
+  (:require [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
             [madek.api.authorization :as authorization]
@@ -11,7 +10,7 @@
             [next.jdbc :as jdbc]
             [reitit.coercion.schema]
             [schema.core :as s]
-            [taoensso.timbre :refer [spy]]))
+            [taoensso.timbre :refer [info spy]]))
 
 (def res-req-name :favorite_collection)
 (def res-table-name "favorite_collections")
@@ -30,13 +29,13 @@
   (let [user-id (-> req :authenticated-entity :id)
         db-result (sd/query-eq-find-all :favorite_collections :user_id user-id)
         id-set (map :collection_id db-result)]
-    ;(logging/info "handle_list-favorite_collection-by-user" "\nresult\n" db-result "\nid-set\n" id-set)
+    ;(info "handle_list-favorite_collection-by-user" "\nresult\n" db-result "\nid-set\n" id-set)
     (sd/response_ok {:collection_ids id-set})))
 
 (defn handle_get-favorite_collection
   [req]
   (let [favorite_collection (-> req res-req-name)]
-    ;(logging/info "handle_get-favorite_collection" favorite_collection)
+    ;(info "handle_get-favorite_collection" favorite_collection)
     (sd/response_ok favorite_collection)))
 
 ; TODO log write
@@ -92,7 +91,7 @@
     (fn [request]
       (let [user-id (-> request :authenticated-entity :id str)
             col-id (-> request :parameters :path :collection_id str)]
-        (logging/info "uid\n" user-id "col-id\n" col-id)
+        (info "uid\n" user-id "col-id\n" col-id)
         (sd/req-find-data-search2
           request handler
           user-id col-id

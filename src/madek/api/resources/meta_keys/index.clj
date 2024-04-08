@@ -1,6 +1,5 @@
 (ns madek.api.resources.meta-keys.index
   (:require
-   [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
@@ -9,13 +8,14 @@
    [madek.api.resources.shared :as sd]
    [madek.api.resources.shared]
    [madek.api.resources.vocabularies.permissions :as permissions]
-   [next.jdbc :as jdbc]))
+   [next.jdbc :as jdbc]
+   [taoensso.timbre :refer [info]]))
 
 (defn- where-clause
   [user-id scope]
   (let [vocabulary-ids (permissions/accessible-vocabulary-ids user-id scope)
         perm-kw (keyword (str "vocabularies.enabled_for_public_" scope))]
-    (logging/info "vocabs where clause: " vocabulary-ids " for user " user-id " and " scope)
+    (info "vocabs where clause: " vocabulary-ids " for user " user-id " and " scope)
     (if (empty? vocabulary-ids)
       [:= perm-kw true]
       [:or
@@ -60,7 +60,7 @@
 (defn db-query-meta-keys [request]
   (catcher/with-logging {}
     (let [query (build-query request)]
-      (logging/info "db-query-meta-keys: query: " query)
+      (info "db-query-meta-keys: query: " query)
       (jdbc/execute! (get-ds) query))))
 
 ;(defn get-index [request]

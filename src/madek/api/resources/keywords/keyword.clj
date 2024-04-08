@@ -21,7 +21,7 @@
              (sd/build-query-param-like query :description)
              (pagination/add-offset-for-honeysql query)
              sql-format)]
-    ; (logging/info "db-keywords-query" dbq)
+    ; (info "db-keywords-query" dbq)
     (jdbc/execute! (get-ds) dbq)))
 
 ;### Debug ####################################################################

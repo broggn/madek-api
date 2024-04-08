@@ -2,7 +2,6 @@
   (:require
    [camel-snake-kebab.core :refer :all]
    [cider-ci.open-session.bcrypt :refer [checkpw]]
-   [clojure.tools.logging :as logging]
    [clojure.walk :refer [keywordize-keys]]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
@@ -10,9 +9,10 @@
    [madek.api.authentication.token :as token-authentication]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
-   [next.jdbc :as jdbc])
-(:import
- [java.util Base64]))
+   [next.jdbc :as jdbc]
+   [taoensso.timbre :refer [debug warn]])
+  (:import
+   [java.util Base64]))
 
 (defn- get-by-login [table-name login]
   (->> (jdbc/execute! (get-ds) (-> (sql/select :*) (sql/from table-name) (sql/where [:= :login login]) sql-format))
@@ -48,14 +48,14 @@
   (String. (.decode (Base64/getDecoder) encoded)))
 
 (defn extract [request]
-  (logging/debug 'extract request)
+  (debug 'extract request)
   (try (when-let [auth-header (-> request :headers keywordize-keys :authorization)]
          (when (re-matches #"(?i)^basic\s+.+$" auth-header)
            (let [decoded-val (base64-decode (last (re-find #"(?i)^basic (.*)$" auth-header)))
                  [username password] (clojure.string/split (str decoded-val) #":" 2)]
              {:username username :password password})))
        (catch Exception _
-         (logging/warn "failed to extract basic-auth properties because" _))))
+         (warn "failed to extract basic-auth properties because" _))))
 
 (defn user-password-authentication [login-or-email password handler request]
   (if-let [entity (get-entity-by-login-or-email login-or-email)]

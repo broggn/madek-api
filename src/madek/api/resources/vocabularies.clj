@@ -1,8 +1,6 @@
 (ns madek.api.resources.vocabularies
   (:require
    [clojure.string :as str]
-   [clojure.tools.logging :as logging]
-   [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
@@ -12,12 +10,11 @@
    [madek.api.resources.vocabularies.permissions :as permissions]
    [madek.api.resources.vocabularies.vocabulary :refer [get-vocabulary]]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.helper :refer [cast-to-hstore]]
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist f t]]
-   [madek.api.utils.helper :refer [mslurp]]
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist f mslurp t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-   [schema.core :as s]))
+   [schema.core :as s]
+   [taoensso.timbre :refer [info]]))
 
 ; TODO logwrite
 
@@ -60,7 +57,7 @@
 
             (if upd-res
               (do
-                (logging/info "handle_update-vocab" "\nid: " id "\nnew-data:\n" upd-res)
+                (info "handle_update-vocab" "\nid: " id "\nnew-data:\n" upd-res)
                 (sd/response_ok upd-res))
               (sd/response_failed "Could not update vocabulary." 406)))
           (sd/response_not_found "No such vocabulary."))))

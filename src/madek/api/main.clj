@@ -9,7 +9,6 @@
    [madek.api.db.core :as db]
    [madek.api.utils.config :as config :refer [get-config]]
    [madek.api.utils.exit :as exit]
-   [madek.api.utils.logging :as logging]
    [madek.api.utils.nrepl :as nrepl]
    [madek.api.utils.rdbms :as rdbms]
    [madek.api.web]
@@ -77,7 +76,6 @@
 (defonce args* (atom nil))
 
 (defn main []
-  (logging/init)
   (info "main")
   (let [args @args*]
     (let [args @args*

@@ -1,7 +1,6 @@
 (ns madek.api.resources.shared
   (:require [cheshire.core :as cheshire]
             [clojure.string :as str]
-            [clojure.tools.logging :as logging]
             [clojure.walk :refer [keywordize-keys]]
             [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
@@ -14,7 +13,7 @@
             [madek.api.utils.helper :refer [to-uuid]]
             [next.jdbc :as jdbc]
             [schema.core :as s]
-            [taoensso.timbre :refer [spy]]))
+            [taoensso.timbre :refer [error info spy warn]]))
 
 (def schema_ml_list
   {(s/optional-key :de) (s/maybe s/Str)
@@ -41,33 +40,33 @@
 
 (defn try-instant-on-presence [data keyword]
   (try
-    ;(logging/info "try-instant-on-presence " data keyword)
+    ;(info "try-instant-on-presence " data keyword)
     (if-not (nil? (-> data keyword))
       (assoc data keyword (-> data keyword .toInstant))
       data)
     (catch Exception ex
-      (logging/error "Invalid instant data" (ex-message ex))
+      (error "Invalid instant data" (ex-message ex))
       data)))
 
 (defn try-instant [dinst]
   (try
-    ;(logging/info "try-instant " dinst)
+    ;(info "try-instant " dinst)
     (if-not (nil? dinst)
       (.toInstant dinst)
       nil)
     (catch Exception ex
-      (logging/error "Invalid instant data" dinst (ex-message ex))
+      (error "Invalid instant data" dinst (ex-message ex))
       nil)))
 
 (defn try-parse-date-time [dt_string]
   (try
-    (logging/info "try-parse-date-time "
+    (info "try-parse-date-time "
                   dt_string)
     (let [zoneid (java.time.ZoneId/systemDefault)
 
           parsed2 (jt/local-date-time (jt/offset-date-time dt_string) zoneid)
           pcas (.toString parsed2)]
-      (logging/info "try-parse-date-time "
+      (info "try-parse-date-time "
                     dt_string
                     "\n zoneid " zoneid
                     "\n parsed " parsed2
@@ -75,7 +74,7 @@
       pcas)
 
     (catch Exception ex
-      (logging/error "Invalid date time string" (ex-message ex))
+      (error "Invalid date time string" (ex-message ex))
       nil)))
 
 (defn build-query-ts-after [query query-params param col-name]
@@ -84,7 +83,7 @@
       query
       ;(let [parsed (try-parse-date-time pval)]
       (let [parsed (try-instant pval)]
-        (logging/info "build-query-created-or-updated-after: " pval ":" parsed)
+        (info "build-query-created-or-updated-after: " pval ":" parsed)
         (if (nil? parsed)
           query
           (-> query (sql/where [:raw (str "'" parsed "'::timestamp < " col-name)])))))))
@@ -95,7 +94,7 @@
       query
       ;(let [parsed (try-parse-date-time pval)]
       (let [parsed (try-instant pval)]
-        (logging/info "build-query-created-or-updated-after: " pval ":" parsed)
+        (info "build-query-created-or-updated-after: " pval ":" parsed)
         (if (nil? parsed)
           query
           (-> query (sql/where [:or
@@ -254,11 +253,11 @@
   "Logs requests authed user id "
   [request msg]
   (if-let [auth-id (-> request :authenticated-entity :id)]
-    (logging/info "WRITE: User: " auth-id "; Message: " msg)
-    (logging/info "WRITE: anonymous; Message: " msg)))
+    (info "WRITE: User: " auth-id "; Message: " msg)
+    (info "WRITE: anonymous; Message: " msg)))
 
   ;([auth-entity msg entity]
-  ; (logging/info
+  ; (info
   ;  "WRITE: "
   ;  (if (nil? auth-entity)
   ;    "anonymous; "
@@ -274,7 +273,7 @@
    If it exists it is associated with the request as reqkey"
   [request handler path-param db_table db_col_name reqkey send404]
   (let [search (-> request :parameters :path path-param)]
-    ;(logging/info "req-find-data: " search " " db_table " " db_col_name)
+    ;(info "req-find-data: " search " " db_table " " db_col_name)
     (if-let [result-db (query-eq-find-one db_table db_col_name search)]
       (handler (assoc request reqkey result-db))
       (if (= true send404)
@@ -287,7 +286,7 @@
    If it exists it is associated with the request as reqkey"
   [request handler path-param db_table db_col_name reqkey send404]
   (let [search (-> request :path-params path-param)]
-    ;(logging/info "req-find-data: " search " " db_table " " db_col_name)
+    ;(info "req-find-data: " search " " db_table " " db_col_name)
     (if-let [result-db (query-eq-find-one db_table db_col_name search)]
       (handler (assoc request reqkey result-db))
       (if (= true send404)
@@ -299,7 +298,7 @@
    It does send404 if set true and no such entity is found.
    If it exists it is associated with the request as reqkey"
   [request handler search search2 db_table db_col_name db_col_name2 reqkey send404]
-  (logging/info "req-find-data-search2" "\nc1: " db_col_name "\ns1: " search "\nc2: " db_col_name2 "\ns2: " search2)
+  (info "req-find-data-search2" "\nc1: " db_col_name "\ns1: " search "\nc2: " db_col_name2 "\ns2: " search2)
   (if-let [result-db (query-eq-find-one db_table db_col_name search db_col_name2 search2)]
     (handler (assoc request reqkey result-db))
     (if (= true send404)
@@ -316,7 +315,7 @@
         search2 (-> request :parameters :path path-param2 str)
         res (query-eq-find-one db_table db_col_name search db_col_name2 search2)]
 
-;(logging/info "req-find-data2" "\nc1: " db_col_name "\ns1: " search "\nc2: " db_col_name2 "\ns2: " search2)
+;(info "req-find-data2" "\nc1: " db_col_name "\ns1: " search "\nc2: " db_col_name2 "\ns2: " search2)
     (if-let [result-db res]
       (handler (assoc request reqkey result-db))
       (if (= true send404)
@@ -337,7 +336,7 @@
                         sql-format)))
               empty?)
         result (not none)]
-    ;(logging/info "is-admin: " user-id " : " result)
+    ;(info "is-admin: " user-id " : " result)
     (spy result)))
 
 ; end user and other util wrappers
@@ -353,7 +352,7 @@
   ([request id-key table-name type]
    (try
      (when-let [id (-> request :parameters :path id-key)]
-       ;(logging/info "get-media-resource" "\nid\n" id)
+       ;(info "get-media-resource" "\nid\n" id)
        (when-let [resource (spy (jdbc/execute-one! (get-ds)
                                                    (spy (-> (sql/select :*)
                                                             (sql/from (keyword table-name))
@@ -362,14 +361,14 @@
          (spy (assoc resource :type type :table-name table-name))))
 
      (catch Exception e
-       (logging/error "ERROR: get-media-resource: " (ex-data e))
+       (error "ERROR: get-media-resource: " (ex-data e))
        (merge (ex-data e)
               {:statuc 406, :body {:message (.getMessage e)}})))))
 
 (defn- ring-add-media-resource [request handler] ;;here
   (if-let [media-resource (get-media-resource request)]
     (let [request-with-media-resource (assoc request :media-resource media-resource)]
-      ;(logging/info "ring-add-media-resource" "\nmedia-resource\n" media-resource)
+      ;(info "ring-add-media-resource" "\nmedia-resource\n" media-resource)
       (handler request-with-media-resource))
     {:status 404}))
 
@@ -379,7 +378,7 @@
 
 (defn query-meta-datum [request]
   (let [id (-> request :parameters :path :meta_datum_id)]
-    #_(logging/info "query-meta-datum" "\nid\n" id)
+    #_(info "query-meta-datum" "\nid\n" id)
     (or
      (jdbc/execute-one! (get-ds)
                         (-> (sql/select :*)
@@ -404,7 +403,7 @@
 (defn- ring-add-meta-datum-with-media-resource [request handler]
   (if-let [meta-datum (query-meta-datum request)]
     (let [media-resource (query-media-resource-for-meta-datum meta-datum)]
-      ;(logging/info "add-meta-datum-with-media-resource" "\nmeta-datum\n" meta-datum "\nmedia-resource\n" media-resource)
+      ;(info "add-meta-datum-with-media-resource" "\nmeta-datum\n" meta-datum "\nmedia-resource\n" media-resource)
       (handler (assoc request
                       :meta-datum meta-datum
                       :media-resource media-resource)))
@@ -419,7 +418,7 @@
 
 (defn- authorize-request-for-media-resource [request handler scope]
   ;(
-  ;(logging/info "auth-request-for-mr"
+  ;(info "auth-request-for-mr"
   ;              "\nscope: " scope
   ;              "\nauth entity:\n" (-> request :authenticated-entity)
   ;              "\nis-admin:\n" (-> request :is_admin)
@@ -446,7 +445,7 @@
 
     ; else
     (let [response {:status 500 :body {:message "No media-resource in request."}}]
-      (logging/warn 'authorize-request-for-media-resource response [request handler])
+      (warn 'authorize-request-for-media-resource response [request handler])
       response))
   ;)
   )

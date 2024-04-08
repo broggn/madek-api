@@ -67,7 +67,7 @@
                   (sd/build-query-ts-after (-> request :parameters :query) :updated_after "meta_data.meta_data_updated_at")
                   (filter-meta-data-by-meta-key-ids request)
                   sql-format)]
-    ;(logging/info "MD:build-query:\n " query)
+    ;(info "MD:build-query:\n " query)
     query))
 
 (defn get-media-entry-meta-data [id user-id]
@@ -78,7 +78,7 @@
 (defn get-collection-meta-data [id user-id]
   (let [mdq (sql-format (meta-data-query-for-collection id user-id))
         result (jdbc/execute! (get-ds) mdq)]
-    ;(logging/info "get-collection-meta-data:"
+    ;(info "get-collection-meta-data:"
     ;              "\n col id: " id
     ;              "\n user id: " user-id
     ;              "\n query: " mdq
@@ -97,11 +97,11 @@
                                   (case (:type media-resource)
                                     "MediaEntry" (meta-data-query-for-media-entry id user-id)
                                     "Collection" (meta-data-query-for-collection id user-id)))]
-        ;(logging/info "get-meta-data" "\n db-query \n" db-query)
+        ;(info "get-meta-data" "\n db-query \n" db-query)
         (jdbc/execute! (get-ds) db-query)))))
 
 (defn get-index [request]
-  ;(logging/info "get-index" "\nmedia-resource\n" (:media-resource request))
+  ;(info "get-index" "\nmedia-resource\n" (:media-resource request))
   (when-let [media-resource (:media-resource request)]
     (when-let [meta-data (get-meta-data request media-resource)]
       (let [data (conj

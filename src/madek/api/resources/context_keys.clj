@@ -1,6 +1,5 @@
 (ns madek.api.resources.context-keys
   (:require
-   [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
@@ -8,11 +7,11 @@
    [madek.api.pagination :as pagination]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.helper :refer [t cast-to-hstore to-uuid]]
+   [madek.api.utils.helper :refer [cast-to-hstore t to-uuid]]
    [next.jdbc :as jdbc]
-   [pghstore-clj.core]
    [reitit.coercion.schema]
    [schema.core :as s]
+   [taoensso.timbre :refer [error spy]]
    [taoensso.timbre :refer [spy]]))
 
 (defn context_key_transform_ml [context_key]
@@ -41,8 +40,6 @@
                      sql-format)
         db-result (jdbc/execute! (get-ds) db-query)
         tf (map context_key_transform_ml db-result)]
-
-    ;(logging/info "handle_adm-list-context_keys" "\ndb-query\n" db-query)
     (sd/response_ok tf)))
 
 (defn handle_usr-list-context_keys
@@ -60,20 +57,20 @@
         db-result (jdbc/execute! (get-ds) db-query)
         tf (map context_key_transform_ml db-result)]
 
-    ;(logging/info "handle_usr-list-context_keys" "\ndb-query\n" db-query)
+    ;(info "handle_usr-list-context_keys" "\ndb-query\n" db-query)
     (sd/response_ok tf)))
 
 (defn handle_adm-get-context_key
   [req]
   (let [result (-> req :context_key context_key_transform_ml)]
-    ;(logging/info "handle_get-context_key: result: " result)
+    ;(info "handle_get-context_key: result: " result)
     (sd/response_ok result)))
 
 (defn handle_usr-get-context_key
   [req]
   (let [context_key (-> req :context_key context_key_transform_ml)
         result (dissoc context_key :admin_comment :updated_at :created_at)]
-    ;(logging/info "handle_usr-get-context_key" "\nbefore\n" context_key "\nresult\n" result)
+    ;(info "handle_usr-get-context_key" "\nbefore\n" context_key "\nresult\n" result)
     (sd/response_ok result)))
 
 (defn convert-hints [data]
@@ -146,7 +143,7 @@
         (sd/logwrite req (str "handle_delete-context_key: " id " result: " del-result))
         (if (= 1 (::jdbc/update-count del-result))
           (sd/response_ok (context_key_transform_ml context_key))
-          (logging/error "Could not delete context_key: " id))))
+          (error "Could not delete context_key: " id))))
     (catch Exception ex (sd/response_exception ex))))
 
 (defn wwrap-find-context_key [param colname send404]

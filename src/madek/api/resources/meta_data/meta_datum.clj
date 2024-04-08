@@ -1,7 +1,6 @@
 (ns madek.api.resources.meta-data.meta-datum
   (:require
    [cheshire.core :as json]
-   [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [madek.api.db.core :refer [get-ds]]
@@ -9,7 +8,8 @@
    [madek.api.resources.shared :as sd]
    [madek.api.utils.helper :refer [to-uuid]]
    [next.jdbc :as jdbc]
-   [ring.util.response :as ring-response]))
+   [ring.util.response :as ring-response]
+   [taoensso.timbre :refer [info]]))
 
 ;### people ###################################################################
 
@@ -76,7 +76,7 @@
 (defn get-meta-datum [request]
   (let [meta-datum (:meta-datum request)
         result (prepare-meta-datum meta-datum)]
-    #_(logging/info "get-meta-datum" "\nresult\n" result)
+    #_(info "get-meta-datum" "\nresult\n" result)
     (sd/response_ok result)))
 
 ; TODO Q? why no response status

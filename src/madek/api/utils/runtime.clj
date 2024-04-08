@@ -4,11 +4,9 @@
 
 (ns madek.api.utils.runtime
   (:require
-   [clj-commons-exec :as commons-exec]
-   [clojure.tools.logging :as logging]
-   [logbug.debug :as debug])
+   [taoensso.timbre :refer [error]])
   (:import
-   [humanize Humanize]))
+   (humanize Humanize)))
 
 (defn check-memory-usage []
   (System/gc)
@@ -24,7 +22,7 @@
                :Allocated (Humanize/binaryPrefix allocated-mem)
                :Used (Humanize/binaryPrefix used)
                :Usage (Double/parseDouble (String/format "%.2f" (into-array [usage])))}]
-    (when-not ok? (logging/fatal stats))
+    (when-not ok? (error stats))
     stats))
 
 ;### Debug #####################################################################

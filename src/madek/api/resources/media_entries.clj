@@ -2,7 +2,6 @@
   (:require [clj-uuid]
             [clojure.java.io :as io]
             [clojure.spec.alpha :as sa]
-            [clojure.tools.logging :as logging]
             [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
             [madek.api.authorization :as authorization]
@@ -17,7 +16,8 @@
             [reitit.coercion.schema]
             [reitit.coercion.spec]
             [reitit.ring.middleware.multipart :as multipart]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [taoensso.timbre :refer [info]]))
 (defn handle_query_media_entry [req]
   (get-index req))
 
@@ -42,7 +42,7 @@
                               sql-format)
         dresult (jdbc/execute! (get-ds) sql-query-entries)]
 
-    (logging/info "handle_delete_media_entry"
+    (info "handle_delete_media_entry"
                   "\n eid: \n" eid
                   "\n fresult: \n" fresult
                   "\n dresult: \n" dresult)
@@ -76,7 +76,7 @@
         tf (for [elem hasMetaData] (vals elem))
         publishable (reduce (fn [tfresult tfval] (and tfresult (first tfval))) [true] tf)]
 
-    (logging/info "handle_try-publish-media-entry"
+    (info "handle_try-publish-media-entry"
                   "\n eid: \n" eid
                   "\n validationContexts: \n" validationContexts
                   "\n contextKeys: \n" contextKeys
@@ -92,7 +92,7 @@
                           sql-format)
             dresult (jdbc/execute-one! (get-ds) sql-query)]
 
-        (logging/info "handle_try-publish-media-entry"
+        (info "handle_try-publish-media-entry"
                       "\n published: entry_id: \n" eid
                       "\n dresult: \n" dresult)
 
@@ -126,7 +126,7 @@
 (defn original-store-location [mf]
   (let [guid (:guid mf)
         loc (apply str FILE_STORAGE_DIR "/" (first guid) "/" guid)]
-    ;(logging/info "\nstore-location\n" "\nmf\n" mf "\nguid\n" guid "\nloc\n" loc)
+    ;(info "\nstore-location\n" "\nmf\n" mf "\nguid\n" guid "\nloc\n" loc)
     loc))
 
 (defn handle_uploaded_file_resp_ok
@@ -146,8 +146,8 @@
     ;(me_add-to-collection new-mer (or col_id_param (-> workflow :master_collection :id)))
     ;(if-let [collection (sd/query-eq-find-one "collections" "id" collection-id)]
     ;  (if-let [add-col-res (collection-media-entry-arcs/create-col-me-arc collection-id (:id media-entry) {} tx)]
-    ;    (logging/info "handle_uploaded_file_resp_ok: added to collection: " collection-id "\nresult\n" add-col-res)
-    ;    (logging/error "Failed: handle_uploaded_file_resp_ok: add to collection: " collection-id))
+    ;    (info "handle_uploaded_file_resp_ok: added to collection: " collection-id "\nresult\n" add-col-res)
+    ;    (error "Failed: handle_uploaded_file_resp_ok: add to collection: " collection-id))
     ;    (sd/response_ok {:media_entry (assoc media-entry :media_file media-file :collection_id collection-id)})
     ;    (sd/response_ok {:media_entry (assoc media-entry :media_file media-file)}))
 
@@ -179,7 +179,7 @@
                             sql-format)
               new-mfr (jdbc/execute-one! tx sql-query)]
 
-          (logging/info "\ncreate-me: " "\ncreated media-entry: " new-mer "\nnew media-file: " new-mf)
+          (info "\ncreate-me: " "\ncreated media-entry: " new-mer "\nnew media-file: " new-mf)
 
           (if new-mfr
             (handle_uploaded_file_resp_ok file new-mfr new-mer collection-id tx)
@@ -201,7 +201,7 @@
         temppath (.getPath (:tempfile file))
         auth (-> req :authenticated-entity)]
 
-    (logging/info "handle_create-media-entry"
+    (info "handle_create-media-entry"
                   "\nauth\n" (:id auth)
                   "\ncopy_md\n" copy-md-id
                   "\ncollection-id\n" collection-id
@@ -212,7 +212,7 @@
     (let [;mime (or file-content-type (mime-type-of temppath) )
           mime file-content-type]
 
-      (logging/info "handle_create-media-entry" "\nmime-type\n" mime)
+      (info "handle_create-media-entry" "\nmime-type\n" mime)
       (if (nil? auth)
         (sd/response_failed "Not authed" 406)
         (create-media_entry file auth mime collection-id)))))

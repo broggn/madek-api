@@ -1,6 +1,5 @@
 (ns madek.api.resources.full-texts
-  (:require [clojure.tools.logging :as logging]
-            [honey.sql :refer [format] :rename {format sql-format}]
+  (:require [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
             [madek.api.db.core :refer [get-ds]]
@@ -10,7 +9,8 @@
             [madek.api.utils.helper :refer [t]]
             [next.jdbc :as jdbc]
             [reitit.coercion.schema]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [taoensso.timbre :refer [error info]]))
 
 (defn handle_list-full_texts
   [req]
@@ -27,7 +27,7 @@
                      sql-format)
         db-result (jdbc/execute! (get-ds) db-query)]
 
-    (logging/info "handle_list-full_texts:" "\nquery:\n" db-query)
+    (info "handle_list-full_texts:" "\nquery:\n" db-query)
     (sd/response_ok db-result)))
 
 (defn handle_get-full_text
@@ -51,7 +51,7 @@
                           sql-format)
             ins-res (jdbc/execute-one! (get-ds) sql-query)]
 
-        (logging/info "handle_create-full_texts: " "\nnew-data:\n" ins-data "\nresult:\n" ins-res)
+        (info "handle_create-full_texts: " "\nnew-data:\n" ins-data "\nresult:\n" ins-res)
 
         (if ins-res
           (sd/response_ok ins-res)
@@ -75,7 +75,7 @@
                           sql-format)
             upd-result (jdbc/execute-one! (get-ds) sql-query)]
 
-        (logging/info "handle_update-full_texts: " mr-id "\new-data:\n" dwid "\nresult:\n" upd-result)
+        (info "handle_update-full_texts: " mr-id "\new-data:\n" dwid "\nresult:\n" upd-result)
 
         (if upd-result
           (sd/response_ok upd-result)
@@ -94,11 +94,11 @@
                           sql-format)
             del-result (jdbc/execute-one! (get-ds) sql-query)]
 
-        (logging/info "handle_delete-full_texts: " mr-id " result: " del-result)
+        (info "handle_delete-full_texts: " mr-id " result: " del-result)
 
         (if del-result
           (sd/response_ok del-result)
-          (logging/error "Could not delete full_text " mr-id))))
+          (error "Could not delete full_text " mr-id))))
     (catch Exception e (sd/response_exception e))))
 
 (defn wrap-find-full_text [param send404]

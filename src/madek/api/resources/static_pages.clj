@@ -1,6 +1,5 @@
 (ns madek.api.resources.static-pages
   (:require
-   [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
@@ -10,7 +9,8 @@
    [madek.api.utils.helper :refer [cast-to-hstore t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-   [schema.core :as s]))
+   [schema.core :as s]
+   [taoensso.timbre :refer [info]]))
 
 (defn handle_list-static_pages
   [req]
@@ -37,7 +37,7 @@
             ins-res (jdbc/execute-one! (get-ds) sql-query)
             ins-res (sd/transform_ml_map ins-res)]
 
-        (logging/info "handle_create-static-page:"
+        (info "handle_create-static-page:"
                       "\ninsert data:\n" ins-data
                       "\nresult:\n " ins-res)
 
@@ -60,7 +60,7 @@
             upd-result (jdbc/execute-one! (get-ds) sql-query)
             upd-result (sd/transform_ml_map upd-result)]
 
-        (logging/info "handle_update-static_pages: "
+        (info "handle_update-static_pages: "
                       "\nid:\n" id
                       "\nnew-data:\n" dwid
                       "\nupd-result:" upd-result)
@@ -81,7 +81,7 @@
             delresult (jdbc/execute-one! (get-ds) sql-query)
             delresult (sd/transform_ml_map delresult)]
 
-        (logging/info "handle_delete-static_page: "
+        (info "handle_delete-static_page: "
                       " id: " id
                       " result: " delresult)
         (if delresult

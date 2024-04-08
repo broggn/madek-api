@@ -1,13 +1,13 @@
 (ns madek.api.resources.custom-urls
-  (:require [clojure.tools.logging :as logging]
-            [honey.sql :refer [format] :rename {format sql-format}]
+  (:require [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
             [madek.api.db.core :refer [get-ds]]
             [madek.api.resources.shared :as sd]
             [next.jdbc :as jdbc]
             [reitit.coercion.schema]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [taoensso.timbre :refer [info]]))
 
 (defn build-query [query-params]
   (let [col-sel (if (true? (-> query-params :full_data))
@@ -24,7 +24,7 @@
   [req]
   (let [db-query (build-query (-> req :parameters :query))
         db-result (jdbc/execute! (get-ds) db-query)]
-    (logging/info "handle_list-custom-urls" "\ndb-query\n" db-query "\nresult\n" db-result)
+    (info "handle_list-custom-urls" "\ndb-query\n" db-query "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
 (defn handle_get-custom-url
@@ -41,7 +41,7 @@
         mr-id (-> mr :id str)
         col-name (if (= mr-type "MediaEntry") :media_entry_id :collection_id)]
 
-    (logging/info "handle_get-custom-urls"
+    (info "handle_get-custom-urls"
                   "\ntype: " mr-type
                   "\nmr-id: " mr-id
                   "\ncol-name: " col-name)

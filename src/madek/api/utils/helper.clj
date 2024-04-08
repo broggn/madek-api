@@ -1,7 +1,7 @@
 (ns madek.api.utils.helper
   (:require [cheshire.core :as json]
-            [clojure.tools.logging :as logging]
-            [pghstore-clj.core :refer [to-hstore]])
+            [pghstore-clj.core :refer [to-hstore]]
+            [taoensso.timbre :refer [warn]])
 (:import (java.util UUID)))
 
 (def LOAD-SWAGGER-DESCRIPTION-FROM-FILE false)
@@ -37,7 +37,7 @@
      (let [result (if (instance? String value) (UUID/fromString value) value)]
        result)
      (catch Exception e
-       (logging/warn ">>> DEV-ERROR in to-uuid[value], value=" value ", exception=" (.getMessage e))
+       (warn ">>> DEV-ERROR in to-uuid[value], value=" value ", exception=" (.getMessage e))
        value)))
 
   ([value key]
@@ -49,7 +49,7 @@
                  (UUID/fromString value)
                  value)
                (catch Exception e
-                 (logging/warn ">>> DEV-ERROR in to-uuid[value key], value=" value ", key=" key " exception=" (.getMessage e))
+                 (warn ">>> DEV-ERROR in to-uuid[value key], value=" value ", key=" key " exception=" (.getMessage e))
                  value))] res))
 
   ([value key table]

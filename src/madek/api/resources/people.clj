@@ -7,7 +7,6 @@
             [madek.api.pagination :as pagination]
             [madek.api.resources.shared :as sd]
             [next.jdbc :as jdbc]
-            [next.jdbc :as njdbc]
             [reitit.coercion.schema]
             [schema.core :as s]))
 
@@ -88,7 +87,7 @@
         sql-query (build-index-query query-params)
         db-result (jdbc/execute! (get-ds) sql-query)
         result (map transform_export db-result)]
-    ;(logging/info "handle_query-people: \n" sql-query)
+    ;(info "handle_query-people: \n" sql-query)
     (sd/response_ok {:people result})))
 
 ;### routes ###################################################################
@@ -189,7 +188,7 @@
                           sql-format)
             db-result (jdbc/execute-one! (get-ds) sql-query)]
 
-        (if-let [result (::njdbc/update-count db-result)]
+        (if-let [result (::jdbc/update-count db-result)]
           (sd/response_ok (transform_export result) 201)
           (sd/response_failed "Could not create person." 406))))
     (catch Exception ex (sd/response_exception ex))))

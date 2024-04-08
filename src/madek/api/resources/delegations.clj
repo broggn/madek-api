@@ -1,6 +1,5 @@
 (ns madek.api.resources.delegations
   (:require
-   [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
@@ -9,20 +8,21 @@
    [madek.api.utils.helper :refer [t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-   [schema.core :as s]))
+   [schema.core :as s]
+   [taoensso.timbre :refer [info]]))
 
 (defn handle_list-delegations
   [req]
   (let [full-data (= "true" (get (-> req :query-params) "full-data"))
         qd (if (true? full-data) :* :delegations.id)
         db-result (sd/query-find-all :delegations qd)]
-    ;(logging/info "handle_list-delegation" "\nqd\n" qd "\nresult\n" db-result)
+    ;(info "handle_list-delegation" "\nqd\n" qd "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
 (defn handle_get-delegation
   [req]
   (let [delegation (-> req :delegation)]
-    (logging/info "handle_get-delegation" delegation)
+    (info "handle_get-delegation" delegation)
     ; TODO hide some fields
     (sd/response_ok delegation)))
 
@@ -48,13 +48,13 @@
                       (sql/where [:= :id id])
                       sql-format)]
     ; create delegation entry
-    (logging/info "handle_update-delegations: " "\nid\n" id "\ndwid\n" dwid
+    (info "handle_update-delegations: " "\nid\n" id "\ndwid\n" dwid
                   "\nold-data\n" old-data
                   "\nupd-query\n" upd-query)
 
     (if-let [ins-res (first (jdbc/execute! (get-ds) sql-query))]
       (let [new-data (sd/query-eq-find-one :delegations :id id)]
-        (logging/info "handle_update-delegations:" "\nnew-data\n" new-data)
+        (info "handle_update-delegations:" "\nnew-data\n" new-data)
         (sd/response_ok new-data))
       (sd/response_failed "Could not update delegation." 406))))
 

@@ -1,6 +1,5 @@
 (ns madek.api.resources.io-interfaces
   (:require
-   [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
@@ -11,7 +10,7 @@
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
-   [taoensso.timbre :refer [spy]]))
+   [taoensso.timbre :refer [error info spy]]))
 
 ;### handlers #################################################################
 
@@ -21,13 +20,13 @@
         qd (if (true? full_data) :* :io_interfaces.id)
         db-result (sd/query-find-all :io_interfaces qd)]
 
-;(logging/info "handle_list-io_interface" "\nqd\n" qd "\nresult\n" db-result)
+;(info "handle_list-io_interface" "\nqd\n" qd "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
 (defn handle_get-io_interface
   [req]
   (let [io_interface (-> req :io_interface)]
-    ;(logging/info "handle_get-io_interface" io_interface)
+    ;(info "handle_get-io_interface" io_interface)
     (sd/response_ok io_interface)))
 
 (defn handle_create-io_interfaces
@@ -40,7 +39,7 @@
                           (sql/returning :*)
                           sql-format)
             ins-res (jdbc/execute-one! (get-ds) sql-query)]
-        (logging/info "handle_create-io_interfaces: " "\ndata:\n" data "\nresult:\n" ins-res)
+        (info "handle_create-io_interfaces: " "\ndata:\n" data "\nresult:\n" ins-res)
 
         (if-let [result ins-res]
           (sd/response_ok result)
@@ -60,7 +59,7 @@
                           sql-format)
             upd-result (jdbc/execute-one! (get-ds) sql-query)]
 
-        (logging/info "handle_update-io_interfaces: " "id: " id "\nnew-data:\n" dwid "\nresult: " upd-result)
+        (info "handle_update-io_interfaces: " "id: " id "\nnew-data:\n" dwid "\nresult: " upd-result)
 
         (if (= 1 (::jdbc/update-count upd-result))
           (sd/response_ok (sd/query-eq-find-one :io_interfaces :id id))
@@ -81,7 +80,7 @@
 
         (if (= 1 (::jdbc/update-count del-result))
           (sd/response_ok io_interface)
-          (logging/error "Could not delete io_interface: " id))))
+          (error "Could not delete io_interface: " id))))
     (catch Exception e (sd/response_exception e))))
 
 (defn wrap-find-io_interface [handler]

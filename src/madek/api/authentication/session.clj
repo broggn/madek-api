@@ -4,9 +4,7 @@
    [buddy.core.hash :as hash]
    [clj-time.core :as time]
    [clj-time.format :as time-format]
-   [clojure.tools.logging :as logging]
    [clojure.walk :refer [keywordize-keys]]
-   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
@@ -17,7 +15,7 @@
    [madek.api.utils.config :refer [get-config
                                    parse-config-duration-to-seconds]]
    [next.jdbc :as jdbc]
-   [taoensso.timbre :refer [debug]]))
+   [taoensso.timbre :refer [debug info]]))
 
 (defn- get-session-secret []
   (-> (get-config) :madek_master_secret))
@@ -120,7 +118,7 @@
         (let [user-id (:users/user_id user-session)
               expires-at (:session_expires_at user-session)
               user (assoc (sd/query-eq-find-one :users :id user-id) :type "User")]
-          #_(logging/info "handle session: "
+          #_(info "handle session: "
                           "\nfound user session:\n " user-session
                           "\n user-id:  " user-id
                           "\n expires-at: " expires-at

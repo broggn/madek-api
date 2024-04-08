@@ -1,6 +1,5 @@
 (ns madek.api.resources.favorite-media-entries
   (:require
-   [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
@@ -11,7 +10,8 @@
    [madek.api.utils.helper :refer [t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-   [schema.core :as s]))
+   [schema.core :as s]
+   [taoensso.timbre :refer [error info]]))
 
 (def res-req-name :favorite_media_entry)
 (def res-table-name "favorite_media_entries")
@@ -20,7 +20,7 @@
 (defn handle_list-favorite_media_entries
   [req]
   (let [db-result (sd/query-find-all :favorite_media_entries :*)]
-    ;(logging/info "handle_list-favorite_media_entry" "\nresult\n" db-result)
+    ;(info "handle_list-favorite_media_entry" "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
 (defn handle_list-favorite_media_entries-by-user
@@ -29,13 +29,13 @@
         user-id (-> req :authenticated-entity :id)
         db-result (sd/query-eq-find-all :favorite_media_entries :user_id user-id)
         id-set (map :media_entry_id db-result)]
-    ;(logging/info "handle_list-favorite_media_entry" "\nresult\n" db-result "\nid-set\n" id-set)
+    ;(info "handle_list-favorite_media_entry" "\nresult\n" db-result "\nid-set\n" id-set)
     (sd/response_ok {:media_entry_ids id-set})))
 
 (defn handle_get-favorite_media_entry
   [req]
   (let [favorite_me (-> req res-req-name)]
-    ;(logging/info "handle_get-favorite_media_entry" favorite_collection)
+    ;(info "handle_get-favorite_media_entry" favorite_collection)
     (sd/response_ok favorite_me)))
 
 ; TODO logwrite
@@ -73,7 +73,7 @@
               del-result (jdbc/execute-one! (get-ds) sql-query)]
           (if (= 1 del-result)
             (sd/response_ok favorite_media_entry)
-            (logging/error "Failed delete favorite_media_entry "
+            (error "Failed delete favorite_media_entry "
                            "user-id: " user-id "media_entry-id: " media_entry-id)))))
     (catch Exception ex (sd/response_exception ex))))
 
@@ -93,7 +93,7 @@
     (fn [request]
       (let [user-id (-> request :authenticated-entity :id str)
             me-id (-> request :parameters :path :media_entry_id str)]
-        (logging/info "uid\n" user-id "meid\n" me-id)
+        (info "uid\n" user-id "meid\n" me-id)
         (sd/req-find-data-search2
          request handler
          user-id me-id

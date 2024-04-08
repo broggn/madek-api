@@ -4,7 +4,6 @@
    [honey.sql.helpers :as sql]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.utils.helper :refer [to-uuid]]
-   [madek.api.utils.helper :refer [to-uuid]]
    [next.jdbc :as jdbc]))
 
 (def ^:private media-entry-keys
@@ -23,7 +22,7 @@
                   (sql/where [:= :previews.id (to-uuid preview-id)])
                   (sql-format))
         dbresult (jdbc/execute-one! (get-ds) query)]
-    ;(logging/info "get-media-entry-for-preview" "\npreview-id\n" preview-id "\ndbresult\n" dbresult)
+    ;(info "get-media-entry-for-preview" "\npreview-id\n" preview-id "\ndbresult\n" dbresult)
     dbresult))
 
 (defn get-media-entry [request]

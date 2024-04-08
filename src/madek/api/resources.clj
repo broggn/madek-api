@@ -1,6 +1,5 @@
 (ns madek.api.resources
   (:require
-   [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [madek.api.authentication :as authentication]
@@ -39,7 +38,8 @@
    [madek.api.resources.vocabularies :as vocabularies]
    [madek.api.resources.workflows :as workflows]
    [next.jdbc :as jdbc]
-   [reitit.coercion.schema]))
+   [reitit.coercion.schema]
+   [taoensso.timbre :refer [debug]]))
 
 ;### wrap media resource ######################################################
 
@@ -51,7 +51,7 @@
   [{{media-entry-id :media_entry_id
      meta-key-id :meta_key_id} :route-params
     context :context :as request}]
-  (logging/debug request)
+  (debug request)
   (if-let [meta-data-id (-> (jdbc/execute! (get-ds)
 
                               (-> (sql/select :id)
@@ -69,7 +69,7 @@
 (defn redirect-to-media-file-data-stream
   [{{media-entry-id :media_entry_id} :route-params
     context :context :as request}]
-  (logging/debug request)
+  (debug request)
   (if-let [media-file-id (-> (jdbc/execute! (get-ds)
 
                                (-> (sql/select :id)

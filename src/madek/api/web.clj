@@ -10,7 +10,6 @@
    [madek.api.resources.auth-info :as auth-info]
    [madek.api.utils.cli :refer [long-opt-for-key]]
    [madek.api.utils.helper :refer [mslurp]]
-   [madek.api.utils.logging :as logging]
    [muuntaja.core :as m]
    [reitit.coercion.schema]
    [reitit.coercion.spec]
@@ -166,7 +165,7 @@
         (try
           (debug "RING-LOGGING-WRAPPER"
                  {:wrap-debug-level wrap-debug-level
-                  :request (logging/clean-request request)})
+                  :request request})
           (let [response (handler
                           (assoc request :wrap-debug-level (inc wrap-debug-level)))]
             (debug "RING-LOGGING-WRAPPER"

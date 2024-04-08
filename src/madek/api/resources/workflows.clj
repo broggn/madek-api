@@ -1,6 +1,5 @@
 (ns madek.api.resources.workflows
-  (:require [clojure.tools.logging :as logging]
-            [honey.sql :refer [format] :rename {format sql-format}]
+  (:require [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
             [madek.api.authorization :as authorization]
@@ -8,7 +7,8 @@
             [madek.api.resources.shared :as sd]
             [next.jdbc :as jdbc]
             [reitit.coercion.schema]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [taoensso.timbre :refer [info]]))
 
 (defn handle_list-workflows
   [req]
@@ -16,13 +16,13 @@
              :workflows.*
              :workflows.id)
         db-result (sd/query-find-all :workflows qd)]
-    ;(logging/info "handle_list-workflows" "\nqd\n" qd "\nresult\n" db-result)
+    ;(info "handle_list-workflows" "\nqd\n" qd "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
 (defn handle_get-workflow
   [req]
   (let [workflow (-> req :workflow)]
-    (logging/info "handle_get-workflow" workflow)
+    (info "handle_get-workflow" workflow)
     ; TODO hide some fields
     (sd/response_ok workflow)))
 
@@ -40,7 +40,7 @@
                           sql-format)
             ins-res (jdbc/execute-one! (get-ds) sql-query)]
 
-        (logging/info "handle_create-workflow: "
+       (info "handle_create-workflow: "
                       "\ndata:\n" ins-data
                       "\nresult:\n" ins-res)
 
@@ -62,7 +62,7 @@
                           sql-format)
             upd-result (jdbc/execute! (get-ds) sql-query)]
 
-        (logging/info "handle_update-workflow: " "\nid\n" id "\ndwid\n" dwid "\nupd-result:" upd-result)
+        (info "handle_update-workflow: " "\nid\n" id "\ndwid\n" dwid "\nupd-result:" upd-result)
 
         (if (= 1 (::jdbc/update-count upd-result))
           (sd/response_ok (sd/query-eq-find-one :workflows :id id))

@@ -1,6 +1,5 @@
 (ns madek.api.resources.collections
   (:require
-   [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
@@ -13,6 +12,7 @@
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
+   [taoensso.timbre :refer [info spy]]
    [taoensso.timbre :refer [spy]]))
 
 (defn handle_get-collection [request]
@@ -27,7 +27,7 @@
 (defn handle_get-index [req]
   (let [query-params (-> req :parameters :query)
         qreq (assoc-in req [:query-params] query-params)]
-    (logging/info "handle_get-index" "\nquery-params\n" query-params)
+    (info "handle_get-index" "\nquery-params\n" query-params)
     (get-index qreq)))
 
 (defn handle_create-collection [req]

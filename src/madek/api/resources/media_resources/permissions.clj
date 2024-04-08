@@ -1,11 +1,11 @@
 (ns madek.api.resources.media-resources.permissions
   (:require
-   [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.utils.helper :refer [convert-map-if-exist to-uuid]]
-   [next.jdbc :as jdbc]))
+   [next.jdbc :as jdbc]
+   [taoensso.timbre :refer [info]]))
 
 (defn- user-table
   [mr-type]
@@ -142,7 +142,7 @@
                         (sql/where [:= :id (to-uuid mr-id)])
                         sql-format)
         upd-result (jdbc/execute-one! (get-ds) update-stmt)]
-    (logging/info "update resource permissions"
+    (info "update resource permissions"
                   "\ntable\n" tname
                   "\nperm-data\n" perm-data)
     upd-result))
@@ -184,12 +184,12 @@
                         sql-format)
         ins-result (jdbc/execute-one! (get-ds) insert-stmt)]
 
-    (logging/info "create-user-permissions" mr-id mr-type user-id tname insdata)
+    (info "create-user-permissions" mr-id mr-type user-id tname insdata)
     (if-let [result ins-result]
       result
       nil)))
    ; (catch Exception ex
-   ;   (logging/error "Could not create resource user permissions." (ex-message ex)))))
+   ;   (error "Could not create resource user permissions." (ex-message ex)))))
 
 ; TODO logwrite
 (defn delete-user-permissions
@@ -202,12 +202,12 @@
                         (sql-cls-resource-and-new mr-type mr-id :user_id user-id)
                         sql-format)
         delresult (jdbc/execute-one! (get-ds) delete-stmt)]
-    (logging/info "delete-user-permissions: " mr-id user-id delresult)
+    (info "delete-user-permissions: " mr-id user-id delresult)
     (if (= 1 (::jdbc/update-count delresult))
       true
       false)))
     ;(catch Exception ex
-    ;  ((logging/error "Could not delete resource user permissions." (ex-message ex))
+    ;  ((error "Could not delete resource user permissions." (ex-message ex))
     ;     false))))
 
 ; TODO logwrite
@@ -222,7 +222,7 @@
                         (sql-cls-resource-and-new mr-type mr-id :user_id user-id)
                         sql-format)
         result (jdbc/execute-one! (get-ds) update-stmt)]
-    (logging/info "update user permissions"
+    (info "update user permissions"
                   "\ntable\n" tname
                   "\nperm-data\n" perm-data
                   "\nresult:\n" result)
@@ -259,12 +259,12 @@
                         (sql/returning :*)
                         sql-format)
         insresult (jdbc/execute-one! (get-ds) insert-stmt)]
-    (logging/info "create-group-permissions" mr-id mr-type group-id tname insdata)
+    (info "create-group-permissions" mr-id mr-type group-id tname insdata)
     (if-let [result insresult]
       result
       nil)))
 ;(catch Exception ex
-;  (logging/error "ERROR: Could not create resource group permissions." (ex-message ex)))))
+;  (error "ERROR: Could not create resource group permissions." (ex-message ex)))))
 
 (defn delete-group-permissions
   [resource mr-type group-id]
@@ -276,12 +276,12 @@
                         (sql-cls-resource-and-new mr-type mr-id :group_id group-id)
                         sql-format)
         delresult (jdbc/execute-one! (get-ds) delete-stmt)]
-    (logging/info "delete-group-permissions: " mr-id group-id delresult)
+    (info "delete-group-permissions: " mr-id group-id delresult)
     (if (= 1 (::jdbc/update-count delresult))
       true
       false)))
 ;  (catch Exception ex
-;    ((logging/error "ERROR: Could not delete resource group permissions." (ex-message ex))
+;    ((error "ERROR: Could not delete resource group permissions." (ex-message ex))
 ;     false))))
 
 ; TODO logwrite
@@ -295,7 +295,7 @@
                         (sql-cls-resource-and-new mr-type mr-id :group_id group-id)
                         sql-format)
         result (jdbc/execute-one! (get-ds) update-stmt)]
-    (logging/info "update group permissions"
+    (info "update group permissions"
                   "\ntable\n" tname
                   "\nperm-data\n" perm-data
                   "\nresult\n" result)

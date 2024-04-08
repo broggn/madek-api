@@ -53,7 +53,7 @@
 
         query (base-query user-id size offset request)]
 
-;(logging/info "query-index-resources: " query)
+;(info "query-index-resources: " query)
     (jdbc/execute! (get-ds) query)))
 
 (defn transform_ml [vocab]

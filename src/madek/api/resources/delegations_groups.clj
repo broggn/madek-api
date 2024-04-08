@@ -1,6 +1,5 @@
 (ns madek.api.resources.delegations-groups
   (:require
-   [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [madek.api.db.core :refer [get-ds]]
@@ -8,7 +7,8 @@
    [madek.api.utils.helper :refer [t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-   [schema.core :as s]))
+   [schema.core :as s]
+   [taoensso.timbre :refer [error info]]))
 
 (def res-req-name :delegation_group)
 (def res-table-name "delegations_groups")
@@ -27,7 +27,7 @@
                 delegation_id (sql/where [:= :delegation_id delegation_id])
                 group_id (sql/where [:= :group_id group_id]))
         db-result (jdbc/execute! (get-ds) (sql-format query))]
-    (logging/info "handle_list-delegations_group" "\nresult\n" db-result)
+    (info "handle_list-delegations_group" "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
 (defn handle_list-delegations_groups-by-group
@@ -36,7 +36,7 @@
         group-id (-> req :authenticated-entity :id)
         db-result (sd/query-eq-find-all :delegations_groups :group_id group-id)
         id-set (map :delegation_id db-result)]
-    (logging/info "handle_list-delegations_group" "\nresult\n" db-result "\nid-set\n" id-set)
+    (info "handle_list-delegations_group" "\nresult\n" db-result "\nid-set\n" id-set)
     (sd/response_ok {:delegation_ids id-set})
     ;(if full-data (sd/response_ok db-result) (sd/response_ok {:delegation_ids id-set})) 
     ))
@@ -44,7 +44,7 @@
 (defn handle_get-delegations_group
   [req]
   (let [favorite_collection (-> req res-req-name)]
-    ;(logging/info "handle_get-favorite_collection" favorite_collection)
+    ;(info "handle_get-favorite_collection" favorite_collection)
     ; TODO hide some fields
     (sd/response_ok favorite_collection)))
 
@@ -75,7 +75,7 @@
         result (jdbc/execute-one! (get-ds) sql-query)]
     (if result
       (sd/response_ok delegations_group)
-      (logging/error "Failed delete delegations_group "
+      (error "Failed delete delegations_group "
                      "group-id: " group-id "delegation-id: " delegation-id))))
 
 (defn wwrap-find-delegations_group [send404]
@@ -95,7 +95,7 @@
     (fn [request]
       (let [group-id (-> request :authenticated-entity :id str)
             del-id (-> request :parameters :path :delegation_id str)]
-        (logging/info "uid\n" group-id "del-id\n" del-id)
+        (info "uid\n" group-id "del-id\n" del-id)
         (sd/req-find-data-search2
          request handler
          group-id del-id

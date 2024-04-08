@@ -1,6 +1,5 @@
 (ns madek.api.resources.groups
   (:require [clj-uuid]
-            [clojure.tools.logging :as logging]
             [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
             [madek.api.db.core :refer [get-ds]]
@@ -9,12 +8,12 @@
             [madek.api.resources.groups.users :as group-users]
             [madek.api.resources.shared :as sd]
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-            [madek.api.utils.helper :refer [convert-groupid f t mslurp]]
+            [madek.api.utils.helper :refer [convert-groupid f mslurp t]]
             [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
             [next.jdbc :as jdbc]
             [reitit.coercion.schema]
             [schema.core :as s]
-            [taoensso.timbre :refer [error spy]]))
+            [taoensso.timbre :refer [error info]]))
 
 ;### create group #############################################################
 
@@ -140,7 +139,7 @@
                                                         (sql/returning :*)
                                                         sql-format)))
           result (dissoc resultdb :previous_id :searchable)]
-      (logging/info (apply str ["handler_create-group: \ndata:" data_wtype "\nresult-db: " resultdb "\nresult: " result]))
+      (info (apply str ["handler_create-group: \ndata:" data_wtype "\nresult-db: " resultdb "\nresult: " result]))
       {:status 201 :body result})
     (catch Exception e
       (error "handle-create-group failed" {:request request})
@@ -149,7 +148,7 @@
 (defn handle_get-group [req]
   (let [group-id (-> req :parameters :path :id)
         id (-> (convert-groupid group-id) :group-id)]
-    (logging/info "handle_get-group" "\nid\n" id)
+    (info "handle_get-group" "\nid\n" id)
     (get-group id)))
 
 (defn handle_delete-group [req]
@@ -159,7 +158,7 @@
 (defn handle_update-group [req]
   (let [id (-> req :parameters :path :id)
         body (-> req :parameters :body)]
-    ;(logging/info "handle_update-group" "\nid\n" id "\nbody\n" body)
+    ;(info "handle_update-group" "\nid\n" id "\nbody\n" body)
     (patch-group {:params {:group-id id} :body body})))
 
 (def schema_query-groups

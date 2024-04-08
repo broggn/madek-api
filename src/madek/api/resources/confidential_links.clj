@@ -1,14 +1,14 @@
 (ns madek.api.resources.confidential-links
   (:require [buddy.core.codecs :refer [bytes->b64u bytes->str]]
             [buddy.core.hash :as hash]
-            [clojure.tools.logging :as logging]
             [honey.sql :refer [format] :rename {format sql-format}]
             [logbug.catcher :as catcher]
             [madek.api.db.core :refer [get-ds]]
             [madek.api.resources.shared :as sd]
             [next.jdbc :as jdbc]
             [reitit.coercion.schema]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [taoensso.timbre :refer [info]]))
 
 (defn create-conf-link-token
   []
@@ -20,7 +20,7 @@
                   #(rand-nth "0123456789abcdef"))))
         token (-> random hash/sha512 bytes->b64u bytes->str)
         cut (apply str (take 45 token))]
-    (logging/info "create-conf-link-token: "
+    (info "create-conf-link-token: "
                   "\nrandom: " random
                   "\n token: " token
                   "\n cut: " cut)

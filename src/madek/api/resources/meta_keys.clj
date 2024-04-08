@@ -1,7 +1,5 @@
 (ns madek.api.resources.meta-keys
   (:require
-   [cheshire.core :as json]
-   [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.debug :as debug]
@@ -16,7 +14,8 @@
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [reitit.coercion.spec]
-   [schema.core :as s]))
+   [schema.core :as s]
+   [taoensso.timbre :refer [info]]))
 
 (defn adm-export-meta-key [meta-key]
   (-> meta-key
@@ -109,7 +108,7 @@
         db-result (jdbc/execute-one! (get-ds) sql-query)
         db-result (replace-java-hashmaps db-result)]
 
-    (logging/info "handle_update_meta-key:"
+    (info "handle_update_meta-key:"
                   "\nid: " id
                   "\ndwid\n" dwid)
 

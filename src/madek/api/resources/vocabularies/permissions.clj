@@ -12,7 +12,7 @@
 
 (defn- execute-query
   [query]
-  ;(logging/info "execute-query: \n" query)
+  ;(info "execute-query: \n" query)
   (jdbc/execute! (get-ds) query))
 
 (defn- group-ids
@@ -27,11 +27,11 @@
 
 (defn- user-permissions-query
   ([user-id]
-   ;(logging/info "user-permissions-query:" user-id)
+   ;(info "user-permissions-query:" user-id)
    (user-permissions-query user-id "view"))
 
   ([user-id acc-type]
-   ;(logging/info "user-permissions-query:" user-id ":" acc-type)
+   ;(info "user-permissions-query:" user-id ":" acc-type)
    ; acc-type: "view" or "use"
    (if (str/blank? (str user-id))
      nil
