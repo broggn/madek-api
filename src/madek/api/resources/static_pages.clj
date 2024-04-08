@@ -1,14 +1,13 @@
 (ns madek.api.resources.static-pages
   (:require
    [clojure.tools.logging :as logging]
-   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.helper :refer [cast-to-hstore]]
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist f replace-java-hashmaps t v]]
+   [madek.api.utils.helper :refer [cast-to-hstore t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]))
@@ -31,12 +30,10 @@
     (catcher/with-logging {}
       (let [data (-> req :parameters :body)
             ins-data (cast-to-hstore data)
-
             sql-query (-> (sql/insert-into :static_pages)
                           (sql/values [ins-data])
                           (sql/returning :*)
                           sql-format)
-
             ins-res (jdbc/execute-one! (get-ds) sql-query)
             ins-res (sd/transform_ml_map ins-res)]
 
@@ -55,13 +52,11 @@
       (let [data (-> req :parameters :body)
             id (-> req :parameters :path :id)
             dwid (cast-to-hstore data)
-
             sql-query (-> (sql/update :static_pages)
                           (sql/set dwid)
                           (sql/where [:= :id id])
                           (sql/returning :*)
                           sql-format)
-
             upd-result (jdbc/execute-one! (get-ds) sql-query)
             upd-result (sd/transform_ml_map upd-result)]
 
@@ -78,13 +73,11 @@
 (defn handle_delete-static_page [req]
   (try
     (catcher/with-logging {}
-      (let [olddata (-> req :static_page)
-            id (-> req :parameters :path :id)
+      (let [id (-> req :parameters :path :id)
             sql-query (-> (sql/delete-from :static_pages)
                           (sql/where [:= :id id])
                           (sql/returning :*)
                           sql-format)
-
             delresult (jdbc/execute-one! (get-ds) sql-query)
             delresult (sd/transform_ml_map delresult)]
 
@@ -133,11 +126,9 @@
             :coercion reitit.coercion.schema/coercion
             :parameters {:body schema_create_static_page}
             :responses {200 {:body schema_export_static_page}
-
                         406 {:description "Not Acceptable."
                              :schema s/Str
                              :examples {"application/json" {:message "Could not create static_page."}}}
-
                         409 {:description "Conflict."
                              :schema s/Str
                              :examples {"application/json" {:message "Entry already exists"}}}}}
@@ -154,7 +145,6 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Uuid}}
            :responses {200 {:body schema_export_static_page}
-
                        404 {:description "Not Found."
                             :schema s/Str
                             :examples {"application/json" {:message "No such entity in :static_pages as :id with <id>"}}}}}
@@ -167,7 +157,6 @@
                         :body schema_update_static_page}
            :responses {200 {:body schema_export_static_page}
                        406 {:body s/Any}
-
                        404 {:description "Not Found."
                             :schema s/Str
                             :examples {"application/json" {:message "No such entity in :static_pages as :id with <id>"}}}}}
@@ -178,7 +167,6 @@
               :middleware [(wwrap-find-static_page :id)]
               :parameters {:path {:id s/Uuid}}
               :responses {200 {:body schema_export_static_page}
-
                           404 {:description "Not Found."
                                :schema s/Str
                                :examples {"application/json" {:message "No such entity in :static_pages as :id with <id>"}}}

@@ -1,19 +1,14 @@
 (ns madek.api.resources.people
   (:require [clj-uuid]
-            [clojure.tools.logging :as log]
-            ;; all needed imports
             [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
             [madek.api.db.core :refer [get-ds]]
             [madek.api.pagination :as pagination]
             [madek.api.resources.shared :as sd]
-            [madek.api.utils.auth :refer [wrap-authorize-admin!]]
             [next.jdbc :as jdbc]
             [next.jdbc :as njdbc]
-
-            reitit.coercion.schema
-
+            [reitit.coercion.schema]
             [schema.core :as s]))
 
 ; TODO clean code
@@ -202,7 +197,6 @@
 (defn handle_get-person
   [req]
   (let [id-or-institutinal-person-id (-> req :parameters :path :id str)]
-
     (if-let [person (db-person-get id-or-institutinal-person-id)]
       (sd/response_ok (transform_export person))
       (sd/response_failed "No such person found" 404))))

@@ -3,14 +3,10 @@
             [clojure.string :as str]
             [clojure.tools.logging :as logging]
             [clojure.walk :refer [keywordize-keys]]
-   ;[honeysql.helpers :as h2helpers]
             [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
             [java-time.api :as jt]
             [logbug.catcher :as catcher]
-
-            [logbug.debug :as debug]
-
             [madek.api.authorization :refer [authorized?]]
             [madek.api.constants :as mc]
             [madek.api.db.core :refer [get-ds]]
@@ -18,7 +14,7 @@
             [madek.api.utils.helper :refer [to-uuid]]
             [next.jdbc :as jdbc]
             [schema.core :as s]
-            [taoensso.timbre :refer [info warn error spy]]))
+            [taoensso.timbre :refer [spy]]))
 
 (def schema_ml_list
   {(s/optional-key :de) (s/maybe s/Str)
@@ -119,18 +115,13 @@
 
 (defn- sql-query-find-eq
   ([table-name col-name row-data]
-
-   (let [p (println ">o> sql-query-find-eq1" table-name col-name row-data)
-         query (-> (build-query-base table-name :*)
+   (let [query (-> (build-query-base table-name :*)
                    (sql/where [:= col-name (to-uuid row-data col-name table-name)])
                    sql-format)]
-
      query))
 
   ([table-name col-name row-data col-name2 row-data2]
-
-   (let [p (println ">o> sql-query-find-eq2" table-name col-name row-data col-name2 row-data2)
-         query (-> (build-query-base table-name :*)
+   (let [query (-> (build-query-base table-name :*)
                    (sql/where [:= col-name (to-uuid row-data col-name)])
                    (sql/where [:= col-name2 (to-uuid row-data2 col-name2)])
                    sql-format)] query)))
@@ -266,14 +257,14 @@
     (logging/info "WRITE: User: " auth-id "; Message: " msg)
     (logging/info "WRITE: anonymous; Message: " msg)))
 
-;([auth-entity msg entity]
-; (logging/info
-;  "WRITE: "
-;  (if (nil? auth-entity)
-;    "anonymous; "
-;    (str "user: " (:id auth-entity) "; "))
-;  "E: " entity
-;  "M: " msg)))
+  ;([auth-entity msg entity]
+  ; (logging/info
+  ;  "WRITE: "
+  ;  (if (nil? auth-entity)
+  ;    "anonymous; "
+  ;    (str "user: " (:id auth-entity) "; "))
+  ;  "E: " entity
+  ;  "M: " msg)))
 
 ; begin generic path param find in db and assoc with request
 
@@ -323,12 +314,7 @@
   [request handler path-param path-param2 db_table db_col_name db_col_name2 reqkey send404]
   (let [search (-> request :parameters :path path-param str)
         search2 (-> request :parameters :path path-param2 str)
-        res (query-eq-find-one db_table db_col_name search db_col_name2 search2)
-
-        p (println ">o> req-find-data2.path-param=" db_table db_col_name db_col_name2)
-        p (println ">o> req-find-data2.search=" search)
-        p (println ">o> req-find-data2.search2=" search2)
-        p (println ">o> req-find-data2.res=" res)]
+        res (query-eq-find-one db_table db_col_name search db_col_name2 search2)]
 
 ;(logging/info "req-find-data2" "\nc1: " db_col_name "\ns1: " search "\nc2: " db_col_name2 "\ns2: " search2)
     (if-let [result-db res]
@@ -348,29 +334,13 @@
                (spy (-> (sql/select :*)
                         (sql/from :admins)
                         (sql/where [:= :user_id (to-uuid user-id)])
-                        sql-format))
-
-                ;["SELECT * FROM admins WHERE user_id = ? " user-id]
-               )empty?)
+                        sql-format)))
+              empty?)
         result (not none)]
     ;(logging/info "is-admin: " user-id " : " result)
     (spy result)))
 
 ; end user and other util wrappers
-
-(comment
-  (let [table-name :users
-        table-name "users"
-
-        res (spy (jdbc/execute-one! (get-ds)
-                                    (spy (-> (sql/select :*)
-                            ;(sql/from [:raw table-name])
-                            ;(sql/from table-name)
-                            ;(sql/from [[:inline table-name]])
-                                             (sql/from (keyword table-name))
-                                             sql-format))))
-
-        p (println "\nres=" res)]))
 
 ; begin media resources helpers
 (defn- get-media-resource
@@ -398,10 +368,7 @@
 
 (defn- ring-add-media-resource [request handler] ;;here
   (if-let [media-resource (get-media-resource request)]
-    (let [request-with-media-resource (assoc request :media-resource media-resource)
-
-          p (println ">o> ring-add-media-resource.media-resource" media-resource)
-          p (println ">o> ring-add-media-resource.request-with-media-resource" request-with-media-resource)]
+    (let [request-with-media-resource (assoc request :media-resource media-resource)]
       ;(logging/info "ring-add-media-resource" "\nmedia-resource\n" media-resource)
       (handler request-with-media-resource))
     {:status 404}))
@@ -457,22 +424,6 @@
   ;              "\nauth entity:\n" (-> request :authenticated-entity)
   ;              "\nis-admin:\n" (-> request :is_admin)
   ;              )
-
-  (let [p (println ">oo> scope=" scope)
-
-        media-resource (:media-resource request)
-        p (println ">oo> media-resource=" media-resource)
-
-        viewable-if-public (and (= scope :view) (public? media-resource))
-        p (println ">oo> viewable-if-public=" viewable-if-public)
-
-        auth-entity (-> request :authenticated-entity)
-        do-all-as-admin (and (-> request :is_admin true?) auth-entity)
-        p (println ">oo> do-all-as-admin=" do-all-as-admin)
-
-        not-admin-check-user-auth (and (-> request :is_admin true?) (not auth-entity))
-        p (println ">oo> not-admin-check-user-auth=" not-admin-check-user-auth)])
-
   (if-let [media-resource (:media-resource request)]
 
     (if (and (= scope :view) (public? media-resource))
@@ -580,6 +531,7 @@
 
 (defn sum_cnv [text] (apply str text " " s_cnv_acc))
 
+;; TODO: no usage
 (defn sum_cnv_adm [text] (sum_adm (sum_cnv text)))
 
 (defn sum_adm_todo [text] (sum_todo (sum_adm text)))

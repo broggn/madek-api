@@ -12,14 +12,6 @@
 (defn ring-wrap-find-and-add-preview
   ([handler] #(ring-wrap-find-and-add-preview % handler))
   ([request handler]
-
-   (let [preview-id (-> request :parameters :path :preview_id)
-
-         p (println ">o> !!! preview-id=" preview-id)
-
-         preview (first (sd/query-eq-find-all :previews :id preview-id))
-         p (println ">o> !!! preview=" preview)])
-
    (when-let [preview-id (-> request :parameters :path :preview_id)]
      (logging/info "ring-wrap-find-and-add-preview" "\npreview-id\n" preview-id)
      (when-let [preview (first (sd/query-eq-find-all :previews :id preview-id))]
@@ -47,13 +39,9 @@
   (fn [request] (add-preview-for-media-file handler request)))
 
 (defn- ring-add-media-resource-preview [request handler]
-  (println ">o> !!! media-resource=" (get-media-entry-for-preview request))
   (if-let [media-resource (get-media-entry-for-preview request)]
     (let [mmr (assoc media-resource :type "MediaEntry" :table-name "media_entries")
-          request-with-media-resource (assoc request :media-resource mmr)
-
-          p (println ">o> mmr=" mmr)
-          p (println ">o> request-with-media-resource=" request-with-media-resource)]
+          request-with-media-resource (assoc request :media-resource mmr)]
       (handler request-with-media-resource))
     (sd/response_not_found "No media-resource for preview")))
 

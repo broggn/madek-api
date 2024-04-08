@@ -1,31 +1,22 @@
 (ns madek.api.resources.vocabularies
   (:require
-
    [clojure.string :as str]
-   ;[clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
-   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-
    [logbug.catcher :as catcher]
-
    [madek.api.db.core :refer [get-ds]]
-
    [madek.api.resources.shared :as sd]
    [madek.api.resources.vocabularies.index :refer [get-index]]
    [madek.api.resources.vocabularies.permissions :as permissions]
-   ;; all needed imports
    [madek.api.resources.vocabularies.vocabulary :refer [get-vocabulary]]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.helper :refer [cast-to-hstore]]
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist f t]]
    [madek.api.utils.helper :refer [mslurp]]
    [next.jdbc :as jdbc]
-   [pghstore-clj.core :refer [to-hstore]]
    [reitit.coercion.schema]
-
    [schema.core :as s]))
 
 ; TODO logwrite
@@ -38,10 +29,8 @@
                           (sql/values [(convert-map-if-exist (cast-to-hstore data))])
                           (sql/returning :*)
                           sql-format)
-
             ins-res (jdbc/execute-one! (get-ds) sql-query)
-            ins-res (sd/transform_ml_map ins-res)
-            p (println ">o> ins-res=" ins-res)]
+            ins-res (sd/transform_ml_map ins-res)]
 
         (if ins-res
           (sd/response_ok ins-res)
@@ -55,13 +44,10 @@
             id (-> req :path-params :id)
             dwid (assoc data :id id)
             dwid (convert-map-if-exist (cast-to-hstore dwid))
-
-            old-data (sd/query-eq-find-one :vocabularies :id id)
-            p (println ">o> old-data" old-data)]
+            old-data (sd/query-eq-find-one :vocabularies :id id)]
 
         (if old-data
           (let [is_admin_endpoint (str/includes? (-> req :uri) "/admin/")
-
                 cols (if is_admin_endpoint [:*] [:id :position :labels :descriptions :admin_comment])
                 sql-query (-> (sql/update :vocabularies)
                               (sql/set dwid)
@@ -69,7 +55,6 @@
                 sql-query (apply sql/returning sql-query cols)
                 sql-query (-> sql-query
                               sql-format)
-
                 upd-res (jdbc/execute-one! (get-ds) sql-query)
                 upd-res (sd/transform_ml_map upd-res)]
 
@@ -81,28 +66,6 @@
           (sd/response_not_found "No such vocabulary."))))
     (catch Exception ex (sd/response_exception ex))))
 
-(comment
-  (let [data {:first_name "foo" :last_name "bar"}
-
-        ;cols [:id :description]
-        cols [:*]
-
-        query (-> (sql/insert-into :people)
-                  (sql/values [data]))
-
-;query (apply sql/returning query [:id :description :first_name]) ;;works
-        query (apply sql/returning query cols) ;;works
-
-        query (sql-format query)
-        p (println ">o> query" query)
-
-        db-result (jdbc/execute-one! (get-ds) query)
-
-        p (println ">o> query" query)
-        p (println ">o> db-result" db-result)]
-
-    db-result))
-
 (defn handle_delete-vocab [req]
   (try
     (catcher/with-logging {}
@@ -113,6 +76,7 @@
                               (sql/returning :*)
                               sql-format)
                 db-result (jdbc/execute-one! (get-ds) sql-query)]
+
             (if db-result
               (sd/response_ok (sd/transform_ml_map old-data))
               (sd/response_failed "Could not delete vocabulary." 406)))
@@ -230,8 +194,6 @@
             :coercion reitit.coercion.schema/coercion
             :parameters {:body schema_import-vocabulary}
             :responses {200 {:body schema_export-vocabulary-admin}
-                        ;:responses {200 {:body schema_export-vocabulary}
-
                         406 {:description "Creation failed."
                              :schema s/Str
                              :examples {"application/json" {:message "Could not create vocabulary."}}}
@@ -295,16 +257,13 @@
               :parameters {:path {:id s/Str}}
               ;:responses {200 {:body schema_export-vocabulary}
               :responses {200 {:body schema_export-vocabulary-admin}
-
                           403 {:description "Forbidden."
                                :schema s/Str
                                :examples {"application/json" {:message "References still exist"}}}
-
                           404 {:description "Not found."
                                :schema s/Str
                                :examples {"application/json" {:message "No such vocabulary."}}}
                           500 {:body s/Any}}
-
               :swagger {:produces "application/json"}}}]
 
    ["/:id/perms"
@@ -318,7 +277,6 @@
        :coercion reitit.coercion.schema/coercion
        :parameters {:path {:id s/Str}}
        :responses {200 {:body schema_export-perms_all}
-
                    404 {:description "Not found."
                         :schema s/Str
                         :examples {"application/json" {:message "No such vocabulary."}}}}}
@@ -415,7 +373,6 @@
                            :user_id s/Uuid}
                     :body schema_perms-update-user-or-group}
        :responses {200 {:body schema_export-user-perms}
-
                    406 {:description "Not Acceptable."
                         :schema s/Str
                         :examples {"application/json" {:message "Could not update vocabulary user permission"}}}}}
@@ -492,15 +449,12 @@
                            :group_id s/Uuid}
                     :body schema_perms-update-user-or-group}
        :responses {200 {:body schema_export-group-perms}
-
                    404 {:description "Not Found."
                         :schema s/Str
                         :examples {"application/json" {:message "Vocabulary entry not found"}}}
-
                    406 {:description "Not Acceptable."
                         :schema s/Str
                         :examples {"application/json" {:message "Could not delete vocabulary group permission"}}}
-
                    409 {:description "Conflict."
                         :schema s/Str
                         :examples {"application/json" {:message "Entry already exists"}}}}}
@@ -520,11 +474,9 @@
                            :group_id s/Uuid}
                     :body schema_perms-update-user-or-group}
        :responses {200 {:body schema_export-group-perms}
-
                    404 {:description "Not Found."
                         :schema s/Str
                         :examples {"application/json" {:message "No such vocabulary group permission"}}}
-
                    406 {:description "Not Acceptable."
                         :schema s/Str
                         :examples {"application/json" {:message "Could not update vocabulary group permission"}}}}}
@@ -534,21 +486,15 @@
        :handler permissions/handle_delete-vocab-group-perms
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
-
-       ;; TODO: remove this
-       :description (str "TODO: REMOVE THIS | id: columns , id: ecb0de43-ccd2-463a-85a6-826c6ff99cdf")
-
        :accept "application/json"
        :coercion reitit.coercion.schema/coercion
        :parameters {:path {:id s/Str
                            :group_id s/Uuid}}
        :responses {200 {:body schema_export-group-perms}
-
                    404 {:description "Not Found."
                         :schema s/Str
                         ;:examples {"application/json" {:message "Vocabulary entry not found"}}}
                         :examples {"application/json" {:message "No such vocabulary group permission."}}}
-
                    406 {:description "Not Acceptable."
                         :schema s/Str
                         :examples {"application/json" {:message "Could not delete vocabulary group permission"}}}}}}]]])
@@ -556,7 +502,6 @@
 (def user-routes
   ["/vocabularies"
    {:swagger {:tags ["vocabulary"]}}
-
    ["/" {:get {:summary (t "Get list of vocabularies ids.")
                :description "Get list of vocabularies ids."
                :handler get-index
@@ -569,10 +514,6 @@
                   ;:description "Get a vocabulary by id. Returns 404, if no such vocabulary exists."
                   :swagger {:produces "application/json"}
                   :content-type "application/json"
-
-                  ;; TODO: remove this
-                  :description (str "TODO: REMOVE THIS | id: media_content")
-
                   :handler get-vocabulary
                   :coercion reitit.coercion.schema/coercion
                   :parameters {:path {:id s/Str}}

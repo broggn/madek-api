@@ -1,16 +1,9 @@
 (ns madek.api.resources.permissions
   (:require
-   [clojure.tools.logging :as logging]
-   ;; all needed imports
-   [honey.sql :refer [format] :rename {format sql-format}]
    [logbug.catcher :as catcher]
-
    [madek.api.resources.media-resources.permissions :as mr-permissions]
    [madek.api.resources.shared :as sd]
-
-   [madek.api.resources.vocabularies.permissions :as voc-perms]
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
-   ;[leihs.core.db :as db]
+   [madek.api.utils.helper :refer [t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]))

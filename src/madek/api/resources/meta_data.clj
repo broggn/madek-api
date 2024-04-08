@@ -1,30 +1,18 @@
 (ns madek.api.resources.meta-data
   (:require [cheshire.core :as cheshire]
-            [cheshire.core :as json]
-            ;[clojure.java.jdbc :as jdbc]
+            [cheshire.core]
             [clojure.tools.logging :as logging]
             [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
-
-            ;[madek.api.utils.rdbms :as rdbms]
-            [madek.api.db.core :refer [get-ds builder-fn-options-default]]
-
+            [madek.api.db.core :refer [builder-fn-options-default get-ds]]
             [madek.api.resources.meta-data.index :as meta-data.index]
-            ;; all needed imports
             [madek.api.resources.meta-data.meta-datum :as meta-datum]
-
-            ;; all needed imports
             [madek.api.resources.shared :as sd]
-
-            [madek.api.utils.helper :refer [convert-map-if-exist array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-
-   ;[leihs.core.db :as db]
+            [madek.api.utils.helper :refer [convert-map-if-exist to-uuid]]
             [next.jdbc :as jdbc]
-            [next.jdbc.result-set :as jdbc-rs]
             [reitit.coercion.schema]
             [reitit.coercion.spec]
-
             [schema.core :as s]))
 
 (defn- col-key-for-mr-type [mr]
@@ -37,11 +25,9 @@
   (assoc ins-data
          (col-key-for-mr-type mr)
          (-> mr :id)))
-;(str (-> mr :id))))
 
 (defn- sql-cls-upd-meta-data [mr mk-id]
   (let [colomn (col-key-for-mr-type mr)
-
         md-sql (-> (sql/where [:and
                                [:= :meta_key_id mk-id]
                                [:= colomn (to-uuid (-> mr :id) colomn)]])
@@ -51,22 +37,10 @@
 
 (defn- sql-cls-upd-meta-data-new [stmt mr mk-id]
   (let [colomn (col-key-for-mr-type mr)
-
         md-sql (-> stmt
                    (sql/where [:and
                                [:= :meta_key_id mk-id]
                                [:= colomn (to-uuid (-> mr :id) colomn)]]))]
-    md-sql))
-
-(defn- sql-cls-upd-meta-data-typed-id [mr mk-id md-type]
-  (let [colomn (col-key-for-mr-type mr)
-
-        md-sql (-> (sql/where [:and
-                               [:= :meta_key_id mk-id]
-                               [:= :type md-type]
-                               [:= colomn (to-uuid (-> mr :id) colomn)]])
-                   sql-format
-                   sd/hsql-upd-clause-format)]
     md-sql))
 
 (defn- sql-cls-upd-meta-data-typed-id-new [stmt mr mk-id md-type]
@@ -94,7 +68,6 @@
   ([mr mk-id md-type db]
    (let [mr-id (str (-> mr :id))
          mr-key (col-key-for-mr-type mr)
-         p (println ">o> mr-key=" mr-key)
          db-query (-> (sql/select :*)
                       (sql/from :meta_data)
                       (sql/where [:and
@@ -111,18 +84,11 @@
 (defn- db-create-meta-data
   ([db meta-data]
    (logging/info "db-create-meta-data: " meta-data)
-   (let [;result (first (jdbc/insert! db :meta_data meta-data))
-
-         p (println ">o> meta-data=" meta-data)
-
-         sql-query (-> (sql/insert-into :meta_data)
+   (let [sql-query (-> (sql/insert-into :meta_data)
                        (sql/values [(convert-map-if-exist meta-data)])
                        (sql/returning :*)
                        sql-format)
-         ;result (jdbc/execute-one! db sql-query {:builder-fn jdbc-rs/as-unqualified-lower-maps})
-         result (jdbc/execute-one! db sql-query builder-fn-options-default)
-         p (println ">o> db-create-meta-data.result=" result)]
-
+         result (jdbc/execute-one! db sql-query builder-fn-options-default)]
      (if result
        result
        nil)))
@@ -142,63 +108,11 @@
      ;              "MD-new: " md)
      (db-create-meta-data db md))))
 
-(comment
-
-  (let [;meta-data= {:meta_key_id test:json, :type MetaDatum::JSON, :created_by_id #uuid "51dbe6fe-3b4a-46b6-a38d-5b00cb1e7198", :media_entry_id #uuid "01624c98-2fee-4b26-8cf0-2b4e9221de25", :json {some_boolean true, zero_point -273.15, seq [1 2 nil]}}
-
-        data {:meta-key-id "test:zwei"
-              :type "MetaDatum::JSON"
-              :created-by-id (java.util.UUID/fromString "67ce2f2f-441d-48aa-b1bb-a8625a37dded")
-              :media-entry-id (java.util.UUID/fromString "8ab7f7c2-26da-4e19-8c65-e5bc6f2b2cb1")
-
-              ;; fails because of missing jsonb-cast
-              ;:json "{'some-boolean': true,
-              ;      'zero-point': -273.15,
-              ;      'seq': [1, 2, 3]}"
-
-              ;; TODO: move this to helper
-              ;; Solution #1
-              ;:json [:cast "{\"some-boolean\": true,
-              ;      \"zero-point\": -273.15,
-              ;      \"seq\": [1, 2, 3]}" :jsonb]
-
-              ;; Solution #2, use helper::convert-map-if-exist, works
-              :json {:some_boolean true, :zero_point -273.15, :seq [1 2 nil]}
-
-;; Solution #3, wont work - cast missing
-              ;;   (jdbc/execute! db-spec ["INSERT INTO your_table (jsonb_column_name) VALUES (?::jsonb)" jsonb-data]))
-              ;:json (json/generate-string  {:some_boolean true, :zero_point -273.15, :seq [1 2 nil]})
-              }
-        data (convert-map-if-exist data)
-        p (println ">o> data" data)
-
-        _query (-> (sql/insert-into :meta_data)
-                   (sql/values [data])
-                   (sql/returning :*)
-                   sql-format)
-
-        query (-> (sql/insert-into :meta_data)
-                  (sql/values [(convert-map-if-exist data)])
-                  (sql/returning :*)
-                  sql-format)
-
-        p (println ">o> query" query)
-        result (jdbc/execute-one! (get-ds) query)
-
-        p (println "result" result)]
-    result))
-
 (defn- handle-delete-meta-data [req]
   (let [mr (-> req :media-resource)
         meta-data (-> req :meta-data)
         meta-key-id (:meta_key_id meta-data)
-        ;del-clause (sql-cls-upd-meta-data mr meta-key-id)
-
-        ;    del-result (jdbc/delete! (get-ds) :meta_data del-clause)]
-        ;(if (= 1 (first del-result))
-
         sql-query (-> (sql/delete-from :meta_data)
-                      ;(sql/where del-clause)
                       (sql-cls-upd-meta-data-new mr meta-key-id)
                       sql-format)
         del-result (jdbc/execute-one! (get-ds) sql-query)]
@@ -212,32 +126,19 @@
   (try
     (catcher/with-logging {}
       (let [mr (-> req :media-resource)
-            ;upd-data2 (assoc upd-data (col-key-for-mr-type mr) (:id mr))
             meta-key-id (-> req :parameters :path :meta_key_id)
-            ;upd-clause (sql-cls-upd-meta-data-typed-id-new mr meta-key-id md-type)
-
-            ;upd-result (jdbc/update! (get-ds) :meta_data upd-data upd-clause)
-
-            p (println ">o> upd-data=" upd-data)
-            ;p (println ">o> upd-clause=" upd-clause)
-
             sql-query (-> (sql/update :meta_data)
                           (sql/set (convert-map-if-exist upd-data))
-                          ;(sql/where upd-clause)
                           (sql-cls-upd-meta-data-typed-id-new mr meta-key-id md-type)
                           sql-format)
             upd-result (jdbc/execute-one! (get-ds) sql-query)
-
-            result-data (db-get-meta-data mr meta-key-id md-type)
-            p (println ">o> upd-result=" upd-result)
-            p (println ">o> result-data=" result-data)]
+            result-data (db-get-meta-data mr meta-key-id md-type)]
 
         (sd/logwrite req (str "handle_update-meta-data-text-base:"
                               " mr-id: " (:id mr)
                               " mr-type: " (:type mr)
                               " md-type: " md-type
                               " meta-key-id: " meta-key-id
-                                         ;" upd-clause: " upd-clause
                               " upd-result: " upd-result))
 
         (if (= 1 (::jdbc/update-count upd-result))
@@ -350,18 +251,11 @@
   (let [data {:meta_datum_id md-id
               :keyword_id kw-id
               :created_by_id user-id}
-
-        ;result (jdbc/insert! db :meta_data_keywords data)]
-
-        p (println ">o> data=" data)
-
         sql-query (-> (sql/insert-into :meta_data_keywords)
                       (sql/values [data])
                       (sql/returning :*)
                       sql-format)
-        result (jdbc/execute! db sql-query builder-fn-options-default)
-        p (println ">o> result=" result)]
-
+        result (jdbc/execute! db sql-query builder-fn-options-default)]
     (logging/info "db-create-meta-data-keyword"
                   "\nkw-data\n" data
                   "\nresult\n" result)
@@ -369,16 +263,10 @@
 
 (defn- db-delete-meta-data-keyword
   [db md-id kw-id]
-  (let [;query ["meta_datum_id = ? AND keyword_id = ?" md-id kw-id]
-
-        ;result (jdbc/delete! db :meta_data_keywords query)]
-
-        sql-query (-> (sql/delete-from :meta_data_keywords)
+  (let [sql-query (-> (sql/delete-from :meta_data_keywords)
                       (sql/where [:= :meta_datum_id md-id] [:= :keyword_id kw-id])
                       sql-format)
-        result (jdbc/execute-one! db sql-query)
-        p (println ">o> result=" result)]
-
+        result (jdbc/execute-one! db sql-query)]
     (logging/info "db-delete-meta-data-keyword"
                   "\nmd-id\n" md-id
                   "\nkw-id\n" kw-id
@@ -396,11 +284,7 @@
   (try
     (catcher/with-logging {}
       (jdbc/with-transaction [tx (get-ds)]
-        ;(jdbc/with-transaction [tx get-ds]
-
-        (let [meta-data (db-get-meta-data mr meta-key-id nil tx)
-              p (println ">o> meta-data=" meta-data)])
-
+        (let [meta-data (db-get-meta-data mr meta-key-id nil tx)])
         (if-let [meta-data (db-get-meta-data mr meta-key-id nil tx)]
           ; already has meta-data
           (if-let [result (db-create-meta-data-keyword tx (:id meta-data) kw-id user-id)]
@@ -427,12 +311,7 @@
       (let [mr (-> req :media-resource)
             meta-key-id (-> req :parameters :path :meta_key_id)
             kw-id (-> req :parameters :path :keyword_id)
-            user-id (-> req :authenticated-entity :id)
-
-            p (println ">o> handle_create-meta-data-keyword.mr=" mr)
-            p (println ">o> handle_create-meta-data-keyword.meta=" meta-key-id)
-            p (println ">o> handle_create-meta-data-keyword.kw=" kw-id)
-            p (println ">o> handle_create-meta-data-keyword.user-id=" user-id)]
+            user-id (-> req :authenticated-entity :id)]
 
         (if-let [result (create_md_and_keyword mr meta-key-id kw-id user-id)]
           ;((sd/logwrite req  (str "handle_create-meta-data-keyword:" "mr-id: " (:id mr) "kw-id: " kw-id "result: " result))
@@ -504,11 +383,6 @@
   (let [data {:meta_datum_id (to-uuid md-id)
               :person_id person-id
               :created_by_id user-id}
-
-        p (println ">o> db-create-meta-data-people.data=" data)
-
-        ;result (jdbc/insert! db :meta_data_people data)]
-
         sql-query (-> (sql/insert-into :meta_data_people)
                       (sql/values [data])
                       (sql/returning :*)
@@ -612,25 +486,16 @@
             person-id (-> req :parameters :path :person_id)
             md (db-get-meta-data mr meta-key-id MD_TYPE_PEOPLE)
             md-id (-> md :id)
-
-            p (println ">o> md-id=" md-id)
-            p (println ">o> person-id=" person-id)
-
             sql-query (-> (sql/delete-from :meta_data_people)
                           (sql/where [:and
                                       [:= :meta_datum_id md-id]
                                       [:= :person_id person-id]])
                           sql-format)
             del-result (jdbc/execute-one! (get-ds) sql-query)]
-
-        ;mdr-clause ["meta_datum_id = ? AND person_id = ?" md-id person-id]
-        ;del-result (jdbc/delete! (get-ds) :meta_data_people mdr-clause)]
-
         (sd/logwrite req (str "\nhandle_delete-meta-data-people:"
                               "\nmr-id: " (:id mr)
                               " meta-key: " meta-key-id
                               " person-id: " person-id
-                                         ;" upd-cls: " mdr-clause
                               " result: " del-result))
 
         (if (= 1 (:next.jdbc/update-count del-result))
@@ -650,14 +515,10 @@
               :person_id person-id
               :role_id role-id
               :position position}
-
-        ;result (jdbc/insert! db :meta_data_roles data)]
-
         sql-query (-> (sql/insert-into :meta_data_roles)
                       (sql/values [data])
                       sql-format)
         result (jdbc/execute! db sql-query)]
-
     result))
 
 (defn- create_md_and_role
@@ -753,10 +614,7 @@
                     "meta_datum_id" md-id
                     "role_id" role-id
                     "person_id" person-id)
-
-        ;del-result (jdbc/delete! (get-ds) :meta_data_roles del-clause)]
-
-        sql-query (-> (sql/delete-from :meta_data_roles)
+       sql-query (-> (sql/delete-from :meta_data_roles)
                       (sql/where del-clause)
                       sql-format)
         del-result (jdbc/execute! (get-ds) sql-query)]
@@ -1349,7 +1207,6 @@
                                    :meta_key_id s/Str
                                    :person_id s/Uuid}}
                :responses {200 {:body s/Any}}}}]
-    ; TODO meta-data roles
     ["/:meta_key_id/role"
      {:get {:summary "Get meta-data role for media-entry."
             :handler handle_get-meta-data-roles

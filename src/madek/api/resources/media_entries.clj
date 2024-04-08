@@ -4,26 +4,19 @@
             [clojure.spec.alpha :as sa]
             [clojure.tools.logging :as logging]
             [honey.sql :refer [format] :rename {format sql-format}]
-
             [honey.sql.helpers :as sql]
-
             [madek.api.authorization :as authorization]
             [madek.api.constants :refer [FILE_STORAGE_DIR]]
             [madek.api.db.core :refer [get-ds]]
             [madek.api.resources.media-entries.index :refer [get-index
                                                              get-index_related_data]]
-            ;[madek.api.utils.rdbms :as rdbms]
             [madek.api.resources.media-entries.media-entry :refer [get-media-entry]]
             [madek.api.resources.shared :as sd]
-            [madek.api.utils.helper :refer [array-to-map convert-map-if-exist map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-            [next.jdbc :as jdbc] ;[pantomime.mime :refer [mime-type-of]]
-
-   ;; all needed imports
+            [madek.api.utils.helper :refer [convert-map-if-exist to-uuid]]
+            [next.jdbc :as jdbc]
             [reitit.coercion.schema]
-   ;[leihs.core.db :as db]
             [reitit.coercion.spec]
             [reitit.ring.middleware.multipart :as multipart]
-
             [schema.core :as s]))
 (defn handle_query_media_entry [req]
   (get-index req))
@@ -39,14 +32,7 @@
 ; TODO try catch
 (defn handle_delete_media_entry [req]
   (let [eid (-> req :parameters :path :media_entry_id)
-
         mr (-> req :media-resource)
-
-        ;fclause ["media_entry_id = ?" eid]
-        ;fresult (jdbc/delete! (get-ds) :media_files fclause)
-        ;dclause ["id = ?" eid]
-        ;dresult (jdbc/delete! (rdbms/get-ds) :media_entries dclause)]
-
         sql-query-files (-> (sql/delete :media_files)
                             (sql/where [:= :media_entry_id eid])
                             sql-format)
@@ -58,9 +44,7 @@
 
     (logging/info "handle_delete_media_entry"
                   "\n eid: \n" eid
-      ;"\n fclause: \n" fclause
                   "\n fresult: \n" fresult
-      ;"\n dclause: \n" dclause
                   "\n dresult: \n" dresult)
     (if (= 1 (first dresult))
       (sd/response_ok {:deleted mr})
@@ -68,15 +52,12 @@
 
 (defn- get-context-keys-4-context [contextId]
   (map :meta_key_id
-    ;(sd/query-eq-find-all :context_keys :context_id contextId)))
        (sd/query-eq-find-all :context_keys :context_id (to-uuid contextId))))
 
 (defn- check-has-meta-data-for-context-key [meId mkId]
-  ;(let [md (sd/query-eq-find-one :meta_data :media_entry_id (str meId) :meta_key_id mkId)
   (let [md (sd/query-eq-find-one :meta_data :media_entry_id (to-uuid meId) :meta_key_id mkId)
         hasMD (not (nil? md))
         result {(keyword mkId) hasMD}]
-    ;(logging/info "check-has-meta-data-for-context-key:" meId  ":"  result)
     result))
 
 (defn handle_try-publish-media-entry [req]
@@ -104,11 +85,7 @@
                   "\n publishable: \n" publishable)
     (if (true? publishable)
       (let [data {:is_published true}
-
-            ;dresult (jdbc/update! (rdbms/get-ds) :media_entries data ["id = ?" eid])]
-
             eid (to-uuid eid)
-
             sql-query (-> (sql/update :media_entries)
                           (sql/set data)
                           (sql/where [:= :id eid])
@@ -162,19 +139,19 @@
     (io/copy (io/file temp-path) (io/file store-location))
     (sd/response_ok {:media_entry (assoc media-entry :media_file media-file)})))
 
-; We dont do add meta-data or collection.
-; This is done via front-end.
-;(me_add-default-license new-mer)
-;(me_exract-and-store-metadata new-mer)
-;(me_add-to-collection new-mer (or col_id_param (-> workflow :master_collection :id)))
-;(if-let [collection (sd/query-eq-find-one "collections" "id" collection-id)]
-;  (if-let [add-col-res (collection-media-entry-arcs/create-col-me-arc collection-id (:id media-entry) {} tx)]
-;    (logging/info "handle_uploaded_file_resp_ok: added to collection: " collection-id "\nresult\n" add-col-res)
-;    (logging/error "Failed: handle_uploaded_file_resp_ok: add to collection: " collection-id))
-;    (sd/response_ok {:media_entry (assoc media-entry :media_file media-file :collection_id collection-id)})
-;    (sd/response_ok {:media_entry (assoc media-entry :media_file media-file)}))
+    ; We dont do add meta-data or collection.
+    ; This is done via front-end.
+    ;(me_add-default-license new-mer)
+    ;(me_exract-and-store-metadata new-mer)
+    ;(me_add-to-collection new-mer (or col_id_param (-> workflow :master_collection :id)))
+    ;(if-let [collection (sd/query-eq-find-one "collections" "id" collection-id)]
+    ;  (if-let [add-col-res (collection-media-entry-arcs/create-col-me-arc collection-id (:id media-entry) {} tx)]
+    ;    (logging/info "handle_uploaded_file_resp_ok: added to collection: " collection-id "\nresult\n" add-col-res)
+    ;    (logging/error "Failed: handle_uploaded_file_resp_ok: add to collection: " collection-id))
+    ;    (sd/response_ok {:media_entry (assoc media-entry :media_file media-file :collection_id collection-id)})
+    ;    (sd/response_ok {:media_entry (assoc media-entry :media_file media-file)}))
 
-;))
+  ;))
 
 (defn create-media_entry
   "Only for testing. Does not trigger media convert. So previews are missing."
@@ -197,38 +174,17 @@
               me-id (:id new-mer)
               mf (new_media_file_attributes file user-id mime)
               new-mf (assoc mf :media_entry_id me-id)
-
               sql-query (-> (sql/insert-into :media_files)
                             (sql/values [(convert-map-if-exist new-mf)])
                             sql-format)
-              new-mfr (jdbc/execute-one! tx sql-query)
-
-              ;(first (jdbc/insert! tx "media_files" new-mf))
-              ]
+              new-mfr (jdbc/execute-one! tx sql-query)]
 
           (logging/info "\ncreate-me: " "\ncreated media-entry: " new-mer "\nnew media-file: " new-mf)
 
-          ;(if-let [new-mfr (first (jdbc/insert! tx "media_files" new-mf))]
           (if new-mfr
             (handle_uploaded_file_resp_ok file new-mfr new-mer collection-id tx)
             (sd/response_failed "Could not create media-file" 406)))
-
-        (sd/response_failed "Could not create media-entry" 406))
-
-      ;(jdbc/with-db-transaction [tx (get-ds)]
-      ;  (if-let [new-mer (first (jdbc/insert! tx "media_entries" new-me))]
-      ;    (let [me-id (:id new-mer)
-      ;          mf (new_media_file_attributes file user-id mime)
-      ;          new-mf (assoc mf :media_entry_id me-id)]
-      ;
-      ;      (logging/info "\ncreate-me: " "\ncreated media-entry: " new-mer "\nnew media-file: " new-mf)
-      ;
-      ;      (if-let [new-mfr (first (jdbc/insert! tx "media_files" new-mf))]
-      ;        (handle_uploaded_file_resp_ok file new-mfr new-mer collection-id tx)
-      ;        (sd/response_failed "Could not create media-file" 406)))
-      ;
-      ;    (sd/response_failed "Could not create media-entry" 406))
-      )))
+        (sd/response_failed "Could not create media-entry" 406)))))
 ; this is only for dev
 ; no collection add
 ; no meta data / entry clone
