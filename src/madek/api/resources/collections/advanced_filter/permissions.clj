@@ -1,15 +1,7 @@
 (ns madek.api.resources.collections.advanced-filter.permissions
   (:require
-   [clojure.tools.logging :as logging]
    ;; all needed imports
-   [honey.sql :refer [format] :rename {format sql-format}]
-   [honey.sql.helpers :as sql]
-   [logbug.catcher :as catcher]
-   [logbug.debug :as debug]
-   [madek.api.db.core :refer [get-ds]]
-   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-   ;[leihs.core.db :as db]
-   [next.jdbc :as jdbc]))
+   [honey.sql.helpers :as sql]   ))
 
 ;(defn- api-client-authorized-condition [perm id]
 ;  [:or

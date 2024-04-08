@@ -1,18 +1,14 @@
 (ns madek.api.resources.collections.index
   (:require
-   [clojure.tools.logging :as logging]
    ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-   [logbug.debug :as debug]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.pagination :as pagination]
-   [madek.api.resources.collections.advanced-filter.permissions :as permissions :refer [filter-by-query-params]]
+   [madek.api.resources.collections.advanced-filter.permissions :as permissions]
    [madek.api.resources.shared :as sd]
-   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-   [next.jdbc :as jdbc]
-   [taoensso.timbre :refer [debug info warn error spy]]))
+   [next.jdbc :as jdbc]))
 
 ;### collection_id ############################################################
 

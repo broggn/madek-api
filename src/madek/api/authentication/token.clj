@@ -1,7 +1,5 @@
 (ns madek.api.authentication.token
   (:require
-   ;[clojure.java.jdbc :as jdbc]
-   [clojure.tools.logging :as logging]
    [clojure.walk :refer [keywordize-keys]]
    ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]

@@ -5,8 +5,7 @@
    [honey.sql.helpers :as sql]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.utils.helper :refer [to-uuid]]
-   [next.jdbc :as jdbc]
-   [taoensso.timbre :refer [debug error info spy warn]]))
+   [next.jdbc :as jdbc]))
 
 (defn sql-merge-where-id
   ([group-id] (sql-merge-where-id {} group-id))

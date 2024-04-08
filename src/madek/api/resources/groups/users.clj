@@ -4,19 +4,16 @@
    [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [logbug.debug :as debug]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.pagination :as pagination]
    [madek.api.resources.groups.shared :as groups]
-
    ; all needed imports
    [madek.api.resources.shared :as sd]
 
    [madek.api.utils.helper :refer [convert-groupid-userid]]
    [madek.api.utils.helper :refer [to-uuid]]
    [next.jdbc :as jdbc]
-   [schema.core :as s]
-   [taoensso.timbre :refer [spy]]))
+   [schema.core :as s]))
 
 ;;; temporary users stuff ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -24,9 +21,9 @@
   ([] (sql-select {}))
   ([sql-map]
    (sql/select sql-map :*
-     ;:users.id :users.email :users.institutional_id :users.login
-     ;:users.created_at :users.updated_at
-     ;:users.person_id
+               ;:users.id :users.email :users.institutional_id :users.login
+               ;:users.created_at :users.updated_at
+               ;:users.person_id
                )))
 
 (defn sql-merge-user-where-id
@@ -206,7 +203,6 @@
 (def schema_update-group-user-list
   {:users
    [{(s/required-key :id) s/Uuid
-     ;[{(s/optional-key :id) s/Uuid
      (s/optional-key :institutional_id) s/Uuid
      (s/optional-key :email) s/Str}]})
 

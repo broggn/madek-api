@@ -17,8 +17,7 @@
    [madek.api.utils.config :refer [get-config
                                    parse-config-duration-to-seconds]]
    [next.jdbc :as jdbc]
-
-   [taoensso.timbre :refer [debug spy]]))
+   [taoensso.timbre :refer [debug]]))
 
 (defn- get-session-secret []
   (-> (get-config) :madek_master_secret))
@@ -26,11 +25,8 @@
 (defn- get-user [user-id]
   (when-let [user (jdbc/execute-one! (get-ds) (-> (sql/select :*)
                                                   (sql/from :users)
-                                                 (sql/where :id user-id)
-                                                  sql-format))
-                                     ;["SELECT * FROM users WHERE id = ? " user-id])
-             ]
-
+                                                  (sql/where [:= :id user-id])
+                                                  sql-format))]
     (assoc user :type "User")))
 
 (defn- get-madek-session-cookie-name []

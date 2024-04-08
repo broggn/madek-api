@@ -2,43 +2,35 @@
   (:require
    [camel-snake-kebab.core :refer :all]
    [cider-ci.open-session.bcrypt :refer [checkpw]]
-   ;[clojure.java.jdbc :as jdbc]
    [clojure.tools.logging :as logging]
    [clojure.walk :refer [keywordize-keys]]
    ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [inflections.core :refer :all]
-   [logbug.debug :as debug]
-   [logbug.debug :as debug]
-   [logbug.thrown :as thrown]
    [madek.api.authentication.token :as token-authentication]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
-   [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-   [next.jdbc :as jdbc]
-   [taoensso.timbre :refer [info warn error spy]])
-  (:import
-   [java.util Base64]))
+   [next.jdbc :as jdbc])
+(:import
+ [java.util Base64]))
 
-;; TODO
 (defn- get-by-login [table-name login]
   (->> (jdbc/execute! (get-ds) (-> (sql/select :*) (sql/from table-name) (sql/where [:= :login login]) sql-format))
-    ;[(str "SELECT * FROM " table-name " WHERE login = ?") login])
     (map #(assoc % :type (-> table-name ->PascalCase singular)))
     (map #(clojure.set/rename-keys % {:email :email_address}))
     first))
 
 (defn- get-api-client-by-login [login]
   (->> (jdbc/execute! (get-ds) (-> (sql/select :*) (sql/from :api_clients) (sql/where [:= :login login]) sql-format))
-    ;[(str "SELECT * FROM api_clients WHERE login = ?") login])
     (map #(assoc % :type "ApiClient"))
     first))
 
 (defn- get-user-by-login-or-email-address [login-or-email]
-  (->> (jdbc/execute! (get-ds) (-> (sql/select :*) (sql/from :users) (sql/where [:or [:= :login login-or-email] [:= :email login-or-email]]) sql-format))
-    ;[(str "SELECT * FROM users WHERE login = ? OR email = ?")
-    ; login-or-email login-or-email])
+  (->> (jdbc/execute! (get-ds) (-> (sql/select :*)
+                                   (sql/from :users)
+                                   (sql/where [:or [:= :login login-or-email] [:= :email login-or-email]])
+                                   sql-format))
     (map #(assoc % :type "User"))
     (map #(clojure.set/rename-keys % {:email :email_address}))
     first))
@@ -48,12 +40,10 @@
     (get-user-by-login-or-email-address login-or-email)))
 
 (defn- get-auth-systems-user [userId]
-  ;(->>
-  (jdbc/execute-one! (get-ds) (-> (sql/select :*) (sql/from :auth_systems_users) (sql/where [:= :user_id userId]) sql-format))
-  ;[(str "SELECT * FROM auth_systems_users WHERE auth_system_id = ? AND user_id = ? ")
-  ; "password" userId])
-  ;first)
-  )
+  (jdbc/execute-one! (get-ds) (-> (sql/select :*)
+                                  (sql/from :auth_systems_users)
+                                  (sql/where [:= :user_id userId])
+                                  sql-format)))
 
 (defn base64-decode [^String encoded]
   (String. (.decode (Base64/getDecoder) encoded)))
