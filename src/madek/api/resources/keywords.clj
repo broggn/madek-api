@@ -1,29 +1,18 @@
 (ns madek.api.resources.keywords
   (:require
-   [cheshire.core :as json]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-
-   [logbug.debug :as debug]
-
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.keywords.keyword :as kw]
-
    [madek.api.resources.shared :as sd]
-   ;; all needed imports
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-
-   [madek.api.utils.helper :refer [array-to-map map-to-array format-uris convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-
-   [madek.api.utils.helper :refer [t d]]
-
+   [madek.api.utils.helper :refer [convert-map]]
+   [madek.api.utils.helper :refer [d t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-
    [schema.core :as s]
-
-   [taoensso.timbre :refer [info warn error spy]]))
+   [taoensso.timbre :refer [spy]]))
 
 ;### swagger io schema ####################################################################
 
@@ -35,15 +24,6 @@
    (s/optional-key :external_uris) [s/Str]
    (s/optional-key :rdf_class) s/Str})
 
-(def schema_create_keyword2
-  {:meta_key_id s/Str
-   :term s/Str
-
-   ;(s/optional-key :description) (s/maybe s/Str)
-   ;(s/optional-key :position) (s/maybe s/Int)
-   ;(s/optional-key :external_uris) [s/Str]
-   ;(s/optional-key :rdf_class) s/Str
-   })
 (def schema_update_keyword
   {;id
    ;(s/optional-key :meta_key_id) s/Str
@@ -75,20 +55,6 @@
    :creator_id (s/maybe s/Uuid)
    :created_at s/Any
    :updated_at s/Any})
-
-(def schema_export_keyword_adm2
-  {;:id s/Uuid
-   :meta_key_id s/Str
-   :term s/Str
-   ;:description (s/maybe s/Str)
-   ;:position (s/maybe s/Int)
-   ;:external_uris [s/Any]
-   ;:external_uri (s/maybe s/Str)
-   ;:rdf_class s/Str
-   ;:creator_id (s/maybe s/Uuid)
-   ;:created_at s/Any
-   ;:updated_at s/Any
-   })
 
 (def schema_query_keyword
   {(s/optional-key :id) s/Uuid
@@ -145,24 +111,15 @@
   (try
     (catcher/with-logging {}
       (let [uid (-> req :authenticated-entity :id)
-
-            ;;; TODO: remove this
-            ;uid #uuid "11571ab5-293c-40d8-bd01-89597fdf3daf"
-
             data (-> req :parameters :body)
             dwid (assoc data :creator_id uid)
-
-            ;; TODO / FIXME:  convert external_uris to hstore
             sql-query (-> (sql/insert-into :keywords)
                           (sql/values [(convert-map dwid)])
                           (sql/returning :*)
-                          ;(sql/returning :meta_key_id :term)
                           sql-format
                           spy)
 
-            ins-result (jdbc/execute-one! (get-ds) sql-query)
-            p (println ">o> ins-result" ins-result)]
-
+            ins-result (jdbc/execute-one! (get-ds) sql-query)]
         (if-let [result ins-result]
           (sd/response_ok (adm-export-keyword result))
           (sd/response_failed "Could not create keyword" 406))))
@@ -172,29 +129,6 @@
   (let [transformed-urls urls
         combined-str (str "'{" (clojure.string/join "," transformed-urls) "}'")]
     [:raw combined-str]))
-
-(comment
-  (let [uris ["http://www.ige.ch", "http://www.example.com"]
-        ;uris ["http://www.examp2le.com"]
-
-        dwid {:meta_key_id "copyright:license"
-              :term "aaa99-8s22292"
-
-              ;:external_uris [:raw "'{test/me/now/78}'"]    ;;works
-              ;:external_uris [:raw "'{test/me/now/78,test/me/now/99}'"]    ;;works
-              :external_uris (urls-to-custom-format uris) ;;works
-              }
-        sql-query (-> (sql/insert-into :keywords)
-                      (sql/values [dwid])
-                      (sql/returning :*)
-                      ;(sql-format :inline true)
-                      sql-format
-                      spy)
-        ins-result (jdbc/execute-one! (get-ds) sql-query)
-        p (println ">o> ins-result" ins-result)
-
-        res (adm-export-keyword ins-result)]
-    res))
 
 (defn handle_update-keyword [req]
   (try
@@ -277,7 +211,6 @@
                                        :default 10}}]}
 
       :responses {200 {:body {:keywords [schema_export_keyword_usr]}}
-
                   202 {:description "Successful response, list of items."
                        :schema {} ;; Define your response schema as needed
                        :examples {"application/json" {:message "Here are your items."
@@ -316,7 +249,6 @@
       :handler handle_create-keyword
       :middleware [wrap-authorize-admin!]
       :parameters {:body schema_create_keyword}
-      ;:responses {200 {:body schema_export_keyword_adm2}
       :responses {200 {:body schema_export_keyword_adm}
                   406 {:body s/Any}}}}]
    ["/:id"
@@ -326,9 +258,7 @@
       :middleware [wrap-authorize-admin!
                    wrap-find-keyword]
       :coercion reitit.coercion.schema/coercion
-
       :parameters {:path {:id s/Uuid}}
-
       :responses {200 {:body schema_export_keyword_adm}
                   404 {:body s/Any}}
       :description "Get keyword for id. Returns 404, if no such keyword exists."}

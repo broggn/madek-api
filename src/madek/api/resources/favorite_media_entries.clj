@@ -5,11 +5,10 @@
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [madek.api.authorization :as authorization]
-   ;; all needed imports
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids t f to-uuid merge-query-parts]]
+   [madek.api.utils.helper :refer [t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]))
@@ -50,7 +49,6 @@
         (if-let [favorite_media_entry (-> req res-req-name)]
           ; already has favorite_media_entry
           (sd/response_ok favorite_media_entry)
-
           (let [sql-query (-> (sql/insert-into :favorite_media_entries)
                               (sql/values [data])
                               sql-format)
@@ -69,7 +67,6 @@
       (let [favorite_media_entry (-> req res-req-name)
             user-id (:user_id favorite_media_entry)
             media_entry-id (res-col-name favorite_media_entry)]
-
         (let [sql-query (-> (sql/delete-from :favorite_media_entries)
                             (sql/where [:= :user_id user-id] [:= :media_entry_id media_entry-id])
                             sql-format)

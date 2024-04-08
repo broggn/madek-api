@@ -9,16 +9,12 @@
             [madek.api.resources.groups.users :as group-users]
             [madek.api.resources.shared :as sd]
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-            [madek.api.utils.helper :refer [array-to-map map-to-array convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-            [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
-            [madek.api.utils.helper :refer [convert-groupid]]
-
-            [madek.api.utils.helper :refer [mslurp]]
+            [madek.api.utils.helper :refer [convert-groupid f t mslurp]]
             [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
             [next.jdbc :as jdbc]
             [reitit.coercion.schema]
             [schema.core :as s]
-            [taoensso.timbre :refer [spy error info warn]]))
+            [taoensso.timbre :refer [error spy]]))
 
 ;### create group #############################################################
 
@@ -53,20 +49,17 @@
         update-count (get res :next.jdbc/update-count)]
 
     (if (= 1 update-count)
-      {:status 204 :content-type "application/json"} ;TODO / FIXME: repsonse is of type octet-stream
+      {:status 204 :content-type "application/json"} ;TODO / FIXME: repsonse is of type octet-stream?
       {:status 404})))
 
 ;### patch group ##############################################################
 (defn db_update-group [group-id body]
-  (let [sett (-> body convert-sequential-values-to-sql-arrays)
-        where-clause (:where (groups/jdbc-update-group-id-where-clause group-id))
-
+  (let [where-clause (:where (groups/jdbc-update-group-id-where-clause group-id))
         fir (-> (sql/update :groups)
                 (sql/set (-> body convert-sequential-values-to-sql-arrays))
                 (sql/where where-clause)
                 (sql/returning :*)
                 sql-format)
-
         result (jdbc/execute-one! (get-ds) fir)]
     result))
 
@@ -92,17 +85,13 @@
         (sd/build-query-param query-params :id)
         (sd/build-query-param query-params :institutional_id)
         (sd/build-query-param query-params :type)
-
-        ;(sd/build-query-param query-params :person_id) ;; TODO: FIX: person_id is not in the groups table
         (sd/build-query-param query-params :created_by_user_id)
-
         (sd/build-query-param-like query-params :name)
         (sd/build-query-param-like query-params :institutional_name)
         (sd/build-query-param-like query-params :institution)
         (sd/build-query-param-like query-params :searchable)
         (pagination/add-offset-for-honeysql query-params)
-        sql-format
-        spy)))
+        sql-format)))
 
 (defn index [request]
   (let [result (jdbc/execute! (get-ds) (build-index-query request))]
@@ -118,8 +107,6 @@
    (s/optional-key :institutional_id) (s/maybe s/Str)
    (s/optional-key :institutional_name) (s/maybe s/Str)
    (s/optional-key :institution) (s/maybe s/Str)
-
-   ;(s/optional-key :person_id) (s/maybe s/Uuid) ;; TODO: FIX: person_id is not in the groups table
    (s/optional-key :created_by_user_id) (s/maybe s/Uuid)})
 
 (def schema_update-group
@@ -128,8 +115,6 @@
    (s/optional-key :institutional_id) (s/maybe s/Str)
    (s/optional-key :institutional_name) (s/maybe s/Str)
    (s/optional-key :institution) (s/maybe s/Str)
-
-   ;(s/optional-key :person_id) (s/maybe s/Uuid) ;; TODO: FIX: person_id is not in the groups table
    (s/optional-key :created_by_user_id) (s/maybe s/Uuid)})
 
 (def schema_export-group
@@ -142,16 +127,10 @@
    (s/optional-key :institutional_id) (s/maybe s/Str)
    (s/optional-key :institutional_name) (s/maybe s/Str)
    (s/optional-key :institution) (s/maybe s/Str)
-
-   ;(s/optional-key :person_id) (s/maybe s/Uuid) ;; TODO: FIX: person_id is not in the groups table
-   ;(s/optional-key :created_by_user_id) (s/maybe s/Uuid)
-
    (s/optional-key :searchable) s/Str})
 
 (defn handle_create-group
-  "TODO  catch errors"
   [request]
-
   (try
     (let [params (get-in request [:parameters :body])
           data_wid (assoc params :id (or (:id params) (clj-uuid/v4)))
@@ -160,11 +139,9 @@
                                                         (sql/values [data_wtype])
                                                         (sql/returning :*)
                                                         sql-format)))
-
           result (dissoc resultdb :previous_id :searchable)]
       (logging/info (apply str ["handler_create-group: \ndata:" data_wtype "\nresult-db: " resultdb "\nresult: " result]))
       {:status 201 :body result})
-
     (catch Exception e
       (error "handle-create-group failed" {:request request})
       (sd/parsed_response_exception e))))
@@ -194,10 +171,7 @@
    (s/optional-key :institutional_id) s/Str
    (s/optional-key :institutional_name) s/Str
    (s/optional-key :institution) s/Str
-
-   ;(s/optional-key :person_id) s/Uuid ;; TODO: FIX: person_id is not in the groups table
    (s/optional-key :created_by_user_id) s/Uuid
-
    (s/optional-key :searchable) s/Str
    (s/optional-key :full_data) s/Bool
    (s/optional-key :page) s/Int
@@ -206,7 +180,6 @@
 (def user-routes
   [["/groups"
     {:swagger {:tags ["groups"]}}
-
     ["/" {:get {:summary (t "Get all group ids")
                 :description "Get list of group ids. Paging is used as you get a limit of 100 entries."
                 :handler index
@@ -237,7 +210,6 @@
                :middleware [wrap-authorize-admin!]
                :swagger {:produces "application/json"}
                :parameters {:query schema_query-groups}
-               ;:parameters {:query s/Any}
                :content-type "application/json"
                :coercion reitit.coercion.schema/coercion
                :responses {200 {:body {:groups [schema_export-group]}}}}
@@ -252,8 +224,6 @@
                 :coercion reitit.coercion.schema/coercion
                 :parameters {:body schema_import-group}
                 :responses {201 {:body schema_export-group}
-
-                            ;; FIXME: because of groups::person_id-not-exists
                             404 {:description "Not Found."
                                  :schema s/Str
                                  :examples {"application/json" {:message "User entry not found"}}}
@@ -261,7 +231,6 @@
                             409 {:description "Conflict."
                                  :schema s/Str
                                  :examples {"application/json" {:message "Entry already exists"}}}
-
                             500 {:body s/Any}}}}]
 
    ["/:id" {:get {:summary (t "Get group by id OR institutional-id")
@@ -279,11 +248,9 @@
                   ;; http://localhost:3104/api/admin/groups/%3Fthis%23id%2Fneeds%2Fto%2Fbe%2Furl%26encoded>,
 
                   :responses {200 {:body schema_export-group}
-
                               404 {:description "Not Found."
                                    :schema s/Str
                                    :examples {"application/json" {:message "No such group found"}}}}}
-
             :delete {:summary (f (t "Deletes a group by id"))
                      :description "Delete a group by id"
                      :handler handle_delete-group
@@ -291,21 +258,17 @@
                      :coercion reitit.coercion.schema/coercion
                      :parameters {:path {:id s/Uuid}}
                      :responses {403 {:body s/Any}
-
-                                 ;; TODO: response is of type octet-stream
+                                 ;; TODO: response of type octet-stream not yet supported?
                                  204 {:description "No Content. The resource was deleted successfully."
                                       :schema nil
                                       :examples {"application/json" nil}}}}
-
             :put {:summary (t "Get group by id")
-                  ;:description "Get group by id. Returns 404, if no such group exists."
                   :swagger {:produces "application/json"}
                   :content-type "application/json"
                   :accept "application/json"
                   :handler handle_update-group
-
+                  ;:description "Get group by id. Returns 404, if no such group exists."
                   :description (mslurp "./md/admin-groups-put.md")
-
                   :middleware [wrap-authorize-admin!]
                   :coercion reitit.coercion.schema/coercion
                   :parameters {:path {:id s/Uuid}
@@ -357,13 +320,11 @@
                                        :parameters {:path {:group-id s/Str :user-id s/Str}}
 
                                        :responses {200 {:body group-users/schema_export-group-user-simple}
-
                                                    404 {:description "Creation failed."
                                                         :schema s/Str
                                                         :examples {"application/json" {:message "No such group or user."}}}}}
 
                                  ; TODO error handling
-
                                  :put {:summary (t "Get group user by group-id and user-id")
                                        :description "Get group user by group-id and user-id."
                                        :swagger {:produces "application/json"}
@@ -377,13 +338,9 @@
                                        ;:parameters {:path {:group-id s/Uuid :user-id s/Uuid}}
 
                                        :responses {200 {:body {:users [group-users/schema_export-group-user-simple]}}
-
-                                                   ;404 {:body s/Any}
-
                                                    404 {:description "Creation failed."
                                                         :schema s/Str
                                                         :examples {"application/json" {:message "No such group or user."}}}}} ; TODO error handling
-
                                  :delete {:summary (t "Deletes a group-user by group-id and user-id")
                                           :description "Delete a group-user by group-id and user-id."
                                           ;:swagger {:produces "application/json"}
@@ -393,11 +350,9 @@
                                           :coercion reitit.coercion.schema/coercion
                                           :parameters {:path {:group-id s/Uuid :user-id s/Uuid}}
                                           :responses {200 {:body {:users [group-users/schema_export-group-user-simple]}}
-
                                                       404 {:description "Not Found."
                                                            :schema s/Str
                                                            :examples {"application/json" {:message "No such group or user."}}}
-
                                                       406 {:body s/Str}}}}] ; TODO error handling
    ])
 ;### Debug ####################################################################

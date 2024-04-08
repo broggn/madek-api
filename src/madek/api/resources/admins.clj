@@ -2,20 +2,14 @@
   (:require
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-
-   ;; all needed imports
    [logbug.catcher :as catcher]
    [madek.api.db.core :refer [get-ds]]
-
    [madek.api.resources.shared :as sd]
-
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
+   [madek.api.utils.helper :refer [t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-   [schema.core :as s]
-   [taoensso.timbre :refer [spy]]))
+   [schema.core :as s]))
 
 (defn handle_list-admin
   [req]
@@ -38,15 +32,15 @@
     (if-let [admin (-> req :admin)]
       ; already has admin
       (sd/response_ok admin)
+      ; create admin entry
       (let [user (-> req :user)
             id (:id user)
             data {:user_id id}
-            sql (spy (-> (sql/insert-into :admins)
+            sql  (-> (sql/insert-into :admins)
                          (sql/values [data])
                          (sql/returning :*)
-                         sql-format))
-            ins-res (spy (jdbc/execute! (get-ds) sql))]
-
+                         sql-format)
+            ins-res  (jdbc/execute! (get-ds) sql)]
         (sd/logwrite req (str "handle_create-admin:" " user-id: " id " result: " ins-res))
         (if-let [result (first ins-res)]
           (sd/response_ok result)
@@ -61,8 +55,7 @@
                   (sql/where [:= :id admin-id])
                   (sql/returning :*)
                   sql-format)
-          del-result (spy (jdbc/execute-one! (get-ds) sql))]
-
+          del-result  (jdbc/execute-one! (get-ds) sql)]
       (if del-result
         (sd/response_ok del-result)
         (sd/response_failed "Could not delete admin." 406)))))
@@ -85,9 +78,6 @@
 
 (def schema_export-admin
   {:id s/Uuid
-   ;:user_id s/Uuid
-   ;:updated_at s/Any
-   ;:created_at s/Any}
    (s/optional-key :user_id) s/Uuid
    (s/optional-key :updated_at) s/Any
    (s/optional-key :created_at) s/Any})
@@ -105,9 +95,7 @@
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
       :parameters {:query {(s/optional-key :full_data) s/Bool}}
-      :responses {200 {:body {:admins [schema_export-admin]}}}}}] ;; TODO: fixme
-      ;:responses {200 {:body {:admins [s/Any]}}}}}]
-
+      :responses {200 {:body {:admins [schema_export-admin]}}}}}]
    ; edit admin
    ["/:id"
     {:get

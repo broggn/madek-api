@@ -1,9 +1,7 @@
 (ns madek.api.resources.locales
   (:require
-   [clojure.tools.logging :as logging]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [logbug.debug :as debug]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.utils.config :refer [get-config]]
    [next.jdbc :as jdbc]))

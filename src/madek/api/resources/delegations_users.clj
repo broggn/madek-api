@@ -1,18 +1,13 @@
 (ns madek.api.resources.delegations-users
   (:require
    [clojure.tools.logging :as logging]
-   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [madek.api.db.core :refer [get-ds]]
-
    [madek.api.resources.shared :as sd]
-
-   [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids t f to-uuid merge-query-parts]]
+   [madek.api.utils.helper :refer [t]]
    [next.jdbc :as jdbc]
-
    [reitit.coercion.schema]
-
    [schema.core :as s]))
 
 (def res-req-name :delegation_user)
@@ -26,7 +21,6 @@
         col-sel (if (true? (-> req :parameters :query :full-data))
                   (sql/select :*)
                   (sql/select :user_id))
-
         base-query (-> col-sel (sql/from :delegations_users))
         query (cond-> base-query
                 delegation_id (sql/where [:= :delegation_id delegation_id])
@@ -60,13 +54,11 @@
   (let [user (or (-> req :user) (-> req :authenticated-entity))
         delegation (-> req :delegation)
         data {:user_id (:id user) :delegation_id (:id delegation)}
-
         sql-query (-> (sql/insert-into :delegations_users)
                       (sql/values [data])
                       (sql/returning :*)
                       sql-format)
         ins-res (jdbc/execute-one! (get-ds) sql-query)]
-
     (if ins-res
       (sd/response_ok ins-res)
       (sd/response_failed "Could not create delegations_user." 406))))
@@ -76,13 +68,11 @@
   (let [delegations_user (-> req res-req-name)
         user-id (:user_id delegations_user)
         delegation-id (res-col-name delegations_user)
-
         sql-query (-> (sql/delete-from :delegations_users)
                       (sql/where [:= :user_id user-id] [:= :delegation_id delegation-id])
                       (sql/returning :*)
                       sql-format)
         res (jdbc/execute-one! (get-ds) sql-query)]
-
     (if res
       (sd/response_ok delegations_user)
       (logging/error "Failed delete delegations_user "

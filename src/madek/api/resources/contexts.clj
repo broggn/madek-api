@@ -1,25 +1,16 @@
 (ns madek.api.resources.contexts
   (:require
    [clojure.tools.logging :as logging]
-   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-   [logbug.debug :as debug]
-
    [madek.api.db.core :refer [get-ds]]
-
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
-   ;[leihs.core.db :as db]
+   [madek.api.utils.helper :refer [cast-to-hstore t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-
-   [schema.core :as s]
-
-   [taoensso.timbre :refer [info warn error spy]]))
+   [schema.core :as s]))
 
 (defn- context_transform_ml [context]
   (assoc context
@@ -63,18 +54,15 @@
   (try
     (catcher/with-logging {}
       (let [data (-> req :parameters :body)
-
             sql (-> (sql/insert-into :contexts)
                     (sql/values [(cast-to-hstore data)])
                     (sql/returning :*)
                     sql-format)
-
-            res (jdbc/execute-one! (get-ds) sql)
-            res (context_transform_ml res)]
+            res (jdbc/execute-one! (get-ds) sql)]
 
         (if res
           ; TODO clean result
-          (sd/response_ok res)
+          (sd/response_ok (context_transform_ml res))
           (sd/response_failed "Could not create context." 406))))
     (catch Exception ex (sd/response_exception ex))))
 
@@ -90,7 +78,7 @@
                     (sql/where [:= :id id])
                     (sql/returning :*)
                     sql-format)
-            upd-result (jdbc/execute-one! (get-ds) (spy fir))]
+            upd-result (jdbc/execute-one! (get-ds)  fir)]
 
         (if upd-result
           (sd/response_ok (context_transform_ml upd-result))
@@ -106,8 +94,7 @@
             sql-query (-> (sql/delete-from :contexts)
                           (sql/where [:= :id id])
                           (sql/returning :*)
-                          sql-format
-                          spy)
+                          sql-format)
             del-result (jdbc/execute-one! (get-ds) sql-query)]
 
         (if del-result
@@ -208,7 +195,6 @@
 
   ["/contexts"
    {:swagger {:tags ["contexts"]}}
-
    ["/"
     {:get {:summary (sd/sum_usr (t "List contexts."))
            :handler handle_usr-list-contexts

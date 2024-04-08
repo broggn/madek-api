@@ -1,23 +1,16 @@
 (ns madek.api.resources.full-texts
   (:require [clojure.tools.logging :as logging]
-
-            [honey.sql :refer [format] :rename {format sql-format}]
-
-            ;; all needed imports
             [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
-            [logbug.debug :as debug]
-            [madek.api.db.core :refer [get-ds]]
             [madek.api.db.core :refer [get-ds]]
             [madek.api.pagination :as pagination]
             [madek.api.resources.shared :as sd]
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-            [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids t f to-uuid merge-query-parts]]
+            [madek.api.utils.helper :refer [t]]
             [next.jdbc :as jdbc]
             [reitit.coercion.schema]
-            [schema.core :as s]
-            [taoensso.timbre :refer [info warn error spy]]))
+            [schema.core :as s]))
 
 (defn handle_list-full_texts
   [req]
@@ -52,7 +45,6 @@
                       (-> req :parameters :path :collection_id)
                       (-> req :parameters :path :media_entry_id))
             ins-data (assoc rdata :media_resource_id mr-id)
-
             sql-query (-> (sql/insert-into :full_texts)
                           (sql/values [ins-data])
                           (sql/returning :*)
@@ -76,7 +68,6 @@
                       (-> req :parameters :path :collection_id)
                       (-> req :parameters :path :media_entry_id))
             dwid (assoc data :media_resource_id mr-id)
-
             sql-query (-> (sql/update :full_texts)
                           (sql/set dwid)
                           (sql/where [:= :media_resource_id mr-id])

@@ -1,19 +1,17 @@
 (ns madek.api.resources.io-interfaces
   (:require
    [clojure.tools.logging :as logging]
-            ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
+   [madek.api.utils.helper :refer [t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
-
-   [taoensso.timbre :refer [info warn error spy]]))
+   [taoensso.timbre :refer [spy]]))
 
 ;### handlers #################################################################
 
@@ -42,7 +40,6 @@
                           (sql/returning :*)
                           sql-format)
             ins-res (jdbc/execute-one! (get-ds) sql-query)]
-
         (logging/info "handle_create-io_interfaces: " "\ndata:\n" data "\nresult:\n" ins-res)
 
         (if-let [result ins-res]
@@ -82,7 +79,7 @@
                           spy)
             del-result (jdbc/execute-one! (get-ds) sql-query)]
 
-        (if (= 1 (spy (::jdbc/update-count del-result)))
+        (if (= 1 (::jdbc/update-count del-result))
           (sd/response_ok io_interface)
           (logging/error "Could not delete io_interface: " id))))
     (catch Exception e (sd/response_exception e))))

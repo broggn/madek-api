@@ -3,16 +3,15 @@
             [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
-            [logbug.debug :as debug]
             [madek.api.authorization :as authorization]
             [madek.api.db.core :refer [get-ds]]
             [madek.api.resources.shared :as sd]
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-            [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids t f to-uuid merge-query-parts]]
+            [madek.api.utils.helper :refer [f t]]
             [next.jdbc :as jdbc]
             [reitit.coercion.schema]
             [schema.core :as s]
-            [taoensso.timbre :refer [info warn error spy]]))
+            [taoensso.timbre :refer [spy]]))
 
 (def res-req-name :favorite_collection)
 (def res-table-name "favorite_collections")
@@ -81,12 +80,12 @@
   (fn [handler]
     (fn [request]
       (sd/req-find-data2
-       request handler
-       :user_id :collection_id
-       :favorite_collections
-       :user_id :collection_id
-       res-req-name
-       send404))))
+        request handler
+        :user_id :collection_id
+        :favorite_collections
+        :user_id :collection_id
+        res-req-name
+        send404))))
 
 (defn wwrap-find-favorite_collection-by-auth [send404]
   (fn [handler]
@@ -95,24 +94,24 @@
             col-id (-> request :parameters :path :collection_id str)]
         (logging/info "uid\n" user-id "col-id\n" col-id)
         (sd/req-find-data-search2
-         request handler
-         user-id col-id
-         :favorite_collections
-         :user_id :collection_id
-         res-req-name
-         send404)))))
+          request handler
+          user-id col-id
+          :favorite_collections
+          :user_id :collection_id
+          res-req-name
+          send404)))))
 
 (defn wwrap-find-user [param]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler param
-                                    :users :id
-                                    :user true))))
+                    :users :id
+                    :user true))))
 
 (defn wwrap-find-collection [param]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler param
-                                    :collections :id
-                                    :collection true))))
+                    :collections :id
+                    :collection true))))
 
 (def schema_favorite_collection_export
   {:user_id s/Uuid
@@ -168,12 +167,12 @@
        :handler handle_list-favorite_collection
        :middleware [wrap-authorize-admin!]
        :coercion reitit.coercion.schema/coercion
-      ; TODO query params?
+       ; TODO query params?
        :parameters {:query {;(s/optional-key :user_id) s/Uuid
-                           ;(s/optional-key :collection_id) s/Uuid
+                            ;(s/optional-key :collection_id) s/Uuid
                             (s/optional-key :full_data) s/Bool}}
        :responses {200 {:body [schema_favorite_collection_export]}}}}]
-   ; edit favorite collections for other users
+    ; edit favorite collections for other users
     ["/favorite/collections/:collection_id/:user_id"
      {:post {:summary (sd/sum_adm (t "Create favorite_collection for user and collection."))
              :handler handle_create-favorite_collection

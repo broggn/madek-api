@@ -1,35 +1,18 @@
 (ns madek.api.resources.context-keys
   (:require
-   ;[madek.api.utils.rdbms :as rdbms :refer [get-ds]]
    [clojure.tools.logging :as logging]
-
    [honey.sql :refer [format] :rename {format sql-format}]
-
    [honey.sql.helpers :as sql]
-
    [logbug.catcher :as catcher]
    [madek.api.db.core :refer [get-ds]]
-
    [madek.api.pagination :as pagination]
-
    [madek.api.resources.shared :as sd]
-
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.helper :refer [cast-to-hstore]]
-
-   [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids to-uuid merge-query-parts]]
-
-   [madek.api.utils.helper :refer [t]]
-   ;; all needed imports
+   [madek.api.utils.helper :refer [t cast-to-hstore to-uuid]]
    [next.jdbc :as jdbc]
    [pghstore-clj.core]
    [reitit.coercion.schema]
-
-   [reitit.swagger :as swagger]
-   [schema-tools.swagger.core :as swagger2]
    [schema.core :as s]
-
-   [taoensso.timbre :refer [info warn error spy]]
    [taoensso.timbre :refer [spy]]))
 
 (defn context_key_transform_ml [context_key]
@@ -93,41 +76,6 @@
     ;(logging/info "handle_usr-get-context_key" "\nbefore\n" context_key "\nresult\n" result)
     (sd/response_ok result)))
 
-(comment
-
-  (let [x (use '[pghstore-clj.core])
-
-        data_row {:hints {:de "labelde99", :en "labelen88"} :context_id "agree-strikebreaker"
-                  :meta_key_id "madek_core:title"}
-
-        p (println "res-1" data_row)
-        data_row (cast-to-hstore data_row)
-
-        p (println "res-2" data_row)
-        sql (-> (sql/insert-into :context_keys)
-
-                (sql/values [data_row])
-
-                (sql/returning :*)
-                sql-format)
-
-        ;;;;; =================================================================================================
-
-        ;hints_casted (to-hstore {:de "labelde", :en "labelen"})
-        ;p (println "res-2" hints_casted)
-        ;sql (-> (sql/insert-into :context_keys)
-        ;
-        ;          (sql/values [{:hints hints_casted, :context_id "agree-strikebreaker", :meta_key_id "madek_core:title"}])
-        ;
-        ;          (sql/returning :*)
-        ;          sql-format)
-
-        p (println "res-1" sql)
-
-        res (jdbc/execute! (get-ds) sql)]
-
-    res))
-
 (defn convert-hints [data]
   (let [cast-keys [:hints :descriptions]
         process-hstore-cast (fn [data key]
@@ -142,49 +90,10 @@
                                                          :hstore]))]
                                   (assoc data key hstore-val))
                                 data))]
-
     (reduce process-hstore-cast data cast-keys)))
 
 (defn map-to-hstore [m]
   (clojure.string/join ", " (map (fn [[k v]] (str "\"" k "\" => \"" (clojure.string/replace v "\"" "\\\"") "\"")) m)))
-
-(comment
-
-  (let [;;data {:hints {:de "labelde", :en "labelen"}}
-        ;;data {:hints {:de "labelde"}}
-        ;;data {:hints [:cast "de => \"labelde\"" :hstore]}
-        ;
-        ;data {:hints {:de "labelde", :en "labelen"}}
-        ;data {:hints {:de "labelde"}}
-        ;;data {:hints [:cast "de => \"labelde\", en => \"labelen\"" :hstore]}
-        ;
-        ;data (convert-hints data)
-        ;
-        ;p (println ">o> res" data)
-
-        data {:hints [:cast "de => \"labelde\"" :hstore]}
-        ;data {:hints [:cast [:raw "de => \"labelde\""] :hstore]}
-        data {:hints "'de => \"labelde\"'"}
-        data {:hints "de => 'abc'"}
-        ;data {:hints [:cast {:de "hstore"} :hstore]}
-
-        data {:key1 "value1", :key2 "value2"}
-        ;data {:meta_key_id "abc:1" :term "sed-dev" :external_uris [:cast (map-to-hstore data) :hstore]}
-        ;data {:meta_key_id "abc:1" :term "sed-dev" :external_uris "{http://geonames.org/countries/DZ/}"}
-        ;data {:meta_key_id "abc:1" :term "sed-dev" :external_uris (vector "{http://geonames.org/countries/DZ/}")}
-        ;data {:meta_key_id "abc:1" :term "sed-dev" :external_uris [:cast "{http://geonames.org/countries/DZ/}" :char]}
-        data {:meta_key_id "vid:vid_schwerpunkt" :term "sed-dev3" :external_uris [:raw "'{http://geonames.org/countries/DZ/}'"]}
-
-        query (-> (sql/insert-into :keywords)
-                  ;(sql/values [(cast-to-hstore data)])
-                  (sql/values [data])
-                  (sql/returning :*)
-                  sql-format
-                  spy)
-        res (jdbc/execute-one! (get-ds) query)
-
-        p (println "res-1" query)
-        p (println "res-2" res)]))
 
 (defn handle_create-context_keys
   [req]
@@ -194,8 +103,7 @@
             sql (-> (sql/insert-into :context_keys)
                     (sql/values [(spy (cast-to-hstore data))])
                     (sql/returning :*)
-                    sql-format
-                    spy)
+                    sql-format)
             ins-res (jdbc/execute-one! (get-ds) sql)]
 
         (if-let [result ins-res]
@@ -210,13 +118,12 @@
       (let [data (-> req :parameters :body)
             id (-> req :parameters :path :id)
             id (to-uuid id)
-            dwid (spy (assoc data :id id))
-
+            dwid  (assoc data :id id)
             fir (-> (sql/update :context_keys)
                     (sql/set (cast-to-hstore dwid))
                     (sql/where [:= :id id])
                     sql-format)
-            upd-result (jdbc/execute-one! (get-ds) (spy fir))]
+            upd-result (jdbc/execute-one! (get-ds) fir)]
 
         (sd/logwrite req (str "handle_update-context_keys: " id "\nnew-data\n" dwid "\nupd-result: " upd-result))
 
@@ -330,7 +237,7 @@
       :responses {200 {:body schema_export_context_key_admin}
                   406 {:body s/Any}}}
 
-     ; context_key list / query
+    ; context_key list / query
      :get
      {:summary (sd/sum_adm (t "Query context_keys."))
       :handler handle_adm-list-context_keys

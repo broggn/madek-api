@@ -6,7 +6,6 @@
             [madek.api.db.core :refer [get-ds]]
             [madek.api.resources.shared :as sd]
             [next.jdbc :as jdbc]
-
             [reitit.coercion.schema]
             [schema.core :as s]))
 

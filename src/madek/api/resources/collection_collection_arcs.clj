@@ -1,6 +1,5 @@
 (ns madek.api.resources.collection-collection-arcs
   (:require
-   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]

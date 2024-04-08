@@ -2,16 +2,12 @@
   (:require [buddy.core.codecs :refer [bytes->b64u bytes->str]]
             [buddy.core.hash :as hash]
             [clojure.tools.logging :as logging]
-            ;; all needed imports
             [honey.sql :refer [format] :rename {format sql-format}]
-            [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
             [madek.api.db.core :refer [get-ds]]
             [madek.api.resources.shared :as sd]
             [next.jdbc :as jdbc]
-
             [reitit.coercion.schema]
-
             [schema.core :as s]))
 
 (defn create-conf-link-token
@@ -104,7 +100,6 @@
                          :where [:= :id id]}
                 sql (-> sql-map sql-format)
                 del-result (jdbc/execute! (get-ds) [sql [id]])]
-
             (sd/logwrite req (str "handle_delete-conf-link:" "\ndelete data: " del-data "\nresult: " del-result))
             (if (= 1 (first del-result))
               (sd/response_ok del-data)

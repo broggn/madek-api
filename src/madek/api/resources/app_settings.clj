@@ -3,17 +3,13 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-   [logbug.debug :as debug]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t]]
    [madek.api.utils.helper :refer [mslurp]]
-   [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-
-   [schema.core :as s]
-   [taoensso.timbre :refer [debug error info spy warn]]))
+   [schema.core :as s]))
 
 ;;; get ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -168,9 +164,7 @@
       :put {:summary (sd/sum_adm "Update App Settings.")
             :handler handle_update-app-settings
             :middleware [wrap-authorize-admin!]
-
             :description (mslurp "./md/admin-app-settings.md")
-
             :swagger {:produces "application/json"
                       :consumes "application/json"}
             :content-type "application/json"

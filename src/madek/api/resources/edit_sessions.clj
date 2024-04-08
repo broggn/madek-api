@@ -8,12 +8,10 @@
    [madek.api.pagination :as pagination]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids t f to-uuid merge-query-parts]]
+   [madek.api.utils.helper :refer [t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-
-   [schema.core :as s]
-   [taoensso.timbre :refer [info warn error spy]]))
+   [schema.core :as s]))
 
 (defn build-query [query-params]
   (let [col-sel (if (true? (-> query-params :full_data))
@@ -96,10 +94,8 @@
                    (assoc data :media_entry_id mr-id)
                    (assoc data :collection_id mr-id))
             sql-query (-> (sql/insert-into :edit_sessions) (sql/values [dwid]) sql-format)
+            ins-result (jdbc/execute-one! (get-ds) sql-query)]
 
-            ins-result (jdbc/execute-one! (get-ds) sql-query)
-            p (println ">o> ins-result" ins-result)
-            p (println ">o> ?????????????????????")]
         (sd/logwrite req (str "handle_create-edit-session:" "\nnew-data: " dwid))
 
         (if-let [ins-result ins-result]
@@ -113,8 +109,7 @@
     (catcher/with-logging {}
       (let [id (-> req :parameters :path :id)]
         (if-let [del-data (sd/query-eq-find-one :edit_sessions :id id)]
-          (let [;del-clause (sd/sql-update-clause "id" id)
-                sql-query (-> (sql/delete-from :edit_sessions)
+          (let [sql-query (-> (sql/delete-from :edit_sessions)
                               (sql/where [:= :id id])
                               (sql/returning :*)
                               sql-format)

@@ -1,16 +1,13 @@
 (ns madek.api.resources.delegations
   (:require
    [clojure.tools.logging :as logging]
-   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t f]]
+   [madek.api.utils.helper :refer [t]]
    [next.jdbc :as jdbc]
-
    [reitit.coercion.schema]
    [schema.core :as s]))
 
@@ -31,12 +28,11 @@
 
 (defn handle_create-delegations
   [req]
-
   (let [data (-> req :parameters :body)
-        insert-map {:table :delegations :values data}
         sql-query (-> (sql/insert-into :delegations) (sql/values [data]) sql-format)
         ins-res (jdbc/execute! (get-ds) sql-query)]
     (if ins-res
+      ; TODO clean result
       (sd/response_ok (first ins-res))
       (sd/response_failed "Could not create delegation." 406))))
 
@@ -47,13 +43,10 @@
         dwid (assoc data :id id)
         old-data (-> req :delegation)
         upd-query (sd/sql-update-clause "id" (str id))
-        ; or TODO data with id
-
         sql-query (-> (sql/update :delegations)
                       (sql/set dwid)
                       (sql/where [:= :id id])
                       sql-format)]
-
     ; create delegation entry
     (logging/info "handle_update-delegations: " "\nid\n" id "\ndwid\n" dwid
                   "\nold-data\n" old-data
@@ -70,14 +63,12 @@
   (try
     (catcher/with-logging {}
       (if-let [_ (sd/query-eq-find-one :delegation :id (-> req :delegation :id))]
-
         (let [delegation (-> req :delegation)
               id (-> req :delegation :id)
               sql-query (-> (sql/delete-from :delegations)
                             (sql/where [:= :id id])
                             (sql/returning :*)
                             sql-format)]
-
           (if (jdbc/execute-one! (get-ds) sql-query)
             (sd/response_ok delegation)
             (sd/response_failed "Could not delete delegation." 406)))
@@ -142,8 +133,6 @@
                                    :value false
                                    :default false
                                    :type "boolean"
-                                   ;:type s/Bool
-                                   ;:pattern "^[1-9][0-9]*$"
                                    }]}
            :responses {200 {:body [schema_get_delegations]}}}}]
 
@@ -178,13 +167,10 @@
               :handler handle_delete-delegation
               :middleware [(wwrap-find-delegation :id :id true)]
               :parameters {:path {:id s/Uuid}}
-
               :responses {200 {:body schema_export_delegations}
                           404 {:description "Not Found."
                                :schema s/Str
-                               ;:examples {"application/json" {:message "No such entity in :delegations as :id with <id>"}}}
                                :examples {"application/json" {:message "No such delegation found"}}}
-
                           406 {:description "Not Acceptable."
                                :schema s/Str
                                :examples {"application/json" {:message "Could not delete delegation."}}}}}}]])

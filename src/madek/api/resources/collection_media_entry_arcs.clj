@@ -1,15 +1,11 @@
 (ns madek.api.resources.collection-media-entry-arcs
   (:require
-   ;; all needed imports
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [madek.api.db.core :refer [get-ds]]
-
    [madek.api.pagination :as pagination]
-
    [madek.api.resources.shared :as sd]
-   [madek.api.utils.rdbms :as rdbms]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]))
@@ -86,7 +82,6 @@
                                [:= :media_entry_id me-id])
                     sql-format)
             result (jdbc/execute! (get-ds) sql)]
-
         (if (= 1 (first result))
           (sd/response_ok (sd/query-eq-find-one
                            :collection_media_entry_arcs
@@ -106,7 +101,6 @@
                                [:= :media_entry_id me-id])
                     sql-format)
             delresult (jdbc/execute! (get-ds) sql)]
-
         (if (= 1 (first delresult))
           (sd/response_ok data)
           (sd/response_failed "Could not delete collection entry arc." 422))))
@@ -188,8 +182,8 @@
     {:post
      {:summary (sd/sum_usr "Create collection media-entry arc")
       :handler handle_create-col-me-arc
-      ; TODO check: if collection edit md and relations is allowed checked
-      ; not the media entry edit md
+       ; TODO check: if collection edit md and relations is allowed checked
+       ; not the media entry edit md
       :middleware [sd/ring-wrap-add-media-resource
                    sd/ring-wrap-authorization-edit-metadata]
       :swagger {:produces "application/json" :consumes "application/json"}

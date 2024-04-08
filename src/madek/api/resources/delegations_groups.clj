@@ -4,11 +4,8 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [madek.api.db.core :refer [get-ds]]
-
-   ;; all needed imports
    [madek.api.resources.shared :as sd]
-   [madek.api.utils.helper :refer [convert-map cast-to-hstore to-uuids t f to-uuid merge-query-parts]]
-
+   [madek.api.utils.helper :refer [t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]))
@@ -20,21 +17,16 @@
 ; TODO query
 (defn handle_list-delegations_groups
   [req]
-  (let [;full-data (true? (-> req :parameters :query :full-data))
-
-        delegation_id (-> req :parameters :query :delegation_id)
+  (let [delegation_id (-> req :parameters :query :delegation_id)
         group_id (-> req :parameters :query :group_id)
-
         col-sel (if (true? (-> req :parameters :query :full-data))
                   (sql/select :*)
                   (sql/select :group_id))
-
         base-query (-> col-sel (sql/from :delegations_groups))
         query (cond-> base-query
                 delegation_id (sql/where [:= :delegation_id delegation_id])
                 group_id (sql/where [:= :group_id group_id]))
         db-result (jdbc/execute! (get-ds) (sql-format query))]
-    ;(->> db-result (map :id) set)
     (logging/info "handle_list-delegations_group" "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
@@ -81,7 +73,6 @@
                       (sql/returning :*)
                       sql-format)
         result (jdbc/execute-one! (get-ds) sql-query)]
-
     (if result
       (sd/response_ok delegations_group)
       (logging/error "Failed delete delegations_group "
