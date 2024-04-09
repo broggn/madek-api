@@ -122,6 +122,7 @@
 (def user-routes
 
   ["/workflows"
+   {:swagger {:tags ["admin/workflows"] :security [{"auth" []}]}}
    ["/"
     {:post {:summary (sd/sum_adm "Create workflow.")
             :handler handle_create-workflow
