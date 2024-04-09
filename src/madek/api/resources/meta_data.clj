@@ -783,6 +783,7 @@
 ; TODO response coercion
 (def meta-data-routes
   ["/meta-data"
+   {:swagger {:tags ["api/meta-data"]}}
    ["/:meta_datum_id" {:get {:handler meta-datum/get-meta-datum
                              :middleware [sd/ring-wrap-add-meta-datum-with-media-resource
                                           sd/ring-wrap-authorization-view]
@@ -814,17 +815,20 @@
    :position s/Int})
 
 (def role-routes
-  ["/meta-data-role/:meta_data_role_id"
+  ["/meta-data-role"
+   {:swagger {:tags ["api/meta-data-role"]}}
+   [ "/:meta_data_role_id"
    {:get {:summary " Get meta-data role for id "
           :handler meta-datum/handle_get-meta-datum-role
           :description " Get meta-datum-role for id. returns 404, if no such meta-data role exists. "
           :coercion reitit.coercion.schema/coercion
           :parameters {:path {:meta_data_role_id s/Str}}
           :responses {200 {:body schema_export_mdrole}
-                      404 {:body s/Any}}}}])
+                      404 {:body s/Any}}}}]])
 
 (def collection-routes
   ["/collection"
+   {:swagger {:tags ["api/collection"]}}
    ["/:collection_id/meta-data"
     {:get {:summary "Get meta-data for collection."
            :handler meta-data.index/get-index
@@ -1025,6 +1029,7 @@
 
 (def media-entry-routes
   ["/media-entry"
+   {:swagger {:tags ["api/media-entry"]}}
    ["/:media_entry_id/meta-data"
     {:get {:summary "Get meta-data for media-entry."
            :handler meta-data.index/get-index
