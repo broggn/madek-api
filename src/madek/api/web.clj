@@ -31,7 +31,7 @@
 ; extended debug logging; this will increase LOGGING OUTPUT IMMENSELY and might
 ; have other undesired effects; make sure this is never enabled in production
 
-(defonce ^:private DEBUG true)
+(defonce ^:private DEBUG false)
 
 ;### exception ################################################################
 
