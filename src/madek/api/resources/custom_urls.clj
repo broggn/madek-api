@@ -159,6 +159,7 @@
 ; TODO custom urls response coercion
 (def query-routes
   ["/custom_urls"
+   {:swagger {:tags ["api/custom_urls"]}}
    ["/"
     {:get {:summary (sd/sum_usr "Query and list custom_urls.")
            :handler handle_list-custom-urls
@@ -177,6 +178,7 @@
 
 (def media-entry-routes
   ["/media-entry/:media_entry_id/custom_url"
+   {:swagger {:tags ["api/media-entry"] }}
    {:get {:summary "Get custom_url for media entry."
           :handler handle_get-custom-urls
           :middleware [sd/ring-wrap-add-media-resource
@@ -217,6 +219,7 @@
 
 (def collection-routes
   ["/collection/:collection_id/custom_url"
+   {:swagger {:tags ["api/collection"]}}
    {:get {:summary "Get custom_url for collection."
           :handler handle_get-custom-urls
           :middleware [sd/ring-wrap-add-media-resource

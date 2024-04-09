@@ -190,6 +190,7 @@
 
 (def media-entry-routes
   ["/media-entry/:media_entry_id/edit_sessions"
+   {:swagger {:tags ["api/media-entry"] }}
    {:get {:summary (sd/sum_usr_pub "Get edit_session list for media entry.")
           :handler handle_get-edit-sessions
           :middleware [sd/ring-wrap-add-media-resource
@@ -210,6 +211,7 @@
 
 (def collection-routes
   ["/collection/:collection_id/edit_sessions"
+   {:swagger {:tags ["api/collection"]}}
    {:get {:summary (sd/sum_usr_pub "Get edit_session list for collection.")
           :handler handle_get-edit-sessions
           :middleware [sd/ring-wrap-add-media-resource
