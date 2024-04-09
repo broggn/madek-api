@@ -180,7 +180,7 @@
 
 (def ring-routes
   ["/"
-   {:swagger {:tags ["collection"]}}
+   {:swagger {:tags ["api/collection"]}}
    ["collections"
     {:get
      {:summary (sd/sum_usr (f (t "Query/List collections.") "BROKEN-FILTER"))

@@ -144,6 +144,7 @@
 ; TODO add permission checks
 (def ring-routes
   ["/collection-collection-arcs"
+   {:swagger {:tags ["api/collection"]}}
    ["/"
     {:get
      {:summary "Query collection collection arcs."
@@ -171,6 +172,7 @@
 ; TODO rename param use middleware for permissions
 (def collection-routes
   ["/collection/:parent_id"
+   {:swagger {:tags ["api/collection"]}}
    ;["/collection-arcs"
    ; {:get
    ;  {:summary "List collection collection arcs."
