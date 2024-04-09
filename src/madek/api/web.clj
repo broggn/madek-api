@@ -92,11 +92,13 @@
 ;### routes ###################################################################
 
 (def auth-info-route
-  ["/api/auth-info"
+  ["/api"
+     {:swagger {:tags ["api/auth-info"] :security [{"auth" []}]}}
+  ["/auth-info"
    {:get
     {:summary "Authentication help and info."
      :handler auth-info/auth-info
-     :middleware [authentication/wrap]}}])
+     :middleware [authentication/wrap]}}]])
 
 (def swagger-routes
   [""
