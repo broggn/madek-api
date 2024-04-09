@@ -181,7 +181,7 @@
    {:swagger {:tags ["keywords"]}}
    ["/"
     {:get
-     {:summary (sd/sum_pub (d (t "Query / list keywords.")))
+     {:summary (sd/sum_pub (d "Query / list keywords."))
       :handler handle_usr-query-keywords
       :coercion reitit.coercion.schema/coercion
       :parameters {:query ItemQueryParams}
@@ -219,7 +219,7 @@
 
    ["/:id"
     {:get
-     {:summary (sd/sum_pub (t "Get keyword for id."))
+     {:summary (sd/sum_pub "Get keyword for id.")
       :handler handle_usr-get-keyword
       :middleware [wrap-find-keyword]
       :coercion reitit.coercion.schema/coercion
@@ -233,7 +233,7 @@
    {:swagger {:tags ["admin/keywords"] :security [{"auth" []}]}}
    ["/"
     {:get
-     {:summary (sd/sum_adm (t "Query keywords"))
+     {:summary (sd/sum_adm "Query keywords")
       :handler handle_adm-query-keywords
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
@@ -242,7 +242,7 @@
       :description "Get keywords id list. TODO query parameters and paging. TODO get full data."}
 
      :post
-     {:summary (sd/sum_adm (t "Create keyword."))
+     {:summary (sd/sum_adm "Create keyword.")
       :coercion reitit.coercion.schema/coercion
       :handler handle_create-keyword
       :middleware [wrap-authorize-admin!]
@@ -251,7 +251,7 @@
                   406 {:body s/Any}}}}]
    ["/:id"
     {:get
-     {:summary (sd/sum_adm (t "Get keyword for id"))
+     {:summary (sd/sum_adm "Get keyword for id")
       :handler handle_adm-get-keyword
       :middleware [wrap-authorize-admin!
                    wrap-find-keyword]
@@ -262,7 +262,7 @@
       :description "Get keyword for id. Returns 404, if no such keyword exists."}
 
      :put
-     {:summary (sd/sum_adm (t "Update keyword."))
+     {:summary (sd/sum_adm "Update keyword.")
       :handler handle_update-keyword
       :middleware [wrap-authorize-admin!
                    wrap-find-keyword]
@@ -274,7 +274,7 @@
                   406 {:body s/Any}}}
 
      :delete
-     {:summary (sd/sum_adm (t "Delete keyword."))
+     {:summary (sd/sum_adm "Delete keyword.")
       :handler handle_delete-keyword
       :middleware [wrap-authorize-admin!
                    wrap-find-keyword]

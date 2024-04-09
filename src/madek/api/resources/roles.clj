@@ -37,7 +37,7 @@
 (def user-routes
   ["/roles"
    {:swagger {:tags ["roles"]}}
-   ["/" {:get {:summary (t "Get list of roles.")
+   ["/" {:get {:summary "Get list of roles."
                :description "Get list of roles."
                :handler role/get-index
                :swagger {:produces "application/json"}
@@ -50,7 +50,7 @@
          :responses {200 {:body {:roles [schema_export-role]}}}}]
 
    ["/:id"
-    {:get {:summary (t "Get role by id")
+    {:get {:summary "Get role by id"
            :description "Get a role by id. Returns 404, if no such role exists."
            :swagger {:produces "application/json"}
            :content-type "application/json"
@@ -65,7 +65,7 @@
 (def admin-routes
   ["/roles"
    {:swagger {:tags ["admin/roles"] :security [{"auth" []}]}}
-   ["/" {:get {:summary (sd/sum_adm (t "Get list of roles."))
+   ["/" {:get {:summary (sd/sum_adm "Get list of roles.")
                :description "Get list of roles."
                :handler role/get-index
                :swagger {:produces "application/json"}
@@ -79,7 +79,7 @@
                :coercion reitit.coercion.schema/coercion
                :responses {200 {:body {:roles [schema_export-role]}}}}
 
-         :post {:summary (sd/sum_adm (t "Create role."))
+         :post {:summary (sd/sum_adm "Create role.")
                 :handler role/handle_create-role
                 :swagger {:produces "application/json"
                           :consumes "application/json"}
@@ -97,7 +97,7 @@
                                  :examples {"application/json" {:message "Could not create role."}}}}}}]
 
    ["/:id"
-    {:get {:summary (sd/sum_adm (t "Get role by id"))
+    {:get {:summary (sd/sum_adm "Get role by id")
            :description "Get a role by id. Returns 404, if no such role exists."
            :swagger {:produces "application/json"}
            :content-type "application/json"
@@ -107,7 +107,7 @@
            :responses {200 {:body schema_export-role}
                        404 {:body s/Any}}}
 
-     :put {:summary (sd/sum_adm (t "Update role."))
+     :put {:summary (sd/sum_adm "Update role.")
            :handler role/handle_update-role
            :swagger {:produces "application/json"
                      :consumes "application/json"}
@@ -121,7 +121,7 @@
                             :schema s/Str
                             :examples {"application/json" {:message "Could not update role."}}}}}
 
-     :delete {:summary (sd/sum_adm (t "Delete role."))
+     :delete {:summary (sd/sum_adm "Delete role.")
               :handler role/handle_delete-role
               :swagger {:produces "application/json"}
               :content-type "application/json"

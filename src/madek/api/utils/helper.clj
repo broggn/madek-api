@@ -10,7 +10,9 @@
 (defn t [s] (str s ".. MANUALLY TESTED"))
 (defn d [s] (str s " / doc-example"))
 (defn v [s] (str s " / working validation"))
+(defn i [s] (str s " / INFO"))
 (defn fv [s] (str s " / validation FAILS"))
+
 (defn f
   ([s] (str s " / ToFix"))
   ([s text] (str s " / ToFix: " text)))

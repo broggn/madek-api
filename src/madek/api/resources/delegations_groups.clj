@@ -143,7 +143,7 @@
     {:swagger {:tags ["admin/delegation/groups"] :security [{"auth" []}]}}
     ["/"
      {:get
-      {:summary (sd/sum_adm (t "Query delegations_groups."))
+      {:summary (sd/sum_adm "Query delegations_groups.")
        :handler handle_list-delegations_groups
        :coercion reitit.coercion.schema/coercion
        :parameters {:query {(s/optional-key :group_id) s/Uuid
@@ -152,7 +152,7 @@
 
     ["/delegation/groups/:delegation_id/:group_id"
      {:post
-      {:summary (sd/sum_adm (t "Create delegations_group for group and delegation."))
+      {:summary (sd/sum_adm "Create delegations_group for group and delegation.")
        :handler handle_create-delegations_group
        :middleware [(wwrap-find-group :group_id)
                     (wwrap-find-delegation :delegation_id)
@@ -162,7 +162,7 @@
                            :delegation_id s/Uuid}}}
 
       :get
-      {:summary (sd/sum_adm (t "Get delegations_group for group and delegation."))
+      {:summary (sd/sum_adm "Get delegations_group for group and delegation.")
        :handler handle_get-delegations_group
        :middleware [(wwrap-find-delegations_group true)]
        :coercion reitit.coercion.schema/coercion
@@ -170,7 +170,7 @@
                            :delegation_id s/Uuid}}}
 
       :delete
-      {:summary (sd/sum_adm (t "Delete delegations_group for group and delegation."))
+      {:summary (sd/sum_adm "Delete delegations_group for group and delegation.")
        :coercion reitit.coercion.schema/coercion
        :handler handle_delete-delegations_group
        :middleware [(wwrap-find-delegations_group true)]

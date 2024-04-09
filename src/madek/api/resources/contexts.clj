@@ -141,7 +141,7 @@
   ["/contexts"
    {:swagger {:tags ["admin/contexts"] :security [{"auth" []}]}}
    ["/"
-    {:post {:summary (sd/sum_adm_todo (t "Create contexts."))
+    {:post {:summary (sd/sum_adm_todo "Create contexts.")
             :handler handle_create-contexts
             :middleware [wrap-authorize-admin!]
             :coercion reitit.coercion.schema/coercion
@@ -149,7 +149,7 @@
             :responses {200 {:body schema_export_contexts_adm}
                         406 {:body s/Any}}}
      ; context list / query
-     :get {:summary (sd/sum_adm (t "List contexts."))
+     :get {:summary (sd/sum_adm "List contexts.")
            :handler handle_adm-list-contexts
            :middleware [wrap-authorize-admin!]
            :coercion reitit.coercion.schema/coercion
@@ -158,7 +158,7 @@
                        406 {:body s/Any}}}}]
    ; edit context
    ["/:id"
-    {:get {:summary (sd/sum_adm (t "Get contexts by id."))
+    {:get {:summary (sd/sum_adm "Get contexts by id.")
            :handler handle_adm-get-context
            :middleware [wrap-authorize-admin!
                         (wwrap-find-context :id :id true)]
@@ -167,7 +167,7 @@
            :responses {200 {:body schema_export_contexts_adm}
                        404 {:body s/Any}}}
 
-     :put {:summary (sd/sum_adm (t "Update contexts with id."))
+     :put {:summary (sd/sum_adm "Update contexts with id.")
            :handler handle_update-contexts
            :middleware [wrap-authorize-admin!
                         (wwrap-find-context :id :id true)]
@@ -179,7 +179,7 @@
                        406 {:body s/Any}
                        500 {:body s/Any}}}
 
-     :delete {:summary (sd/sum_adm_todo (t "Delete context by id."))
+     :delete {:summary (sd/sum_adm_todo "Delete context by id.")
               :coercion reitit.coercion.schema/coercion
               :handler handle_delete-context
               :middleware [wrap-authorize-admin!
@@ -196,7 +196,7 @@
   ["/contexts"
    {:swagger {:tags ["contexts"]}}
    ["/"
-    {:get {:summary (sd/sum_usr (t "List contexts."))
+    {:get {:summary (sd/sum_usr "List contexts.")
            :handler handle_usr-list-contexts
            :coercion reitit.coercion.schema/coercion
            ;:parameters {:query {(s/optional-key :full-data) s/Bool}}
@@ -204,7 +204,7 @@
                        406 {:body s/Any}}}}]
    ; edit context
    ["/:id"
-    {:get {:summary (sd/sum_usr (t "Get contexts by id."))
+    {:get {:summary (sd/sum_usr "Get contexts by id.")
            :handler handle_usr-get-context
            :middleware [(wwrap-find-context :id :id true)]
            :coercion reitit.coercion.schema/coercion

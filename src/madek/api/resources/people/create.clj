@@ -51,7 +51,7 @@
                409 {:description "Conflict."
                     :schema s/Str
                     :examples {"application/json" {:message "Violation of constraint"}}}}
-   :summary (t "Create a person")
+   :summary "Create a person"
    :swagger {:produces "application/json"
              :consumes "application/json"}})
 

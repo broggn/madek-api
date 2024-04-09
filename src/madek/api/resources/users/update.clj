@@ -44,7 +44,7 @@
    (s/optional-key :searchable) s/Str})
 
 (def route
-  {:summary (sd/sum_adm (f (t "Update user with id")))
+  {:summary (sd/sum_adm "Update user with id")
    :swagger {:consumes "application/json"
              :produces "application/json"}
    :coercion reitit.coercion.schema/coercion

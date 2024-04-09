@@ -37,7 +37,7 @@
    (s/optional-key :page) s/Int})
 
 (def route
-  {:summary (sd/sum_adm (f (t "Get list of users ids.") "no-list"))
+  {:summary (sd/sum_adm (f "Get list of users ids." "no-list"))
    :description "Get list of users ids."
    :swagger {:produces "application/json"
              :parameters [{:name "email"

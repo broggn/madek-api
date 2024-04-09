@@ -88,7 +88,7 @@
    {:swagger {:tags ["admin/admins"] :security [{"auth" []}]}}
    ["/"
     {:get
-     {:summary (sd/sum_adm (t "List admin users."))
+     {:summary (sd/sum_adm "List admin users.")
       :handler handle_list-admin
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
@@ -97,7 +97,7 @@
    ; edit admin
    ["/:id"
     {:get
-     {:summary (sd/sum_adm (t "Get admin by id."))
+     {:summary (sd/sum_adm "Get admin by id.")
       :handler handle_get-admin
       :middleware [wrap-authorize-admin!
                    (wwrap-find-admin :id :id true)]
@@ -107,7 +107,7 @@
                   404 {:body s/Any}}}
 
      :delete
-     {:summary (sd/sum_adm (t "Delete admin by id."))
+     {:summary (sd/sum_adm "Delete admin by id.")
       :coercion reitit.coercion.schema/coercion
       :handler handle_delete-admin
       :middleware [wrap-authorize-admin!
@@ -120,7 +120,7 @@
    ; access via user
    ["/:user_id/user"
     {:post
-     {:summary (sd/sum_adm (t "Create admin for user with id."))
+     {:summary (sd/sum_adm "Create admin for user with id.")
       :handler handle_create-admin
       :middleware [wrap-authorize-admin!
                    (wwrap-find-user :user_id)
@@ -132,7 +132,7 @@
                   406 {:body s/Any}}}
 
      :get
-     {:summary (sd/sum_adm (t "Get admin for user."))
+     {:summary (sd/sum_adm "Get admin for user.")
       :handler handle_get-admin
       :middleware [wrap-authorize-admin!
                    (wwrap-find-admin :user_id :user_id true)]
@@ -143,7 +143,7 @@
                   406 {:body s/Any}}}
 
      :delete
-     {:summary (sd/sum_adm (t "Delete admin for user."))
+     {:summary (sd/sum_adm "Delete admin for user.")
       :coercion reitit.coercion.schema/coercion
       :handler handle_delete-admin
       :middleware [wrap-authorize-admin!

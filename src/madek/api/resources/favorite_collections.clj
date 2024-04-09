@@ -164,7 +164,7 @@
     {:swagger {:tags ["admin/favorite/collections"] :security [{"auth" []}]}}
     ["/"
      {:get
-      {:summary (sd/sum_adm (f (t "List favorite_collection users.") "pagination?"))
+      {:summary (sd/sum_adm (f "List favorite_collection users." " TODO: pagination?"))
        :handler handle_list-favorite_collection
        :middleware [wrap-authorize-admin!]
        :coercion reitit.coercion.schema/coercion
@@ -175,7 +175,7 @@
        :responses {200 {:body [schema_favorite_collection_export]}}}}]
     ; edit favorite collections for other users
     ["/favorite/collections/:collection_id/:user_id"
-     {:post {:summary (sd/sum_adm (t "Create favorite_collection for user and collection."))
+     {:post {:summary (sd/sum_adm "Create favorite_collection for user and collection.")
              :handler handle_create-favorite_collection
 
              :middleware [wrap-authorize-admin!
@@ -189,7 +189,7 @@
                          404 {:body s/Any}
                          406 {:body s/Any}}}
 
-      :get {:summary (sd/sum_adm (t "Get favorite_collection by user and collection id."))
+      :get {:summary (sd/sum_adm "Get favorite_collection by user and collection id.")
             :handler handle_get-favorite_collection
             :middleware [wrap-authorize-admin!
                          (wwrap-find-favorite_collection true)]
@@ -200,7 +200,7 @@
                         404 {:body s/Any}
                         406 {:body s/Any}}}
 
-      :delete {:summary (sd/sum_adm (t "Delete favorite_collection by user and collection id."))
+      :delete {:summary (sd/sum_adm "Delete favorite_collection by user and collection id.")
                :coercion reitit.coercion.schema/coercion
                :handler handle_delete-favorite_collection
                :middleware [wrap-authorize-admin!

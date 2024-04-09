@@ -32,7 +32,7 @@
     (catch Exception ex (sd/parsed_response_exception ex))))
 
 (def route
-  {:summary (sd/sum_adm (t "Delete user by id"))
+  {:summary (sd/sum_adm "Delete user by id")
    :description "Delete a user by id. Returns 404, if no such user exists."
    :handler handler
    :middleware [wrap-authorize-admin!

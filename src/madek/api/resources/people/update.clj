@@ -36,7 +36,7 @@
     {:status 404 :body {:message "Person not found."}}))
 
 (def route
-  {:summary (sd/sum_adm (t "Update person with id"))
+  {:summary (sd/sum_adm "Update person with id")
    :description "Patch a person with id. Returns 404, if no such person exists."
    :swagger {:consumes "application/json"
              :produces "application/json"}

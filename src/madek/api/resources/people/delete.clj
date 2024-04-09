@@ -32,7 +32,7 @@
     (catch Exception ex (sd/parsed_response_exception ex))))
 
 (def route
-  {:summary (sd/sum_adm (t "Delete person by id"))
+  {:summary (sd/sum_adm "Delete person by id")
    :description "Delete a person by id (the madek interal UUID). Returns 404, if no such person exists."
    :handler handler
    :middleware [wrap-authorize-admin!]

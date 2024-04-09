@@ -113,7 +113,7 @@
   [["/full_texts"
     {:swagger {:tags ["full_texts"]}}
     ["/"
-     {:get {:summary (sd/sum_usr (t "Query or list full_texts."))
+     {:get {:summary (sd/sum_usr "Query or list full_texts.")
             :handler handle_list-full_texts
             :coercion reitit.coercion.schema/coercion
             :parameters {:query {(s/optional-key :full_data) s/Bool
@@ -123,7 +123,7 @@
                                  (s/optional-key :count) s/Int}}}}]
 
     ["/full_texts/:media_resource_id"
-     {:get {:summary (sd/sum_usr (t "Get full_text."))
+     {:get {:summary (sd/sum_usr "Get full_text.")
             :handler handle_get-full_text
             :coercion reitit.coercion.schema/coercion
             :parameters {:path {:media_resource_id s/Uuid}}
@@ -138,7 +138,7 @@
   [["/full_text"
     {:swagger {:tags ["admin/full_text"] :security [{"auth" []}]}}
     ["/"
-     {:post {:summary (sd/sum_adm (t "Create full_texts entry????"))
+     {:post {:summary (sd/sum_adm "Create full_texts entry????")
              :swagger {:consumes "application/json" :produces "application/json"}
              :handler handle_create-full_texts
              :coercion reitit.coercion.schema/coercion
@@ -147,14 +147,14 @@
              :middleware [wrap-authorize-admin!]}}]
 
     ["/full_text/:media_resource_id"
-     {:post {:summary (sd/sum_adm (t "Create full_texts entry"))
+     {:post {:summary (sd/sum_adm "Create full_texts entry")
              :swagger {:consumes "application/json" :produces "application/json"}
              :handler handle_create-full_texts
              :coercion reitit.coercion.schema/coercion
              :parameters {:path {:media_resource_id s/Uuid}
                           :body {:text s/Str}}
              :middleware [wrap-authorize-admin!]}
-      :put {:summary (sd/sum_adm (t "Update full_text."))
+      :put {:summary (sd/sum_adm "Update full_text.")
             :coercion reitit.coercion.schema/coercion
             :parameters {:path {:media_resource_id s/Uuid}
                          :body {:text s/Str}}
@@ -162,7 +162,7 @@
                          (wrap-find-full_text :media_resource_id true)]
             :handler handle_update-full_texts}
 
-      :delete {:summary (sd/sum_adm (t "Delete full_text."))
+      :delete {:summary (sd/sum_adm "Delete full_text.")
                :coercion reitit.coercion.schema/coercion
                :parameters {:path {:media_resource_id s/Uuid}}
                :middleware [wrap-authorize-admin!

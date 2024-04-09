@@ -70,7 +70,7 @@
                409 {:description "Conflict."
                     :schema s/Str
                     :examples {"application/json" {:message "Entry already exists"}}}}
-   :summary (sd/sum_adm (f (t "Create user.")))
+   :summary (sd/sum_adm "Create user.")
    :swagger {:consumes "application/json"
              :produces "application/json"}})
 

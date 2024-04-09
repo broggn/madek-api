@@ -179,14 +179,14 @@
     {:swagger {:tags ["admin/favorite/media-entries"] :security [{"auth" []}]}}
     ["/"
      {:get
-      {:summary (sd/sum_adm (t "Query favorite_media_entries."))
+      {:summary (sd/sum_adm "Query favorite_media_entries.")
        :handler handle_list-favorite_media_entries
        :middleware [wrap-authorize-admin!]
        :coercion reitit.coercion.schema/coercion}}]
 
     ["/favorite/media_entries/:media_entry_id/:user_id"
      {:post
-      {:summary (sd/sum_adm (t "Create favorite_media-entry for user and media-entry."))
+      {:summary (sd/sum_adm "Create favorite_media-entry for user and media-entry.")
        :handler handle_create-favorite_media_entry
        :middleware [wrap-authorize-admin!
                     (wwrap-find-user :user_id)
@@ -197,7 +197,7 @@
                            :media_entry_id s/Uuid}}}
 
       :get
-      {:summary (sd/sum_adm (t "Get favorite_media-entry for user and media-entry."))
+      {:summary (sd/sum_adm "Get favorite_media-entry for user and media-entry.")
        :handler handle_get-favorite_media_entry
        :middleware [wrap-authorize-admin!
                     (wwrap-find-favorite_media_entry true)]
@@ -206,7 +206,7 @@
                            :media_entry_id s/Uuid}}}
 
       :delete
-      {:summary (sd/sum_adm (t "Delete favorite_media-entry for user and media-entry."))
+      {:summary (sd/sum_adm "Delete favorite_media-entry for user and media-entry.")
        :coercion reitit.coercion.schema/coercion
        :handler handle_delete-favorite_media_entry
        :middleware [wrap-authorize-admin!

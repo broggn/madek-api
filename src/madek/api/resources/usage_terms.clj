@@ -119,7 +119,7 @@
   ["/usage-terms"
    {:swagger {:tags ["admin/usage-terms"] :security [{"auth" []}]}}
    ["/"
-    {:post {:summary (sd/sum_adm (t "Create usage_terms."))
+    {:post {:summary (sd/sum_adm "Create usage_terms.")
             :handler handle_create-usage_terms
             ;:middleware [(wwrap-find-usage_term :id "id" false)]
             :coercion reitit.coercion.schema/coercion
@@ -129,7 +129,7 @@
                         406 {:body s/Any}}}
 
      ; usage_term list / query
-     :get {:summary (sd/sum_adm (t "List usage_terms."))
+     :get {:summary (sd/sum_adm "List usage_terms.")
            :handler handle_list-usage_term
            :coercion reitit.coercion.schema/coercion
            :middleware [wrap-authorize-admin!]
@@ -139,7 +139,7 @@
 
    ; edit usage_term
    ["/:id"
-    {:get {:summary (sd/sum_adm (t "Get usage_terms by id."))
+    {:get {:summary (sd/sum_adm "Get usage_terms by id.")
            :handler handle_get-usage_term
            :middleware [wrap-authorize-admin!
                         (wwrap-find-usage_term :id)]
@@ -150,7 +150,7 @@
                             :schema s/Str
                             :examples {"application/json" {:message "No such entity in :usage_terms as :id with <id>"}}}}}
 
-     :put {:summary (sd/sum_adm (t "Update usage_terms with id."))
+     :put {:summary (sd/sum_adm "Update usage_terms with id.")
            :handler handle_update-usage_terms
            :middleware [wrap-authorize-admin!
                         (wwrap-find-usage_term :id)]
@@ -163,7 +163,7 @@
                             :examples {"application/json" {:message "No such entity in :usage_terms as :id with <id>"}}}
                        406 {:body s/Any}}}
 
-     :delete {:summary (sd/sum_adm (t "Delete usage_term by id."))
+     :delete {:summary (sd/sum_adm "Delete usage_term by id.")
               :coercion reitit.coercion.schema/coercion
               :handler handle_delete-usage_term
               :middleware [wrap-authorize-admin!
@@ -180,14 +180,14 @@
   ["/usage-terms"
    {:swagger {:tags ["usage-terms"]}}
    ["/"
-    {:get {:summary (sd/sum_pub (t "List usage_terms."))
+    {:get {:summary (sd/sum_pub "List usage_terms.")
            :handler handle_list-usage_term
            :coercion reitit.coercion.schema/coercion
            :parameters {:query {(s/optional-key :full_data) s/Bool}}
            :responses {200 {:body [schema_export_usage_term]}}}}]
 
    ["/:id"
-    {:get {:summary (sd/sum_pub (t "Get usage_terms by id."))
+    {:get {:summary (sd/sum_pub "Get usage_terms by id.")
            :handler handle_get-usage_term
            :middleware [(wwrap-find-usage_term :id)]
            :coercion reitit.coercion.schema/coercion

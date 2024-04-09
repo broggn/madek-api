@@ -222,7 +222,7 @@
    {:swagger {:tags ["admin/context-keys"] :security [{"auth" []}]}}
    ["/"
     {:post
-     {:summary (sd/sum_adm (t "Post context_key by id."))
+     {:summary (sd/sum_adm "Post context_key by id.")
       :swagger {:security [{"auth" []}]}
       :handler handle_create-context_keys
       :middleware [wrap-authorize-admin!]
@@ -235,7 +235,7 @@
 
     ; context_key list / query
      :get
-     {:summary (sd/sum_adm (t "Query context_keys."))
+     {:summary (sd/sum_adm "Query context_keys.")
       :handler handle_adm-list-context_keys
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
@@ -253,7 +253,7 @@
    ; edit context_key
    ["/:id"
     {:get
-     {:summary (sd/sum_adm (t "Get context_key by id."))
+     {:summary (sd/sum_adm "Get context_key by id.")
       :handler handle_adm-get-context_key
       :middleware [wrap-authorize-admin!
                    (wwrap-find-context_key :id :id true)]
@@ -264,7 +264,7 @@
                   406 {:body s/Any}}}
 
      :put
-     {:summary (sd/sum_adm (t "Update context_keys with id."))
+     {:summary (sd/sum_adm "Update context_keys with id.")
       :handler handle_update-context_keys
       :middleware [wrap-authorize-admin!
                    (wwrap-find-context_key :id :id true)]
@@ -276,7 +276,7 @@
                   406 {:body s/Any}}}
 
      :delete
-     {:summary (sd/sum_adm_todo (t "Delete context_key by id."))
+     {:summary (sd/sum_adm_todo "Delete context_key by id.")
       :coercion reitit.coercion.schema/coercion
       :handler handle_delete-context_key
       :middleware [wrap-authorize-admin!
@@ -292,7 +292,7 @@
    {:swagger {:tags ["context-keys"]}}
    ["/"
     {:get
-     {:summary (sd/sum_pub (t "Query / List context_keys."))
+     {:summary (sd/sum_pub "Query / List context_keys.")
       :handler handle_usr-list-context_keys
       :coercion reitit.coercion.schema/coercion
       :parameters {:query {(s/optional-key :id) s/Uuid
@@ -304,7 +304,7 @@
 
    ["/:id"
     {:get
-     {:summary (sd/sum_pub (t "Get context_key by id."))
+     {:summary (sd/sum_pub "Get context_key by id.")
       :handler handle_usr-get-context_key
       :middleware [(wwrap-find-context_key :id :id true)]
       :coercion reitit.coercion.schema/coercion

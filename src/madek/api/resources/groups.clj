@@ -179,7 +179,7 @@
 (def user-routes
   [["/groups"
     {:swagger {:tags ["groups"]}}
-    ["/" {:get {:summary (t "Get all group ids")
+    ["/" {:get {:summary "Get all group ids"
                 :description "Get list of group ids. Paging is used as you get a limit of 100 entries."
                 :handler index
                 :middleware [wrap-authorize-admin!]
@@ -189,7 +189,7 @@
                 ;:accept "application/json"
                 :coercion reitit.coercion.schema/coercion
                 :responses {200 {:body {:groups [schema_export-group]}}}}}]
-    ["/:id" {:get {:summary (t "Get group by id")
+    ["/:id" {:get {:summary "Get group by id"
                    :description "Get group by id. Returns 404, if no such group exists."
                    :swagger {:produces "application/json"}
                    :content-type "application/json"
@@ -203,7 +203,7 @@
 (def ring-routes
   ["/groups"
    {:swagger {:tags ["admin/groups"] :security [{"auth" []}]}}
-   ["/" {:get {:summary (f (t "Get all group ids") "no-input-validation")
+   ["/" {:get {:summary (f "Get all group ids" " / TODO: no-input-validation")
                :description "Get list of group ids. Paging is used as you get a limit of 100 entries."
                :handler index
                :middleware [wrap-authorize-admin!]
@@ -213,7 +213,7 @@
                :coercion reitit.coercion.schema/coercion
                :responses {200 {:body {:groups [schema_export-group]}}}}
 
-         :post {:summary (f (t "Create a group") "groups::person_id-not-exists")
+         :post {:summary (f "Create a group" "groups::person_id-not-exists")
                 :description "Create a group."
                 :handler handle_create-group
                 :middleware [wrap-authorize-admin!]
@@ -232,7 +232,7 @@
                                  :examples {"application/json" {:message "Entry already exists"}}}
                             500 {:body s/Any}}}}]
 
-   ["/:id" {:get {:summary (t "Get group by id OR institutional-id")
+   ["/:id" {:get {:summary "Get group by id OR institutional-id"
                   :description "CAUTION: Get group by id OR institutional-id. Returns 404, if no such group exists."
                   :swagger {:produces "application/json"}
                   :content-type "application/json"
@@ -250,7 +250,7 @@
                               404 {:description "Not Found."
                                    :schema s/Str
                                    :examples {"application/json" {:message "No such group found"}}}}}
-            :delete {:summary (f (t "Deletes a group by id"))
+            :delete {:summary "Deletes a group by id"
                      :description "Delete a group by id"
                      :handler handle_delete-group
                      :middleware [wrap-authorize-admin!]
@@ -261,7 +261,7 @@
                                  204 {:description "No Content. The resource was deleted successfully."
                                       :schema nil
                                       :examples {"application/json" nil}}}}
-            :put {:summary (t "Get group by id")
+            :put {:summary "Get group by id"
                   :swagger {:produces "application/json"}
                   :content-type "application/json"
                   :accept "application/json"
@@ -276,7 +276,7 @@
                               404 {:body s/Any}}}}] ; TODO error handling
 
    ; groups-users/ring-routes
-   ["/:group-id/users/" {:get {:summary (t "Get group users by id")
+   ["/:group-id/users/" {:get {:summary "Get group users by id"
                                :description "Get group users by id. (zero-based paging)"
                                :swagger {:produces "application/json"}
                                :content-type "application/json"
@@ -292,7 +292,7 @@
 
                          ; TODO works with tests, but not with the swagger ui
                          ; TODO: broken test / duplicate key issue
-                         :put {:summary (f (t "Update group users by group-id and list of users.") "tests-needed / BROKEN-TEST")
+                         :put {:summary "Update group users by group-id and list of users."
                                :description "Update group users by group-id and list of users."
                                :swagger {:consumes "application/json" :produces "application/json"}
                                :content-type "application/json"
@@ -305,10 +305,10 @@
                                :responses {200 {:body s/Any} ;groups/schema_export-group}
                                            404 {:body s/Str}}}}]
 
-   ["/:group-id/users/:user-id" {:get {:summary (t "Get group user by group-id and user-id")
+   ["/:group-id/users/:user-id" {:get {:summary "Get group user by group-id and user-id"
                                        :description "gid= uuid/institutional_id\n
-                                       user_id= uuid|email??\n WTF
-                                       Get group user by group-id and user-id. gid: 4059e7eb-cf2d-4434-b14e-9a8b4119cfbe uid: 74feaf67-6706-469a-92a5-eff9aef9f897 "
+                                       user_id= uuid|email\n
+                                       Get group user by group-id and user-id."
                                        :swagger {:produces "application/json"}
                                        :content-type "application/json"
                                        :handler group-users/handle_get-group-user
@@ -324,7 +324,7 @@
                                                         :examples {"application/json" {:message "No such group or user."}}}}}
 
                                  ; TODO error handling
-                                 :put {:summary (t "Get group user by group-id and user-id")
+                                 :put {:summary "Get group user by group-id and user-id"
                                        :description "Get group user by group-id and user-id."
                                        :swagger {:produces "application/json"}
                                        :content-type "application/json"
@@ -340,7 +340,7 @@
                                                    404 {:description "Creation failed."
                                                         :schema s/Str
                                                         :examples {"application/json" {:message "No such group or user."}}}}} ; TODO error handling
-                                 :delete {:summary (t "Deletes a group-user by group-id and user-id")
+                                 :delete {:summary "Deletes a group-user by group-id and user-id"
                                           :description "Delete a group-user by group-id and user-id."
                                           ;:swagger {:produces "application/json"}
                                           ;:content-type "application/json"

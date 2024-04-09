@@ -153,7 +153,7 @@
   [["/app-settings"
     {:swagger {:tags ["admin/app-settings"] :security [{"auth" []}]}}
     ["/"
-     {:get {:summary (sd/sum_adm (t "Get App Settings."))
+     {:get {:summary (sd/sum_adm "Get App Settings.")
             :handler handle_get-app-settings
             :middleware [wrap-authorize-admin!]
             :swagger {:produces "application/json"}
@@ -178,7 +178,7 @@
   [["/app-settings"
     {:swagger {:tags ["app-settings"]}}
     ["/"
-     {:get {:summary (sd/sum_pub (t "Get App Settings."))
+     {:get {:summary (sd/sum_pub "Get App Settings.")
             :handler handle_get-app-settings
             :swagger {:produces "application/json"}
             :content-type "application/json"

@@ -255,7 +255,7 @@
   ["/meta-keys"
    {:swagger {:tags ["admin/meta-keys"] :security [{"auth" []}]}}
    ["/"
-    {:get {:summary (sd/sum_adm (f (t "Get all meta-key ids")))
+    {:get {:summary (sd/sum_adm "Get all meta-key ids")
            :description "Get list of meta-key ids. Paging is used as you get a limit of 100 entries."
            :handler handle_adm-query-meta-keys
            :middleware [wrap-authorize-admin!]
@@ -269,7 +269,7 @@
            :responses {200 {:description "Meta-Keys-Object that contians list of meta-key-entries OR empty list"
                             :body {:meta-keys [schema_export-meta-key-adm]}}}}
 
-     :post {:summary (sd/sum_adm (t "Create meta-key."))
+     :post {:summary (sd/sum_adm "Create meta-key.")
             :handler handle_create_meta-key
             :middleware [wrap-authorize-admin!]
 
@@ -288,7 +288,7 @@
                         406 {:body s/Any}}}}]
 
    ["/:id"
-    {:get {:summary (sd/sum_adm (t "Get meta-key by id"))
+    {:get {:summary (sd/sum_adm "Get meta-key by id")
            :description "Get meta-key by id. Returns 404, if no such meta-key exists."
            :content-type "application/json"
            :accept "application/json"
@@ -312,7 +312,7 @@
                             :schema s/Str
                             :examples {"application/json" {:message "Wrong meta_key_id format! See documentation. (fdas)"}}}}}
 
-     :put {:summary (sd/sum_adm (t "Update meta-key."))
+     :put {:summary (sd/sum_adm "Update meta-key.")
            :handler handle_update_meta-key
            :content-type "application/json"
            :accept "application/json"
@@ -339,7 +339,7 @@
                             :schema s/Str
                             :examples {"application/json" {:message "Could not update meta_key."}}}}}
 
-     :delete {:summary (sd/sum_adm (t "Delete meta-key."))
+     :delete {:summary (sd/sum_adm "Delete meta-key.")
               :handler handle_delete_meta-key
               :middleware [(sd/wrap-check-valid-meta-key-new :id)
                            (wwrap-find-meta_key :id :id true)]
@@ -363,7 +363,7 @@
   ["/meta-keys"
    {:swagger {:tags ["meta-keys"]}}
    ["/"
-    {:get {:summary (sd/sum_usr_pub (t "Get all meta-key ids"))
+    {:get {:summary (sd/sum_usr_pub "Get all meta-key ids")
            :description "Get list of meta-key ids. Paging is used as you get a limit of 100 entries."
            :handler handle_usr-query-meta-keys
            :parameters {:query schema_query-meta-key}
@@ -376,7 +376,7 @@
                             :body {:meta-keys [schema_export-meta-key-usr]}}}}}]
 
    ["/:id"
-    {:get {:summary (sd/sum_usr_pub (v (t "Get meta-key by id")))
+    {:get {:summary (sd/sum_usr_pub (v "Get meta-key by id"))
            :description "Get meta-key by id. Returns 404, if no such meta-key exists."
            :content-type "application/json"
            :accept "application/json"

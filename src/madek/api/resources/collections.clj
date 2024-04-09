@@ -183,7 +183,7 @@
    {:swagger {:tags ["api/collection"]}}
    ["collections"
     {:get
-     {:summary (sd/sum_usr (f (t "Query/List collections.") "BROKEN-FILTER"))
+     {:summary (sd/sum_usr "Query/List collections.")
       :handler handle_get-index
       :swagger {:produces ["application/json" "application/octet-stream"]}
       :parameters {:query schema_collection-query}
@@ -192,7 +192,7 @@
 
    ["collection"
     {:post
-     {:summary (sd/sum_usr (t "Create collection"))
+     {:summary (sd/sum_usr "Create collection")
 
       ;:description "CAUTION: Either :responsible_user_id OR :responsible_user_id has to be set - not both (db-constraint)"
       :description (mslurp "./md/collections-post.md")
@@ -207,7 +207,7 @@
                   406 {:body s/Any}}}}]
 
    ["collection/:collection_id"
-    {:get {:summary (sd/sum_usr_pub (t "Get collection for id."))
+    {:get {:summary (sd/sum_usr_pub "Get collection for id.")
            :handler handle_get-collection
            :middleware [sd/ring-wrap-add-media-resource
                         sd/ring-wrap-authorization-view]
@@ -219,7 +219,7 @@
                        404 {:body s/Any}
                        422 {:body s/Any}}}
 
-     :put {:summary (sd/sum_usr (t "Update collection for id."))
+     :put {:summary (sd/sum_usr "Update collection for id.")
            :handler handle_update-collection
            :middleware [sd/ring-wrap-add-media-resource
                         sd/ring-wrap-authorization-edit-metadata]
@@ -235,7 +235,7 @@
 
      ; TODO Frage: wer darf eine col löschen: nur der benutzer und der responsible
      ; TODO check owner or responsible
-     :delete {:summary (sd/sum_usr (t "Delete collection for id."))
+     :delete {:summary (sd/sum_usr "Delete collection for id.")
               :handler handle_delete-collection
               :middleware [sd/ring-wrap-add-media-resource
                            sd/ring-wrap-authorization-edit-permissions]

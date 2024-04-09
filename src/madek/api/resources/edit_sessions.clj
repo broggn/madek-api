@@ -152,18 +152,18 @@
   ["/edit_sessions"
    {:swagger {:tags ["admin/edit_sessions"] :security [{"auth" []}]}}
    ["/"
-    {:get {:summary (sd/sum_adm (t "List edit_sessions."))
+    {:get {:summary (sd/sum_adm "List edit_sessions.")
            :handler handle_adm_list-edit-sessions
            :middleware [wrap-authorize-admin!]
            :coercion reitit.coercion.schema/coercion
            :parameters {:query schema_adm_query_edit_session}}}]
    ["/:id"
-    {:get {:summary (sd/sum_adm (t "Get edit_session."))
+    {:get {:summary (sd/sum_adm "Get edit_session.")
            :handler handle_adm_get-edit-session
            :middleware [wrap-authorize-admin!]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Uuid}}}
-     :delete {:summary (sd/sum_adm (t "Delete edit_session."))
+     :delete {:summary (sd/sum_adm "Delete edit_session.")
               :handler handle_adm_delete-edit-sessions
               :middleware [wrap-authorize-admin!]
               :coercion reitit.coercion.schema/coercion
@@ -175,14 +175,14 @@
   ["/edit_sessions"
    {:swagger {:tags ["edit_sessions"]}}
    ["/"
-    {:get {:summary (sd/sum_usr (t "List authed users edit_sessions."))
+    {:get {:summary (sd/sum_usr "List authed users edit_sessions.")
            :handler handle_usr_list-edit-sessions
            :middleware [authorization/wrap-authorized-user]
            :coercion reitit.coercion.schema/coercion
            :parameters {:query schema_usr_query_edit_session}}}]
 
    ["/:id"
-    {:get {:summary (sd/sum_usr (t "Get edit_session."))
+    {:get {:summary (sd/sum_usr "Get edit_session.")
            :handler handle_usr_get-edit-session
            :middleware [authorization/wrap-authorized-user]
            :coercion reitit.coercion.schema/coercion

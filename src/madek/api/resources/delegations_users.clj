@@ -178,7 +178,7 @@
     {:swagger {:tags ["admin/delegation/users"] :security [{"auth" []}]}}
     ["/"
      {:get
-      {:summary (sd/sum_adm (t "Query delegations_users."))
+      {:summary (sd/sum_adm "Query delegations_users.")
        :handler handle_list-delegations_users
        :coercion reitit.coercion.schema/coercion
        :parameters {:query {(s/optional-key :user_id) s/Uuid
@@ -186,7 +186,7 @@
                             (s/optional-key :full-data) s/Bool}}}}]
     ["/:delegation_id/:user_id"
      {:post
-      {:summary (sd/sum_adm (t "Create delegations_user for user and delegation."))
+      {:summary (sd/sum_adm "Create delegations_user for user and delegation.")
        :handler handle_create-delegations_user
        :middleware [(wwrap-find-user :user_id)
                     (wwrap-find-delegation :delegation_id)
@@ -196,7 +196,7 @@
                            :delegation_id s/Uuid}}}
 
       :get
-      {:summary (sd/sum_adm (t "Get delegations_user for user and delegation."))
+      {:summary (sd/sum_adm "Get delegations_user for user and delegation.")
        :handler handle_get-delegations_user
        :middleware [(wwrap-find-delegations_user true)]
        :coercion reitit.coercion.schema/coercion
@@ -204,7 +204,7 @@
                            :delegation_id s/Uuid}}}
 
       :delete
-      {:summary (sd/sum_adm (t "Delete delegations_user for user and delegation."))
+      {:summary (sd/sum_adm "Delete delegations_user for user and delegation.")
        :coercion reitit.coercion.schema/coercion
        :handler handle_delete-delegations_user
        :middleware [(wwrap-find-delegations_user true)]

@@ -75,7 +75,7 @@
    (s/optional-key :count) greater-zero-validation})
 
 (def route
-  {:summary (sd/sum_adm (t "Get list of people ids."))
+  {:summary (sd/sum_adm "Get list of people ids.")
    :description "Get list of people ids."
    :swagger {:produces "application/json"}
    :parameters {:query query-schema}

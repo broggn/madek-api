@@ -359,7 +359,7 @@
    {:swagger {:tags ["media-entry/perms"]}}
    ["/"
     {:get
-     {:summary (sd/sum_usr_pub (t "List media-entry permissions."))
+     {:summary (sd/sum_usr_pub "List media-entry permissions.")
       :swagger {:produces "application/json"}
       :content-type "application/json"
       :handler handle_list-perms
@@ -542,7 +542,7 @@
    {:swagger {:tags ["collection/perms"]}}
    ["/"
     {:get
-     {:summary (t "Query collection permissions.")
+     {:summary "Query collection permissions."
       :swagger {:produces "application/json"}
       :content-type "application/json"
       :handler handle_list-perms
@@ -554,7 +554,7 @@
 
    ["/resources"
     {:get
-     {:summary (t "Query collection permissions.")
+     {:summary "Query collection permissions."
       :swagger {:produces "application/json"}
       :content-type "application/json"
       :handler handle_get_entity_perms
@@ -589,7 +589,7 @@
       :responses {200 {:body schema_export-collection-perms}}}}]
 
    ["/users"
-    {:get {:summary (t "Query collection permissions.")
+    {:get {:summary "Query collection permissions."
            :swagger {:produces "application/json"}
            :content-type "application/json"
            :handler handle_list-user-perms

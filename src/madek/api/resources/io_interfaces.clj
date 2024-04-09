@@ -116,7 +116,7 @@
    {:swagger {:tags ["admin/io_interfaces"] :security [{"auth" []}]}}
    ["/"
     {:post
-     {:summary (sd/sum_adm (t "Create io_interfaces."))
+     {:summary (sd/sum_adm "Create io_interfaces.")
       :handler handle_create-io_interfaces
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
@@ -126,7 +126,7 @@
 
      ; io_interface list / query
      :get
-     {:summary (sd/sum_adm (t "List io_interfaces."))
+     {:summary (sd/sum_adm "List io_interfaces.")
       :handler handle_list-io_interface
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
@@ -136,7 +136,7 @@
    ; edit io_interface
    ["/:id"
     {:get
-     {:summary (sd/sum_adm (t "Get io_interfaces by id."))
+     {:summary (sd/sum_adm "Get io_interfaces by id.")
       :handler handle_get-io_interface
       :middleware [wrap-authorize-admin!
                    wrap-find-io_interface]
@@ -146,7 +146,7 @@
                   404 {:body s/Any}}}
 
      :put
-     {:summary (sd/sum_adm (t "Update io_interfaces with id."))
+     {:summary (sd/sum_adm "Update io_interfaces with id.")
       :handler handle_update-io_interfaces
       :middleware [wrap-authorize-admin!
                    wrap-find-io_interface]
@@ -158,7 +158,7 @@
                   406 {:body s/Any}}}
 
      :delete
-     {:summary (sd/sum_adm (t "Delete io_interface by id."))
+     {:summary (sd/sum_adm "Delete io_interface by id.")
       :coercion reitit.coercion.schema/coercion
       :handler handle_delete-io_interface
       :middleware [wrap-authorize-admin!

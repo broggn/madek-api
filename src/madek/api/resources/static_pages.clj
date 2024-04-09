@@ -121,7 +121,7 @@
   ["/static-pages"
    {:swagger {:tags ["admin/static-pages"] :security [{"auth" []}]}}
    ["/"
-    {:post {:summary (sd/sum_adm (t "Create static_page."))
+    {:post {:summary (sd/sum_adm "Create static_page.")
             :handler handle_create-static_page
             :coercion reitit.coercion.schema/coercion
             :parameters {:body schema_create_static_page}
@@ -133,13 +133,13 @@
                              :schema s/Str
                              :examples {"application/json" {:message "Entry already exists"}}}}}
 
-     :get {:summary (sd/sum_adm (t "List static_pages."))
+     :get {:summary (sd/sum_adm "List static_pages.")
            :handler handle_list-static_pages
            :coercion reitit.coercion.schema/coercion
            :parameters {:query {(s/optional-key :full_data) s/Bool}}}}]
 
    ["/:id"
-    {:get {:summary (sd/sum_adm (t "Get static_pages by id."))
+    {:get {:summary (sd/sum_adm "Get static_pages by id.")
            :handler handle_get-static_page
            :middleware [(wwrap-find-static_page :id)]
            :coercion reitit.coercion.schema/coercion
@@ -149,7 +149,7 @@
                             :schema s/Str
                             :examples {"application/json" {:message "No such entity in :static_pages as :id with <id>"}}}}}
 
-     :put {:summary (sd/sum_adm (t "Update static_pages with id."))
+     :put {:summary (sd/sum_adm "Update static_pages with id.")
            :handler handle_update-static_page
            :middleware [(wwrap-find-static_page :id)]
            :coercion reitit.coercion.schema/coercion
@@ -161,7 +161,7 @@
                             :schema s/Str
                             :examples {"application/json" {:message "No such entity in :static_pages as :id with <id>"}}}}}
 
-     :delete {:summary (sd/sum_adm (t "Delete static_page by id."))
+     :delete {:summary (sd/sum_adm "Delete static_page by id.")
               :coercion reitit.coercion.schema/coercion
               :handler handle_delete-static_page
               :middleware [(wwrap-find-static_page :id)]

@@ -171,7 +171,7 @@
   ["/vocabularies"
    {:swagger {:tags ["admin/vocabularies"] :security [{"auth" []}]}}
    ["/"
-    {:get {:summary (t "Get list of vocabularies ids.")
+    {:get {:summary "Get list of vocabularies ids."
            :description "Get list of vocabularies ids."
            :handler get-index
            :middleware [wrap-authorize-admin!]
@@ -180,7 +180,7 @@
            :coercion reitit.coercion.schema/coercion
            :responses {200 {:body {:vocabularies [schema_export-vocabulary-admin]}}}}
 
-     :post {:summary (sd/sum_adm (t "Create vocabulary."))
+     :post {:summary (sd/sum_adm "Create vocabulary.")
             :handler handle_create-vocab
             :middleware [wrap-authorize-admin!]
 
@@ -201,7 +201,7 @@
             :swagger {:consumes "application/json" :produces "application/json"}}}]
 
    ["/:id"
-    {:get {:summary (sd/sum_adm (t "Get vocabulary by id."))
+    {:get {:summary (sd/sum_adm "Get vocabulary by id.")
            :handler get-vocabulary
            :middleware [wrap-authorize-admin!]
            :swagger {:produces "application/json"}
@@ -218,7 +218,7 @@
                             :schema s/Str
                             :examples {"application/json" {:message "Vocabulary could not be found!"}}}}}
 
-     :put {:summary (sd/sum_adm_todo (f (t "Update vocabulary.")))
+     :put {:summary (sd/sum_adm_todo "Update vocabulary.")
            :handler handle_update-vocab
            :middleware [wrap-authorize-admin!]
            :content-type "application/json"
@@ -241,7 +241,7 @@
                             :schema s/Str
                             :examples {"application/json" {:message "No such vocabulary."}}}}}
 
-     :delete {:summary (sd/sum_adm_todo (f (t "Delete vocabulary.") "http-status-409?"))
+     :delete {:summary (sd/sum_adm_todo "Delete vocabulary.")
               :handler handle_delete-vocab
               :middleware [wrap-authorize-admin!]
               :content-type "application/json"
@@ -266,7 +266,7 @@
    ["/:id/perms"
     ["/"
      {:get
-      {:summary (sd/sum_adm (t "List vocabulary permissions"))
+      {:summary (sd/sum_adm "List vocabulary permissions")
        :handler permissions/handle_list-vocab-perms
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
@@ -279,7 +279,7 @@
                         :examples {"application/json" {:message "No such vocabulary."}}}}}
 
       :put
-      {:summary (sd/sum_adm (t "Update vocabulary resource permissions"))
+      {:summary (sd/sum_adm "Update vocabulary resource permissions")
        :handler handle_update-vocab
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
@@ -300,7 +300,7 @@
 
     ["/users"
      {:get
-      {:summary (sd/sum_adm_todo (t "List vocabulary user permissions"))
+      {:summary (sd/sum_adm_todo "List vocabulary user permissions")
        :handler permissions/handle_list-vocab-user-perms
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
@@ -320,7 +320,7 @@
 
     ["/user/:user_id"
      {:get
-      {:summary (sd/sum_adm_todo (t "Get vocabulary user permissions"))
+      {:summary (sd/sum_adm_todo "Get vocabulary user permissions")
        :handler permissions/handle_get-vocab-user-perms
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
@@ -333,7 +333,7 @@
                         :schema s/Str
                         :examples {"application/json" {:message "No such vocabulary user permission."}}}}}
       :post
-      {:summary (sd/sum_adm (t "Create vocabulary user permissions"))
+      {:summary (sd/sum_adm "Create vocabulary user permissions")
        :handler permissions/handle_create-vocab-user-perms
 
        ;; TODO: remove this
@@ -356,7 +356,7 @@
                         :examples {"application/json" {:message "Entry already exists"}}}}}
 
       :put
-      {:summary (sd/sum_adm (t "Update vocabulary user permissions"))
+      {:summary (sd/sum_adm "Update vocabulary user permissions")
        :handler permissions/handle_update-vocab-user-perms
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
@@ -375,7 +375,7 @@
                         :examples {"application/json" {:message "Could not update vocabulary user permission"}}}}}
 
       :delete
-      {:summary (sd/sum_adm (t "Delete vocabulary user permissions"))
+      {:summary (sd/sum_adm "Delete vocabulary user permissions")
        :handler permissions/handle_delete-vocab-user-perms
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
@@ -399,7 +399,7 @@
 
     ["/groups"
      {:get
-      {:summary (sd/sum_adm_todo (t "List vocabulary group permissions"))
+      {:summary (sd/sum_adm_todo "List vocabulary group permissions")
        :handler permissions/handle_list-vocab-group-perms
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
@@ -418,7 +418,7 @@
 
     ["/group/:group_id"
      {:get
-      {:summary (sd/sum_adm_todo (t "Get vocabulary group permissions"))
+      {:summary (sd/sum_adm_todo "Get vocabulary group permissions")
        :handler permissions/handle_get-vocab-group-perms
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
@@ -432,14 +432,10 @@
                         :examples {"application/json" {:message "No such vocabulary group permission."}}}}}
 
       :post
-      {:summary (sd/sum_adm_todo (t "Create vocabulary group permissions"))
+      {:summary (sd/sum_adm_todo "Create vocabulary group permissions")
        :handler permissions/handle_create-vocab-group-perms
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
-
-       ;; TODO: remove this
-       :description (str "TODO: REMOVE THIS | id: columns , id: ecb0de43-ccd2-463a-85a6-826c6ff99cdf")
-
        :accept "application/json"
        :coercion reitit.coercion.schema/coercion
        :parameters {:path {:id s/Str
@@ -457,7 +453,7 @@
                         :examples {"application/json" {:message "Entry already exists"}}}}}
 
       :put
-      {:summary (sd/sum_adm_todo (t "Update vocabulary group permissions"))
+      {:summary (sd/sum_adm_todo "Update vocabulary group permissions")
        :handler permissions/handle_update-vocab-group-perms
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
@@ -479,7 +475,7 @@
                         :examples {"application/json" {:message "Could not update vocabulary group permission"}}}}}
 
       :delete
-      {:summary (sd/sum_adm_todo (t "Delete vocabulary group permissions"))
+      {:summary (sd/sum_adm_todo "Delete vocabulary group permissions")
        :handler permissions/handle_delete-vocab-group-perms
        :middleware [wrap-authorize-admin!]
        :content-type "application/json"
@@ -499,7 +495,7 @@
 (def user-routes
   ["/vocabularies"
    {:swagger {:tags ["vocabulary"]}}
-   ["/" {:get {:summary (t "Get list of vocabularies ids.")
+   ["/" {:get {:summary "Get list of vocabularies ids."
                :description "Get list of vocabularies ids."
                :handler get-index
                :content-type "application/json"
@@ -507,7 +503,7 @@
                :swagger (generate-swagger-pagination-params)
                :responses {200 {:body {:vocabularies [schema_export-vocabulary]}}}}}]
 
-   ["/:id" {:get {:summary (t "Get vocabulary by id.")
+   ["/:id" {:get {:summary "Get vocabulary by id."
                   ;:description "Get a vocabulary by id. Returns 404, if no such vocabulary exists."
                   :swagger {:produces "application/json"}
                   :content-type "application/json"

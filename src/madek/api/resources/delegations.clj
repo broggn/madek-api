@@ -115,14 +115,14 @@
   ["/delegations"
    {:swagger {:tags ["admin/delegations"] :security [{"auth" []}]}}
    ["/"
-    {:post {:summary (sd/sum_adm_todo (t "Create delegations."))
+    {:post {:summary (sd/sum_adm_todo "Create delegations.")
             ; TODO labels and descriptions
             :handler handle_create-delegations
             :coercion reitit.coercion.schema/coercion
             :parameters {:body schema_import_delegations}
             :responses {200 {:body schema_export_delegations}
                         406 {:body s/Any}}}
-     :get {:summary (sd/sum_adm (t "List delegations."))
+     :get {:summary (sd/sum_adm "List delegations.")
            :handler handle_list-delegations
            :coercion reitit.coercion.schema/coercion
            :swagger {:produces "application/json"
@@ -137,7 +137,7 @@
 
 ; edit delegation
    ["/:id"
-    {:get {:summary (sd/sum_adm (t "Get delegations by id."))
+    {:get {:summary (sd/sum_adm "Get delegations by id.")
            :handler handle_get-delegation
            :middleware [(wwrap-find-delegation :id :id true)]
            :coercion reitit.coercion.schema/coercion
@@ -147,7 +147,7 @@
                             :schema s/Str
                             :examples {"application/json" {:message "No such entity in :delegations as :id with <id>"}}}}}
 
-     :put {:summary (sd/sum_adm (t "Update delegations with id."))
+     :put {:summary (sd/sum_adm "Update delegations with id.")
            :handler handle_update-delegations
            :middleware [(wwrap-find-delegation :id :id true)]
            :coercion reitit.coercion.schema/coercion
@@ -161,7 +161,7 @@
                             :schema s/Str
                             :examples {"application/json" {:message "Could not update delegation."}}}}}
 
-     :delete {:summary (sd/sum_adm_todo (t "Delete delegation by id."))
+     :delete {:summary (sd/sum_adm_todo "Delete delegation by id.")
               :coercion reitit.coercion.schema/coercion
               :handler handle_delete-delegation
               :middleware [(wwrap-find-delegation :id :id true)]
