@@ -349,6 +349,7 @@
 
 (def ring-routes
   ["/"
+   {:swagger {:tags ["api/media-entries"]}}
    ["media-entries"
     {:get
      {:summary "Query media-entries."
