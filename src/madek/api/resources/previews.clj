@@ -90,7 +90,7 @@
 ; TODO tests
 (def media-entry-routes
   ["/media-entry"
-   {:swagger {:tags ["api/media-entry"] }}
+   {:swagger {:tags ["api/media-entry"]}}
    ; TODO media-entry preview auth
    ["/:media_entry_id/preview"
     {:get {:summary "Get preview for media-entry id."

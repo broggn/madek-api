@@ -178,7 +178,7 @@
 
 (def media-entry-routes
   ["/media-entry/:media_entry_id/custom_url"
-   {:swagger {:tags ["api/media-entry"] }}
+   {:swagger {:tags ["api/media-entry"]}}
    {:get {:summary "Get custom_url for media entry."
           :handler handle_get-custom-urls
           :middleware [sd/ring-wrap-add-media-resource

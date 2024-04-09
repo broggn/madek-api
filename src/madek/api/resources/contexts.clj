@@ -139,7 +139,7 @@
 (def admin-routes
 
   ["/contexts"
-   {:swagger {:tags  ["admin/contexts"]  :security [{"auth" []}]}}
+   {:swagger {:tags ["admin/contexts"] :security [{"auth" []}]}}
    ["/"
     {:post {:summary (sd/sum_adm_todo (t "Create contexts."))
             :handler handle_create-contexts

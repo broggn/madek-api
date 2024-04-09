@@ -817,14 +817,14 @@
 (def role-routes
   ["/meta-data-role"
    {:swagger {:tags ["api/meta-data-role"]}}
-   [ "/:meta_data_role_id"
-   {:get {:summary " Get meta-data role for id "
-          :handler meta-datum/handle_get-meta-datum-role
-          :description " Get meta-datum-role for id. returns 404, if no such meta-data role exists. "
-          :coercion reitit.coercion.schema/coercion
-          :parameters {:path {:meta_data_role_id s/Str}}
-          :responses {200 {:body schema_export_mdrole}
-                      404 {:body s/Any}}}}]])
+   ["/:meta_data_role_id"
+    {:get {:summary " Get meta-data role for id "
+           :handler meta-datum/handle_get-meta-datum-role
+           :description " Get meta-datum-role for id. returns 404, if no such meta-data role exists. "
+           :coercion reitit.coercion.schema/coercion
+           :parameters {:path {:meta_data_role_id s/Str}}
+           :responses {200 {:body schema_export_mdrole}
+                       404 {:body s/Any}}}}]])
 
 (def collection-routes
   ["/collection"

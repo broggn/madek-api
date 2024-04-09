@@ -376,7 +376,7 @@
 (sa/def ::collection_id string?)
 (def media-entry-routes
   ["/media-entry"
-    {:swagger {:tags ["api/media-entry"] }}
+   {:swagger {:tags ["api/media-entry"]}}
    ["/"
     {:post {:summary (sd/sum_todo "Create media-entry. Only for testing. Use webapp until media-encoder is ready")
             :handler handle_create-media-entry

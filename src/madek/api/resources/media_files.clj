@@ -88,7 +88,7 @@
            }}]])
 (def media-entry-routes
   ["/media-entry"
-   {:swagger {:tags ["api/media-entry"] }}
+   {:swagger {:tags ["api/media-entry"]}}
    ["/:media_entry_id/media-file"
     {:get
      {:summary (sd/sum_usr_pub "Get media-file for media-entry id.")

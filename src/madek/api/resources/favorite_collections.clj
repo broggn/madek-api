@@ -122,7 +122,7 @@
 ; TODO tests
 (def favorite-routes
   ["/favorite/collections"
-   {:swagger {:tags ["api/favorite"] }}
+   {:swagger {:tags ["api/favorite"]}}
    {:get
     {:summary (sd/sum_usr "List users favorite_collections.")
      :handler handle_list-favorite_collection-by-user
