@@ -5,7 +5,8 @@
    [next.jdbc.prepare :as prepare]
    [next.jdbc.result-set :as jdbc-rs])
   (:import
-   (org.postgresql.util PGobject)))
+   [java.sql Array PreparedStatement]
+   [org.postgresql.util PGobject]))
 
 ;;; Time ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

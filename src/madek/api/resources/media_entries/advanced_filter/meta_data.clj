@@ -59,6 +59,8 @@
          [:= full-column (to-uuid value column)]))))
 
 (defn- sql-raw-text-search [column search-string]
+  ; we need to pass 'english' because it was also used
+  ; when creating indexes
   [[:raw (str "to_tsvector('english', "
               column
               ") @@ plainto_tsquery('english', '" search-string "')")]])

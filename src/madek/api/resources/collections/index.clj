@@ -46,6 +46,9 @@
                                                           authenticated-entity)
                       (pagination/add-offset-for-honeysql query-params)
                       sql-format)]
+    ;(logging/info "build-query"
+    ;              "\nquery\n" query-params
+    ;              "\nsql query:\n" sql-query)
     sql-query))
 
 (defn- query-index-resources [request]
