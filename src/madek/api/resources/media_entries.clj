@@ -374,7 +374,9 @@
 (sa/def ::copy_me_id string?)
 (sa/def ::collection_id string?)
 (def media-entry-routes
-  [["/media-entry"
+  ["/media-entry"
+    {:swagger {:tags ["api/media-entry"] }}
+   ["/"
     {:post {:summary (sd/sum_todo "Create media-entry. Only for testing. Use webapp until media-encoder is ready")
             :handler handle_create-media-entry
             :swagger {:consumes "multipart/form-data"
@@ -387,7 +389,8 @@
             :parameters {:query (sa/keys :opt-un [::copy_me_id ::collection_id])
                          :multipart {:file multipart/temp-file-part}}}}]
 
-   ["/media-entry/:media_entry_id"
+   ["/:media_entry_id"
+    ;{:swagger {:tags ["api/media-entry"] }}
     {:get {:summary "Get media-entry for id."
            :handler handle_get-media-entry
            :swagger {:produces "application/json"}
@@ -411,7 +414,7 @@
               :coercion reitit.coercion.schema/coercion
               :parameters {:path {:media_entry_id s/Uuid}}}}]
 
-   ["/media-entry/:media_entry_id/publish"
+   ["/:media_entry_id/publish"
     {:put {:summary "Try publish media-entry for id."
            :handler handle_try-publish-media-entry
            :swagger {:produces "application/json"}
