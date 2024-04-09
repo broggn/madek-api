@@ -140,7 +140,7 @@
           (let [del-clause (sd/sql-update-clause "vocabulary_id" vid "user_id" uid)
                 query (-> (sql/delete-from :vocabulary_user_permissions)
                           (sql/where [:= :vocabulary_id vid] [:= :user_id uid])
-                          sql-format                          )
+                          sql-format)
                 del-result (jdbc/execute-one! (get-ds) query)]
             (if (= 1 (::jdbc/update-count del-result))
               (sd/response_ok old-data)
@@ -195,11 +195,11 @@
                            :group_id gid)]
           (let [upd-data (-> req :parameters :body)
                 query (-> (sql/update :vocabulary_group_permissions)
-                          (sql/set  upd-data)
+                          (sql/set upd-data)
                           (sql/where [:= :vocabulary_id vid] [:= :group_id gid])
                           (sql/returning :*)
                           sql-format)
-                upd-result (jdbc/execute-one! (get-ds)  query)]
+                upd-result (jdbc/execute-one! (get-ds) query)]
             (if upd-result
               (sd/response_ok upd-result)
               (sd/response_failed "Could not update vocabulary group permission" 406)))

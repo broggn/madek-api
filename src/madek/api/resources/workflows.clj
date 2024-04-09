@@ -40,9 +40,9 @@
                           sql-format)
             ins-res (jdbc/execute-one! (get-ds) sql-query)]
 
-       (info "handle_create-workflow: "
-                      "\ndata:\n" ins-data
-                      "\nresult:\n" ins-res)
+        (info "handle_create-workflow: "
+              "\ndata:\n" ins-data
+              "\nresult:\n" ins-res)
 
         (if-let [result (::jdbc/update-count ins-res)]
           (sd/response_ok result)

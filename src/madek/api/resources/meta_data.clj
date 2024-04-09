@@ -1,6 +1,6 @@
 (ns madek.api.resources.meta-data
-  (:require [cheshire.core :as cheshire]
-            [cheshire.core]
+  (:require [cheshire.core]
+            [cheshire.core :as cheshire]
             [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
@@ -243,7 +243,7 @@
         upd-data {:json (with-meta json-parsed {:pgtype "jsonb"})}
         md-type "MetaDatum::JSON"]
     (info "handle_update-meta-data-json"
-                  "\nupd-data\n" upd-data)
+          "\nupd-data\n" upd-data)
     (handle_update-meta-data-text-base req md-type upd-data)))
 
 (defn- db-create-meta-data-keyword
@@ -257,8 +257,8 @@
                       sql-format)
         result (jdbc/execute! db sql-query builder-fn-options-default)]
     (info "db-create-meta-data-keyword"
-                  "\nkw-data\n" data
-                  "\nresult\n" result)
+          "\nkw-data\n" data
+          "\nresult\n" result)
     result))
 
 (defn- db-delete-meta-data-keyword
@@ -268,9 +268,9 @@
                       sql-format)
         result (jdbc/execute-one! db sql-query)]
     (info "db-delete-meta-data-keyword"
-                  "\nmd-id\n" md-id
-                  "\nkw-id\n" kw-id
-                  "\nresult\n" result)
+          "\nmd-id\n" md-id
+          "\nkw-id\n" kw-id
+          "\nresult\n" result)
     result))
 
 (def MD_TYPE_KEYWORDS "MetaDatum::Keywords")
@@ -610,7 +610,7 @@
                     "meta_datum_id" md-id
                     "role_id" role-id
                     "person_id" person-id)
-       sql-query (-> (sql/delete-from :meta_data_roles)
+        sql-query (-> (sql/delete-from :meta_data_roles)
                       (sql/where del-clause)
                       sql-format)
         del-result (jdbc/execute! (get-ds) sql-query)]

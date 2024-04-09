@@ -78,7 +78,7 @@
                     (sql/where [:= :id id])
                     (sql/returning :*)
                     sql-format)
-            upd-result (jdbc/execute-one! (get-ds)  fir)]
+            upd-result (jdbc/execute-one! (get-ds) fir)]
 
         (if upd-result
           (sd/response_ok (context_transform_ml upd-result))

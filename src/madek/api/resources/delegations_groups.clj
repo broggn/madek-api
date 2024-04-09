@@ -76,7 +76,7 @@
     (if result
       (sd/response_ok delegations_group)
       (error "Failed delete delegations_group "
-                     "group-id: " group-id "delegation-id: " delegation-id))))
+             "group-id: " group-id "delegation-id: " delegation-id))))
 
 (defn wwrap-find-delegations_group [send404]
   (fn [handler]

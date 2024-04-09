@@ -1,8 +1,7 @@
 (ns madek.api.resources.media-entries.advanced-filter.permissions
   (:require
    [honey.sql.helpers :as sql]
-   [madek.api.utils.helper :refer [to-uuid]]
-   ))
+   [madek.api.utils.helper :refer [to-uuid]]))
 
 (defn- delegation-ids-subquery [user_id]
   {:union

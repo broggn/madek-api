@@ -21,9 +21,9 @@
         token (-> random hash/sha512 bytes->b64u bytes->str)
         cut (apply str (take 45 token))]
     (info "create-conf-link-token: "
-                  "\nrandom: " random
-                  "\n token: " token
-                  "\n cut: " cut)
+          "\nrandom: " random
+          "\n token: " token
+          "\n cut: " cut)
     cut))
 
 (defn handle_create-conf-link

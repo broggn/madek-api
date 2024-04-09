@@ -53,7 +53,7 @@
   (let [related-meta-data-alias (str "rmd" counter)
         column (str (get-in match-columns
                             [related-meta-data-table :resource]) "_id")
-        full-column (keyword (str related-meta-data-alias "." column))        ]
+        full-column (keyword (str related-meta-data-alias "." column))]
     (-> sqlmap
         (sql/where
          [:= full-column (to-uuid value column)]))))
@@ -251,7 +251,7 @@
                 (partition 2
                            (interleave meta-data-specs
                                        (iterate inc 1))))
-        modified-query        )
+        modified-query)
     sqlmap))
 
 ;### Debug ####################################################################

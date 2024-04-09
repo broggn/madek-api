@@ -5,8 +5,8 @@
    [logbug.catcher :as catcher]
    [madek.api.db.core :refer [get-ds]]
    [madek.api.pagination :refer [add-offset-for-honeysql]]
-   [madek.api.resources.shared :as sd]
    [madek.api.resources.shared]
+   [madek.api.resources.shared :as sd]
    [madek.api.resources.vocabularies.permissions :as permissions]
    [next.jdbc :as jdbc]
    [taoensso.timbre :refer [info]]))
@@ -39,8 +39,7 @@
         query-params (-> request :query-params)
         params (if (or (contains? qparams :page) (contains? qparams :count))
                  qparams
-                 query-params)
-        ]params))
+                 query-params)] params))
 
 (defn- build-query [request]
   (let [qparams (-> request :parameters :query)

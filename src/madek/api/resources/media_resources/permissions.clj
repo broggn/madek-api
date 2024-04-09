@@ -43,15 +43,15 @@
 
   ([mr-id mr-table]
    (-> (jdbc/execute-one! (get-ds)
-         (-> (sql/select :*) (sql/from (keyword mr-table)) (sql/where [:= :id mr-id]) (sql-format))))))
+                          (-> (sql/select :*) (sql/from (keyword mr-table)) (sql/where [:= :id mr-id]) (sql-format))))))
 
 (defn- build-user-permissions-query
   [media-resource-id user-id perm-name mr-type]
   (-> (sql/select :*)
       (sql/from (user-table mr-type))
       (sql/where [:= (resource-key mr-type) media-resource-id]
-        [:= :user_id user-id]
-        [:= perm-name true])
+                 [:= :user_id user-id]
+                 [:= perm-name true])
       (sql-format)))
 
 (defn- build-user-permission-get-query
@@ -143,8 +143,8 @@
                         sql-format)
         upd-result (jdbc/execute-one! (get-ds) update-stmt)]
     (info "update resource permissions"
-                  "\ntable\n" tname
-                  "\nperm-data\n" perm-data)
+          "\ntable\n" tname
+          "\nperm-data\n" perm-data)
     upd-result))
 
 (defn- query-user-permissions
@@ -223,9 +223,9 @@
                         sql-format)
         result (jdbc/execute-one! (get-ds) update-stmt)]
     (info "update user permissions"
-                  "\ntable\n" tname
-                  "\nperm-data\n" perm-data
-                  "\nresult:\n" result)
+          "\ntable\n" tname
+          "\nperm-data\n" perm-data
+          "\nresult:\n" result)
     result))
 
 (defn- query-group-permissions
@@ -237,9 +237,9 @@
 
 (defn query-get-group-permission
   [resource mr-type group-id]
-(jdbc/execute-one! (get-ds)
-                        (build-group-permission-get-query
-                         (:id resource) mr-type group-id)))
+  (jdbc/execute-one! (get-ds)
+                     (build-group-permission-get-query
+                      (:id resource) mr-type group-id)))
 
 (defn query-list-group-permissions
   [resource mr-type]
@@ -296,9 +296,9 @@
                         sql-format)
         result (jdbc/execute-one! (get-ds) update-stmt)]
     (info "update group permissions"
-                  "\ntable\n" tname
-                  "\nperm-data\n" perm-data
-                  "\nresult\n" result)
+          "\ntable\n" tname
+          "\nperm-data\n" perm-data
+          "\nresult\n" result)
     result))
 
 (defn permission-by-auth-entity? [resource auth-entity perm-name mr-type]

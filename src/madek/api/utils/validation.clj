@@ -17,7 +17,7 @@
 (s/defn valid-json?
   ([json-str allow-str-only]
    (if (and (not (= true allow-str-only)) (or (instance? clojure.lang.PersistentVector json-str) (instance? clojure.lang.PersistentHashMap json-str)))
-      true
+     true
      (try
        (json/read-str json-str)
        (catch Exception e

@@ -38,8 +38,8 @@
             ins-res (sd/transform_ml_map ins-res)]
 
         (info "handle_create-static-page:"
-                      "\ninsert data:\n" ins-data
-                      "\nresult:\n " ins-res)
+              "\ninsert data:\n" ins-data
+              "\nresult:\n " ins-res)
 
         (if ins-res
           (sd/response_ok ins-res)
@@ -61,9 +61,9 @@
             upd-result (sd/transform_ml_map upd-result)]
 
         (info "handle_update-static_pages: "
-                      "\nid:\n" id
-                      "\nnew-data:\n" dwid
-                      "\nupd-result:" upd-result)
+              "\nid:\n" id
+              "\nnew-data:\n" dwid
+              "\nupd-result:" upd-result)
 
         (if upd-result
           (sd/response_ok upd-result)
@@ -82,8 +82,8 @@
             delresult (sd/transform_ml_map delresult)]
 
         (info "handle_delete-static_page: "
-                      " id: " id
-                      " result: " delresult)
+              " id: " id
+              " result: " delresult)
         (if delresult
           (sd/response_ok delresult)
           (sd/response_failed "Could not delete static page." 422))))

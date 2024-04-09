@@ -119,10 +119,10 @@
               expires-at (:session_expires_at user-session)
               user (assoc (sd/query-eq-find-one :users :id user-id) :type "User")]
           #_(info "handle session: "
-                          "\nfound user session:\n " user-session
-                          "\n user-id:  " user-id
-                          "\n expires-at: " expires-at
-                          "\n user: " user)
+                  "\nfound user session:\n " user-session
+                  "\n user-id:  " user-id
+                  "\n expires-at: " expires-at
+                  "\n user: " user)
           (handler (assoc request
                           :authenticated-entity user
                           :is_admin (sd/is-admin user-id)

@@ -76,7 +76,7 @@
     (if res
       (sd/response_ok delegations_user)
       (error "Failed delete delegations_user "
-                     "user-id: " user-id "delegation-id: " delegation-id))))
+             "user-id: " user-id "delegation-id: " delegation-id))))
 
 (defn wwrap-find-delegations_user [send404]
   (fn [handler]

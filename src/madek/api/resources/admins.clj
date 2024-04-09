@@ -34,11 +34,11 @@
       (let [user (-> req :user)
             id (:id user)
             data {:user_id id}
-            sql  (-> (sql/insert-into :admins)
-                         (sql/values [data])
-                         (sql/returning :*)
-                         sql-format)
-            ins-res  (jdbc/execute! (get-ds) sql)]
+            sql (-> (sql/insert-into :admins)
+                    (sql/values [data])
+                    (sql/returning :*)
+                    sql-format)
+            ins-res (jdbc/execute! (get-ds) sql)]
         (sd/logwrite req (str "handle_create-admin:" " user-id: " id " result: " ins-res))
         (if-let [result (first ins-res)]
           (sd/response_ok result)
@@ -53,7 +53,7 @@
                   (sql/where [:= :id admin-id])
                   (sql/returning :*)
                   sql-format)
-          del-result  (jdbc/execute-one! (get-ds) sql)]
+          del-result (jdbc/execute-one! (get-ds) sql)]
       (if del-result
         (sd/response_ok del-result)
         (sd/response_failed "Could not delete admin." 406)))))

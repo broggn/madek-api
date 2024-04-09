@@ -109,7 +109,7 @@
         keyword2 (keyword (str from-name ".media_entry_id"))]
     (-> query
         (sql/left-join [:meta_data from-name]
-          [:= keyword1 meta-key-id])
+                       [:= keyword1 meta-key-id])
         (sql/order-by [(-> from-name (str ".string") keyword)
                        (case (keyword order)
                          :asc :asc-nulls-last
@@ -125,7 +125,7 @@
 
 (defn- order-by-title [query order]
   (let [direction (-> (str/split order #"_") (last))]
-     (reduce order-reducer [query ["MetaDatum::Text" "madek_core:title" direction]])))
+    (reduce order-reducer [query ["MetaDatum::Text" "madek_core:title" direction]])))
 
 (defn- find-collection-default-sorting [collection-id]
   (let [query {:select [:sorting]
@@ -215,7 +215,7 @@
                       (set-order query-params)
                       (filter-by-collection-id query-params)
                       (permissions/filter-by-query-params query-params
-                                                         authenticated-entity)
+                                                          authenticated-entity)
                       (advanced-filter/filter-by filter-by)
                       (pagination/add-offset-for-honeysql query-params))
         query-res (-> query-res sql-format)]

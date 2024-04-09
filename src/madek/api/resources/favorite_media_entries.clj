@@ -74,7 +74,7 @@
           (if (= 1 del-result)
             (sd/response_ok favorite_media_entry)
             (error "Failed delete favorite_media_entry "
-                           "user-id: " user-id "media_entry-id: " media_entry-id)))))
+                   "user-id: " user-id "media_entry-id: " media_entry-id)))))
     (catch Exception ex (sd/response_exception ex))))
 
 (defn wwrap-find-favorite_media_entry [send404]

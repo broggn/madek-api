@@ -13,11 +13,11 @@
 (defn sql-filter-by [sqlmap media-file-specs]
   (if-not (empty? media-file-specs)
     (reduce sql-merge-where-media-file-spec
-      (-> sqlmap
-          (sql/join
-            :media_files
-            [:= :media_files.media_entry_id :media_entries.id]))
-      media-file-specs)
+            (-> sqlmap
+                (sql/join
+                 :media_files
+                 [:= :media_files.media_entry_id :media_entries.id]))
+            media-file-specs)
     sqlmap))
 
 ;### Debug ####################################################################

@@ -54,15 +54,15 @@
   (debug request)
   (if-let [meta-data-id (-> (jdbc/execute! (get-ds)
 
-                              (-> (sql/select :id)
-                                  (sql/from :meta_data)
-                                  (sql/where  [:and [:= :media_entry_id media-entry-id] [:= :meta_key_id meta-key-id]])
-                                  sql-format                                  )
+                                           (-> (sql/select :id)
+                                               (sql/from :meta_data)
+                                               (sql/where [:and [:= :media_entry_id media-entry-id] [:= :meta_key_id meta-key-id]])
+                                               sql-format)
 
                                            ;[(str "SELECT id FROM meta_data "
                                            ;      "WHERE media_entry_id = ? "
                                            ;      "AND meta_key_id = ?") media-entry-id meta-key-id]
-                              )
+                                           )
                             first :id)]
     (ring.util.response/redirect (str context "/meta-data/" meta-data-id "/data-stream"))))
 
@@ -72,15 +72,14 @@
   (debug request)
   (if-let [media-file-id (-> (jdbc/execute! (get-ds)
 
-                               (-> (sql/select :id)
-                                   (sql/from :media_files)
-                                   (sql/where   [:= :media_entry_id media-entry-id] )
-                                   sql-format                                  )
+                                            (-> (sql/select :id)
+                                                (sql/from :media_files)
+                                                (sql/where [:= :media_entry_id media-entry-id])
+                                                sql-format)
 
                                             ;[(str "SELECT id FROM media_files "
                                             ;      "WHERE media_entry_id = ? ") media-entry-id]
-
-                               )
+                                            )
                              first :id)]
     (ring.util.response/redirect (str context "/media-files/" media-file-id "/data-stream"))))
 

@@ -43,9 +43,9 @@
         dresult (jdbc/execute! (get-ds) sql-query-entries)]
 
     (info "handle_delete_media_entry"
-                  "\n eid: \n" eid
-                  "\n fresult: \n" fresult
-                  "\n dresult: \n" dresult)
+          "\n eid: \n" eid
+          "\n fresult: \n" fresult
+          "\n dresult: \n" dresult)
     (if (= 1 (first dresult))
       (sd/response_ok {:deleted mr})
       (sd/response_failed {:message "Failed to delete media entry"} 406))))
@@ -77,12 +77,12 @@
         publishable (reduce (fn [tfresult tfval] (and tfresult (first tfval))) [true] tf)]
 
     (info "handle_try-publish-media-entry"
-                  "\n eid: \n" eid
-                  "\n validationContexts: \n" validationContexts
-                  "\n contextKeys: \n" contextKeys
-                  "\n hasMetaData: \n" hasMetaData
-                  "\n tf: \n" tf
-                  "\n publishable: \n" publishable)
+          "\n eid: \n" eid
+          "\n validationContexts: \n" validationContexts
+          "\n contextKeys: \n" contextKeys
+          "\n hasMetaData: \n" hasMetaData
+          "\n tf: \n" tf
+          "\n publishable: \n" publishable)
     (if (true? publishable)
       (let [data {:is_published true}
             eid (to-uuid eid)
@@ -93,8 +93,8 @@
             dresult (jdbc/execute-one! (get-ds) sql-query)]
 
         (info "handle_try-publish-media-entry"
-                      "\n published: entry_id: \n" eid
-                      "\n dresult: \n" dresult)
+              "\n published: entry_id: \n" eid
+              "\n dresult: \n" dresult)
 
         (if (= 1 (::jdbc/update-count dresult))
           (sd/response_ok (sd/query-eq-find-one :media_entries :id eid))
@@ -202,12 +202,12 @@
         auth (-> req :authenticated-entity)]
 
     (info "handle_create-media-entry"
-                  "\nauth\n" (:id auth)
-                  "\ncopy_md\n" copy-md-id
-                  "\ncollection-id\n" collection-id
-                  "\nfile\n" file
-                  "\n content: " file-content-type
-                  "\ntemppath\n" temppath)
+          "\nauth\n" (:id auth)
+          "\ncopy_md\n" copy-md-id
+          "\ncollection-id\n" collection-id
+          "\nfile\n" file
+          "\n content: " file-content-type
+          "\ntemppath\n" temppath)
 
     (let [;mime (or file-content-type (mime-type-of temppath) )
           mime file-content-type]

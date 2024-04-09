@@ -109,8 +109,8 @@
         db-result (replace-java-hashmaps db-result)]
 
     (info "handle_update_meta-key:"
-                  "\nid: " id
-                  "\ndwid\n" dwid)
+          "\nid: " id
+          "\ndwid\n" dwid)
 
     (if db-result
       (sd/response_ok db-result)
@@ -222,8 +222,7 @@
    (s/optional-key :meta_datum_object_type) s/Str ; TODO enum
    (s/optional-key :is_enabled_for_collections) s/Bool
    (s/optional-key :is_enabled_for_media_entries) s/Bool
-   (s/optional-key :scope) (s/enum "view" "use")
-   })
+   (s/optional-key :scope) (s/enum "view" "use")})
 
 (defn wwrap-find-meta_key [param colname send404]
   (fn [handler]
@@ -364,7 +363,7 @@
   ["/meta-keys"
    {:swagger {:tags ["meta-keys"]}}
    ["/"
-    {:get {:summary (sd/sum_usr_pub  (t "Get all meta-key ids"))
+    {:get {:summary (sd/sum_usr_pub (t "Get all meta-key ids"))
            :description "Get list of meta-key ids. Paging is used as you get a limit of 100 entries."
            :handler handle_usr-query-meta-keys
            :parameters {:query schema_query-meta-key}

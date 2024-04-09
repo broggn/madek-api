@@ -2,7 +2,7 @@
   (:require [cheshire.core :as json]
             [pghstore-clj.core :refer [to-hstore]]
             [taoensso.timbre :refer [warn]])
-(:import (java.util UUID)))
+  (:import (java.util UUID)))
 
 (def LOAD-SWAGGER-DESCRIPTION-FROM-FILE false)
 
@@ -76,7 +76,7 @@
       (update :external_uris #(if (nil? %)
                                 [:raw "'{}'"]
                                 (convert-to-raw-set %))) ;;rename to convert-to-raw-set
-      (update :creator_id #(if (contains? map :creator_id) (to-uuid % :creator_id)))      ))
+      (update :creator_id #(if (contains? map :creator_id) (to-uuid % :creator_id)))))
 
 (defn modify-if-exists [m k f]
   (if (contains? m k)

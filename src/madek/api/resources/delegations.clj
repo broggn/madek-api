@@ -49,8 +49,8 @@
                       sql-format)]
     ; create delegation entry
     (info "handle_update-delegations: " "\nid\n" id "\ndwid\n" dwid
-                  "\nold-data\n" old-data
-                  "\nupd-query\n" upd-query)
+          "\nold-data\n" old-data
+          "\nupd-query\n" upd-query)
 
     (if-let [ins-res (first (jdbc/execute! (get-ds) sql-query))]
       (let [new-data (sd/query-eq-find-one :delegations :id id)]
@@ -132,8 +132,7 @@
                                    :required true
                                    :value false
                                    :default false
-                                   :type "boolean"
-                                   }]}
+                                   :type "boolean"}]}
            :responses {200 {:body [schema_get_delegations]}}}}]
 
 ; edit delegation

@@ -42,9 +42,9 @@
         col-name (if (= mr-type "MediaEntry") :media_entry_id :collection_id)]
 
     (info "handle_get-custom-urls"
-                  "\ntype: " mr-type
-                  "\nmr-id: " mr-id
-                  "\ncol-name: " col-name)
+          "\ntype: " mr-type
+          "\nmr-id: " mr-id
+          "\ncol-name: " col-name)
     (if-let [result (sd/query-eq-find-one :custom_urls col-name mr-id)]
       (sd/response_ok result)
       (sd/response_not_found (str "No such custom_url for " mr-type " with id: " mr-id)))))

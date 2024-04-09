@@ -16,27 +16,27 @@
 
 (defn- get-by-login [table-name login]
   (->> (jdbc/execute! (get-ds) (-> (sql/select :*) (sql/from table-name) (sql/where [:= :login login]) sql-format))
-    (map #(assoc % :type (-> table-name ->PascalCase singular)))
-    (map #(clojure.set/rename-keys % {:email :email_address}))
-    first))
+       (map #(assoc % :type (-> table-name ->PascalCase singular)))
+       (map #(clojure.set/rename-keys % {:email :email_address}))
+       first))
 
 (defn- get-api-client-by-login [login]
   (->> (jdbc/execute! (get-ds) (-> (sql/select :*) (sql/from :api_clients) (sql/where [:= :login login]) sql-format))
-    (map #(assoc % :type "ApiClient"))
-    first))
+       (map #(assoc % :type "ApiClient"))
+       first))
 
 (defn- get-user-by-login-or-email-address [login-or-email]
   (->> (jdbc/execute! (get-ds) (-> (sql/select :*)
                                    (sql/from :users)
                                    (sql/where [:or [:= :login login-or-email] [:= :email login-or-email]])
                                    sql-format))
-    (map #(assoc % :type "User"))
-    (map #(clojure.set/rename-keys % {:email :email_address}))
-    first))
+       (map #(assoc % :type "User"))
+       (map #(clojure.set/rename-keys % {:email :email_address}))
+       first))
 
 (defn get-entity-by-login-or-email [login-or-email]
   (or (get-api-client-by-login login-or-email)
-    (get-user-by-login-or-email-address login-or-email)))
+      (get-user-by-login-or-email-address login-or-email)))
 
 (defn- get-auth-systems-user [userId]
   (jdbc/execute-one! (get-ds) (-> (sql/select :*)

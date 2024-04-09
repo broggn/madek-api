@@ -23,10 +23,10 @@
     {:OK? true :message "RDBMS is not initialized!"}
     (catcher/snatch
      {:return-fn (fn [e] {:OK? false :error (.getMessage e)})}
-     (assert (->> (jdbc/execute! @ds                    (-> (sql/select [true :state])
-                        (sql/from :schema_migrations)
-                        (sql/limit 1)
-                        sql-format))
+     (assert (->> (jdbc/execute! @ds (-> (sql/select [true :state])
+                                         (sql/from :schema_migrations)
+                                         (sql/limit 1)
+                                         sql-format))
                   first :state))
      (let [c3p0ds (-> @ds :datasource)
            max (.getMaxPoolSize c3p0ds)

@@ -1,6 +1,6 @@
 (ns madek.api.resources.collections.advanced-filter.permissions
   (:require
-   [honey.sql.helpers :as sql]   ))
+   [honey.sql.helpers :as sql]))
 
 ;(defn- api-client-authorized-condition [perm id]
 ;  [:or

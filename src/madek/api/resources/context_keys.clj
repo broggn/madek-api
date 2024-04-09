@@ -115,7 +115,7 @@
       (let [data (-> req :parameters :body)
             id (-> req :parameters :path :id)
             id (to-uuid id)
-            dwid  (assoc data :id id)
+            dwid (assoc data :id id)
             fir (-> (sql/update :context_keys)
                     (sql/set (cast-to-hstore dwid))
                     (sql/where [:= :id id])

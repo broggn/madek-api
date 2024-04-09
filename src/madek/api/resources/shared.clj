@@ -61,16 +61,16 @@
 (defn try-parse-date-time [dt_string]
   (try
     (info "try-parse-date-time "
-                  dt_string)
+          dt_string)
     (let [zoneid (java.time.ZoneId/systemDefault)
 
           parsed2 (jt/local-date-time (jt/offset-date-time dt_string) zoneid)
           pcas (.toString parsed2)]
       (info "try-parse-date-time "
-                    dt_string
-                    "\n zoneid " zoneid
-                    "\n parsed " parsed2
-                    "\n result:  " pcas)
+            dt_string
+            "\n zoneid " zoneid
+            "\n parsed " parsed2
+            "\n result:  " pcas)
       pcas)
 
     (catch Exception ex
