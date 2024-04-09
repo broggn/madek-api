@@ -29,7 +29,7 @@
                   ;"madek.api.resources.users.*"
                   ;"madek.api.resources.users.create"
                   ;"madek.api.web"
-                  }:warn]
+                  }:debug]
                [#{#?(:clj "com.zaxxer.hikari.*")
                   "madek.*"} :info]
                [#{"*"} :warn]]
