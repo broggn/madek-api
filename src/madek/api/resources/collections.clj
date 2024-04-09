@@ -12,8 +12,7 @@
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
-   [taoensso.timbre :refer [info spy]]
-   [taoensso.timbre :refer [spy]]))
+   [taoensso.timbre :refer [info]]))
 
 (defn handle_get-collection [request]
   (let [collection (:media-resource request)
@@ -37,10 +36,10 @@
         (let [req-data (-> req :parameters :body)
               ins-data (assoc req-data :creator_id auth-id :responsible_user_id auth-id)
               ins-data (convert-map-if-exist ins-data)
-              query (spy (-> (sql/insert-into :collections)
-                             (sql/values [ins-data])
-                             (sql/returning :*)
-                             sql-format))
+              query (-> (sql/insert-into :collections)
+                        (sql/values [ins-data])
+                        (sql/returning :*)
+                        sql-format)
               ins-result (jdbc/execute! (get-ds) query)]
           (sd/logwrite req (str "handle_create-collection: " ins-result))
           (if-let [result (first ins-result)]

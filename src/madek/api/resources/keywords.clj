@@ -11,8 +11,7 @@
    [madek.api.utils.helper :refer [d t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
-   [schema.core :as s]
-   [taoensso.timbre :refer [spy]]))
+   [schema.core :as s]))
 
 ;### swagger io schema ####################################################################
 
@@ -116,8 +115,7 @@
             sql-query (-> (sql/insert-into :keywords)
                           (sql/values [(convert-map dwid)])
                           (sql/returning :*)
-                          sql-format
-                          spy)
+                          sql-format)
 
             ins-result (jdbc/execute-one! (get-ds) sql-query)]
         (if-let [result ins-result]

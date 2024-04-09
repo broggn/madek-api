@@ -7,7 +7,7 @@
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
-   [taoensso.timbre :refer [debug spy]]))
+   [taoensso.timbre :refer [debug]]))
 
 (def schema
   {:created_at s/Any
@@ -29,9 +29,7 @@
   (debug req)
   (debug id)
   (if-let [person (-> (person-query id)
-                      spy
                       sql-format
-                      spy
                       (->> (jdbc/execute-one! ds)))]
     (sd/response_ok person)
     (sd/response_failed "No such person found" 404)))

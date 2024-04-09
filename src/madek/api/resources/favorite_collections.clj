@@ -10,7 +10,7 @@
             [next.jdbc :as jdbc]
             [reitit.coercion.schema]
             [schema.core :as s]
-            [taoensso.timbre :refer [info spy]]))
+            [taoensso.timbre :refer [info]]))
 
 (def res-req-name :favorite_collection)
 (def res-table-name "favorite_collections")
@@ -68,7 +68,7 @@
                           (sql/where [:= :user_id user-id] [:= :collection_id collection-id])
                           (sql/returning :*)
                           sql-format)
-            del-result (spy (jdbc/execute-one! (get-ds) (spy sql-query)))]
+            del-result (jdbc/execute-one! (get-ds) sql-query)]
 
         (if del-result
           (sd/response_ok favorite_collection)

@@ -14,7 +14,7 @@
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
-   [taoensso.timbre :refer [debug spy]]))
+   [taoensso.timbre :refer [debug]]))
 
 (defn subtype-filter [query {subtype :subtype}]
   (if (empty-or-nil? subtype)
@@ -52,7 +52,6 @@
 
 (comment
   (-> (build-query {:search-term "Schänk Thomas"})
-      spy
       (sql-format :inline true)
       (->> (jdbc/execute! (get-ds)))))
 

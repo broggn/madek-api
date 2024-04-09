@@ -13,7 +13,7 @@
             [madek.api.utils.helper :refer [to-uuid]]
             [next.jdbc :as jdbc]
             [schema.core :as s]
-            [taoensso.timbre :refer [error info spy warn]]))
+            [taoensso.timbre :refer [error info warn]]))
 
 (def schema_ml_list
   {(s/optional-key :de) (s/maybe s/Str)
@@ -162,21 +162,21 @@
 (defn query-eq-find-all-one
   ([table-name col-name row-data]
    (catcher/snatch {}
-                   (spy (jdbc/execute-one!
-                         (get-ds)
-                         (sql-query-find-eq table-name col-name row-data)))))
+                   (jdbc/execute-one!
+                    (get-ds)
+                    (sql-query-find-eq table-name col-name row-data))))
 
   ([table-name col-name row-data col-name2 row-data2]
    (catcher/snatch {}
-                   (spy (jdbc/execute-one!
-                         (get-ds)
-                         (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))))
+                   (jdbc/execute-one!
+                    (get-ds)
+                    (sql-query-find-eq table-name col-name row-data col-name2 row-data2)))))
 
 (defn query-eq-find-one
   ([table-name col-name row-data]
-   (spy (query-eq-find-all-one table-name col-name row-data)))
+   (query-eq-find-all-one table-name col-name row-data))
   ([table-name col-name row-data col-name2 row-data2]
-   (spy (query-eq-find-all-one table-name col-name row-data col-name2 row-data2))))
+   (query-eq-find-all-one table-name col-name row-data col-name2 row-data2)))
 
 #_(defn query-eq2-find-all [table-name col-name row-data col-name2 row-data2]
     (catcher/snatch {}
@@ -330,14 +330,14 @@
   (let [none (->
               (jdbc/execute!
                (get-ds)
-               (spy (-> (sql/select :*)
-                        (sql/from :admins)
-                        (sql/where [:= :user_id (to-uuid user-id)])
-                        sql-format)))
+               (-> (sql/select :*)
+                   (sql/from :admins)
+                   (sql/where [:= :user_id (to-uuid user-id)])
+                   sql-format))
               empty?)
         result (not none)]
     ;(info "is-admin: " user-id " : " result)
-    (spy result)))
+    result))
 
 ; end user and other util wrappers
 
@@ -353,12 +353,12 @@
    (try
      (when-let [id (-> request :parameters :path id-key)]
        ;(info "get-media-resource" "\nid\n" id)
-       (when-let [resource (spy (jdbc/execute-one! (get-ds)
-                                                   (spy (-> (sql/select :*)
-                                                            (sql/from (keyword table-name))
-                                                            (sql/where [:= :id (to-uuid id)])
-                                                            sql-format))))]
-         (spy (assoc resource :type type :table-name table-name))))
+       (when-let [resource (jdbc/execute-one! (get-ds)
+                                              (-> (sql/select :*)
+                                                  (sql/from (keyword table-name))
+                                                  (sql/where [:= :id (to-uuid id)])
+                                                  sql-format))]
+         (assoc resource :type type :table-name table-name)))
 
      (catch Exception e
        (error "ERROR: get-media-resource: " (ex-data e))

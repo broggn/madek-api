@@ -77,4 +77,4 @@
           (sd/response_bad_request "UserId is not valid."))))))
 
 ;### Debug ####################################################################
-(debug/debug-ns *ns*)
+;(debug/debug-ns *ns*)

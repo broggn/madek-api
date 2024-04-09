@@ -2,7 +2,6 @@
   (:require
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.people.common]
    [madek.api.resources.people.common :refer [find-person-by-uid]]
    [madek.api.resources.people.get :as get-person]
@@ -12,7 +11,7 @@
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
-   [taoensso.timbre :refer [error spy]]))
+   [taoensso.timbre :refer [error]]))
 
 (defn handle-create-person
   [{{data :body} :parameters ds :tx :as req}]
@@ -21,7 +20,7 @@
                        (sql/values [(convert-map-if-exist data)])
                        sql-format
                        ((partial jdbc/execute-one! ds) {:return-keys true}))]
-      (sd/response_ok (spy (find-person-by-uid id ds)) 201))
+      (sd/response_ok (find-person-by-uid id ds) 201))
     (catch Exception e
       (error "handle-create-person failed" {:request req})
       (sd/parsed_response_exception e))))

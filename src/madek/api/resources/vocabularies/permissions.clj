@@ -7,8 +7,7 @@
    [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.helper :refer [to-uuid]]
-   [next.jdbc :as jdbc]
-   [taoensso.timbre :refer [spy]]))
+   [next.jdbc :as jdbc]))
 
 (defn- execute-query
   [query]
@@ -103,7 +102,7 @@
                             :vocabulary_id vid
                             :user_id uid)
             query (-> (sql/insert-into :vocabulary_user_permissions)
-                      (sql/values [(spy ins-data)])
+                      (sql/values [ins-data])
                       sql-format)
             ins-result (jdbc/execute! (get-ds) query)]
         (if-let [result (first ins-result)]
@@ -118,7 +117,7 @@
             uid (to-uuid (-> req :parameters :path :user_id))
             upd-data (-> req :parameters :body)
             query (-> (sql/update :vocabulary_user_permissions)
-                      (sql/set (spy upd-data))
+                      (sql/set upd-data)
                       (sql/where [:and [:= :vocabulary_id vid] [:= :user_id uid]])
                       (sql/returning :*)
                       sql-format)
@@ -175,7 +174,7 @@
                             :vocabulary_id vid
                             :group_id gid)
             query (-> (sql/insert-into :vocabulary_group_permissions)
-                      (sql/values [(spy ins-data)])
+                      (sql/values [ins-data])
                       (sql/returning :*)
                       sql-format)
             ins-result (jdbc/execute-one! (get-ds) query)]

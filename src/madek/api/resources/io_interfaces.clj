@@ -10,7 +10,7 @@
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
-   [taoensso.timbre :refer [error info spy]]))
+   [taoensso.timbre :refer [error info]]))
 
 ;### handlers #################################################################
 
@@ -20,7 +20,7 @@
         qd (if (true? full_data) :* :io_interfaces.id)
         db-result (sd/query-find-all :io_interfaces qd)]
 
-;(info "handle_list-io_interface" "\nqd\n" qd "\nresult\n" db-result)
+    ;(info "handle_list-io_interface" "\nqd\n" qd "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
 (defn handle_get-io_interface
@@ -74,8 +74,7 @@
             id (-> req :parameters :path :id)
             sql-query (-> (sql/delete-from :io_interfaces)
                           (sql/where [:= :id id])
-                          sql-format
-                          spy)
+                          sql-format)
             del-result (jdbc/execute-one! (get-ds) sql-query)]
 
         (if (= 1 (::jdbc/update-count del-result))
@@ -125,7 +124,7 @@
       :responses {200 {:body schema_export_io_interfaces}
                   406 {:body s/Any}}}
 
-    ; io_interface list / query
+     ; io_interface list / query
      :get
      {:summary (sd/sum_adm (t "List io_interfaces."))
       :handler handle_list-io_interface
@@ -134,7 +133,7 @@
       :parameters {:query {(s/optional-key :full_data) s/Bool}}
       :responses {200 {:body [schema_export_io_interfaces_opt]}}}}]
 
-    ; edit io_interface
+   ; edit io_interface
    ["/:id"
     {:get
      {:summary (sd/sum_adm (t "Get io_interfaces by id."))

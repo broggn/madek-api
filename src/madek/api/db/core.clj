@@ -6,9 +6,9 @@
    [next.jdbc :as jdbc]
    [next.jdbc.connection :as connection]
    [next.jdbc.result-set :as jdbc-rs]
-   [taoensso.timbre :refer [debug info warn error spy]])
+   [taoensso.timbre :refer [debug info warn]])
   (:import
-   [com.zaxxer.hikari HikariDataSource]))
+   (com.zaxxer.hikari HikariDataSource)))
 
 (defonce ^:private ds* (atom nil))
 

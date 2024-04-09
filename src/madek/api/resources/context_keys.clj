@@ -11,8 +11,7 @@
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
-   [taoensso.timbre :refer [error spy]]
-   [taoensso.timbre :refer [spy]]))
+   [taoensso.timbre :refer [error]]))
 
 (defn context_key_transform_ml [context_key]
   (assoc context_key
@@ -98,7 +97,7 @@
     (catcher/with-logging {}
       (let [data (-> req :parameters :body)
             sql (-> (sql/insert-into :context_keys)
-                    (sql/values [(spy (cast-to-hstore data))])
+                    (sql/values [(cast-to-hstore data)])
                     (sql/returning :*)
                     sql-format)
             ins-res (jdbc/execute-one! (get-ds) sql)]

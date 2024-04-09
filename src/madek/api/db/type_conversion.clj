@@ -1,17 +1,11 @@
 (ns madek.api.db.type-conversion
   (:require
-   [honey.sql :refer [format] :rename {format sql-format}]
-   [honey.sql.helpers :as sql]
    [madek.api.utils.json :as json]
-   [next.jdbc :as jdbc]
-   [next.jdbc.connection :as connection]
    [next.jdbc.date-time]
    [next.jdbc.prepare :as prepare]
-   [next.jdbc.result-set :as jdbc-rs]
-   [taoensso.timbre :refer [debug info warn error spy]])
+   [next.jdbc.result-set :as jdbc-rs])
   (:import
-   [java.sql Array PreparedStatement]
-   [org.postgresql.util PGobject]))
+   (org.postgresql.util PGobject)))
 
 ;;; Time ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -32,7 +32,7 @@
                   }:debug]
                [#{#?(:clj "com.zaxxer.hikari.*")
                   "madek.*"} :info]
-               [#{"*"} :info]]
+               [#{"*"} :warn]]
    :appenders #?(:clj {} ;{:spit (appenders/spit-appender {:fname "log/debug.log"})}
                  :cljs {})
    :log-level nil})

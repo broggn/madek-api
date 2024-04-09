@@ -1,11 +1,11 @@
 (ns madek.api.utils.exit
-  (:refer-clojure :exclude [str keyword])
+  (:refer-clojure :exclude [keyword str])
   (:require
    [clj-pid.core :as pid]
    [clojure.java.io :as io]
    [environ.core :refer [env]]
    [signal.handler]
-   [taoensso.timbre :refer [debug info warn error spy]]))
+   [taoensso.timbre :refer [info]]))
 
 (def cli-options
   [[nil "--pid-file PID_FILE"
