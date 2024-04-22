@@ -3,7 +3,6 @@
             [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
             [madek.api.authorization :as authorization]
-            [madek.api.db.core :refer [get-ds]]
             [madek.api.resources.shared :as sd]
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
             [madek.api.utils.helper :refer [f t]]
@@ -21,13 +20,13 @@
   (let [col-sel (if (true? (-> req :parameters :query :full_data))
                   :*
                   :user_id)
-        db-result (sd/query-find-all :favorite_collections col-sel)]
+        db-result (sd/query-find-all :favorite_collections col-sel (:tx req))]
     (sd/response_ok db-result)))
 
 (defn handle_list-favorite_collection-by-user
   [req]
   (let [user-id (-> req :authenticated-entity :id)
-        db-result (sd/query-eq-find-all :favorite_collections :user_id user-id)
+        db-result (sd/query-eq-find-all :favorite_collections :user_id user-id (:tx req))
         id-set (map :collection_id db-result)]
     ;(info "handle_list-favorite_collection-by-user" "\nresult\n" db-result "\nid-set\n" id-set)
     (sd/response_ok {:collection_ids id-set})))
@@ -51,7 +50,7 @@
           ; already has favorite_collection
           (sd/response_ok favorite_collection)
           ; create favorite_collection entry
-          (if-let [ins_res (first (jdbc/execute! (get-ds) sql-query))]
+          (if-let [ins_res (first (jdbc/execute! (:tx req) sql-query))]
             (sd/response_ok ins_res)
             (sd/response_failed "Could not create favorite_collection." 406)))))
     (catch Exception ex (sd/response_exception ex))))
@@ -68,7 +67,7 @@
                           (sql/where [:= :user_id user-id] [:= :collection_id collection-id])
                           (sql/returning :*)
                           sql-format)
-            del-result (jdbc/execute-one! (get-ds) sql-query)]
+            del-result (jdbc/execute-one! (:tx req) sql-query)]
 
         (if del-result
           (sd/response_ok favorite_collection)

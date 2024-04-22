@@ -29,35 +29,35 @@
          :welcome_texts (sd/transform_ml (:welcome_texts data))
          :welcome_titles (sd/transform_ml (:welcome_titles data))))
 
-(defn db-get-app-settings [ds]
+(defn db-get-app-settings [tx]
   (-> (sql/select :*)
       (sql/from :app_settings)
       sql-format
-      ((partial jdbc/execute-one! ds))))
+      ((partial jdbc/execute-one! tx))))
 
-(defn handle_get-app-settings [{ds :tx}]
-  (sd/response_ok (transform_ml (db-get-app-settings ds))))
+(defn handle_get-app-settings [{tx :tx}]
+  (sd/response_ok (transform_ml (db-get-app-settings tx))))
 
 ;;; update ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn update-app-settings
   "Updates app_settings and returns true if that happened and
   false otherwise"
-  [data ds]
+  [data tx]
   (let [data (convert-map-if-exist (cast-to-hstore data))
         res (-> (sql/update :app_settings)
                 (sql/set data)
                 (sql-format :inline false)
-                (->> (jdbc/execute-one! ds))
+                (->> (jdbc/execute-one! tx))
                 :next.jdbc/update-count
                 (= 1))] res))
 
 (defn handle_update-app-settings
-  [{{body :body} :parameters ds :tx :as req}]
+  [{{body :body} :parameters tx :tx :as req}]
   (try
     (catcher/with-logging {}
-      (if (update-app-settings body ds)
-        (sd/response_ok (transform_ml (db-get-app-settings ds)))
+      (if (update-app-settings body tx)
+        (sd/response_ok (transform_ml (db-get-app-settings tx)))
         (sd/response_failed "Could not update app-settings." 406)))
     (catch Exception ex (sd/parsed_response_exception ex))))
 

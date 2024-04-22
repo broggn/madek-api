@@ -3,10 +3,8 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.helper :refer [t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
@@ -18,7 +16,8 @@
   [req]
   (let [full_data (true? (-> req :parameters :query :full_data))
         qd (if (true? full_data) :* :io_interfaces.id)
-        db-result (sd/query-find-all :io_interfaces qd)]
+        tx (:tx req)
+        db-result (sd/query-find-all :io_interfaces qd tx)]
 
     ;(info "handle_list-io_interface" "\nqd\n" qd "\nresult\n" db-result)
     (sd/response_ok db-result)))
@@ -34,11 +33,11 @@
   (try
     (catcher/with-logging {}
       (let [data (-> req :parameters :body)
-            sql-query (-> (sql/insert-into :io_interfaces)
-                          (sql/values [data])
-                          (sql/returning :*)
-                          sql-format)
-            ins-res (jdbc/execute-one! (get-ds) sql-query)]
+            query (-> (sql/insert-into :io_interfaces)
+                      (sql/values [data])
+                      (sql/returning :*)
+                      sql-format)
+            ins-res (jdbc/execute-one! (:tx req) query)]
         (info "handle_create-io_interfaces: " "\ndata:\n" data "\nresult:\n" ins-res)
 
         (if-let [result ins-res]
@@ -53,16 +52,17 @@
       (let [data (-> req :parameters :body)
             id (-> req :parameters :path :id)
             dwid (assoc data :id id)
-            sql-query (-> (sql/update :io_interfaces)
-                          (sql/set dwid)
-                          (sql/where [:= :id id])
-                          sql-format)
-            upd-result (jdbc/execute-one! (get-ds) sql-query)]
+            tx (:tx req)
+            query (-> (sql/update :io_interfaces)
+                      (sql/set dwid)
+                      (sql/where [:= :id id])
+                      sql-format)
+            upd-result (jdbc/execute-one! tx query)]
 
         (info "handle_update-io_interfaces: " "id: " id "\nnew-data:\n" dwid "\nresult: " upd-result)
 
         (if (= 1 (::jdbc/update-count upd-result))
-          (sd/response_ok (sd/query-eq-find-one :io_interfaces :id id))
+          (sd/response_ok (sd/query-eq-find-one :io_interfaces :id id tx))
           (sd/response_failed "Could not update io_interface." 406))))
     (catch Exception ex (sd/response_exception ex))))
 
@@ -72,10 +72,10 @@
     (catcher/with-logging {}
       (let [io_interface (-> req :io_interface)
             id (-> req :parameters :path :id)
-            sql-query (-> (sql/delete-from :io_interfaces)
-                          (sql/where [:= :id id])
-                          sql-format)
-            del-result (jdbc/execute-one! (get-ds) sql-query)]
+            query (-> (sql/delete-from :io_interfaces)
+                      (sql/where [:= :id id])
+                      sql-format)
+            del-result (jdbc/execute-one! (:tx req) query)]
 
         (if (= 1 (::jdbc/update-count del-result))
           (sd/response_ok io_interface)

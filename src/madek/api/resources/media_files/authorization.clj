@@ -2,26 +2,26 @@
   (:require
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.media-entries.permissions :as me-permissions]
    [next.jdbc :as jdbc]
    [taoensso.timbre :refer [info]]))
 
 (defn- media-file-authorize [request handler scope]
   (let [media-entry-id (get-in request [:media-file :media_entry_id])
-        media-entry (-> (jdbc/execute-one! (get-ds) (-> (sql/select :*)
-                                                        (sql/from :media_entries)
-                                                        (sql/where [:= :id media-entry-id])
-                                                        sql-format)))]
+        tx (:tx request)
+        media-entry (-> (jdbc/execute-one! (:tx request) (-> (sql/select :*)
+                                                             (sql/from :media_entries)
+                                                             (sql/where [:= :id media-entry-id])
+                                                             sql-format)))]
     (info "authorize" "\nmedia-entry-id\n" media-entry-id "\nmedia-entry\n" media-entry)
     (if (get media-entry scope)
       (handler request)
       (if-let [auth-entity (:authenticated-entity request)]
         (if (case scope
               :get_full_size (me-permissions/downloadable-by-auth-entity?
-                              media-entry auth-entity)
+                              media-entry auth-entity tx)
               :get_metadata_and_previews (me-permissions/viewable-by-auth-entity?
-                                          media-entry auth-entity))
+                                          media-entry auth-entity tx))
           (handler request)
           {:status 403})
         {:status 401}))))

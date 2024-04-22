@@ -3,7 +3,6 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-   [madek.api.db.core :refer [get-ds]]
    [madek.api.pagination :refer [add-offset-for-honeysql]]
    [madek.api.resources.shared]
    [madek.api.resources.shared :as sd]
@@ -12,8 +11,8 @@
    [taoensso.timbre :refer [info]]))
 
 (defn- where-clause
-  [user-id scope]
-  (let [vocabulary-ids (permissions/accessible-vocabulary-ids user-id scope)
+  [user-id scope tx]
+  (let [vocabulary-ids (permissions/accessible-vocabulary-ids user-id scope tx)
         perm-kw (keyword (str "vocabularies.enabled_for_public_" scope))]
     (info "vocabs where clause: " vocabulary-ids " for user " user-id " and " scope)
     (if (empty? vocabulary-ids)
@@ -27,12 +26,12 @@
       ;  [:in :vocabularies.id vocabulary-ids]])))
 
 (defn- base-query
-  [user-id scope]
+  [user-id scope tx]
   (-> (sql/select :meta_keys.*)
       (sql/from :meta_keys)
       (sql/join :vocabularies
                 [:= :meta_keys.vocabulary_id :vocabularies.id])
-      (sql/where (where-clause user-id scope))))
+      (sql/where (where-clause user-id scope tx))))
 
 (defn get-pagination-params [request]
   (let [qparams (-> request :parameters :query)
@@ -44,9 +43,10 @@
 (defn- build-query [request]
   (let [qparams (-> request :parameters :query)
         pagination-params (get-pagination-params request)
+        tx (:tx request)
         scope (or (:scope qparams) "view")
         user-id (-> request :authenticated-entity :id)]
-    (-> (base-query user-id scope)
+    (-> (base-query user-id scope tx)
         (sd/build-query-param qparams :vocabulary_id)
         (sd/build-query-param-like qparams :id :meta_keys.id)
         (sd/build-query-param qparams :meta_datum_object_type)
@@ -58,9 +58,10 @@
 
 (defn db-query-meta-keys [request]
   (catcher/with-logging {}
-    (let [query (build-query request)]
+    (let [query (build-query request)
+          tx (:tx request)]
       (info "db-query-meta-keys: query: " query)
-      (jdbc/execute! (get-ds) query))))
+      (jdbc/execute! tx query))))
 
 ;(defn get-index [request]
 ;  (catcher/with-logging {}

@@ -25,12 +25,12 @@
 
 (defn handler
   [{{{id :id} :path} :parameters
-    ds :tx :as req}]
+    tx :tx :as req}]
   (debug req)
   (debug id)
   (if-let [person (-> (person-query id)
                       sql-format
-                      (->> (jdbc/execute-one! ds)))]
+                      (->> (jdbc/execute-one! tx)))]
     (sd/response_ok person)
     (sd/response_failed "No such person found" 404)))
 

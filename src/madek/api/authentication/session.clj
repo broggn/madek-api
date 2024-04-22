@@ -8,7 +8,6 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-   [madek.api.db.core :refer [get-ds]]
    [madek.api.legacy.session.encryptor :refer [decrypt]]
    [madek.api.legacy.session.signature :refer [valid?]]
    [madek.api.resources.shared :as sd]
@@ -20,11 +19,11 @@
 (defn- get-session-secret []
   (-> (get-config) :madek_master_secret))
 
-(defn- get-user [user-id]
-  (when-let [user (jdbc/execute-one! (get-ds) (-> (sql/select :*)
-                                                  (sql/from :users)
-                                                  (sql/where [:= :id user-id])
-                                                  sql-format))]
+(defn- get-user [user-id tx]
+  (when-let [user (jdbc/execute-one! tx (-> (sql/select :*)
+                                            (sql/from :users)
+                                            (sql/where [:= :id user-id])
+                                            sql-format))]
     (assoc user :type "User")))
 
 (defn- get-madek-session-cookie-name []
@@ -94,11 +93,11 @@
       (sql/where [:= :user_sessions.token_hash token-hash])
       (sql/where [:<= [:now] expiration-sql-expr])))
 
-(defn user-session [token-hash]
+(defn user-session [token-hash tx]
   (-> token-hash
       user-session-query
       (sql-format :inline false)
-      (#(jdbc/execute! (get-ds) %))))
+      (#(jdbc/execute! tx %))))
 
 (defn- session-enbabled? []
   (-> (get-config) :madek_api_session_enabled boolean))
@@ -113,11 +112,12 @@
 (defn- handle [request handler]
   (debug 'handle request)
   (if-let [cookie-value (and (session-enbabled?) (get-cookie-value request))]
-    (let [token-hash (token-hash cookie-value)]
-      (if-let [user-session (first (user-session token-hash))]
+    (let [token-hash (token-hash cookie-value)
+          tx (:tx request)]
+      (if-let [user-session (first (user-session token-hash tx))]
         (let [user-id (:users/user_id user-session)
               expires-at (:session_expires_at user-session)
-              user (assoc (sd/query-eq-find-one :users :id user-id) :type "User")]
+              user (assoc (sd/query-eq-find-one :users :id user-id tx) :type "User")]
           #_(info "handle session: "
                   "\nfound user session:\n " user-session
                   "\n user-id:  " user-id
@@ -125,7 +125,7 @@
                   "\n user: " user)
           (handler (assoc request
                           :authenticated-entity user
-                          :is_admin (sd/is-admin user-id)
+                          :is_admin (sd/is-admin user-id tx)
                           :authentication-method "Session"
                           :session-expires-at expires-at
                             ;:session-expiration-seconds (in-seconds (time/now) expires-at)

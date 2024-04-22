@@ -24,9 +24,9 @@
       (= 1)))
 
 (defn handler
-  [{{id :id :as user} :user ds :tx :as req}]
+  [{{id :id :as user} :user tx :tx :as req}]
   (try
-    (if (delete-user id ds)
+    (if (delete-user id tx)
       (sd/response_ok user)
       (sd/response_failed "Could not delete user." 406))
     (catch Exception ex (sd/parsed_response_exception ex))))

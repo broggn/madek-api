@@ -9,7 +9,6 @@
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [logbug.debug :refer [I> identity-with-logging]]
-   [madek.api.db.core :refer [get-ds]]
    [madek.api.pagination :as pagination]
    [madek.api.resources.media-entries.advanced-filter :as advanced-filter]
    [madek.api.resources.media-entries.advanced-filter.permissions :as permissions]
@@ -127,12 +126,12 @@
   (let [direction (-> (str/split order #"_") (last))]
     (reduce order-reducer [query ["MetaDatum::Text" "madek_core:title" direction]])))
 
-(defn- find-collection-default-sorting [collection-id]
+(defn- find-collection-default-sorting [collection-id tx]
   (let [query (-> (sql/select :sorting)
                   (sql/from :collections)
                   (sql/where [:= :collections.id collection-id])
                   sql-format)]
-    (:sorting (jdbc/execute-one! (get-ds) query))))
+    (:sorting (jdbc/execute-one! tx query))))
 
 (defn- handle-missing-collection-id [collection-id code-to-run]
   (if (or (not collection-id) (nil? collection-id))
@@ -155,10 +154,11 @@
 (defn- default-order [query]
   (sql/order-by query [:media_entries.created_at :asc]))
 
-(defn- order-by-collection-sorting [query collection-id]
+(defn- order-by-collection-sorting [query collection-id tx]
   (handle-missing-collection-id collection-id
-                                (if-let [sorting (find-collection-default-sorting collection-id)]
-                                  (let [prepared-sorting (->> (str/split (str/replace sorting "created_at " "") #" ") (str/join "_") str/lower-case)]
+                                (if-let [sorting (find-collection-default-sorting collection-id tx)]
+                                  (let [prepared-sorting (->> (str/split (str/replace sorting "created_at " "") #" ")
+                                                              (str/join "_") str/lower-case)]
                                     (order-by-string query prepared-sorting collection-id))
                                   (sql/order-by query [:media_entries.created_at :asc]))))
 
@@ -166,7 +166,7 @@
   (str "only the following values are allowed as order parameter: "
        (str/join ", " available-sortings) " and stored_in_collection"))
 
-(defn- set-order [query query-params]
+(defn- set-order [query query-params tx]
   (-> (let [qorder (-> query-params :order)
             order (sd/try-as-json qorder)
             collection-id (-> query-params :collection_id)
@@ -174,7 +174,7 @@
                      (nil? order) (default-order query)
                      (string? order) (cond
                                        (some #(= order %) available-sortings) (order-by-string query order collection-id)
-                                       (= order "stored_in_collection") (order-by-collection-sorting query collection-id)
+                                       (= order "stored_in_collection") (order-by-collection-sorting query collection-id tx)
                                        :else (throw (ex-info not-allowed-order-param-message
                                                              {:status 422})))
                      (seq? order) (reduce order-reducer query order)
@@ -210,14 +210,13 @@
   (let [query-params (-> request :parameters :query)
         filter-by (json/decode (:filter_by query-params) true)
         props-by (:media_entry filter-by)
+        tx (:tx request)
         authenticated-entity (:authenticated-entity request)
-        query-res (I> identity-with-logging
-                      (base-query props-by)
-                      (set-order query-params)
+        query-res (-> (base-query props-by)
+                      (set-order query-params tx)
                       (filter-by-collection-id query-params)
-                      (permissions/filter-by-query-params query-params
-                                                          authenticated-entity)
-                      (advanced-filter/filter-by filter-by)
+                      (permissions/filter-by-query-params query-params authenticated-entity)
+                      (advanced-filter/filter-by filter-by tx)
                       (pagination/add-offset-for-honeysql query-params))
         query-res (-> query-res sql-format)]
 
@@ -228,7 +227,7 @@
     query-res))
 
 (defn- query-index-resources [request]
-  (jdbc/execute! (get-ds) (build-query request)))
+  (jdbc/execute! (:tx request) (build-query request)))
 
 ;### index ####################################################################
 
@@ -276,23 +275,23 @@
                              :arc_created_at :created_at
                              :arc_updated_at :updated_at}))))
 
-(defn- get-files4me-list [melist auth-entity]
-  (let [auth-list (remove nil? (map #(when (true? (media-entry-perms/downloadable-by-auth-entity? % auth-entity))
-                                       (media-files/query-media-file-by-media-entry-id (:id %))) melist))]
+(defn- get-files4me-list [melist auth-entity tx]
+  (let [auth-list (remove nil? (map #(when (true? (media-entry-perms/downloadable-by-auth-entity? % auth-entity tx))
+                                       (media-files/query-media-file-by-media-entry-id (:id %) tx)) melist))]
     ;(info "get-files4me-list: \n" auth-list)
     auth-list))
 
-(defn get-preview-list [melist auth-entity]
-  (let [auth-list (map #(when (true? (media-entry-perms/viewable-by-auth-entity? % auth-entity))
+(defn get-preview-list [melist auth-entity tx]
+  (let [auth-list (map #(when (true? (media-entry-perms/viewable-by-auth-entity? % auth-entity tx))
                           (sd/query-eq-find-all :previews :media_file_id
-                                                (:id (media-files/query-media-file-by-media-entry-id (:id %))))) melist)]
+                                                (:id (media-files/query-media-file-by-media-entry-id (:id %) tx)) tx)) melist)]
     ;(info "get-preview-list" auth-list)
     auth-list))
 
-(defn get-md4me-list [melist auth-entity]
+(defn get-md4me-list [melist auth-entity tx]
   (let [user-id (:id auth-entity)
-        auth-list (map #(when (true? (media-entry-perms/viewable-by-auth-entity? % auth-entity))
-                          (meta-data.index/get-media-entry-meta-data (:id %) user-id)) melist)]
+        auth-list (map #(when (true? (media-entry-perms/viewable-by-auth-entity? % auth-entity tx))
+                          (meta-data.index/get-media-entry-meta-data (:id %) user-id tx)) melist)]
     auth-list))
 
 (defn build-result [collection-id full-data data]
@@ -306,15 +305,15 @@
 (defn build-result-related-data
   "Builds all the query result related data into the response:
   files, previews, meta-data for entries and a collection"
-  [collection-id auth-entity full-data data]
+  [collection-id auth-entity full-data data tx]
   (let [me-list (get-me-list true data)
         result-me-list (get-me-list full-data data)
         user-id (:id auth-entity)
         ; TODO compute only on demand
-        files (get-files4me-list me-list auth-entity)
-        previews (get-preview-list me-list auth-entity)
-        me-md (get-md4me-list me-list auth-entity)
-        col-md (meta-data.index/get-collection-meta-data collection-id user-id)
+        files (get-files4me-list me-list auth-entity tx)
+        previews (get-preview-list me-list auth-entity tx)
+        me-md (get-md4me-list me-list auth-entity tx)
+        col-md (meta-data.index/get-collection-meta-data collection-id user-id tx)
         result (merge
                 {:media_entries result-me-list
                  ; TODO add only on demand
@@ -328,22 +327,23 @@
     result))
 
 (defn get-index [{{{collection-id :collection_id full-data :full_data} :query} :parameters :as request}]
-    ;(try
+  ;(try
   (catcher/with-logging {}
     (let [data (query-index-resources request)
           result (build-result collection-id full-data data)]
       (sd/response_ok result)))
-      ;(catch Exception e (sd/response_exception e)))
+  ;(catch Exception e (sd/response_exception e)))
   )
 
 (defn get-index_related_data [{{{collection-id :collection_id full-data :full_data} :query} :parameters :as request}]
-   ;(try
+  ;(try
   (catcher/with-logging {}
     (let [auth-entity (-> request :authenticated-entity)
           data (query-index-resources request)
-          result (build-result-related-data collection-id auth-entity full-data data)]
+          tx (:tx request)
+          result (build-result-related-data collection-id auth-entity full-data data tx)]
       (sd/response_ok result)))
-     ;(catch Exception e (sd/response_exception e)))
+  ;(catch Exception e (sd/response_exception e)))
   )
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

@@ -3,7 +3,6 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-   [madek.api.db.core :refer [get-ds]]
    [madek.api.pagination :as pagination]
    [madek.api.resources.shared :as sd]
    [next.jdbc :as jdbc]
@@ -16,23 +15,23 @@
       (sql/where [:= :id (-> request :parameters :path :id)])
       sql-format))
 
-(defn handle_get-arc [request]
-  (let [query (arc-query request)
-        db-result (jdbc/execute! (get-ds) query)]
+(defn handle_get-arc [req]
+  (let [query (arc-query req)
+        db-result (jdbc/execute! (:tx req) query)]
     (if-let [arc (first db-result)]
       (sd/response_ok arc)
       (sd/response_failed "No such collection-collection-arc" 404))))
 
-(defn arc-query-by-parent-and-child [request]
+(defn arc-query-by-parent-and-child [req]
   (-> (sql/select :*)
       (sql/from :collection_collection_arcs)
-      (sql/where [:= :parent_id (-> request :parameters :path :parent_id)])
-      (sql/where [:= :child_id (-> request :parameters :path :child_id)])
+      (sql/where [:= :parent_id (-> req :parameters :path :parent_id)])
+      (sql/where [:= :child_id (-> req :parameters :path :child_id)])
       sql-format))
 
-(defn handle_arc-by-parent-and-child [request]
-  (let [query (arc-query-by-parent-and-child request)
-        db-result (jdbc/execute! (get-ds) query)]
+(defn handle_arc-by-parent-and-child [req]
+  (let [query (arc-query-by-parent-and-child req)
+        db-result (jdbc/execute! (:tx req) query)]
     (if-let [arc (first db-result)]
       (sd/response_ok arc)
       (sd/response_failed "No such collection-collection-arc" 404))))
@@ -45,9 +44,9 @@
       (pagination/add-offset-for-honeysql query-params)
       sql-format))
 
-(defn handle_query-arcs [request]
-  (let [query (arcs-query (-> request :parameters :query))
-        db-result (jdbc/execute! (get-ds) query)]
+(defn handle_query-arcs [req]
+  (let [query (arcs-query (-> req :parameters :query))
+        db-result (jdbc/execute! (:tx req) query)]
     (sd/response_ok {:collection-collection-arcs db-result})))
 
 (defn handle_create-col-col-arc [req]
@@ -60,7 +59,7 @@
             sql-map {:insert-into :collection_collection_arcs
                      :values [ins-data]}
             sql (-> sql-map sql-format)]
-        (if-let [ins-res (next.jdbc/execute! (get-ds) [sql ins-data])]
+        (if-let [ins-res (next.jdbc/execute! (:tx req) [sql ins-data])]
           (sd/response_ok ins-res)
           (sd/response_failed "Could not create collection-collection-arc" 406))))
     (catch Exception e (sd/response_exception e))))
@@ -76,14 +75,14 @@
                       (sql/where [:= :parent_id parent-id
                                   := :child_id child-id])
                       sql-format)
-
-            result (next.jdbc/execute! (get-ds) query)]
+            tx (:tx req)
+            result (next.jdbc/execute! tx query)]
 
         (if (= 1 (first result))
           (sd/response_ok (sd/query-eq-find-one
                            :collection_collection_arcs
                            :parent_id parent-id
-                           :child_id child-id))
+                           :child_id child-id tx))
           (sd/response_failed "Could not update collection collection arc." 406))))
     (catch Exception e (sd/response_exception e))))
 
@@ -92,17 +91,20 @@
     (catcher/with-logging {}
       (let [parent-id (-> req :parameters :path :parent_id)
             child-id (-> req :parameters :path :child_id)
+            tx (:tx req)
             ;; TODO: fetch old data by delete-query
             olddata (sd/query-eq-find-one
                      :collection_collection_arcs
                      :parent_id parent-id
-                     :child_id child-id)
+                     :child_id child-id
+                     tx)
+            tx (:tx req)
             query (-> (sql/delete :collection_collection_arcs)
                       (sql/where [:= :parent_id parent-id
                                   := :child_id child-id])
                       sql-format)
 
-            delresult (next.jdbc/execute! (get-ds) query)]
+            delresult (next.jdbc/execute! tx query)]
 
         (if (= 1 (first delresult))
           (sd/response_ok olddata)

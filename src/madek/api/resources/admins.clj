@@ -3,7 +3,6 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.helper :refer [t]]
@@ -16,7 +15,7 @@
   (let [qd (if (true? (-> req :parameters :query :full_data))
              :admins.*
              :admins.id)
-        db-result (sd/query-find-all :admins qd)]
+        db-result (sd/query-find-all :admins qd (:tx req))]
     (sd/response_ok {:admins db-result})))
 
 (defn handle_get-admin
@@ -38,7 +37,7 @@
                     (sql/values [data])
                     (sql/returning :*)
                     sql-format)
-            ins-res (jdbc/execute! (get-ds) sql)]
+            ins-res (jdbc/execute! (:tx req) sql)]
         (sd/logwrite req (str "handle_create-admin:" " user-id: " id " result: " ins-res))
         (if-let [result (first ins-res)]
           (sd/response_ok result)
@@ -53,7 +52,7 @@
                   (sql/where [:= :id admin-id])
                   (sql/returning :*)
                   sql-format)
-          del-result (jdbc/execute-one! (get-ds) sql)]
+          del-result (jdbc/execute-one! (:tx req) sql)]
       (if del-result
         (sd/response_ok del-result)
         (sd/response_failed "Could not delete admin." 406)))))

@@ -3,7 +3,6 @@
             [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
-            [madek.api.db.core :refer [get-ds]]
             [madek.api.pagination :as pagination]
             [madek.api.resources.shared :as sd]
             [next.jdbc :as jdbc]
@@ -11,12 +10,12 @@
             [schema.core :as s]))
 
 ; TODO clean code
-(defn transform_export [person]
-  (-> person
-      (assoc
-       ; support old (singular) version of field
-       :external_uri (first (person :external_uris)))
-      (dissoc :previous_id :searchable)))
+;(defn transform_export [person]
+;  (-> person
+;      (assoc
+;       ; support old (singular) version of field
+;       :external_uri (first (person :external_uris)))
+;      (dissoc :previous_id :searchable)))
 
 (defn id-where-clause
   [id]
@@ -41,17 +40,18 @@
 ;### get person
 ;################################################################
 
-(defn find-person-sql
-  [id]
-  (->
-   (id-where-clause id)
-   (sql/select :*)
-   (sql/from :people)
-   (sql/returning :*)
-   sql-format))
+;; TODO: not in use?
+;(defn find-person-sql
+;  [id]
+;  (->
+;   (id-where-clause id)
+;   (sql/select :*)
+;   (sql/from :people)
+;   (sql/returning :*)
+;   sql-format))
 
-(defn db-person-get [id]
-  (jdbc/execute-one! (get-ds) (find-person-sql id)))
+;(defn db-person-get [id tx]
+;  (jdbc/execute-one! tx (find-person-sql id)))
 
 ;### delete person
 ;##############################################################
@@ -81,14 +81,15 @@
      (pagination/add-offset-for-honeysql query-params)
      sql-format)))
 
-(defn handle_query-people
-  [request]
-  (let [query-params (-> request :parameters :query)
-        sql-query (build-index-query query-params)
-        db-result (jdbc/execute! (get-ds) sql-query)
-        result (map transform_export db-result)]
-    ;(info "handle_query-people: \n" sql-query)
-    (sd/response_ok {:people result})))
+;; TODO: not in use?
+;(defn handle_query-people
+;  [req]
+;  (let [query-params (-> req :parameters :query)
+;        sql-query (build-index-query query-params)
+;        db-result (jdbc/execute! (:tx req) sql-query)
+;        result (map transform_export db-result)]
+;    ;(info "handle_query-people: \n" sql-query)
+;    (sd/response_ok {:people result})))
 
 ;### routes ###################################################################
 
@@ -174,64 +175,67 @@
                                      "PeopleGroup"
                                      "PeopleInstitutionalGroup")})
 
-"TODO check subtype, catch errors"
-(defn handle_create-person
-  [request]
-  (try
-    (catcher/with-logging {}
-      (let [data (-> request :parameters :body)
-            data_wid (assoc data
-                            :id (or (:id data) (clj-uuid/v4))
-                            :subtype (-> data :subtype str))
-            sql-query (-> (sql/insert-into :people)
-                          (sql/values [data_wid])
-                          sql-format)
-            db-result (jdbc/execute-one! (get-ds) sql-query)]
+;; TODO: not in use?
+;"TODO check subtype, catch errors"
+;(defn handle_create-person
+;  [request]
+;  (try
+;    (catcher/with-logging {}
+;      (let [data (-> request :parameters :body)
+;            data_wid (assoc data
+;                            :id (or (:id data) (clj-uuid/v4))
+;                            :subtype (-> data :subtype str))
+;            sql-query (-> (sql/insert-into :people)
+;                          (sql/values [data_wid])
+;                          sql-format)
+;            db-result (jdbc/execute-one! (:tx request) sql-query)]
+;
+;        (if-let [result (::jdbc/update-count db-result)]
+;          (sd/response_ok (transform_export result) 201)
+;          (sd/response_failed "Could not create person." 406))))
+;    (catch Exception ex (sd/response_exception ex))))
+;
+;(defn handle_get-person
+;  [req]
+;  (let [id-or-institutinal-person-id (-> req :parameters :path :id str)]
+;    (if-let [person (db-person-get id-or-institutinal-person-id (:tx req))]
+;      (sd/response_ok (transform_export person))
+;      (sd/response_failed "No such person found" 404))))
+;
+;(defn handle_delete-person [req]
+;  (try
+;    (catcher/with-logging {}
+;      (let [id (-> req :parameters :path :id)
+;            tx (:tx req)]
+;        (if-let [old-data (db-person-get id tx)]
+;          (let [sql-query (-> (sql/delete-from :people)
+;                              (sql/where (jdbc-id-where-clause id))
+;                              sql-format)
+;                del-result (jdbc/execute! tx sql-query)]
+;
+;            (if (= 1 (::jdbc/update-count del-result))
+;              (sd/response_ok (transform_export old-data) 200)
+;              (sd/response_failed "Could not delete person." 406)))
+;          (sd/response_failed "No such person data." 404))))
+;    (catch Exception ex (sd/response_exception ex))))
 
-        (if-let [result (::jdbc/update-count db-result)]
-          (sd/response_ok (transform_export result) 201)
-          (sd/response_failed "Could not create person." 406))))
-    (catch Exception ex (sd/response_exception ex))))
-
-(defn handle_get-person
-  [req]
-  (let [id-or-institutinal-person-id (-> req :parameters :path :id str)]
-    (if-let [person (db-person-get id-or-institutinal-person-id)]
-      (sd/response_ok (transform_export person))
-      (sd/response_failed "No such person found" 404))))
-
-(defn handle_delete-person [req]
-  (try
-    (catcher/with-logging {}
-      (let [id (-> req :parameters :path :id)]
-        (if-let [old-data (db-person-get id)]
-          (let [sql-query (-> (sql/delete-from :people)
-                              (sql/where (jdbc-id-where-clause id))
-                              sql-format)
-                del-result (jdbc/execute! (get-ds) sql-query)]
-
-            (if (= 1 (::jdbc/update-count del-result))
-              (sd/response_ok (transform_export old-data) 200)
-              (sd/response_failed "Could not delete person." 406)))
-          (sd/response_failed "No such person data." 404))))
-    (catch Exception ex (sd/response_exception ex))))
-
-(defn handle_patch-person
-  [req]
-  (try
-    (catcher/with-logging {}
-      (let [body (get-in req [:parameters :body])
-            id (-> req :parameters :path :id)
-            sql-query (-> (sql/update :people)
-                          (sql/set body)
-                          (sql/where (jdbc-id-where-clause id))
-                          sql-format)
-            upd-result (jdbc/execute! (get-ds) sql-query)]
-
-        (if (= 1 (first upd-result))
-          (sd/response_ok (transform_export (db-person-get id)))
-          (sd/response_failed "Could not update person" 406))))
-    (catch Exception ex (sd/response_exception ex))))
+;(defn handle_patch-person
+;  [req]
+;  (try
+;    (catcher/with-logging {}
+;      (let [body (get-in req [:parameters :body])
+;            tx (:tx req)
+;            id (-> req :parameters :path :id)
+;            sql-query (-> (sql/update :people)
+;                          (sql/set body)
+;                          (sql/where (jdbc-id-where-clause id))
+;                          sql-format)
+;            upd-result (jdbc/execute! tx sql-query)]
+;
+;        (if (= 1 (first upd-result))
+;          (sd/response_ok (transform_export (db-person-get id tx)))
+;          (sd/response_failed "Could not update person" 406))))
+;    (catch Exception ex (sd/response_exception ex))))
 
 ;;; TODO: not in use?
 ;(def admin-routes

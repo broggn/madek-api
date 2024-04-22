@@ -15,21 +15,21 @@
 
 (defn update-user
   "Updates and returns true if that happened and false otherwise"
-  [user-id data ds]
+  [user-id data tx]
   (-> (sql/update :users)
       (sql/set (-> data convert-sequential-values-to-sql-arrays))
       (sql/where [:= :users.id [:uuid user-id]])
       (sql-format :inline false)
-      (->> (jdbc/execute-one! ds))
+      (->> (jdbc/execute-one! tx))
       :next.jdbc/update-count
       (= 1)))
 
 (defn update-user-handler
   [{{data :body} :parameters
     {user-id :id} :path-params
-    ds :tx :as req}]
-  (if (update-user user-id data ds)
-    (sd/response_ok (find-user-by-uid user-id ds) 200)
+    tx :tx :as req}]
+  (if (update-user user-id data tx)
+    (sd/response_ok (find-user-by-uid user-id tx) 200)
     (sd/response_not_found "No such user.")))
 
 (def schema

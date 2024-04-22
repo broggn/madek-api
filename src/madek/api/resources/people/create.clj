@@ -14,13 +14,13 @@
    [taoensso.timbre :refer [error]]))
 
 (defn handle-create-person
-  [{{data :body} :parameters ds :tx :as req}]
+  [{{data :body} :parameters tx :tx :as req}]
   (try
     (let [{id :id} (-> (sql/insert-into :people)
                        (sql/values [(convert-map-if-exist data)])
                        sql-format
-                       ((partial jdbc/execute-one! ds) {:return-keys true}))]
-      (sd/response_ok (find-person-by-uid id ds) 201))
+                       ((partial jdbc/execute-one! tx) {:return-keys true}))]
+      (sd/response_ok (find-person-by-uid id tx) 201))
     (catch Exception e
       (error "handle-create-person failed" {:request req})
       (sd/parsed_response_exception e))))
