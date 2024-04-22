@@ -41,11 +41,13 @@ describe "Getting a media-entry resource with authentication" do
       url = "#{api_base_url}/media-entry/#{@media_entry.id}/perms/resources"
       update = newbasic_auth_plain_faraday_json_client(@owner.login, @owner.password)
         .put(url) do |req|
-          req.body = {
-            responsible_user_id: @entity.id
-          }.to_json
-          req.headers["Content-Type"] = "application/json"
-        end
+        req.body = {
+          responsible_user_id: @entity.id
+        }.to_json
+        req.headers["Content-Type"] = "application/json"
+      end
+
+      assert update.status == 200
       # @media_entry.update! responsible_user: @entity
     end
 
@@ -163,6 +165,7 @@ describe "Getting a media-entry resource with authentication" do
   context :check_allowed_if_group_permission do
     let :group do
       group = FactoryBot.create(:group)
+      expect(group).to be_a(Group)
     end
     before :example do
       @entity.groups << group
@@ -186,6 +189,7 @@ describe "Getting a media-entry resource with authentication" do
   context :check_not_allowed_if_updated_group_permission do
     let :group do
       group = FactoryBot.create(:group)
+      assert_not_nil group
     end
     before :example do
       @entity.groups << group
@@ -216,6 +220,7 @@ describe "Getting a media-entry resource with authentication" do
   context :check_not_allowed_if_deleted_group_permission do
     let :group do
       group = FactoryBot.create(:group)
+      expect(group).to be_a(Group)
     end
     before :example do
       @entity.groups << group
