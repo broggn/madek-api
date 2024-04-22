@@ -231,43 +231,24 @@
 ;      [leihs.core.db :as db]
 ;      [next.jdbc :as jdbc]))
 
-(comment
-
-  (let [tx (db/get-ds-next)
-        request {:route-params {:user-id #uuid "c0777d74-668b-5e01-abb5-f8277baa0ea8"}
-                 :tx tx}
-        user-id #uuid "37bb3d3d-3a61-4f98-863e-c549568317f0"
-        query (sql-format {:select :*
-                           :from [:users]
-                           :where [:= :id [:cast user-id :uuid]]})
-
-        ;query2 (-> (sql/select :*)
-        ;           (sql/from :users)
-        ;           (sql/where [:= :id user-id])
-        ;           sql-format
-        ;           (->> (jdbc/execute! tx))
-        ;           )
-
-        p (println "\nquery" query)
-        ;p (println "\nquery2" query2)
-        ]))
-(defn handle_patch-person
-  [req]
-  (try
-    (catcher/with-logging {}
-      (let [body (get-in req [:parameters :body])
-            tx (:tx req)
-            id (-> req :parameters :path :id)
-            sql-query (-> (sql/update :people)
-                          (sql/set body)
-                          (sql/where (jdbc-id-where-clause id))
-                          sql-format)
-            upd-result (jdbc/execute! tx sql-query)]
-
-        (if (= 1 (first upd-result))
-          (sd/response_ok (transform_export (db-person-get id tx)))
-          (sd/response_failed "Could not update person" 406))))
-    (catch Exception ex (sd/response_exception ex))))
+;; TODO: not in use?
+;(defn handle_patch-person
+;  [req]
+;  (try
+;    (catcher/with-logging {}
+;      (let [body (get-in req [:parameters :body])
+;            tx (:tx req)
+;            id (-> req :parameters :path :id)
+;            sql-query (-> (sql/update :people)
+;                          (sql/set body)
+;                          (sql/where (jdbc-id-where-clause id))
+;                          sql-format)
+;            upd-result (jdbc/execute! tx sql-query)]
+;
+;        (if (= 1 (first upd-result))
+;          (sd/response_ok (transform_export (db-person-get id tx)))
+;          (sd/response_failed "Could not update person" 406))))
+;    (catch Exception ex (sd/response_exception ex))))
 
 ;;; TODO: not in use?
 ;(def admin-routes

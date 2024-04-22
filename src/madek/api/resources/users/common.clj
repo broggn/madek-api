@@ -57,15 +57,15 @@
 
 ;;; other ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn find-user-by-uid [uid ds]
-  (jdbc/execute-one! ds (-> base-query (where-uid uid) sql-format)))
+(defn find-user-by-uid [uid tx]
+  (jdbc/execute-one! tx (-> base-query (where-uid uid) sql-format)))
 
 (defn wrap-find-user [param]
   (fn [handler]
-    (fn [{{uid param} :path-params ds :tx :as request}]
+    (fn [{{uid param} :path-params tx :tx :as request}]
       (let [converted (convert-userid uid)
             uid (-> converted :user-id)
-            user (find-user-by-uid uid ds)]
+            user (find-user-by-uid uid tx)]
         (if (-> converted :is_userid_valid)
           (if user
             (handler (assoc request :user user))

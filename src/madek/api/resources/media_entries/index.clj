@@ -255,31 +255,6 @@
 ;      [leihs.core.db :as db]
 ;      [next.jdbc :as jdbc]))
 
-(comment
-
-  (let [tx (get-tx)
-        query-res (I> identity-with-logging
-                      (base-query props-by)
-
-                    ;;identity-with-logging
-                    ;;
-                    ;;(base-query props-by)
-                    ;;;(set-order query-params tx)
-                    ;;  (-> (set-order query-params
-                    ;
-                    ;(set-order query-res query-params tx)
-                    ;;(set-order query-params tx)
-                    ;
-                    ;;(apply set-order query-params tx)
-                    ;
-                    ;(filter-by-collection-id query-params tx)
-                    ;(permissions/filter-by-query-params query-params
-                    ;  authenticated-entity tx)
-                    ;(advanced-filter/filter-by filter-by tx)
-                    ;(pagination/add-offset-for-honeysql query-params tx)
-                      )
-        p (println "query=" query-res)]))
-
 (defn- query-index-resources [request]
   (jdbc/execute! (:tx request) (build-query request)))
 

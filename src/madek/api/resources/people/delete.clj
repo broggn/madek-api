@@ -21,11 +21,11 @@
       (= 1)))
 
 (defn handler
-  [{{{id :id} :path} :parameters ds :tx :as req}]
+  [{{{id :id} :path} :parameters tx :tx :as req}]
   ; delete person should only false if no person was found; if the delete fails
   ; because of constraints an exception would have been raised
   (try
-    (if (delete-person id ds)
+    (if (delete-person id tx)
       {:status 204}
       {:status 404 :body {:message "Person not found."}})
     (catch Exception ex (sd/parsed_response_exception ex))))

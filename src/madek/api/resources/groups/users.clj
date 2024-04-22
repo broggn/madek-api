@@ -94,12 +94,12 @@
   (info "add-user" group-id ":" user-id)
   (if-let [user (find-group-user group-id user-id (:tx req))]
     (sd/response_ok {:users (group-users group-id req)})
-    (let [ds (:tx req)
-          group (groups/find-group group-id ds)
+    (let [tx (:tx req)
+          group (groups/find-group group-id tx)
           user (find-user user-id (:tx req))]
       (if-not (and group user)
         (sd/response_not_found "No such user or group.")
-        (do (jdbc/execute! ds
+        (do (jdbc/execute! tx
                            (-> (sql/insert-into :groups_users)
                                (sql/values [{:group_id (:id group)
                                              :user_id (:id user)}])
@@ -109,9 +109,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn remove-user [group-id user-id req]
-  (let [ds (:tx req)]
+  (let [tx (:tx req)]
     (if-let [user (find-group-user group-id user-id (:tx req))]
-      (if-let [group (groups/find-group group-id ds)]
+      (if-let [group (groups/find-group group-id tx)]
         (let [delok (jdbc/execute! (:tx req)
                                    (-> (sql/delete-from :groups_users)
                                        (sql/where [:= :group_id (:id group)] [:= :user_id (:id user)])
@@ -122,8 +122,8 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn current-group-users-ids [ds group-id]
-  (let [res (jdbc/execute! ds (-> (sql/select-distinct :user_id)
+(defn current-group-users-ids [tx group-id]
+  (let [res (jdbc/execute! tx (-> (sql/select-distinct :user_id)
                                   (sql/from :groups_users)
                                   (sql/where [:= :group_id group-id])
                                   sql-format))

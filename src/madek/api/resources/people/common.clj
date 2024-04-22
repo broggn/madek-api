@@ -45,7 +45,7 @@
   (-> base-query
       (where-uid uid)))
 
-(defn find-person-by-uid [uid ds]
+(defn find-person-by-uid [uid tx]
   (-> (person-query uid)
       sql-format
-      (->> (jdbc/execute-one! ds))))
+      (->> (jdbc/execute-one! tx))))
