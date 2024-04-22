@@ -3,7 +3,6 @@
             [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
-            [madek.api.db.core :refer [get-ds]]
             [madek.api.pagination :as pagination]
             [madek.api.resources.shared :as sd]
             [next.jdbc :as jdbc]
@@ -50,8 +49,8 @@
    (sql/returning :*)
    sql-format))
 
-(defn db-person-get [id]
-  (jdbc/execute-one! (get-ds) (find-person-sql id)))
+(defn db-person-get [id tx]
+  (jdbc/execute-one! tx (find-person-sql id)))
 
 ;### delete person
 ;##############################################################
@@ -85,7 +84,7 @@
   [request]
   (let [query-params (-> request :parameters :query)
         sql-query (build-index-query query-params)
-        db-result (jdbc/execute! (get-ds) sql-query)
+        db-result (jdbc/execute! (:tx request) sql-query)
         result (map transform_export db-result)]
     ;(info "handle_query-people: \n" sql-query)
     (sd/response_ok {:people result})))
@@ -186,7 +185,7 @@
             sql-query (-> (sql/insert-into :people)
                           (sql/values [data_wid])
                           sql-format)
-            db-result (jdbc/execute-one! (get-ds) sql-query)]
+            db-result (jdbc/execute-one! (:tx request) sql-query)]
 
         (if-let [result (::jdbc/update-count db-result)]
           (sd/response_ok (transform_export result) 201)
@@ -196,19 +195,20 @@
 (defn handle_get-person
   [req]
   (let [id-or-institutinal-person-id (-> req :parameters :path :id str)]
-    (if-let [person (db-person-get id-or-institutinal-person-id)]
+    (if-let [person (db-person-get id-or-institutinal-person-id (:tx req))]
       (sd/response_ok (transform_export person))
       (sd/response_failed "No such person found" 404))))
 
 (defn handle_delete-person [req]
   (try
     (catcher/with-logging {}
-      (let [id (-> req :parameters :path :id)]
-        (if-let [old-data (db-person-get id)]
+      (let [id (-> req :parameters :path :id)
+            tx (:tx req)]
+        (if-let [old-data (db-person-get id tx)]
           (let [sql-query (-> (sql/delete-from :people)
                               (sql/where (jdbc-id-where-clause id))
                               sql-format)
-                del-result (jdbc/execute! (get-ds) sql-query)]
+                del-result (jdbc/execute! tx sql-query)]
 
             (if (= 1 (::jdbc/update-count del-result))
               (sd/response_ok (transform_export old-data) 200)
@@ -216,20 +216,56 @@
           (sd/response_failed "No such person data." 404))))
     (catch Exception ex (sd/response_exception ex))))
 
+;(ns leihs.my.back.html
+;    (:refer-clojure :exclude [keyword str])
+;    (:require
+;      [hiccup.page :refer [html5]]
+;      [honey.sql :refer [format] :rename {format sql-format}]
+;      [honey.sql.helpers :as sql]
+;      [leihs.core.http-cache-buster2 :as cache-buster]
+;      [leihs.core.json :refer [to-json]]
+;      [leihs.core.remote-navbar.shared :refer [navbar-props]]
+;      [leihs.core.shared :refer [head]]
+;      [leihs.core.url.core :as url]
+;      [leihs.my.authorization :as auth]
+;      [leihs.core.db :as db]
+;      [next.jdbc :as jdbc]))
+
+(comment
+
+  (let [tx (db/get-ds-next)
+        request {:route-params {:user-id #uuid "c0777d74-668b-5e01-abb5-f8277baa0ea8"}
+                 :tx tx}
+        user-id #uuid "37bb3d3d-3a61-4f98-863e-c549568317f0"
+        query (sql-format {:select :*
+                           :from [:users]
+                           :where [:= :id [:cast user-id :uuid]]})
+
+        ;query2 (-> (sql/select :*)
+        ;           (sql/from :users)
+        ;           (sql/where [:= :id user-id])
+        ;           sql-format
+        ;           (->> (jdbc/execute! tx))
+        ;           )
+
+        p (println "\nquery" query)
+        ;p (println "\nquery2" query2)
+        ]))
 (defn handle_patch-person
   [req]
   (try
     (catcher/with-logging {}
       (let [body (get-in req [:parameters :body])
+            tx (:tx req)
             id (-> req :parameters :path :id)
             sql-query (-> (sql/update :people)
                           (sql/set body)
                           (sql/where (jdbc-id-where-clause id))
                           sql-format)
-            upd-result (jdbc/execute! (get-ds) sql-query)]
+            upd-result (jdbc/execute! tx sql-query)]
 
         (if (= 1 (first upd-result))
-          (sd/response_ok (transform_export (db-person-get id)))
+          (sd/response_ok (transform_export (db-person-get id tx)))
           (sd/response_failed "Could not update person" 406))))
     (catch Exception ex (sd/response_exception ex))))
 

@@ -1,7 +1,6 @@
 (ns madek.api.resources.media-entries.advanced-filter.meta-data
   (:require
    [honey.sql.helpers :as sql]
-   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.meta-keys.meta-key :as meta-key]
    [madek.api.utils.helper :refer [to-uuid]]
    [next.jdbc :as jdbc]))
@@ -12,12 +11,12 @@
                               "meta_data_keywords" {:table "keywords",
                                                     :resource "keyword",
                                                     :match_column "term"}})
-(defn- get-meta-datum-object-type [meta-datum-spec]
+(defn- get-meta-datum-object-type [meta-datum-spec tx]
   (or (:type meta-datum-spec)
       (:meta_datum_object_type
        (first
         (jdbc/execute!
-         (get-ds)
+         tx
          (meta-key/build-meta-key-query (:key meta-datum-spec)))))))
 
 (defn- sql-merge-join-related-meta-data
@@ -149,16 +148,29 @@
                               (sql/where [:= :meta_data.media_entry_id :media_entries.id]))])
                       (keys match-columns)))))))
 
-(defn- extend-sqlmap-according-to-meta-datum-spec [sqlmap [meta-datum-spec counter]]
-  (let [meta-datum-object-type (get-meta-datum-object-type meta-datum-spec)
+(defn- extend-sqlmap-according-to-meta-datum-spec [sqlmap [meta-datum-spec counter] tx]
+
+  (println ">o> extend-sqlmap-according-to-meta-datum-spec.sqlmap=" sqlmap)
+  (println ">o> extend-sqlmap-according-to-meta-datum-spec.meta-datum-spec=" meta-datum-spec)
+  (println ">o> extend-sqlmap-according-to-meta-datum-spec.counter=" counter)
+
+  (let [meta-datum-object-type (get-meta-datum-object-type meta-datum-spec tx)
+
+        p (println ">o> meta-datum-object-type=" meta-datum-object-type)
+
         related-meta-data-table (case meta-datum-object-type
                                   "MetaDatum::People" "meta_data_people"
                                   "MetaDatum::Keywords" "meta_data_keywords"
                                   nil)
+
+        p (println ">o> related-meta-data-table=" related-meta-data-table)
+
         sqlmap-with-joined-meta-data (sql-merge-join-meta-data sqlmap
                                                                counter
                                                                meta-datum-object-type
-                                                               meta-datum-spec)]
+                                                               meta-datum-spec)
+
+        p (println ">o> sqlmap-with-joined-meta-data=" sqlmap-with-joined-meta-data)]
 
     (cond
       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -246,17 +258,23 @@
                                  (assoc :select-distinct (get query :select))
                                  (dissoc :select)))
 
-(defn sql-filter-by [sqlmap meta-data-specs]
+;; broken???
+(defn sql-filter-by [sqlmap meta-data-specs tx]
+  (println ">o> sql-filter-by.sqlmap=" sqlmap)
+  (println ">o> sql-filter-by.meta-data-specs=" meta-data-specs)
+
   (if-not (empty? meta-data-specs)
-    (-> (reduce extend-sqlmap-according-to-meta-datum-spec
-                sqlmap
-                (partition 2
-                           (interleave meta-data-specs
-                                       (iterate inc 1))))
-        modified-query)
+    (let [partition-res (partition 2
+                                   (interleave meta-data-specs
+                                               (iterate inc 1)))
+          p (println ">o> res0=" partition-res)
+          reduce-res (reduce (fn [acc val] (extend-sqlmap-according-to-meta-datum-spec acc val tx)) sqlmap partition-res)
+          p (println ">o> res2=" reduce-res)]
+      (-> reduce-res
+          modified-query))
     sqlmap))
 
 ;### Debug ####################################################################
-;(debug/debug-ns *ns*)
-;(debug/wrap-with-log-debug #'filter-by-permissions)
-;(debug/wrap-with-log-debug #'build-query)
+  ;(debug/debug-ns *ns*)
+  ;(debug/wrap-with-log-debug #'filter-by-permissions)
+  ;(debug/wrap-with-log-debug #'build-query)

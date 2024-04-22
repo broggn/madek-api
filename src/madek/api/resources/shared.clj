@@ -8,7 +8,6 @@
             [logbug.catcher :as catcher]
             [madek.api.authorization :refer [authorized?]]
             [madek.api.constants :as mc]
-            [madek.api.db.core :refer [get-ds]]
             [madek.api.semver :as semver]
             [madek.api.utils.helper :refer [to-uuid]]
             [next.jdbc :as jdbc]
@@ -159,48 +158,48 @@
   (update-in sql-cls [0] #(clojure.string/replace % "WHERE" "")))
 
 (defn query-find-all
-  [table-key col-keys]
+  [table-key col-keys tx]
   (let [db-query (-> (build-query-base table-key col-keys)
                      sql-format)
-        db-result (jdbc/execute! (get-ds) db-query)]
+        db-result (jdbc/execute! tx db-query)]
     db-result))
 
 (defn query-eq-find-all
-  ([table-name col-name row-data]
+  ([table-name col-name row-data tx]
    (catcher/snatch {}
                    (jdbc/execute!
-                    (get-ds)
+                    tx
                     (sql-query-find-eq table-name col-name row-data))))
 
-  ([table-name col-name row-data col-name2 row-data2]
+  ([table-name col-name row-data col-name2 row-data2 tx]
    (catcher/snatch {}
                    (jdbc/execute!
-                    (get-ds)
+                    tx
                     (sql-query-find-eq table-name col-name row-data col-name2 row-data2)))))
 
 (defn query-eq-find-all-one
-  ([table-name col-name row-data]
+  ([table-name col-name row-data tx]
    (catcher/snatch {}
                    (jdbc/execute-one!
-                    (get-ds)
+                    tx
                     (sql-query-find-eq table-name col-name row-data))))
 
-  ([table-name col-name row-data col-name2 row-data2]
+  ([table-name col-name row-data col-name2 row-data2 tx]
    (catcher/snatch {}
                    (jdbc/execute-one!
-                    (get-ds)
+                    tx
                     (sql-query-find-eq table-name col-name row-data col-name2 row-data2)))))
 
 (defn query-eq-find-one
-  ([table-name col-name row-data]
-   (query-eq-find-all-one table-name col-name row-data))
-  ([table-name col-name row-data col-name2 row-data2]
-   (query-eq-find-all-one table-name col-name row-data col-name2 row-data2)))
+  ([table-name col-name row-data tx]
+   (query-eq-find-all-one table-name col-name row-data tx))
+  ([table-name col-name row-data col-name2 row-data2 tx]
+   (query-eq-find-all-one table-name col-name row-data col-name2 row-data2 tx)))
 
-#_(defn query-eq2-find-all [table-name col-name row-data col-name2 row-data2]
+#_(defn query-eq2-find-all [table-name col-name row-data col-name2 row-data2 tx]
     (catcher/snatch {}
                     (jdbc/query
-                     (get-ds)
+                     tx
                      (sql-query-find-eq table-name col-name row-data col-name2 row-data2))))
 
 #_(defn query-eq2-find-one [table-name col-name row-data col-name2 row-data2]
@@ -291,9 +290,10 @@
    It does send404 if set true and no such entity is found.
    If it exists it is associated with the request as reqkey"
   [request handler path-param db_table db_col_name reqkey send404]
-  (let [search (-> request :parameters :path path-param)]
+  (let [search (-> request :parameters :path path-param)
+        tx (:tx request)]
     ;(info "req-find-data: " search " " db_table " " db_col_name)
-    (if-let [result-db (query-eq-find-one db_table db_col_name search)]
+    (if-let [result-db (query-eq-find-one db_table db_col_name search tx)]
       (handler (assoc request reqkey result-db))
       (if (= true send404)
         (response_not_found (str "No such entity in " db_table " as " db_col_name " with " search))
@@ -304,9 +304,10 @@
    It does send404 if set true and no such entity is found.
    If it exists it is associated with the request as reqkey"
   [request handler path-param db_table db_col_name reqkey send404]
-  (let [search (-> request :path-params path-param)]
+  (let [search (-> request :path-params path-param)
+        tx (:tx request)]
     ;(info "req-find-data: " search " " db_table " " db_col_name)
-    (if-let [result-db (query-eq-find-one db_table db_col_name search)]
+    (if-let [result-db (query-eq-find-one db_table db_col_name search tx)]
       (handler (assoc request reqkey result-db))
       (if (= true send404)
         (response_not_found (str "No such entity in " db_table " as " db_col_name " with " search))
@@ -318,7 +319,7 @@
    If it exists it is associated with the request as reqkey"
   [request handler search search2 db_table db_col_name db_col_name2 reqkey send404]
   (info "req-find-data-search2" "\nc1: " db_col_name "\ns1: " search "\nc2: " db_col_name2 "\ns2: " search2)
-  (if-let [result-db (query-eq-find-one db_table db_col_name search db_col_name2 search2)]
+  (if-let [result-db (query-eq-find-one db_table db_col_name search db_col_name2 search2 (:tx request))]
     (handler (assoc request reqkey result-db))
     (if (= true send404)
       (response_not_found (str "No such entity in " db_table " as " db_col_name " with " search " and " db_col_name2 " with " search2))
@@ -332,7 +333,8 @@
   [request handler path-param path-param2 db_table db_col_name db_col_name2 reqkey send404]
   (let [search (-> request :parameters :path path-param str)
         search2 (-> request :parameters :path path-param2 str)
-        res (query-eq-find-one db_table db_col_name search db_col_name2 search2)]
+        tx (:tx request)
+        res (query-eq-find-one db_table db_col_name search db_col_name2 search2 tx)]
 
 ;(info "req-find-data2" "\nc1: " db_col_name "\ns1: " search "\nc2: " db_col_name2 "\ns2: " search2)
     (if-let [result-db res]
@@ -345,10 +347,10 @@
 
 ; begin user and other util wrappers
 
-(defn is-admin [user-id]
+(defn is-admin [user-id tx]
   (let [none (->
               (jdbc/execute!
-               (get-ds)
+               tx
                (-> (sql/select :*)
                    (sql/from :admins)
                    (sql/where [:= :user_id (to-uuid user-id)])
@@ -364,15 +366,22 @@
 (defn- get-media-resource
   "First checks for collection_id, then for media_entry_id.
    If creating collection-media-entry-arc, the collection permission is checked."
-  ([request]
-   (or (get-media-resource request :collection_id "collections" "Collection")
-       (get-media-resource request :media_entry_id "media_entries" "MediaEntry")))
+  ([params tx]
+   (println ">o> get-media-resource1")
+   (or (get-media-resource params :collection_id "collections" "Collection" tx)
+       (get-media-resource params :media_entry_id "media_entries" "MediaEntry" tx)))
 
-  ([request id-key table-name type]
+  ([params id-key table-name type tx]
+
+   (println ">o> get-media-resource2")
+
+   (println ">o> 1tx=" (:tx params) " id=" id-key " table=" table-name " type=" type)
+   (println ">o> 2tx=" params)
+
    (try
-     (when-let [id (-> request :parameters :path id-key)]
+     (when-let [id (-> params :parameters :path id-key)]
        ;(info "get-media-resource" "\nid\n" id)
-       (when-let [resource (jdbc/execute-one! (get-ds)
+       (when-let [resource (jdbc/execute-one! tx
                                               (-> (sql/select :*)
                                                   (sql/from (keyword table-name))
                                                   (sql/where [:= :id (to-uuid id)])
@@ -384,8 +393,11 @@
        (merge (ex-data e)
               {:statuc 406, :body {:message (.getMessage e)}})))))
 
-(defn- ring-add-media-resource [request handler] ;;here
-  (if-let [media-resource (get-media-resource request)]
+(defn- ring-add-media-resource [request handler tx] ;;here
+
+  (println ">o> ring-add-media-resource")
+
+  (if-let [media-resource (get-media-resource request tx)]
     (let [request-with-media-resource (assoc request :media-resource media-resource)]
       ;(info "ring-add-media-resource" "\nmedia-resource\n" media-resource)
       (handler request-with-media-resource))
@@ -399,7 +411,7 @@
   (let [id (-> request :parameters :path :meta_datum_id)]
     #_(info "query-meta-datum" "\nid\n" id)
     (or
-     (jdbc/execute-one! (get-ds)
+     (jdbc/execute-one! (:tx request)
                         (-> (sql/select :*)
                             (sql/from :meta_data)
                             (sql/where [:= :id (to-uuid id)])
@@ -408,20 +420,20 @@
      (throw (IllegalStateException. (str "We expected to find a MetaDatum for "
                                          id " but did not."))))))
 
-(defn- query-media-resource-for-meta-datum [meta-datum]
+(defn- query-media-resource-for-meta-datum [meta-datum tx]
   (or (when-let [id (:media_entry_id meta-datum)]
         (get-media-resource {:parameters {:path {:media_entry_id id}}}
-                            :media_entry_id "media_entries" "MediaEntry"))
+                            :media_entry_id "media_entries" "MediaEntry" tx))
       (when-let [id (:collection_id meta-datum)]
         (get-media-resource {:parameters {:path {:collection_id id}}}
-                            :collection_id "collections" "Collection"))
+                            :collection_id "collections" "Collection" tx))
       (throw (IllegalStateException. (str "Getting the resource for "
                                           meta-datum "
                                           is not implemented yet.")))))
 
 (defn- ring-add-meta-datum-with-media-resource [request handler]
   (if-let [meta-datum (query-meta-datum request)]
-    (let [media-resource (query-media-resource-for-meta-datum meta-datum)]
+    (let [media-resource (query-media-resource-for-meta-datum meta-datum (:tx request))]
       ;(info "add-meta-datum-with-media-resource" "\nmeta-datum\n" meta-datum "\nmedia-resource\n" media-resource)
       (handler (assoc request
                       :meta-datum meta-datum
@@ -436,7 +448,10 @@
   (-> resource :get_metadata_and_previews boolean))
 
 (defn- authorize-request-for-media-resource [request handler scope]
-  ;(
+
+  (println ">o> authorize-request-for-media-resource")
+
+;(
   ;(info "auth-request-for-mr"
   ;              "\nscope: " scope
   ;              "\nauth entity:\n" (-> request :authenticated-entity)
@@ -454,7 +469,7 @@
           (handler request)
 
           ; if not admin check user auth
-          (if (authorized? auth-entity media-resource scope)
+          (if (authorized? auth-entity media-resource scope (:tx request))
             (handler request)
             ;else
             {:status 403 :body {:message "Not authorized for media-resource"}}))
@@ -491,7 +506,8 @@
 
 (defn ring-wrap-add-media-resource [handler]
   (fn [request]
-    (ring-add-media-resource request handler)))
+    (println ">o> ring-wrap-add-media-resource")
+    (ring-add-media-resource request handler (:tx request))))
 
 (defn ring-wrap-add-meta-datum-with-media-resource [handler]
   (fn [request]
@@ -511,6 +527,7 @@
 
 (defn ring-wrap-authorization-edit-permissions [handler]
   (fn [request]
+    (println ">o> ring-wrap-authorization-edit-permissions")
     (authorize-request-for-media-resource request handler :edit-perm)))
 
 (defn ring-wrap-parse-json-query-parameters [handler]

@@ -3,7 +3,6 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.keywords.keyword :as kw]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
@@ -94,13 +93,15 @@
 
 (defn handle_usr-query-keywords [request]
   (let [rq (-> request :parameters :query)
-        db-result (kw/db-keywords-query rq)
+        tx (:tx request)
+        db-result (kw/db-keywords-query rq tx)
         result (map user-export-keyword db-result)]
     (sd/response_ok {:keywords result})))
 
 (defn handle_adm-query-keywords [request]
   (let [rq (-> request :parameters :query)
-        db-result (kw/db-keywords-query rq)
+        tx (:tx request)
+        db-result (kw/db-keywords-query rq tx)
         result (map adm-export-keyword db-result)]
     (sd/response_ok {:keywords result})))
 
@@ -117,7 +118,7 @@
                           (sql/returning :*)
                           sql-format)
 
-            ins-result (jdbc/execute-one! (get-ds) sql-query)]
+            ins-result (jdbc/execute-one! (:tx req) sql-query)]
         (if-let [result ins-result]
           (sd/response_ok (adm-export-keyword result))
           (sd/response_failed "Could not create keyword" 406))))
@@ -128,15 +129,16 @@
     (catcher/with-logging {}
       (let [id (-> req :parameters :path :id)
             data (-> req :parameters :body)
+            tx (:tx req)
             sql-query (-> (sql/update :keywords)
                           (sql/set (convert-map data))
                           (sql/where [:= :id id])
                           sql-format)
-            upd-res (jdbc/execute-one! (get-ds) sql-query)]
+            upd-res (jdbc/execute-one! tx sql-query)]
 
         (if (= 1 (:next.jdbc/update-count upd-res))
           ;(sd/response_ok (adm-export-keyword (kw/db-keywords-get-one id)))
-          (-> id kw/db-keywords-get-one
+          (-> id (kw/db-keywords-get-one tx)
               adm-export-keyword
               sd/response_ok)
           (sd/response_failed "Could not update keyword." 406))))
@@ -150,7 +152,7 @@
             sql-query (-> (sql/delete-from :keywords)
                           (sql/where [:= :id id])
                           sql-format)
-            del-res (jdbc/execute-one! (get-ds) sql-query)]
+            del-res (jdbc/execute-one! (:tx req) sql-query)]
 
         ; logwrite
         (if (= 1 (::jdbc/update-count del-res))

@@ -5,20 +5,20 @@
    [logbug.catcher :as catcher]
    [madek.api.constants]
    [madek.api.data-streaming :as data-streaming]
-   [madek.api.db.core :refer [get-ds]]
    [next.jdbc :as jdbc]
    [taoensso.timbre :refer [info]]))
 
-(defn db-get-preview [id]
+(defn db-get-preview [id tx]
   (let [query (-> (sql/select :*)
                   (sql/from :previews)
                   (sql/where [:= :previews.id id])
                   sql-format)]
-    (jdbc/execute-one! (get-ds) query)))
+    (jdbc/execute-one! tx query)))
 
 (defn get-preview [request]
   (let [id (-> request :parameters :path :preview_id)
-        result (db-get-preview id)]
+        tx (:tx request)
+        result (db-get-preview id tx)]
     (info "get-preview" "\nid\n" id "\nresult\n" result)
     {:body result}))
 
@@ -35,9 +35,9 @@
 (defn get-preview-file-data-stream [request]
   (catcher/snatch {}
                   (when-let [preview (:preview request)]
-                    (info "get-preview-file-ds" "\npreview\n" preview)
+                    (info "get-preview-file-tx" "\npreview\n" preview)
                     (when-let [file-path (preview-file-path preview)]
-                      (info "get-preview-file-ds" "\nfilepath\n" file-path)
+                      (info "get-preview-file-tx" "\nfilepath\n" file-path)
                       (data-streaming/respond-with-file file-path
                                                         (:content_type preview))))))
 

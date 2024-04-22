@@ -4,50 +4,50 @@
    [madek.api.resources.media-entries.permissions :as media-entry-perms :only [viewable-by-auth-entity?]]
    [taoensso.timbre :refer [info]]))
 
-(defn authorized-view? [auth-entity resource]
+(defn authorized-view? [auth-entity resource tx]
   (case (:type resource)
     "MediaEntry" (media-entry-perms/viewable-by-auth-entity?
-                  resource auth-entity)
+                  resource auth-entity tx)
     "Collection" (collection-perms/viewable-by-auth-entity?
-                  resource auth-entity)
+                  resource auth-entity tx)
     false))
 
-(defn authorized-download? [auth-entity resource]
+(defn authorized-download? [auth-entity resource tx]
   (case (:type resource)
     "MediaEntry" (media-entry-perms/downloadable-by-auth-entity?
-                  resource auth-entity)
+                  resource auth-entity tx)
     false))
 
-(defn authorized-edit-metadata? [auth-entity resource]
+(defn authorized-edit-metadata? [auth-entity resource tx]
   (let [auth-res (case (:type resource)
                    "MediaEntry" (media-entry-perms/editable-meta-data-by-auth-entity?
-                                 resource auth-entity)
+                                 resource auth-entity tx)
                    "Collection" (collection-perms/editable-meta-data-by-auth-entity?
-                                 resource auth-entity)
+                                 resource auth-entity tx)
                    ;"Collection" (mr-permissions/permission-by-auth-entity?
                    ;              resource auth-entity :edit_metadata_and_relations "collection")
                    false)]
     (info "auth-edit-metadata" auth-res)
     auth-res))
 
-(defn authorized-edit-permissions? [auth-entity resource]
+(defn authorized-edit-permissions? [auth-entity resource tx]
   (case (:type resource)
     "MediaEntry" (media-entry-perms/editable-permissions-by-auth-entity?
-                  resource auth-entity)
+                  resource auth-entity tx)
     "Collection" (collection-perms/editable-permissions-by-auth-entity?
-                  resource auth-entity)
+                  resource auth-entity tx)
     false))
 
 (defn authorized-view?! [request resource]
   (or authorized-view?
       (throw (ex-info "Forbidden" {:status 403}))))
 
-(defn authorized? [auth-entity resource scope]
+(defn authorized? [auth-entity resource scope tx]
   (let [auth-res (case scope
-                   :view (authorized-view? auth-entity resource)
-                   :download (authorized-download? auth-entity resource)
-                   :edit-md (authorized-edit-metadata? auth-entity resource)
-                   :edit-perm (authorized-edit-permissions? auth-entity resource)
+                   :view (authorized-view? auth-entity resource tx)
+                   :download (authorized-download? auth-entity resource tx)
+                   :edit-md (authorized-edit-metadata? auth-entity resource tx)
+                   :edit-perm (authorized-edit-permissions? auth-entity resource tx)
                    false)]
     (info 'authorized? scope auth-res)
     auth-res))
