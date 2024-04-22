@@ -95,7 +95,7 @@
 
 (defn init-ds [db-options]
   (close)
-  (let [ds (connection/->pool
+  (let [tx (connection/->pool
             HikariDataSource
             {:dbtype "postgres"
              :dbname (get db-options db-name-key)
@@ -112,8 +112,8 @@
              :maxLifetime (* 1 60 60 1000) ; 1 hour
              })]
     ;; this code initializes the pool and performs a validation check:
-    (.close (jdbc/get-connection ds))
-    (reset! ds* ds)
+    (.close (jdbc/get-connection tx))
+    (reset! ds* tx)
     @ds*))
 
 (defn init

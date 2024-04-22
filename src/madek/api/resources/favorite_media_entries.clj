@@ -4,7 +4,6 @@
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [madek.api.authorization :as authorization]
-   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.helper :refer [t]]
@@ -19,7 +18,7 @@
 
 (defn handle_list-favorite_media_entries
   [req]
-  (let [db-result (sd/query-find-all :favorite_media_entries :*)]
+  (let [db-result (sd/query-find-all :favorite_media_entries :* (:tx req))]
     ;(info "handle_list-favorite_media_entry" "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
@@ -27,7 +26,7 @@
   [req]
   (let [;full-data (true? (-> req :parameters :query :full-data))
         user-id (-> req :authenticated-entity :id)
-        db-result (sd/query-eq-find-all :favorite_media_entries :user_id user-id)
+        db-result (sd/query-eq-find-all :favorite_media_entries :user_id user-id (:tx req))
         id-set (map :media_entry_id db-result)]
     ;(info "handle_list-favorite_media_entry" "\nresult\n" db-result "\nid-set\n" id-set)
     (sd/response_ok {:media_entry_ids id-set})))
@@ -52,7 +51,7 @@
           (let [sql-query (-> (sql/insert-into :favorite_media_entries)
                               (sql/values [data])
                               sql-format)
-                ins-res (jdbc/execute-one! (get-ds) sql-query)]
+                ins-res (jdbc/execute-one! (:tx req) sql-query)]
             (if ins-res
               (sd/response_ok ins-res)
               (sd/response_failed "Could not create favorite_media_entry." 406))))))
@@ -70,7 +69,7 @@
         (let [sql-query (-> (sql/delete-from :favorite_media_entries)
                             (sql/where [:= :user_id user-id] [:= :media_entry_id media_entry-id])
                             sql-format)
-              del-result (jdbc/execute-one! (get-ds) sql-query)]
+              del-result (jdbc/execute-one! (:tx req) sql-query)]
           (if (= 1 del-result)
             (sd/response_ok favorite_media_entry)
             (error "Failed delete favorite_media_entry "

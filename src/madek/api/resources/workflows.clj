@@ -3,7 +3,6 @@
             [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
             [madek.api.authorization :as authorization]
-            [madek.api.db.core :refer [get-ds]]
             [madek.api.resources.shared :as sd]
             [next.jdbc :as jdbc]
             [reitit.coercion.schema]
@@ -15,7 +14,8 @@
   (let [qd (if (true? (-> req :parameters :query :full_data))
              :workflows.*
              :workflows.id)
-        db-result (sd/query-find-all :workflows qd)]
+        tx (:tx req)
+        db-result (sd/query-find-all :workflows qd tx)]
     ;(info "handle_list-workflows" "\nqd\n" qd "\nresult\n" db-result)
     (sd/response_ok db-result)))
 
@@ -38,7 +38,7 @@
             sql-query (-> (sql/insert-into :workflows)
                           (sql/values [ins-data])
                           sql-format)
-            ins-res (jdbc/execute-one! (get-ds) sql-query)]
+            ins-res (jdbc/execute-one! (:tx req) sql-query)]
 
         (info "handle_create-workflow: "
               "\ndata:\n" ins-data
@@ -54,18 +54,19 @@
     (catcher/with-logging {}
       (let [data (-> req :parameters :body)
             id (-> req :parameters :path :id)
+            tx (:tx req)
             dwid (assoc data :id id)
             upd-query (sd/sql-update-clause "id" (str id))
             sql-query (-> (sql/update :workflows)
                           (sql/set dwid)
                           (sql/where upd-query)
                           sql-format)
-            upd-result (jdbc/execute! (get-ds) sql-query)]
+            upd-result (jdbc/execute! (:tx req) sql-query)]
 
         (info "handle_update-workflow: " "\nid\n" id "\ndwid\n" dwid "\nupd-result:" upd-result)
 
         (if (= 1 (::jdbc/update-count upd-result))
-          (sd/response_ok (sd/query-eq-find-one :workflows :id id))
+          (sd/response_ok (sd/query-eq-find-one :workflows :id id tx))
           (sd/response_failed "Could not update workflow." 406))))
     (catch Exception e (sd/response_exception e))))
 
@@ -77,7 +78,7 @@
             sql-query (-> (sql/delete-from :workflows)
                           (sql/where [:= :id id])
                           sql-format)
-            delresult (jdbc/execute! (get-ds) sql-query)]
+            delresult (jdbc/execute! (:tx req) sql-query)]
 
         (if (= 1 (::jdbc/update-count delresult))
           (sd/response_ok olddata)

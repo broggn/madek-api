@@ -8,7 +8,6 @@
    [madek.api.resources.people.get :as get-person]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.helper :refer [t]]
    [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
@@ -16,22 +15,22 @@
 
 (defn update-person
   "Updates and returns true if that happened and false otherwise"
-  [person-id data ds]
+  [person-id data tx]
   (-> (sql/update :people)
       (sql/set (-> data convert-sequential-values-to-sql-arrays))
       (sql/where [:= :people.id (as-uuid person-id)])
       (sql-format :inline false)
-      (->> (jdbc/execute-one! ds))
+      (->> (jdbc/execute-one! tx))
       :next.jdbc/update-count
       (= 1)))
 
 (defn update-person-handler
   [{{data :body} :parameters
     {person-id :id} :path-params
-    ds :tx :as req}]
-  (if-let [person (find-person-by-uid person-id ds)]
-    (if (update-person person-id data ds)
-      {:status 200 :body (find-person-by-uid person-id ds)}
+    tx :tx :as req}]
+  (if-let [person (find-person-by-uid person-id tx)]
+    (if (update-person person-id data tx)
+      {:status 200 :body (find-person-by-uid person-id tx)}
       (throw (ex-info "Update of person failed" {:status 409})))
     {:status 404 :body {:message "Person not found."}}))
 

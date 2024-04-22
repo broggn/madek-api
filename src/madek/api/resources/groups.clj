@@ -2,7 +2,6 @@
   (:require [clj-uuid]
             [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
-            [madek.api.db.core :refer [get-ds]]
             [madek.api.pagination :as pagination]
             [madek.api.resources.groups.shared :as groups]
             [madek.api.resources.groups.users :as group-users]
@@ -23,7 +22,7 @@
 ;                 (or params {})
 ;                 (assoc params :id (or (:id params) (clj-uuid/v4))))]
 ;    {:body (dissoc
-;            (->> (jdbc/execute-one! (get-ds) (-> (sql/insert-into :groups)
+;            (->> (jdbc/execute-one! (:tx req) (-> (sql/insert-into :groups)
 ;                                                 (sql/values [params])
 ;                                                 (sql/returning :*)
 ;                                                 sql-format)))
@@ -32,19 +31,19 @@
 
 ;### get group ################################################################
 
-(defn get-group [id-or-institutional-group-id]
-  (if-let [group (groups/find-group id-or-institutional-group-id)]
+(defn get-group [id-or-institutional-group-id tx]
+  (if-let [group (groups/find-group id-or-institutional-group-id tx)]
     {:body (dissoc group :previous_id :searchable)}
     {:status 404 :body "No such group found"})) ; TODO: toAsk 204 No Content
 
 ;### delete group ##############################################################
 
-(defn delete-group [id]
+(defn delete-group [id tx]
   (let [sec (groups/jdbc-update-group-id-where-clause id)
-        fir (-> (sql/delete-from :groups)
-                (sql/where (:where sec))
-                sql-format)
-        res (jdbc/execute-one! (get-ds) fir)
+        query (-> (sql/delete-from :groups)
+                  (sql/where (:where sec))
+                  sql-format)
+        res (jdbc/execute-one! tx query)
         update-count (get res :next.jdbc/update-count)]
 
     (if (= 1 update-count)
@@ -52,19 +51,19 @@
       {:status 404})))
 
 ;### patch group ##############################################################
-(defn db_update-group [group-id body]
+(defn db_update-group [group-id body tx]
   (let [where-clause (:where (groups/jdbc-update-group-id-where-clause group-id))
-        fir (-> (sql/update :groups)
-                (sql/set (-> body convert-sequential-values-to-sql-arrays))
-                (sql/where where-clause)
-                (sql/returning :*)
-                sql-format)
-        result (jdbc/execute-one! (get-ds) fir)]
+        query (-> (sql/update :groups)
+                  (sql/set (-> body convert-sequential-values-to-sql-arrays))
+                  (sql/where where-clause)
+                  (sql/returning :*)
+                  sql-format)
+        result (jdbc/execute-one! tx query)]
     result))
 
-(defn patch-group [{body :body {group-id :group-id} :params}]
+(defn patch-group [{body :body {group-id :group-id} :params} tx]
   (try
-    (if-let [result (db_update-group group-id body)]
+    (if-let [result (db_update-group group-id body tx)]
       {:body result}
       {:status 404})
 
@@ -92,8 +91,8 @@
         (pagination/add-offset-for-honeysql query-params)
         sql-format)))
 
-(defn index [request]
-  (let [result (jdbc/execute! (get-ds) (build-index-query request))]
+(defn index [req]
+  (let [result (jdbc/execute! (:tx req) (build-index-query req))]
     (sd/response_ok {:groups result})))
 
 ;### routes ###################################################################
@@ -129,37 +128,39 @@
    (s/optional-key :searchable) s/Str})
 
 (defn handle_create-group
-  [request]
+  [req]
   (try
-    (let [params (get-in request [:parameters :body])
+    (let [params (get-in req [:parameters :body])
           data_wid (assoc params :id (or (:id params) (clj-uuid/v4)))
           data_wtype (assoc data_wid :type (or (:type data_wid) "Group"))
-          resultdb (->> (jdbc/execute-one! (get-ds) (-> (sql/insert-into :groups)
-                                                        (sql/values [data_wtype])
-                                                        (sql/returning :*)
-                                                        sql-format)))
+          resultdb (->> (jdbc/execute-one! (:tx req) (-> (sql/insert-into :groups)
+                                                         (sql/values [data_wtype])
+                                                         (sql/returning :*)
+                                                         sql-format)))
           result (dissoc resultdb :previous_id :searchable)]
       (info (apply str ["handler_create-group: \ndata:" data_wtype "\nresult-db: " resultdb "\nresult: " result]))
       {:status 201 :body result})
     (catch Exception e
-      (error "handle-create-group failed" {:request request})
+      (error "handle-create-group failed" {:request req})
       (sd/parsed_response_exception e))))
 
 (defn handle_get-group [req]
   (let [group-id (-> req :parameters :path :id)
+        tx (:tx req)
         id (-> (convert-groupid group-id) :group-id)]
     (info "handle_get-group" "\nid\n" id)
-    (get-group id)))
+    (get-group id tx)))
 
 (defn handle_delete-group [req]
   (let [id (-> req :parameters :path :id)]
-    (delete-group id)))
+    (delete-group id (:tx req))))
 
 (defn handle_update-group [req]
   (let [id (-> req :parameters :path :id)
+        tx (:tx req)
         body (-> req :parameters :body)]
     ;(info "handle_update-group" "\nid\n" id "\nbody\n" body)
-    (patch-group {:params {:group-id id} :body body})))
+    (patch-group {:params {:group-id id} :body body} tx)))
 
 (def schema_query-groups
   {(s/optional-key :id) s/Uuid

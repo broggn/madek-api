@@ -1,7 +1,6 @@
 (ns madek.api.resources.media-entries.advanced-filter.meta-data
   (:require
    [honey.sql.helpers :as sql]
-   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.meta-keys.meta-key :as meta-key]
    [madek.api.utils.helper :refer [to-uuid]]
    [next.jdbc :as jdbc]))
@@ -12,12 +11,12 @@
                               "meta_data_keywords" {:table "keywords",
                                                     :resource "keyword",
                                                     :match_column "term"}})
-(defn- get-meta-datum-object-type [meta-datum-spec]
+(defn- get-meta-datum-object-type [meta-datum-spec tx]
   (or (:type meta-datum-spec)
       (:meta_datum_object_type
        (first
         (jdbc/execute!
-         (get-ds)
+         tx
          (meta-key/build-meta-key-query (:key meta-datum-spec)))))))
 
 (defn- sql-merge-join-related-meta-data
@@ -149,8 +148,8 @@
                               (sql/where [:= :meta_data.media_entry_id :media_entries.id]))])
                       (keys match-columns)))))))
 
-(defn- extend-sqlmap-according-to-meta-datum-spec [sqlmap [meta-datum-spec counter]]
-  (let [meta-datum-object-type (get-meta-datum-object-type meta-datum-spec)
+(defn- extend-sqlmap-according-to-meta-datum-spec [sqlmap [meta-datum-spec counter] tx]
+  (let [meta-datum-object-type (get-meta-datum-object-type meta-datum-spec tx)
         related-meta-data-table (case meta-datum-object-type
                                   "MetaDatum::People" "meta_data_people"
                                   "MetaDatum::Keywords" "meta_data_keywords"
@@ -246,14 +245,12 @@
                                  (assoc :select-distinct (get query :select))
                                  (dissoc :select)))
 
-(defn sql-filter-by [sqlmap meta-data-specs]
+(defn sql-filter-by [sqlmap meta-data-specs tx]
   (if-not (empty? meta-data-specs)
-    (-> (reduce extend-sqlmap-according-to-meta-datum-spec
-                sqlmap
-                (partition 2
-                           (interleave meta-data-specs
-                                       (iterate inc 1))))
-        modified-query)
+    (let [partition-res (partition 2 (interleave meta-data-specs (iterate inc 1)))
+          reduce-res (reduce (fn [acc val] (extend-sqlmap-according-to-meta-datum-spec acc val tx)) sqlmap partition-res)]
+      (-> reduce-res
+          modified-query))
     sqlmap))
 
 ;### Debug ####################################################################

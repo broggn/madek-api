@@ -16,14 +16,14 @@
 ;#### create ##################################################################
 
 (defn handle-create-user
-  [{{data :body} :parameters ds :tx :as req}]
+  [{{data :body} :parameters tx :tx :as req}]
   (try
     (let [data (convert-map-if-exist data)
           query (-> (sql/insert-into :users)
                     (sql/values [data])
                     (sql/returning :*)
                     sql-format)
-          result (jdbc/execute-one! ds query)]
+          result (jdbc/execute-one! tx query)]
       (if result
         (sd/response_ok result 201)
         (sd/response_failed)))

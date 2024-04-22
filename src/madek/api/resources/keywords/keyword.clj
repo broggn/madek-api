@@ -2,15 +2,14 @@
   (:require
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [madek.api.db.core :refer [get-ds]]
    [madek.api.pagination :as pagination]
    [madek.api.resources.shared :as sd]
    [next.jdbc :as jdbc]))
 
-(defn db-keywords-get-one [id]
-  (sd/query-eq-find-one :keywords :id id))
+(defn db-keywords-get-one [id tx]
+  (sd/query-eq-find-one :keywords :id id tx))
 
-(defn db-keywords-query [query]
+(defn db-keywords-query [query tx]
   (let [dbq (->
              (sql/select :*)
              (sql/from :keywords)
@@ -22,7 +21,7 @@
              (pagination/add-offset-for-honeysql query)
              sql-format)]
     ; (info "db-keywords-query" dbq)
-    (jdbc/execute! (get-ds) dbq)))
+    (jdbc/execute! tx dbq)))
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

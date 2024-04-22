@@ -10,6 +10,7 @@
    [madek.api.resources.auth-info :as auth-info]
    [madek.api.utils.cli :refer [long-opt-for-key]]
    [madek.api.utils.helper :refer [mslurp]]
+   [madek.api.utils.ring-audits :as ring-audits]
    [muuntaja.core :as m]
    [reitit.coercion.schema]
    [reitit.coercion.spec]
@@ -146,6 +147,8 @@
 (def ^:dynamic middlewares
   [swagger/swagger-feature
    ring-wrap-cors
+   db/wrap-tx
+   ring-audits/wrap
    rmp/parameters-middleware
    muuntaja/format-negotiate-middleware
    muuntaja/format-response-middleware
@@ -153,7 +156,6 @@
    muuntaja/format-request-middleware
    authentication/wrap
    authentication/wrap-log
-   db/wrap-tx
    rrc/coerce-exceptions-middleware
    rrc/coerce-request-middleware
    rrc/coerce-response-middleware

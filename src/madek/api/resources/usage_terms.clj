@@ -3,7 +3,6 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-   [madek.api.db.core :refer [get-ds]]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.helper :refer [t]]
@@ -16,7 +15,8 @@
   [req]
   (let [full-data (true? (-> req :parameters :query :full_data))
         qd (if (true? full-data) :usage_terms.* :usage_terms.id)
-        db-result (sd/query-find-all :usage_terms qd)]
+        tx (:tx req)
+        db-result (sd/query-find-all :usage_terms qd tx)]
     ;(->> db-result (map :id) set)
     ;(info "handle_list-usage_term" "\nqd\n" qd "\nresult\n" db-result)
     (sd/response_ok db-result)))
@@ -36,7 +36,7 @@
                           (sql/values [data])
                           (sql/returning :*)
                           sql-format)
-            ins-res (jdbc/execute-one! (get-ds) sql-query)]
+            ins-res (jdbc/execute-one! (:tx req) sql-query)]
 
         (info "handle_create-usage_term: " "\ndata:\n" data "\nresult:\n" ins-res)
 
@@ -56,7 +56,7 @@
                           (sql/where [:= :id id])
                           (sql/returning :*)
                           sql-format)
-            upd-result (jdbc/execute-one! (get-ds) sql-query)]
+            upd-result (jdbc/execute-one! (:tx req) sql-query)]
 
         (info "handle_update-usage_terms: " "\nid\n" id "\ndwid\n" dwid "\nupd-result:" upd-result)
 
@@ -73,7 +73,7 @@
             sql-query (-> (sql/delete-from :usage_terms)
                           (sql/where [:= :id id])
                           sql-format)
-            delresult (jdbc/execute-one! (get-ds) sql-query)]
+            delresult (jdbc/execute-one! (:tx req) sql-query)]
 
         (if (= 1 (::jdbc/update-count delresult))
           (sd/response_ok olddata)
