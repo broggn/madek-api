@@ -5,6 +5,7 @@
    [madek.api.utils.config :refer [get-config]]
    [next.jdbc :as jdbc]))
 
+;; TODO: not in use?
 ;(defn- find-app-setting
 ;  [ds]
 ;  (let [query (-> (sql/select :*)

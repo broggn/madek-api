@@ -18,9 +18,9 @@
   ([] (sql-select {}))
   ([sql-map]
    (sql/select sql-map :*
-     ;:users.id :users.email :users.institutional_id :users.login
-     ;:users.created_at :users.updated_at
-     ;:users.person_id
+               ;:users.id :users.email :users.institutional_id :users.login
+               ;:users.created_at :users.updated_at
+               ;:users.person_id
                )))
 
 (defn sql-merge-user-where-id
@@ -79,9 +79,6 @@
       sql-format))
 
 (defn group-users [group-id request]
-  (println ">o> 0 request=" request)
-  (println ">o> 1 (:tx request)=" (:tx request))
-  (println ">o> 2 (:tx request)=" (get request :tx))
   (jdbc/execute! (:tx request)
                  (group-users-query group-id request)))
 
@@ -214,7 +211,6 @@
   (let [group-id (-> req :parameters :path :group-id)
         user-id (-> req :parameters :path :user-id)
         converted (convert-groupid-userid group-id user-id)
-
         tx (:tx req)
 
         ;; TODO: test already exists?
@@ -229,8 +225,7 @@
 
 (defn handle_delete-group-user [req]
   (let [group-id (-> req :parameters :path :group-id)
-        user-id (-> req :parameters :path :user-id)
-        tx (:tx req)]
+        user-id (-> req :parameters :path :user-id)]
     (info "handle_delete-group-user" "\ngroup-id\n" group-id "\nuser-id\n" user-id)
     (remove-user group-id user-id req)))
 
@@ -250,8 +245,7 @@
         user-id (-> req :parameters :path :user-id)
         converted (convert-groupid-userid group-id user-id)
         group-id (-> converted :group-id)
-        user-id (-> converted :user-id)
-        tx (:tx req)]
+        user-id (-> converted :user-id)]
     (add-user group-id user-id req)))
 
 ;### Debug ####################################################################

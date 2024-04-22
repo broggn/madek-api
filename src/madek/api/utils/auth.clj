@@ -34,6 +34,4 @@
 
 (defn wrap-authorize-admin! [handler]
   (fn [req]
-    (println ">o> wrap-authorize-admin!")
-
     (authorize-admin! req handler)))

@@ -67,19 +67,19 @@
 
         ; TODO updated/created after
         from (sql/from where3 :media_entries)
-        ;        orig-query (-> (sql/select [:media_entries.id :media_entry_id]
-        ;                                   [:media_entries.created_at :media_entry_created_at])
-        ;                       (sql/from :media_entries))
+;        orig-query (-> (sql/select [:media_entries.id :media_entry_id]
+;                                   [:media_entries.created_at :media_entry_created_at])
+;                       (sql/from :media_entries))
         ]
-    ;    (info "base-query"
-    ;                  "\nme-query:\n" me-query
-    ;                  "\nfrom:\n" sel
-    ;                  "\nwhere1:\n" where1
-    ;                  "\nwhere2:\n" where2
-    ;                  "\nwhere3:\n" where3
-    ;                  "\nresult:\n" from
-    ;                  ;"\norig:\n" orig-query
-    ;                  )
+;    (info "base-query"
+;                  "\nme-query:\n" me-query
+;                  "\nfrom:\n" sel
+;                  "\nwhere1:\n" where1
+;                  "\nwhere2:\n" where2
+;                  "\nwhere3:\n" where3
+;                  "\nresult:\n" from
+;                  ;"\norig:\n" orig-query
+;                  )
     from))
 
 (defn- order-by-media-entry-attribute [query [attribute order]]
@@ -157,7 +157,8 @@
 (defn- order-by-collection-sorting [query collection-id tx]
   (handle-missing-collection-id collection-id
                                 (if-let [sorting (find-collection-default-sorting collection-id tx)]
-                                  (let [prepared-sorting (->> (str/split (str/replace sorting "created_at " "") #" ") (str/join "_") str/lower-case)]
+                                  (let [prepared-sorting (->> (str/split (str/replace sorting "created_at " "") #" ")
+                                                              (str/join "_") str/lower-case)]
                                     (order-by-string query prepared-sorting collection-id))
                                   (sql/order-by query [:media_entries.created_at :asc]))))
 
@@ -166,7 +167,6 @@
        (str/join ", " available-sortings) " and stored_in_collection"))
 
 (defn- set-order [query query-params tx]
-  (println ">o> set-order")
   (-> (let [qorder (-> query-params :order)
             order (sd/try-as-json qorder)
             collection-id (-> query-params :collection_id)
@@ -178,8 +178,7 @@
                                        :else (throw (ex-info not-allowed-order-param-message
                                                              {:status 422})))
                      (seq? order) (reduce order-reducer query order)
-                     :else (default-order query))
-            p (println ">o> result=" result)]
+                     :else (default-order query))]
         (info "set-order" "\norder\n" order)
         result)
       (sql/order-by :media_entries.id)))
@@ -211,49 +210,21 @@
   (let [query-params (-> request :parameters :query)
         filter-by (json/decode (:filter_by query-params) true)
         props-by (:media_entry filter-by)
-
-        p (println ">o> query-params=" query-params)
-        p (println ">o> filter-by=" filter-by)
-        p (println ">o> props-by=" props-by)
-
         tx (:tx request)
         authenticated-entity (:authenticated-entity request)
-
-        ;query-res (I> identity-with-logging
-        ;              (base-query props-by))
-
         query-res (-> (base-query props-by)
                       (set-order query-params tx)
                       (filter-by-collection-id query-params)
-
-                      (permissions/filter-by-query-params query-params authenticated-entity) ;;ok
-
-                      (advanced-filter/filter-by filter-by tx) ;; error
-
+                      (permissions/filter-by-query-params query-params authenticated-entity)
+                      (advanced-filter/filter-by filter-by tx)
                       (pagination/add-offset-for-honeysql query-params))
-
         query-res (-> query-res sql-format)]
 
-    ;    (info "build-query"
-    ;                  "\nquery-params:\n" query-params
-    ;                  "\nfilter-by json:\n" filter-by
-    ;                  "\nquery-res:\n" query-res)
+;    (info "build-query"
+;                  "\nquery-params:\n" query-params
+;                  "\nfilter-by json:\n" filter-by
+;                  "\nquery-res:\n" query-res)
     query-res))
-
-;(ns leihs.my.back.html
-;    (:refer-clojure :exclude [keyword str])
-;    (:require
-;      [hiccup.page :refer [html5]]
-;      [honey.sql :refer [format] :rename {format sql-format}]
-;      [honey.sql.helpers :as sql]
-;      [leihs.core.http-cache-buster2 :as cache-buster]
-;      [leihs.core.json :refer [to-json]]
-;      [leihs.core.remote-navbar.shared :refer [navbar-props]]
-;      [leihs.core.shared :refer [head]]
-;      [leihs.core.url.core :as url]
-;      [leihs.my.authorization :as auth]
-;      [leihs.core.db :as db]
-;      [next.jdbc :as jdbc]))
 
 (defn- query-index-resources [request]
   (jdbc/execute! (:tx request) (build-query request)))
@@ -283,7 +254,7 @@
                                              :media_entry_is_published :is_published
                                              :media_entry_get_metadata_and_previews :get_metadata_and_previews
                                              :media_entry_get_full_size :get_full_size})))
-                  ; else get only ids
+                    ; else get only ids
                   (->> data
                        (map #(select-keys % [:media_entry_id]))
                        (map #(rename-keys % {:media_entry_id :id}))))]
@@ -345,7 +316,7 @@
         col-md (meta-data.index/get-collection-meta-data collection-id user-id tx)
         result (merge
                 {:media_entries result-me-list
-                  ; TODO add only on demand
+                 ; TODO add only on demand
                  :meta_data me-md
                  :media_files files
                  :previews previews}

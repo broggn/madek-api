@@ -40,7 +40,6 @@
 (defn- query-index-resources [request]
   (let [user-id (-> request :authenticated-entity :id)
         tx (:tx request)
-        p (println ">o> 3ds=" tx)
         qparams (-> request :query-params)
         query (base-query user-id qparams request tx)]
 
@@ -55,9 +54,6 @@
 (defn get-index [request]
   (catcher/with-logging {}
     (let [db-result (query-index-resources request)
-
-          p (println ">o> db-result=" db-result)
-
           result (map transform_ml db-result)]
       (sd/response_ok {:vocabularies result}))))
 

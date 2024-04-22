@@ -8,9 +8,7 @@
   (let [query (-> sqlmap
                   (media-files/sql-filter-by (:media_files filter-map))
                   (permissions/sql-filter-by (:permissions filter-map))
-
-                  (meta-data/sql-filter-by (:meta_data filter-map) tx) ;; error
-
+                  (meta-data/sql-filter-by (:meta_data filter-map) tx)
                   (meta-data/sql-search-through-all (:search filter-map)))]
     ;(info "filter-by" "\nfilter-map:\n" filter-map "\nresult:" query)
     query))

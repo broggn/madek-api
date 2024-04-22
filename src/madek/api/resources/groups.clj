@@ -2,7 +2,6 @@
   (:require [clj-uuid]
             [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
-            [madek.api.db.core :as db]
             [madek.api.pagination :as pagination]
             [madek.api.resources.groups.shared :as groups]
             [madek.api.resources.groups.users :as group-users]
@@ -41,10 +40,10 @@
 
 (defn delete-group [id tx]
   (let [sec (groups/jdbc-update-group-id-where-clause id)
-        fir (-> (sql/delete-from :groups)
-                (sql/where (:where sec))
-                sql-format)
-        res (jdbc/execute-one! tx fir)
+        query (-> (sql/delete-from :groups)
+                  (sql/where (:where sec))
+                  sql-format)
+        res (jdbc/execute-one! tx query)
         update-count (get res :next.jdbc/update-count)]
 
     (if (= 1 update-count)
@@ -54,12 +53,12 @@
 ;### patch group ##############################################################
 (defn db_update-group [group-id body tx]
   (let [where-clause (:where (groups/jdbc-update-group-id-where-clause group-id))
-        fir (-> (sql/update :groups)
-                (sql/set (-> body convert-sequential-values-to-sql-arrays))
-                (sql/where where-clause)
-                (sql/returning :*)
-                sql-format)
-        result (jdbc/execute-one! tx fir)]
+        query (-> (sql/update :groups)
+                  (sql/set (-> body convert-sequential-values-to-sql-arrays))
+                  (sql/where where-clause)
+                  (sql/returning :*)
+                  sql-format)
+        result (jdbc/execute-one! tx query)]
     result))
 
 (defn patch-group [{body :body {group-id :group-id} :params} tx]
@@ -347,8 +346,7 @@
                                           ;:swagger {:produces "application/json"}
                                           ;:content-type "application/json"
                                           :handler group-users/handle_delete-group-user
-                                          :middleware [;db/wrap-tx
-                                                       wrap-authorize-admin!]
+                                          :middleware [wrap-authorize-admin!]
                                           :coercion reitit.coercion.schema/coercion
                                           :parameters {:path {:group-id s/Uuid :user-id s/Uuid}}
                                           :responses {200 {:body {:users [group-users/schema_export-group-user-simple]}}

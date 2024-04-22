@@ -57,26 +57,20 @@
          (warn "failed to extract basic-auth properties because" _))))
 
 (defn user-password-authentication [login-or-email password handler request]
+  (let [tx (:tx request)
+        entity (get-entity-by-login-or-email login-or-email tx)
+        asuser (when entity (get-auth-systems-user (:id entity) tx))]
 
-  (let [tx (:tx request)]
-
-    (if-let [entity (get-entity-by-login-or-email login-or-email tx)]
-      (if-let [asuser (get-auth-systems-user (:id entity) tx)]
-        (if-not (checkpw password (:data asuser))
-      ;(if-not (checkpw password (:password_digest entity)); if there is an entity the password must match
-          {:status 401 :body (str "Password mismatch for "
-                                  {:login-or-email-address login-or-email})}
-
-          (handler (assoc request
-                          :authenticated-entity entity
-                        ; TODO move into ae
-                          :is_admin (sd/is-admin (or (:id entity) (:user_id entity)) tx)
-                          :authentication-method "Basic Authentication")))
-
-        {:status 401 :body (str "Only password auth users supported for basic auth.")})
-
-      {:status 401 :body (str "Neither User nor ApiClient exists for "
-                              {:login-or-email-address login-or-email})})))
+    (cond
+      (not entity) {:status 401 :body (str "Neither User nor ApiClient exists for "
+                                           {:login-or-email-address login-or-email})}
+      (not asuser) {:status 401 :body "Only password auth users supported for basic auth."}
+      (not (checkpw password (:data asuser))) {:status 401 :body (str "Password mismatch for "
+                                                                      {:login-or-email-address login-or-email})}
+      :else (handler (assoc request
+                            :authenticated-entity entity
+                            :is_admin (sd/is-admin (or (:id entity) (:user_id entity)) tx)
+                            :authentication-method "Basic Authentication")))))
 
 (defn authenticate [request handler]
   "Authenticate with the following rules:

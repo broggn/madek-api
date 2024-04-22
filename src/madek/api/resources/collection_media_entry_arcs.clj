@@ -39,9 +39,6 @@
     (sd/response_ok {:collection-media-entry-arcs db-result})))
 
 (defn create-col-me-arc
-  ;([col-id me-id data tx]
-  ; (create-col-me-arc col-id me-id data tx))
-
   ([col-id me-id data tx]
    (let [ins-data (assoc data :collection_id col-id :media_entry_id me-id)
          sql (-> (sql/insert-into :collection_media_entry_arcs)

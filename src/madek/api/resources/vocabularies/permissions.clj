@@ -11,7 +11,6 @@
 (defn- execute-query
   [query tx]
   ;(info "execute-query: \n" query)
-  (println ">o> 1ds=" tx)
   (jdbc/execute! tx query))
 
 (defn- group-ids
@@ -21,8 +20,7 @@
     (let [query (-> (sql/select-distinct :group_id)
                     (sql/from :groups_users)
                     (sql/where [:= :groups_users.user_id (to-uuid user-id)])
-                    sql-format)
-          p (println ">o> 5ds=" tx)]
+                    sql-format)]
       (map :group_id (execute-query query tx)))))
 
 (defn- user-permissions-query
@@ -44,21 +42,14 @@
 
 (defn- pluck-vocabulary-ids
   [query tx]
-
-  (println ">o> 4ds=" tx)
   (if (nil? query)
     '()
     (map :vocabulary_id (execute-query query tx))))
 
 (defn- group-permissions-query
-  ([user-id tx] ((println ">o> 5ds.b=" tx)
-
-                 group-permissions-query user-id "view" tx))
+  ([user-id tx] (group-permissions-query user-id "view" tx))
   ([user-id acc-type tx]
    ; acc-type: "view" or "use"
-
-   (println ">o> 5ds.a=" tx)
-
    (let [groups-ids-result (group-ids user-id tx)]
      (if (empty? groups-ids-result)
        nil
@@ -73,9 +64,6 @@
   ([user-id tx] (accessible-vocabulary-ids user-id "view" tx))
   ([user-id acc-type tx]
    ; acc-type: "view" or "edit"
-
-   (println ">o> 2ds=" tx)
-
    (if-not (str/blank? (str user-id))
      (concat
       (pluck-vocabulary-ids (user-permissions-query user-id acc-type) tx)
@@ -107,9 +95,6 @@
       (sd/response_not_found "No such vocabulary user permission."))))
 
 (defn handle_create-vocab-user-perms [req]
-
-  (println ">o> handle_create-vocab-user-perms")
-
   (try
     (catcher/with-logging {}
       (let [vid (-> req :parameters :path :id)
@@ -213,7 +198,6 @@
       (let [vid (-> req :parameters :path :id)
             gid (-> req :parameters :path :group_id)
             tx (:tx req)]
-
         (if-let [old-data (sd/query-eq-find-one
                            :vocabulary_group_permissions
                            :vocabulary_id vid

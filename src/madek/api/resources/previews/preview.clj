@@ -35,9 +35,9 @@
 (defn get-preview-file-data-stream [request]
   (catcher/snatch {}
                   (when-let [preview (:preview request)]
-                    (info "get-preview-file-tx" "\npreview\n" preview)
+                    (info "get-preview-file-ds" "\npreview\n" preview)
                     (when-let [file-path (preview-file-path preview)]
-                      (info "get-preview-file-tx" "\nfilepath\n" file-path)
+                      (info "get-preview-file-ds" "\nfilepath\n" file-path)
                       (data-streaming/respond-with-file file-path
                                                         (:content_type preview))))))
 

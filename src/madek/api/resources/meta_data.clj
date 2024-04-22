@@ -52,10 +52,6 @@
     (assoc-media-resource-typed-id mr data)))
 
 (defn db-get-meta-data
-
-  ;([mr mk-id md-type tx]
-  ; (db-get-meta-data mr mk-id md-type tx))
-
   ([mr mk-id md-type db]
    (let [mr-id (str (-> mr :id))
          mr-key (col-key-for-mr-type mr)
@@ -578,7 +574,6 @@
   [req]
   (let [mr (-> req :media-resource)
         meta-key-id (-> req :parameters :path :meta_key_id)
-
         tx (:tx req)]
 
     (if-let [md (db-get-meta-data mr meta-key-id MD_TYPE_ROLES tx)]
@@ -691,15 +686,13 @@
       (sd/response_failed "No such meta data" 404))))
 
 (defn handle_get-mr-meta-data-with-related [request]
-  ;(info "get-index" "\nmedia-resource\n" (:media-resource request))
-
-  (let [tx (:tx request)]
-
-    (when-let [media-resource (:media-resource request)]
-      (when-let [meta-data (meta-data.index/get-meta-data request media-resource tx)]
-        (let [extra (map #(add-meta-data-extra % tx) meta-data)
-              data extra]
-          (sd/response_ok data))))))
+  (let [tx (:tx request)
+        media-resource (:media-resource request)
+        meta-data (when media-resource (meta-data.index/get-meta-data request media-resource tx))]
+    (when meta-data
+      (->> meta-data
+           (map #(add-meta-data-extra % tx))
+           sd/response_ok))))
 
 (defn wrap-add-keyword [handler]
   (fn [request] (sd/req-find-data
@@ -762,7 +755,6 @@
           user-id (-> req :authenticated-entity :id str)
           tx (:tx req)
           user-vocab-query (meta-data.index/md-vocab-where-clause user-id tx)
-          tx (:tx req)
           vocab-clause (-> (sql/select :*)
                            (sql/from :vocabularies)
                            (sql/where [:= :id (:vocabulary_id meta-key)])

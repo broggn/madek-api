@@ -33,11 +33,11 @@
   (try
     (catcher/with-logging {}
       (let [data (-> req :parameters :body)
-            sql-query (-> (sql/insert-into :io_interfaces)
-                          (sql/values [data])
-                          (sql/returning :*)
-                          sql-format)
-            ins-res (jdbc/execute-one! (:tx req) sql-query)]
+            query (-> (sql/insert-into :io_interfaces)
+                      (sql/values [data])
+                      (sql/returning :*)
+                      sql-format)
+            ins-res (jdbc/execute-one! (:tx req) query)]
         (info "handle_create-io_interfaces: " "\ndata:\n" data "\nresult:\n" ins-res)
 
         (if-let [result ins-res]
@@ -53,11 +53,11 @@
             id (-> req :parameters :path :id)
             dwid (assoc data :id id)
             tx (:tx req)
-            sql-query (-> (sql/update :io_interfaces)
-                          (sql/set dwid)
-                          (sql/where [:= :id id])
-                          sql-format)
-            upd-result (jdbc/execute-one! tx sql-query)]
+            query (-> (sql/update :io_interfaces)
+                      (sql/set dwid)
+                      (sql/where [:= :id id])
+                      sql-format)
+            upd-result (jdbc/execute-one! tx query)]
 
         (info "handle_update-io_interfaces: " "id: " id "\nnew-data:\n" dwid "\nresult: " upd-result)
 
@@ -72,10 +72,10 @@
     (catcher/with-logging {}
       (let [io_interface (-> req :io_interface)
             id (-> req :parameters :path :id)
-            sql-query (-> (sql/delete-from :io_interfaces)
-                          (sql/where [:= :id id])
-                          sql-format)
-            del-result (jdbc/execute-one! (:tx req) sql-query)]
+            query (-> (sql/delete-from :io_interfaces)
+                      (sql/where [:= :id id])
+                      sql-format)
+            del-result (jdbc/execute-one! (:tx req) query)]
 
         (if (= 1 (::jdbc/update-count del-result))
           (sd/response_ok io_interface)

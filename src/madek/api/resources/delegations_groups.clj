@@ -56,7 +56,7 @@
       ; already has delegations_group
       (sd/response_ok delegations_group)
       ; create delegations_group entry
-      (if-let [ins_res (first (jdbc/execute! (:tx req) sql-query))]
+      (if-let [ins_res (jdbc/execute-one! (:tx req) sql-query)]
         ; TODO clean result
         (sd/response_ok ins_res)
         (sd/response_failed "Could not create delegations_group." 406)))))

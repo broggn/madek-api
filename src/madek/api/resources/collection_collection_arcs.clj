@@ -15,23 +15,23 @@
       (sql/where [:= :id (-> request :parameters :path :id)])
       sql-format))
 
-(defn handle_get-arc [request]
-  (let [query (arc-query request)
-        db-result (jdbc/execute! (:tx request) query)]
+(defn handle_get-arc [req]
+  (let [query (arc-query req)
+        db-result (jdbc/execute! (:tx req) query)]
     (if-let [arc (first db-result)]
       (sd/response_ok arc)
       (sd/response_failed "No such collection-collection-arc" 404))))
 
-(defn arc-query-by-parent-and-child [request]
+(defn arc-query-by-parent-and-child [req]
   (-> (sql/select :*)
       (sql/from :collection_collection_arcs)
-      (sql/where [:= :parent_id (-> request :parameters :path :parent_id)])
-      (sql/where [:= :child_id (-> request :parameters :path :child_id)])
+      (sql/where [:= :parent_id (-> req :parameters :path :parent_id)])
+      (sql/where [:= :child_id (-> req :parameters :path :child_id)])
       sql-format))
 
-(defn handle_arc-by-parent-and-child [request]
-  (let [query (arc-query-by-parent-and-child request)
-        db-result (jdbc/execute! (:tx request) query)]
+(defn handle_arc-by-parent-and-child [req]
+  (let [query (arc-query-by-parent-and-child req)
+        db-result (jdbc/execute! (:tx req) query)]
     (if-let [arc (first db-result)]
       (sd/response_ok arc)
       (sd/response_failed "No such collection-collection-arc" 404))))

@@ -65,9 +65,7 @@
    All the meta-data for the meta-keys have to be set.
    In that case, the is_publishable of the entry is set to true."
   (let [eid (-> req :parameters :path :media_entry_id)
-        mr (-> req :media-resource)
         tx (:tx req)
-
         validationContexts (-> (sd/query-find-all :app_settings :contexts_for_entry_validation tx)
                                first
                                :contexts_for_entry_validation)

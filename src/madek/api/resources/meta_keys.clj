@@ -87,7 +87,6 @@
 
 (defn handle_create_meta-key [req]
   (let [data (-> req :parameters :body)
-
         tx (:tx req)
         sql-query (-> (sql/insert-into :meta_keys)
                       (sql/values [(convert-map-if-exist (cast-to-hstore data))])

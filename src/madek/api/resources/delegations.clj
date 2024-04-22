@@ -57,26 +57,21 @@
         (sd/response_ok new-data))
       (sd/response_failed "Could not update delegation." 406))))
 
-(defn handle_delete-delegation
-  [req]
-  (try
-    (catcher/with-logging {}
-
-      (let [tx (:tx req)]
-
-        (if-let [_ (sd/query-eq-find-one :delegation :id (-> req :delegation :id) tx)]
-          (let [delegation (-> req :delegation)
-                id (-> req :delegation :id)
-                sql-query (-> (sql/delete-from :delegations)
-                              (sql/where [:= :id id])
-                              (sql/returning :*)
-                              sql-format)]
-            (if (jdbc/execute-one! tx sql-query)
-              (sd/response_ok delegation)
-              (sd/response_failed "Could not delete delegation." 406)))
-          (sd/response_not_found "No such delegation found."))))
-
-    (catch Exception ex (sd/parsed_response_exception ex))))
+(defn handle_delete-delegation [req]
+  (let [tx (:tx req)
+        delegation (-> req :delegation)
+        id (-> delegation :id)
+        sql-query (-> (sql/delete-from :delegations)
+                      (sql/where [:= :id id])
+                      (sql/returning :*)
+                      sql-format)]
+    (try
+      (if (sd/query-eq-find-one :delegation :id id tx)
+        (if (jdbc/execute-one! tx sql-query)
+          (sd/response_ok delegation)
+          (sd/response_failed "Could not delete delegation." 406))
+        (sd/response_not_found "No such delegation found."))
+      (catch Exception ex (sd/parsed_response_exception ex)))))
 
 (defn wwrap-find-delegation [param colname send404]
   (fn [handler]

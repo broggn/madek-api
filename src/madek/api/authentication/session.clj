@@ -20,7 +20,6 @@
   (-> (get-config) :madek_master_secret))
 
 (defn- get-user [user-id tx]
-;(defn- get-user [user-id]
   (when-let [user (jdbc/execute-one! tx (-> (sql/select :*)
                                             (sql/from :users)
                                             (sql/where [:= :id user-id])
@@ -114,10 +113,7 @@
   (debug 'handle request)
   (if-let [cookie-value (and (session-enbabled?) (get-cookie-value request))]
     (let [token-hash (token-hash cookie-value)
-          tx (:tx request)
-
-          p (println ">o> tx=" tx)]
-
+          tx (:tx request)]
       (if-let [user-session (first (user-session token-hash tx))]
         (let [user-id (:users/user_id user-session)
               expires-at (:session_expires_at user-session)

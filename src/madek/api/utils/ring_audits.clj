@@ -3,7 +3,6 @@
    [cuerdas.core :as str]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [madek.api.db.core :as db]
    [madek.api.utils.shared :refer [HTTP_SAFE_METHODS]]
    [next.jdbc :as jdbc]
    [next.jdbc.sql :refer [query] :rename {query jdbc-query}]
@@ -47,7 +46,6 @@
              method :request-method
              tx :tx :as request}]
    (letfn [(audited-handler [request]
-             (println ">o> within letfn!!!!")
              (let [txid (txid tx)]
                (persist-request txid request)
                (let [response (try (handler request)
