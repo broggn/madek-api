@@ -83,6 +83,8 @@ context "vocabulary permission" do
               req.headers["Content-Type"] = "application/json"
             end
 
+            expect(create_user_resp.status).to be 200
+
             data = json_vocabulary_resource(vocabulary.id, true).body
 
             expect(data).to have_key "id"
@@ -103,6 +105,7 @@ context "vocabulary permission" do
               req.headers["Content-Type"] = "application/json"
             end
 
+            expect(create_group_resp.status).to be 200
             # Permissions::VocabularyGroupPermission.create!(group_id: group.id,
             #                                               view: true,
             #                                               vocabulary: vocabulary)
@@ -127,6 +130,7 @@ context "vocabulary permission" do
               req.headers["Content-Type"] = "application/json"
             end
 
+            expect(create_user_resp.status).to be 200
             data = json_vocabulary_resource(vocabulary.id, true).body
 
             expect(data).not_to have_key "id"
@@ -147,6 +151,7 @@ context "vocabulary permission" do
               req.headers["Content-Type"] = "application/json"
             end
 
+            expect(create_group_resp.status).to be 200
             data = json_vocabulary_resource(vocabulary.id, true).body
 
             expect(data).not_to have_key "id"
@@ -199,6 +204,7 @@ context "vocabulary permission" do
               req.headers["Content-Type"] = "application/json"
             end
 
+            assert create_group_resp.status == 200
             data = json_vocabulary_resource(vocabulary.id, true).body
             expect(data).to have_key "id"
             expect(data["id"]).to eq vocabulary.id
@@ -211,6 +217,7 @@ context "vocabulary permission" do
               req.headers["Content-Type"] = "application/json"
             end
 
+            assert create_group_resp.status == 200
             data = json_vocabulary_resource(vocabulary.id, true).body
 
             expect(data).not_to have_key "id"
@@ -258,12 +265,13 @@ context "vocabulary permission" do
               req.headers["Content-Type"] = "application/json"
             end
 
+            assert create_group_resp.status == 200
             data = json_vocabulary_resource(vocabulary.id, true).body
             expect(data).to have_key "id"
             expect(data["id"]).to eq vocabulary.id
 
             create_group_resp = client.delete("#{api_base_url}/admin/vocabularies/#{vocabulary.id}/perms/group/#{group.id}")
-
+            assert create_group_resp.status == 200
             data = json_vocabulary_resource(vocabulary.id, true).body
 
             expect(data).not_to have_key "id"
@@ -284,6 +292,7 @@ context "vocabulary permission" do
               req.headers["Content-Type"] = "application/json"
             end
 
+            assert create_user_resp.status == 200
             data = json_vocabulary_resource(vocabulary.id, true).body
             expect(data).not_to have_key "id"
             expect(data["message"]).to eq "Vocabulary could not be found!"
@@ -303,6 +312,7 @@ context "vocabulary permission" do
               req.headers["Content-Type"] = "application/json"
             end
 
+            assert create_group_resp.status == 200
             data = json_vocabulary_resource(vocabulary.id, true).body
 
             expect(data).not_to have_key "id"
