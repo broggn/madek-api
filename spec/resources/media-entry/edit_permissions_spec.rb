@@ -1,4 +1,5 @@
 require "spec_helper"
+require "shared/audit-validator"
 require Pathname(File.expand_path("..", __FILE__)).join("shared")
 
 # TODO check can ... download, edit-metadata, edit-permissions
@@ -295,6 +296,8 @@ describe "Getting a media-entry resource with authentication" do
       uurl = "#{api_base_url}/media-entry/#{@media_entry.id}/perms/resource/get_metadata_and_previews/true"
       edit = newbasic_auth_plain_faraday_json_client(@entity.login, @entity.password).put(uurl)
       expect(edit.status).to be == 200
+
+      expect_audit_entries_count(2, 18, 2)
     end
 
     it "edit user perms is allowed 200" do
@@ -302,6 +305,8 @@ describe "Getting a media-entry resource with authentication" do
       uurl = "#{api_base_url}/media-entry/#{@media_entry.id}/perms/user/#{@entity.id}/get_metadata_and_previews/true"
       edit = newbasic_auth_plain_faraday_json_client(@entity.login, @entity.password).put(uurl)
       expect(edit.status).to be == 200
+
+      expect_audit_entries_count(2, 17, 2)
     end
 
     it "edit group perms is allowed 200" do

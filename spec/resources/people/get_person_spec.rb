@@ -1,5 +1,6 @@
 require "spec_helper"
 require "hashdiff"
+require "shared/audit-validator"
 
 context "people" do
   before :each do
@@ -16,6 +17,11 @@ context "people" do
 
         it "works" do
           expect(get_person_result.status).to be == 200
+
+          expected_audit_entries = ["UPDATE auth_systems", "INSERT groups", "INSERT rdf_classes", "INSERT rdf_classes",
+            "INSERT people", "INSERT people", "INSERT usage_terms", "INSERT users",
+            "INSERT auth_systems_users", "INSERT admins"]
+          expect_audit_entries("GET /api/people/#{@person.id}", expected_audit_entries, 200, OPT_CHANGE_AUDITS_ONLY)
         end
 
         it "has the proper data" do
@@ -36,16 +42,20 @@ context "people" do
             institutional_id: "https://fake-university.com/students/12345"
         end
 
+        url = "/api/people/" +
+          CGI.escape(["fake-university.com", "https://fake-university.com/students/12345"].to_json)
         let :result do
-          client.get(
-            "/api/people/" +
-            CGI.escape(["fake-university.com", "https://fake-university.com/students/12345"].to_json)
-          )
+          client.get(url)
         end
 
         it "can be retrieved by the pair [institution, institutional_id]" do
           expect(result.status).to be == 200
           expect(result.body["id"]).to be == @inst_person["id"]
+
+          expected_audit_entries = ["UPDATE auth_systems", "INSERT groups", "INSERT rdf_classes", "INSERT rdf_classes",
+            "INSERT people", "INSERT people", "INSERT people", "INSERT usage_terms",
+            "INSERT users", "INSERT auth_systems_users", "INSERT admins"]
+          expect_audit_entries("GET #{url}}", expected_audit_entries, 200, OPT_CHANGE_AUDITS_ONLY)
         end
       end
     end

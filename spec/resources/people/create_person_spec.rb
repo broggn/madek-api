@@ -1,4 +1,9 @@
 require "spec_helper"
+require "shared/audit-validator"
+
+expected_audit_entries = ["UPDATE auth_systems", "INSERT groups", "INSERT rdf_classes", "INSERT rdf_classes",
+  "INSERT people", "INSERT usage_terms", "INSERT users", "INSERT auth_systems_users",
+  "INSERT admins", "INSERT people"]
 
 context "people" do
   context "admin user" do
@@ -25,6 +30,8 @@ context "people" do
                           subtype: "PeopleInstitutionalGroup"}.to_json
               req.headers["Content-Type"] = "application/json"
             end.status).to be == 201
+
+            expect_audit_entries("POST /api/admin/people/", expected_audit_entries, 201)
           end
         end
       end
@@ -44,6 +51,8 @@ context "people" do
           end
           it "has the proper institutional_id" do
             expect(created_person.body["institutional_id"]).to be == "12345/x"
+
+            expect_audit_entries("POST /api/admin/people/", expected_audit_entries, 201)
           end
         end
       end

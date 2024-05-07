@@ -1,4 +1,5 @@
 require "spec_helper"
+require "shared/audit-validator"
 
 context "people" do
   before :each do
@@ -15,6 +16,11 @@ context "people" do
               req.headers["Content-Type"] = "application/json"
             end.status
           ).to be == 200
+
+          expected_audit_entries = ["UPDATE auth_systems", "INSERT groups", "INSERT rdf_classes", "INSERT rdf_classes",
+            "INSERT people", "INSERT people", "INSERT usage_terms", "INSERT users",
+            "INSERT auth_systems_users", "INSERT admins", "UPDATE people"]
+          expect_audit_entries("PATCH /api/admin/people/#{CGI.escape(@person.id)}", expected_audit_entries, 200)
         end
 
         it "works when we do no changes" do
@@ -24,6 +30,11 @@ context "people" do
               req.headers["Content-Type"] = "application/json"
             end.status
           ).to be == 200
+
+          expected_audit_entries = ["UPDATE auth_systems", "INSERT groups", "INSERT rdf_classes", "INSERT rdf_classes",
+            "INSERT people", "INSERT people", "INSERT usage_terms", "INSERT users",
+            "INSERT auth_systems_users", "INSERT admins"]
+          expect_audit_entries("PATCH /api/admin/people/#{CGI.escape(@person.id)}", expected_audit_entries, 200)
         end
 
         context "patch result" do
@@ -35,6 +46,11 @@ context "people" do
           end
           it "contains the update" do
             expect(patch_result.body["last_name"]).to be == "new name"
+
+            expected_audit_entries = ["UPDATE auth_systems", "INSERT groups", "INSERT rdf_classes", "INSERT rdf_classes",
+              "INSERT people", "INSERT people", "INSERT usage_terms", "INSERT users",
+              "INSERT auth_systems_users", "INSERT admins", "UPDATE people"]
+            expect_audit_entries("PATCH /api/admin/people/#{CGI.escape(@person.id)}", expected_audit_entries, 200)
           end
         end
       end

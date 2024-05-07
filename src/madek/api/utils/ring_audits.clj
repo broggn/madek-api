@@ -3,27 +3,27 @@
    [cuerdas.core :as str]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [madek.api.utils.shared :refer [HTTP_SAFE_METHODS]]
+   [madek.api.db.core :as db]
    [next.jdbc :as jdbc]
-   [next.jdbc.sql :refer [query] :rename {query jdbc-query}]
    [taoensso.timbre :refer [debug warn]])
   (:import (clojure.lang ExceptionInfo)))
 
+(def HTTP_SAFE_METHODS #{:get :head :options :trace})
+
 (defn txid [tx]
-  (->> ["SELECT txid() AS txid"]
-       (jdbc-query tx)
-       first :txid))
+  (:txid (jdbc/execute-one! tx (-> (sql/select [:%txid :txid])
+                                   sql-format))))
 
 (defn persist-request [txid request]
-  "Persist the request"
+  "Persist the request; does not use the main transaction to avoid rollback"
   (-> (sql/insert-into :audited_requests)
       (sql/values [{:txid txid
                     :http_uid (-> request :headers (get "http-uid"))
                     :path (-> request :uri)
                     :user_id (-> request :authenticated-entity :user_id)
                     :method (-> request :request-method name str/upper)}])
-      (sql-format)
-      (#(jdbc/execute-one! (:tx request) % {:return-keys true}))))
+      sql-format
+      (#(jdbc/execute-one! (db/get-ds) % {:return-keys true}))))
 
 (defn update-request-user-id-from-session [txid tx]
   "Set the user_id in audited_requests;  statement runs within the transaction
@@ -35,8 +35,8 @@
   (-> (sql/insert-into :audited_responses)
       (sql/values [{:txid txid
                     :status (or (:status response) 500)}])
-      (sql-format)
-      (#(jdbc/execute-one! tx % {:return-keys true}))))
+      sql-format
+      (#(jdbc/execute-one! (db/get-ds) % {:return-keys true}))))
 
 (defn wrap
   ([handler]

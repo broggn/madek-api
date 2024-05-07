@@ -15,20 +15,20 @@
    [com.mchange.v2.c3p0 ComboPooledDataSource DataSources]
    [java.net URI]))
 
-(defonce ^:private tx (atom nil))
-(defn get-ds [] @tx)
+(defonce ^:private ds (atom nil))
+(defn get-ds [] @ds)
 
 (defn check-connection []
-  (if-not @tx
+  (if-not @ds
     {:OK? true :message "RDBMS is not initialized!"}
     (catcher/snatch
      {:return-fn (fn [e] {:OK? false :error (.getMessage e)})}
-     (assert (->> (jdbc/execute! @tx (-> (sql/select [true :state])
+     (assert (->> (jdbc/execute! @ds (-> (sql/select [true :state])
                                          (sql/from :schema_migrations)
                                          (sql/limit 1)
                                          sql-format))
                   first :state))
-     (let [c3p0ds (-> @tx :datasource)
+     (let [c3p0ds (-> @ds :datasource)
            max (.getMaxPoolSize c3p0ds)
            conns (.getNumConnectionsDefaultUser c3p0ds)
            busy (.getNumBusyConnectionsDefaultUser c3p0ds)
@@ -41,8 +41,8 @@
 
 (defn reset []
   (info "resetting c3p0 datasource")
-  (when @tx (.hardReset (:datasource @tx)))
-  (reset! tx nil))
+  (when @ds (.hardReset (:datasource @ds)))
+  (reset! ds nil))
 
 (defn- get-url [db-conf]
   (str "jdbc:"
@@ -80,7 +80,7 @@
 
 (defn- create-c3p0-datasources [db-conf]
   (info create-c3p0-datasources [db-conf])
-  (reset! tx
+  (reset! ds
           {:datasource
            (doto (ComboPooledDataSource.)
              (.setJdbcUrl (get-url db-conf))
