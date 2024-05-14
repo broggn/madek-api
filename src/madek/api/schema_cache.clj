@@ -96,7 +96,7 @@
               ;s/Any
 
               ;val)
-               (into {} val)
+              (into {} val)
               )
 
 
@@ -110,8 +110,8 @@
 
 (defn get-schema-converted [key]
   (let [
-        schema-list (get-schema key)
-        res (into {} schema-list)
+        res (get-schema key)
+        ;res (into {} res)
 
         ;p (println ">o> get-schema-by-name.key=" key)
         ;p (println ">o> get-schema-by-name.val=" val)
@@ -122,10 +122,14 @@
 
 
 (defn set-schema [key value]
+  (let [
+        p (println ">o> !!! [set-schema] (" key ") ->" value)
 
-  (println ">o> !!! [set-schema] (" key ") ->" value)
+        value (into {} value)
 
-  (swap! schema-cache assoc key value))
+        res (swap! schema-cache assoc key value)
+        ]res)
+  )
 
 
 (defn type-mapping-enums [key] "Maps a <table>.<key> to a Spec type, eg.: enum OR schema-definition "
@@ -979,29 +983,28 @@
               :raw-schema-name :groups-schema-with-pagination-raw
 
               :schemas [
-                        {:groups-schema-with-pagination {:key-types "optional"}}
-                        {:groups-schema-response-put {
-                                                      ;:template :groups-schema-with-pagination-raw
-                                                      :wl ["name" "type" "institution" "institutional_id" "institutional_name" "created_by_user_id"]}}
+                        {:groups-schema-with-pagination {:key-types "optional" :alias "schema_query-groups"}}
+                        ;{:groups-schema-response-put {
+                        ;                              ;:template :groups-schema-with-pagination-raw
+                        ;                              :wl ["name" "type" "institution" "institutional_id" "institutional_name" "created_by_user_id"]}}
                         ]
               }
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
 
-        ;_ (doseq [k [:groups-schema-with-pagination-raw :groups-schema-with-pagination]]
-        _ (doseq [k [:groups-schema-with-pagination-raw :groups-schema-with-pagination :groups-schema-response-put]]
-            (try
-              (println ">>>> print-schema (" k "): " (get-schema-converted k)
-                ", get-schema-converted=" (s/checker (get-schema-converted k))
-                ", get-schema=" (get-schema k)
-                ", isValid=" (map? (get-schema-converted k))
-                )
-              ;(println ">>>> print-schema (" k "): " (get-schema k) ", isValid=" (s/checker (get-schema k)))
-              ;(println ">>>> print-schema (" k "): " (get-schema k) )
-
-              (catch Exception e (println ">>>> ERROR: print-schema (" k "): " (.getMessage e)))
-              )
-            )
+        ;_ (doseq [k [:groups-schema-with-pagination-raw :groups-schema-with-pagination :groups-schema-response-put]]
+        ;    (try
+        ;      (println ">>>> print-schema (" k "): " (get-schema-converted k)
+        ;        ", get-schema-converted=" (s/checker (get-schema-converted k))
+        ;        ", get-schema=" (get-schema k)
+        ;        ", isValid=" (map? (get-schema-converted k))
+        ;        )
+        ;      ;(println ">>>> print-schema (" k "): " (get-schema k) ", isValid=" (s/checker (get-schema k)))
+        ;      ;(println ">>>> print-schema (" k "): " (get-schema k) )
+        ;
+        ;      (catch Exception e (println ">>>> ERROR: print-schema (" k "): " (.getMessage e)))
+        ;      )
+        ;    )
 
 
         p (println ">o> 1create-raw-schema (" (:raw-schema-name data) ") = " res)
@@ -1022,7 +1025,8 @@
         ;      :raw [{:groups {}}],
         ;      :raw-schema-name :groups-schema-raw
         ;      ;:schemas [
-        ;      ;          {:groups-schema-response-put {:template :groups-schema-with-pagination-raw
+        ;      ;          {:groups-schema-response-put {:alias "schema_update-group"
+        ;                                                   :template :groups-schema-with-pagination-raw
         ;      ;                                        :wl ["name" "type" "institution" "institutional_id" "institutional_name" "created_by_user_id"]}}
         ;      ;          ]
         ;      }
