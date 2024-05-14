@@ -5,7 +5,9 @@
    [clojure.tools.cli :as cli]
    [logbug.catcher :as catcher]
    [logbug.thrown]
-   [madek.api.cli_config_parser :as web]
+
+   [madek.api.cli_config_parser :as cli_parser]
+
    [madek.api.constants]
    [madek.api.db.core :as db]
    [madek.api.schema_cache :refer [init-schema-by-db]]
@@ -25,12 +27,12 @@
 
 (def cli-options
   (concat
-   [["-h" "--help"]
-    ["-d" "--dev-mode"]]
-   exit/cli-options
-   nrepl/cli-options
-   web/cli-options
-   db/cli-options))
+    [["-h" "--help"]
+     ["-d" "--dev-mode"]]
+    exit/cli-options
+    nrepl/cli-options
+    cli_parser/cli-options
+    db/cli-options))
 
 (defn main-usage [options-summary & more]
   (->> ["Madek API"
@@ -45,7 +47,7 @@
           ["-------------------------------------------------------------------"
            (with-out-str (pprint more))
            "-------------------------------------------------------------------"])]
-       flatten (clojure.string/join \newline)))
+    flatten (clojure.string/join \newline)))
 
 (defn helpnexit [summary args options]
   (println (main-usage summary {:args args :options options})))
@@ -61,31 +63,38 @@
   (println ">o> INIT DB!!!!!!!!!!!!!!!!!!!!!")
 
   (catcher/snatch
-   {:level :fatal
-    :throwable Throwable
-    :return-fn (fn [e] (System/exit -1))}
-   (info 'madek.api.main "initializing ...")
-   (madek.api.utils.config/initialize
-    {:filenames ["./config/settings.yml"
-                 "../config/settings.yml",
-                 "./datalayer/config/settings.yml",
-                 "../webapp/datalayer/config/settings.yml",
-                 "./config/settings.local.yml"
-                 "../config/settings.local.yml"]})
-   (info "Effective startup options " options)
-   (info "Effective startup config " (get-config))
+    {:level :fatal
+     :throwable Throwable
+     :return-fn (fn [e] (System/exit -1))}
+    (info 'madek.api.main "initializing ...")
+    (madek.api.utils.config/initialize
+      {:filenames ["./config/settings.yml"
+                   "../config/settings.yml",
+                   "./datalayer/config/settings.yml",
+                   "../webapp/datalayer/config/settings.yml",
+                   "./config/settings.local.yml"
+                   "../config/settings.local.yml"]})
+    (info "Effective startup options " options)
+    (info "Effective startup config " (get-config))
     ; WIP switching to new db container; remove old rdbms later
-   (rdbms/initialize (config/get-db-spec :api))
-   (db/init options)
+    ;(rdbms/initialize (config/get-db-spec :api))
+    (db/init options)
     ;
-   (nrepl/init options)
-   (madek.api.constants/initialize (get-config))
+    (nrepl/init options)
+    (madek.api.constants/initialize (get-config))
 
     ;; TODO: fetch schemas from db
     (println ">o> INIT SCHEMA!!!!!!!!!!!!!!!!!!!!!")
     (init-schema-by-db)
+    
+    ;(try (dynamic-web-initialize options)
+    ;     (catch Throwable e
+    ;       (println ">o> Error initializing web failed, ok when using REPL")
+    ;     ))
 
     (dynamic-web-initialize options)
+
+
     ;(madek.api.web/initialize options)
 
     (info 'madek.api.main "... initialized")))

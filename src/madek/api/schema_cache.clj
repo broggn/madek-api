@@ -5,6 +5,16 @@
 
    [clojure.string :as str]
 
+   [cheshire.core :as json]
+   [madek.api.db.core :refer [get-ds]]
+
+
+
+   [madek.api.resources.shared :as sd]
+
+
+
+
 
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
@@ -1349,7 +1359,7 @@
                                                             {:updated_at {:value-type TYPE_NOTHING}}
                                                             {:settings {:key-type TYPE_OPTIONAL :value-type TYPE_NOTHING}}
                                                             ]
-                                                   :bl [:searchable :active_until :autocomplete]
+                                                    :bl [:searchable :active_until :autocomplete]
                                                     }
                          }
 
@@ -1756,5 +1766,89 @@
 
 
 
+;(ns leihs.my.back.html
+;    (:refer-clojure :exclude [keyword str])
+;    (:require
+;      [hiccup.page :refer [html5]]
+;      [honey.sql :refer [format] :rename {format sql-format}]
+;      [honey.sql.helpers :as sql]
+;      [leihs.core.http-cache-buster2 :as cache-buster]
+;      [leihs.core.json :refer [to-json]]
+;      [leihs.core.remote-navbar.shared :refer [navbar-props]]
+;      [leihs.core.shared :refer [head]]
+;      [leihs.core.url.core :as url]
+;      [leihs.my.authorization :as auth]
+;      [leihs.core.db :as db]
+;      [next.jdbc :as jdbc]))
 
+(comment
+  (let [
+        data {
+              :raw [
+                    {:groups {}}
+                    ;{:_additional (concat schema_pagination_raw schema_full_data_raw)}
+                    ]
+              :raw-schema-name :groups-schema-with-pagination-raw
+              :schemas [
+                        {:groups.schema-query-groups {:key-types "optional" :alias "schema_query-groups"}}
+                        ]
+              }
+
+        tx (get-ds)
+
+        ;data {:foo "bar" :baz "qux"}
+
+        data [:cast (json/generate-string data) :jsonb]
+
+
+        ins-data {:id "abc" :key "test-me" :config data}
+
+        query (-> (sql/insert-into :schema_definition)
+                  (sql/values [ins-data])
+                  (sql/returning :*)
+                  sql-format
+                  )
+
+        ;query (-> (sql/select :*)
+        ;          (sql/from :schema_definition)
+        ;          sql-format
+        ;          )
+
+        p (println ">o> query=" query)
+
+        res (jdbc/execute! tx query)
+
+
+        p (println "\nquery" res)
+
+        ]
+    res
+    )
+  )
+
+
+(defn- context_transform_ml [context]
+  (assoc context
+         :config (sd/transform_ml (:config context))
+         ;:descriptions (sd/transform_ml (:descriptions context))
+         ))
+
+(comment
+  (let [
+        tx (get-ds)
+
+        query (-> (sql/select :*)
+                  (sql/from :schema_definition)
+                  (sql/where [:= :key "test-me"])
+                  sql-format
+                  )
+
+        p (println ">o> query=" query)
+
+        res (jdbc/execute-one! tx query)
+        p (println ">o> res1=" res)
+        ]
+    res
+    )
+  )
 
