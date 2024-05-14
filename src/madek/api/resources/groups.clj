@@ -324,8 +324,9 @@
                                :handler group-users/handle_update-group-users
                                :coercion reitit.coercion.schema/coercion
                                :parameters {:path {:group-id s/Uuid}
-                                            :body group-users/schema_update-group-user-list}
-                                            ;:body {:users [(get-schema :groups.schema-update-group-user-list)]}}
+
+                                            ;:body group-users/schema_update-group-user-list}
+                                            :body {:users [(get-schema :groups.schema-update-group-user-list)]}}
 
 
                                             :responses {200 {:body s/Any} ;groups/schema_export-group}

@@ -194,21 +194,21 @@
 ;   :created_at s/Any
 ;   :updated_at s/Any
 ;   :person_id s/Uuid})
-
-(def schema_export-group-user-simple
-  {:id s/Uuid
-   :email (s/maybe s/Str)
-   :institutional_id (s/maybe s/Str)
-   ;:login (s/maybe s/Str)
-   ;:created_at s/Any
-   ;:updated_at s/Any
-   :person_id (s/maybe s/Uuid)})
-
-(def schema_update-group-user-list
-  {:users
-   [{(s/required-key :id) s/Uuid
-     (s/optional-key :institutional_id) s/Uuid
-     (s/optional-key :email) s/Str}]})
+;
+;(def schema_export-group-user-simple
+;  {:id s/Uuid
+;   :email (s/maybe s/Str)
+;   :institutional_id (s/maybe s/Str)
+;   ;:login (s/maybe s/Str)
+;   ;:created_at s/Any
+;   ;:updated_at s/Any
+;   :person_id (s/maybe s/Uuid)})
+;
+;(def schema_update-group-user-list
+;  {:users
+;   [{(s/required-key :id) s/Uuid
+;     (s/optional-key :institutional_id) s/Uuid
+;     (s/optional-key :email) s/Str}]})
 
 
 
