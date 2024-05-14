@@ -3,14 +3,14 @@
    ;; all needed imports
    ;[leihs.core.db :as db]
 
-   [madek.api.utils.validation :refer [vector-or-hashmap-validation]]
-
-
    [clojure.string :as str]
-   [honey.sql :refer [format] :rename {format sql-format}]
 
+
+   [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
+
    [madek.api.db.core :refer [get-ds]]
+   [madek.api.utils.validation :refer [vector-or-hashmap-validation]]
 
 
 
@@ -1327,16 +1327,10 @@
         ;; :groups-schema-response-put
         data {
               :raw [{:users {}}
-                     ;:admins {:wl ["is_admin" "searchable"]}}
                     {:_additional [{:column_name "is_admin", :data_type "boolean"}]}
-
                     ],
               :raw-schema-name :users-schema-raw
               :schemas [
-                        ;{:groups-schema-response-put {:alias "schema_update-group"
-                        ;                              :template :groups-schema-with-pagination-raw
-                        ;                              :wl ["name" "type" "institution" "institutional_id" "institutional_name" "created_by_user_id"]}
-                        ;                          }
                         {:users-schema-payload {:alias "maru.update/schema"
                                                 :key-types "optional"
                                                 :types [{:accepted_usage_terms_id {:value-type TYPE_MAYBE}} {:notes {:value-type TYPE_MAYBE}}]
@@ -1346,35 +1340,30 @@
                          }
 
                         {:get.users-schema-payload {:alias "mar.users.get/schema"
-                                                :value-types "maybe"
-
-                                                :types [{:created_at {:value-type TYPE_NOTHING}}
-                                                        {:email {:key-type TYPE_OPTIONAL  :value-type TYPE_NOTHING}}
-                                                        {:id {:value-type TYPE_NOTHING}}
-                                                        {:person_id {:value-type TYPE_NOTHING}}
-                                                        {:is_admin {:value-type TYPE_NOTHING}}
-                                                        {:updated_at {:value-type TYPE_NOTHING}}
-                                                        {:settings {:key-type TYPE_OPTIONAL :value-type TYPE_NOTHING}}
-                                                        ]
-
-                                                ;:wl ["accepted_usage_terms_id" "autocomplete" "email" "institution" "first_name" "last_name" "login" "note" "searchable"]
-                                                ;:wl [:accepted_usage_terms_id :autocomplete :email :institution :first_name :last_name :login :note :searchable]
-                                                :bl [ :searchable :active_until :autocomplete]
-                                                }
+                                                    :value-types "maybe"
+                                                    :types [{:created_at {:value-type TYPE_NOTHING}}
+                                                            {:email {:key-type TYPE_OPTIONAL :value-type TYPE_NOTHING}}
+                                                            {:id {:value-type TYPE_NOTHING}}
+                                                            {:person_id {:value-type TYPE_NOTHING}}
+                                                            {:is_admin {:value-type TYPE_NOTHING}}
+                                                            {:updated_at {:value-type TYPE_NOTHING}}
+                                                            {:settings {:key-type TYPE_OPTIONAL :value-type TYPE_NOTHING}}
+                                                            ]
+                                                   :bl [:searchable :active_until :autocomplete]
+                                                    }
                          }
 
                         {:create.users-schema-payload {:alias "mar.users.create/schema"
-                                                :key-types "optional"
+                                                       :key-types "optional"
 
-                                                :types [
-                                                        {:person_id {:key-type TYPE_NOTHING}}
+                                                       :types [
+                                                               {:person_id {:key-type TYPE_NOTHING}}
+                                                               {:accepted_usage_terms_id {:value-type TYPE_MAYBE}}
+                                                               {:notes {:value-type TYPE_MAYBE}}
+                                                               ]
 
-                                                        {:accepted_usage_terms_id {:value-type TYPE_MAYBE}}
-                                                        {:notes {:value-type TYPE_MAYBE}}
-                                                        ]
-
-                                                :wl [:person_id :accepted_usage_terms_id  :email :institution :institution_id :first_name  :last_name :login :note :settings]
-                                                }
+                                                       :wl [:person_id :accepted_usage_terms_id :email :institution :institution_id :first_name :last_name :login :note :settings]
+                                                       }
                          }
                         ]
               }
@@ -1747,7 +1736,8 @@
         ;
         _ (create-groups-schema)
         _ (create-users-schema)
-        ;_ (create-admins-schema)
+
+        _ (create-admins-schema)
         ;_ (create-workflows-schema)
         ;_ (create-collections-schema)
         ;_ (create-collection-media-entry-schema)
