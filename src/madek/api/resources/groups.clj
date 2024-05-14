@@ -289,8 +289,8 @@
                   :coercion reitit.coercion.schema/coercion
                   :parameters {:path {:id s/Uuid}
 
-                               :body schema_update-group}
-                               ;:body (get-schema :groups.schema-update-group)}
+                               ;:body schema_update-group}
+                               :body (get-schema :groups.schema-update-group)}
 
                   :responses {200 {:body s/Any} ;groups/schema_export-group}
                               404 {:body s/Any}}}}] ; TODO error handling

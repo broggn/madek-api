@@ -1133,18 +1133,16 @@
                                                       :key-types "optional"
                                                       :value-types "maybe"
                                                       :types [{:name {:value-type TYPE_NOTHING}} {:type {:value-type TYPE_NOTHING}}]
-                                                      :wl ["name" "type" "institution" "institutional_id" "institutional_name" "created_by_user_id"]}
+                                                      :wl [:name :type :institution :institutional_id :institutional_name :created_by_user_id]}
                          }
                         {:groups.schema-export-group {:alias "schema_export-group"
                                                       :key-types "optional"
-                                                      ;:value-types "maybe"
                                                       :types [
                                                               {:id {:key-type TYPE_NOTHING}}
                                                               {:created_by_user_id {:value-type "maybe"}}
                                                               {:institutional_id {:value-type "maybe"}}
                                                               {:institutional_name {:value-type "maybe"}}
                                                               {:institution {:value-type "maybe"}}]
-                                                      ;:wl ["name" "type" "institution" "institutional_id" "institutional_name" "created_by_user_id"]
                                                       }
                          }
                         ]
