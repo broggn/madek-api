@@ -100,35 +100,35 @@
 
 ;### routes ###################################################################
 
-(def schema_import-group
-  {;(s/optional-key :id) s/Str
-   :name s/Str
-   ;:type (s/enum "Group" "AuthenticationGroup" "InstitutionalGroup")
-   (s/optional-key :type) (s/enum "Group" "AuthenticationGroup" "InstitutionalGroup")
-   (s/optional-key :institutional_id) (s/maybe s/Str)
-   (s/optional-key :institutional_name) (s/maybe s/Str)
-   (s/optional-key :institution) (s/maybe s/Str)
-   (s/optional-key :created_by_user_id) (s/maybe s/Uuid)})
-
-(def schema_update-group
-  {(s/optional-key :name) s/Str
-   (s/optional-key :type) (s/enum "Group" "AuthenticationGroup" "InstitutionalGroup")
-   (s/optional-key :institutional_id) (s/maybe s/Str)
-   (s/optional-key :institutional_name) (s/maybe s/Str)
-   (s/optional-key :institution) (s/maybe s/Str)
-   (s/optional-key :created_by_user_id) (s/maybe s/Uuid)})
-
-(def schema_export-group
-  {:id s/Uuid
-   (s/optional-key :name) s/Str
-   (s/optional-key :type) s/Str ; TODO enum
-   (s/optional-key :created_by_user_id) (s/maybe s/Uuid)
-   (s/optional-key :created_at) s/Any
-   (s/optional-key :updated_at) s/Any
-   (s/optional-key :institutional_id) (s/maybe s/Str)
-   (s/optional-key :institutional_name) (s/maybe s/Str)
-   (s/optional-key :institution) (s/maybe s/Str)
-   (s/optional-key :searchable) s/Str})
+;(def schema_import-group
+;  {;(s/optional-key :id) s/Str
+;   :name s/Str
+;   ;:type (s/enum "Group" "AuthenticationGroup" "InstitutionalGroup")
+;   (s/optional-key :type) (s/enum "Group" "AuthenticationGroup" "InstitutionalGroup")
+;   (s/optional-key :institutional_id) (s/maybe s/Str)
+;   (s/optional-key :institutional_name) (s/maybe s/Str)
+;   (s/optional-key :institution) (s/maybe s/Str)
+;   (s/optional-key :created_by_user_id) (s/maybe s/Uuid)})
+;
+;(def schema_update-group
+;  {(s/optional-key :name) s/Str
+;   (s/optional-key :type) (s/enum "Group" "AuthenticationGroup" "InstitutionalGroup")
+;   (s/optional-key :institutional_id) (s/maybe s/Str)
+;   (s/optional-key :institutional_name) (s/maybe s/Str)
+;   (s/optional-key :institution) (s/maybe s/Str)
+;   (s/optional-key :created_by_user_id) (s/maybe s/Uuid)})
+;
+;(def schema_export-group
+;  {:id s/Uuid
+;   (s/optional-key :name) s/Str
+;   (s/optional-key :type) s/Str ; TODO enum
+;   (s/optional-key :created_by_user_id) (s/maybe s/Uuid)
+;   (s/optional-key :created_at) s/Any
+;   (s/optional-key :updated_at) s/Any
+;   (s/optional-key :institutional_id) (s/maybe s/Str)
+;   (s/optional-key :institutional_name) (s/maybe s/Str)
+;   (s/optional-key :institution) (s/maybe s/Str)
+;   (s/optional-key :searchable) s/Str})
 
 (defn handle_create-group
   [req]
@@ -235,8 +235,11 @@
                 :content-type "application/json"
                 :accept "application/json"
                 :coercion reitit.coercion.schema/coercion
-                :parameters {:body schema_import-group}
-                ;:responses {201 {:body schema_export-group}
+
+                ;:parameters {:body schema_import-group}
+                :parameters {:body (get-schema :groups.schema-import-group)}
+
+                                     ;:responses {201 {:body schema_export-group}
                 :responses {201 {:body (get-schema :groups.schema-export-group)}
                             404 {:description "Not Found."
                                  :schema s/Str
