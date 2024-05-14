@@ -5,15 +5,19 @@
    [clojure.tools.cli :as cli]
    [logbug.catcher :as catcher]
    [logbug.thrown]
+   [madek.api.cli_config_parser :as web]
    [madek.api.constants]
    [madek.api.db.core :as db]
+   [madek.api.schema_cache :refer [init-schema-by-db]]
    [madek.api.utils.config :as config :refer [get-config]]
    [madek.api.utils.exit :as exit]
    [madek.api.utils.logging :as logging]
    [madek.api.utils.nrepl :as nrepl]
+   ;; TODO: this will cause initial loading
+   ;[madek.api.web :as web]
+
    [madek.api.utils.rdbms :as rdbms]
-   [madek.api.web]
-   [madek.api.web :as web]
+
    [pg-types.all]
    [taoensso.timbre :refer [info]]))
 
@@ -48,7 +52,14 @@
 
 ;; run ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn dynamic-web-initialize [options]
+  (require '[madek.api.web :as web])
+  (let [initialize-fn (resolve 'web/initialize)]
+    (initialize-fn options)))
+
 (defn run [options]
+  (println ">o> INIT DB!!!!!!!!!!!!!!!!!!!!!")
+
   (catcher/snatch
    {:level :fatal
     :throwable Throwable
@@ -69,8 +80,15 @@
     ;
    (nrepl/init options)
    (madek.api.constants/initialize (get-config))
-   (madek.api.web/initialize options)
-   (info 'madek.api.main "... initialized")))
+
+    ;; TODO: fetch schemas from db
+    (println ">o> INIT SCHEMA!!!!!!!!!!!!!!!!!!!!!")
+    (init-schema-by-db)
+
+    (dynamic-web-initialize options)
+    ;(madek.api.web/initialize options)
+
+    (info 'madek.api.main "... initialized")))
 
 ;; main ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

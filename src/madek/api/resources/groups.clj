@@ -6,6 +6,9 @@
             [madek.api.resources.groups.shared :as groups]
             [madek.api.resources.groups.users :as group-users]
             [madek.api.resources.shared :as sd]
+
+            [madek.api.schema_cache :refer [get-schema]]
+
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
             [madek.api.utils.helper :refer [convert-groupid f mslurp t]]
             [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
@@ -186,7 +189,10 @@
                 :middleware [wrap-authorize-admin!]
                 :swagger {:produces "application/json"}
                 :content-type "application/json"
-                :parameters {:query schema_query-groups}
+
+                ;:parameters {:query schema_query-groups}
+                :parameters {:query (get-schema :groups-schema-with-pagination)}
+
                 ;:accept "application/json"
                 :coercion reitit.coercion.schema/coercion
                 :responses {200 {:body {:groups [schema_export-group]}}}}}]
@@ -209,7 +215,10 @@
                :handler index
                :middleware [wrap-authorize-admin!]
                :swagger {:produces "application/json"}
-               :parameters {:query schema_query-groups}
+
+               ;:parameters {:query schema_query-groups}
+               :parameters {:query (get-schema :groups-schema-with-pagination)}
+
                :content-type "application/json"
                :coercion reitit.coercion.schema/coercion
                :responses {200 {:body {:groups [schema_export-group]}}}}
