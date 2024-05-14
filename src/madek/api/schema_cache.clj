@@ -632,7 +632,7 @@
    (remove-maps-by-entry-values maps :column_name target-values)
    )
 
-
+  ;; TODO: fix this to handle [:foo :bar]
   ([maps entry-key target-values]
 
    (if (empty? target-values)
@@ -651,7 +651,7 @@
    (keep-maps-by-entry-values maps :column_name target-values)
    )
 
-
+  ;; TODO: fix this to handle [:foo :bar]
   ([maps entry-key target-values]
 
    (if (empty? target-values)
@@ -1203,7 +1203,7 @@
 
                     ;{:users {:wl [:email :person_id] }}
 
-                    ;{:users {:wl [:id :email  :institutional_id  :login :created_at :updated_at :person_id] }} ;; broken
+                    ;{:users {:wl [:id :email  :institutional_id  :login :created_at :updated_at :person_id] }} ;; broken:   ;; TODO: fix this to handle [:foo :bar]
                     {:users {:wl ["id" "email"  "institutional_id"  "login" "created_at" "updated_at" "person_id"] }}
                     ],
               :raw-schema-name :groups-schema-response-user-simple-raw
