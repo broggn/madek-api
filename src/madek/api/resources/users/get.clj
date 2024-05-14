@@ -32,30 +32,30 @@
 
 
 
-(def schema
-  {:accepted_usage_terms_id (s/maybe s/Uuid)
-   :created_at s/Any
-
-   ;:email (s/with-fn-validation valid-email? s/Str)
-
-   ;(s/optional-key :email) email-validation ;; ?? TODO: invalid email?
-   (s/optional-key :email) s/Str
-
-   :first_name (s/maybe s/Str)
-   :id s/Uuid
-   :institution (s/maybe s/Str)
-   :institutional_id (s/maybe s/Str)
-   :is_admin s/Bool
-   :last_name (s/maybe s/Str)
-   :last_signed_in_at (s/maybe s/Any)
-   :login (s/maybe s/Str)
-   :notes (s/maybe s/Str)
-   :person_id s/Uuid
-
-   ;:settings (s/with-fn-validation valid-json? s/Str) ;; Validate settings as JSON ;; broken
-   (s/optional-key :settings) vector-or-hashmap-validation
-
-   :updated_at s/Any})
+;(def schema
+;  {:accepted_usage_terms_id (s/maybe s/Uuid)
+;   :created_at s/Any
+;
+;   ;:email (s/with-fn-validation valid-email? s/Str)
+;
+;   ;(s/optional-key :email) email-validation ;; ?? TODO: invalid email?
+;   (s/optional-key :email) s/Str
+;
+;   :first_name (s/maybe s/Str)
+;   :id s/Uuid
+;   :institution (s/maybe s/Str)
+;   :institutional_id (s/maybe s/Str)
+;   :is_admin s/Bool
+;   :last_name (s/maybe s/Str)
+;   :last_signed_in_at (s/maybe s/Any)
+;   :login (s/maybe s/Str)
+;   :notes (s/maybe s/Str)
+;   :person_id s/Uuid
+;
+;   ;:settings (s/with-fn-validation valid-json? s/Str) ;; Validate settings as JSON ;; broken
+;   (s/optional-key :settings) vector-or-hashmap-validation
+;
+;   :updated_at s/Any})
 
 ;:get.users-schema-payload = {:institution (maybe Str), :institutional_id (maybe Str), :first_name (maybe Str),
 ;:person_id java.util.UUID, :login (maybe Str), :updated_at Any, #schema.core.OptionalKey{:k :settings} Any,

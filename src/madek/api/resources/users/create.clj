@@ -31,6 +31,9 @@
       (error "handle-create-user failed" {:request req})
       (sd/parsed_response_exception e))))
 
+
+
+
 (def schema
   {:person_id s/Uuid
    (s/optional-key :accepted_usage_terms_id) (s/maybe s/Uuid)
@@ -44,6 +47,10 @@
 
    ;(s/optional-key :settings) json-and-json-str-validation
    (s/optional-key :settings) vector-or-hashmap-validation})
+
+
+
+
 
 ;; post /users
 (def route

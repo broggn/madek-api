@@ -6,6 +6,10 @@
    [madek.api.resources.users.common :as common]
    [madek.api.resources.users.get :as get-user]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+
+   [madek.api.schema_cache :refer [get-schema]]
+
+
    [madek.api.utils.helper :refer [f t]]
    [madek.api.utils.pagination :as pagination]
    [next.jdbc :as jdbc]
@@ -72,4 +76,5 @@
    :handler handler
    :middleware [wrap-authorize-admin!]
    :coercion reitit.coercion.schema/coercion
-   :responses {200 {:body {:users [get-user/schema]}}}})
+   ;:responses {200 {:body {:users [get-user/schema]}}}})
+   :responses {200 {:body {:users [(get-schema :get.users-schema-payload)]}}}})
