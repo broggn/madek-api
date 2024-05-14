@@ -3,6 +3,9 @@
    ;; all needed imports
    ;[leihs.core.db :as db]
 
+   [madek.api.utils.validation :refer [vector-or-hashmap-validation]]
+
+
    [clojure.string :as str]
    [honey.sql :refer [format] :rename {format sql-format}]
 
@@ -147,6 +150,9 @@
 
 
                   "groups.type" (get-enum :groups.type)
+
+                  ;"users.settings" vector-or-hashmap-validation
+                  "users.settings" s/Any
 
 
                   "app_settings.about_pages" schema-de-en
@@ -1320,7 +1326,11 @@
         ;; :groups-schema-raw
         ;; :groups-schema-response-put
         data {
-              :raw [{:users {}}],
+              :raw [{:users {}}
+                     ;:admins {:wl ["is_admin" "searchable"]}}
+                    {:_additional [{:column_name "is_admin", :data_type "boolean"}]}
+
+                    ],
               :raw-schema-name :users-schema-raw
               :schemas [
                         ;{:groups-schema-response-put {:alias "schema_update-group"
@@ -1334,6 +1344,30 @@
                                                 :wl [:accepted_usage_terms_id :autocomplete :email :institution :first_name :last_name :login :note :searchable]
                                                 }
                          }
+
+                        {:get.users-schema-payload {:alias "mar.users.get/schema"
+                                                :value-types "maybe"
+
+                                                :types [{:created_at {:value-type TYPE_NOTHING}}
+                                                        {:email {:key-type TYPE_OPTIONAL  :value-type TYPE_NOTHING}}
+                                                        {:id {:value-type TYPE_NOTHING}}
+                                                        {:person_id {:value-type TYPE_NOTHING}}
+                                                        {:is_admin {:value-type TYPE_NOTHING}}
+                                                        {:updated_at {:value-type TYPE_NOTHING}}
+                                                        {:settings {:key-type TYPE_OPTIONAL :value-type TYPE_NOTHING}}
+                                                        ]
+
+                                                ;:wl ["accepted_usage_terms_id" "autocomplete" "email" "institution" "first_name" "last_name" "login" "note" "searchable"]
+                                                ;:wl [:accepted_usage_terms_id :autocomplete :email :institution :first_name :last_name :login :note :searchable]
+                                                :bl [ :searchable :active_until :autocomplete]
+                                                }
+                         }
+
+
+
+
+
+
                         ;{:users-schema-payload {:alias "schema_update-group"
                         ;                        :key-types "optional"
                         ;                        :value-types "maybe"
