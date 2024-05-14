@@ -37,7 +37,7 @@
 (defn get-group [id-or-institutional-group-id tx]
   (if-let [group (groups/find-group id-or-institutional-group-id tx)]
     {:body (dissoc group :previous_id :searchable)}
-    {:status 404 :body "No such group found"})) ; TODO: toAsk 204 No Content
+    {:status 404 :body "No such group found"}))             ; TODO: toAsk 204 No Content
 
 ;### delete group ##############################################################
 
@@ -50,7 +50,7 @@
         update-count (get res :next.jdbc/update-count)]
 
     (if (= 1 update-count)
-      {:status 204 :content-type "application/json"} ;TODO / FIXME: response should support octet-stream as well?
+      {:status 204 :content-type "application/json"}        ;TODO / FIXME: response should support octet-stream as well?
       {:status 404})))
 
 ;### patch group ##############################################################
@@ -239,7 +239,7 @@
                 ;:parameters {:body schema_import-group}
                 :parameters {:body (get-schema :groups.schema-import-group)}
 
-                                     ;:responses {201 {:body schema_export-group}
+                ;:responses {201 {:body schema_export-group}
                 :responses {201 {:body (get-schema :groups.schema-export-group)}
                             404 {:description "Not Found."
                                  :schema s/Str
@@ -295,8 +295,8 @@
                                ;:body schema_update-group}
                                :body (get-schema :groups.schema-update-group)}
 
-                  :responses {200 {:body s/Any} ;groups/schema_export-group}
-                              404 {:body s/Any}}}}] ; TODO error handling
+                  :responses {200 {:body s/Any}             ;groups/schema_export-group}
+                              404 {:body s/Any}}}}]         ; TODO error handling
 
    ; groups-users/ring-routes
    ["/:group-id/users/" {:get {:summary "Get group users by id"
@@ -311,7 +311,8 @@
                                             :query {(s/optional-key :page) s/Int
                                                     (s/optional-key :count) s/Int}}
                                :responses {200 {:description "OK - Returns a list of group users OR an empty list."
-                                                :schema {:body {:users [group-users/schema_export-group-user-simple]}}}}}
+                                                ;:schema {:body {:users [group-users/schema_export-group-user-simple]}}}}}
+                                                :schema {:body {:users [(get-schema :groups.schema-response-user-simple)]}}}}}
 
                          ; TODO works with tests, but not with the swagger ui
                          ; TODO: broken test / duplicate key issue
@@ -324,9 +325,11 @@
                                :coercion reitit.coercion.schema/coercion
                                :parameters {:path {:group-id s/Uuid}
                                             :body group-users/schema_update-group-user-list}
+                                            ;:body {:users [(get-schema :groups.schema-update-group-user-list)]}}
 
-                               :responses {200 {:body s/Any} ;groups/schema_export-group}
-                                           404 {:body s/Str}}}}]
+
+                                            :responses {200 {:body s/Any} ;groups/schema_export-group}
+                                                        404 {:body s/Str}}}}]
 
    ["/:group-id/users/:user-id" {:get {:summary "Get group user by group-id and user-id"
                                        :description "gid= uuid/institutional_id\n
@@ -341,7 +344,8 @@
                                        ;:parameters {:path {:group-id s/Uuid :user-id s/Uuid}}
                                        :parameters {:path {:group-id s/Str :user-id s/Str}}
 
-                                       :responses {200 {:body group-users/schema_export-group-user-simple}
+                                       ;:responses {200 {:body group-users/schema_export-group-user-simple}
+                                       :responses {200 {:body (get-schema :groups.schema-response-user-simple)}
                                                    404 {:description "Creation failed."
                                                         :schema s/Str
                                                         :examples {"application/json" {:message "No such group or user."}}}}}
@@ -359,7 +363,7 @@
                                        :parameters {:path {:group-id s/Str :user-id s/Str}}
                                        ;:parameters {:path {:group-id s/Uuid :user-id s/Uuid}}
 
-                                       :responses {200 {:body {:users [group-users/schema_export-group-user-simple]}}
+                                       :responses {200 {:body {:users [(get-schema :groups.schema-response-user-simple)]}}
                                                    404 {:description "Creation failed."
                                                         :schema s/Str
                                                         :examples {"application/json" {:message "No such group or user."}}}}} ; TODO error handling
@@ -371,7 +375,7 @@
                                           :middleware [wrap-authorize-admin!]
                                           :coercion reitit.coercion.schema/coercion
                                           :parameters {:path {:group-id s/Uuid :user-id s/Uuid}}
-                                          :responses {200 {:body {:users [group-users/schema_export-group-user-simple]}}
+                                          :responses {200 {:body {:users [(get-schema :groups.schema-response-user-simple)]}}
                                                       404 {:description "Not Found."
                                                            :schema s/Str
                                                            :examples {"application/json" {:message "No such group or user."}}}

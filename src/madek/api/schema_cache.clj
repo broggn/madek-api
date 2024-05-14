@@ -705,7 +705,6 @@
 
 
 
-
                                   key (name key)
 
                                   ;p (println ">o> table-name1 >> " (class key))
@@ -714,11 +713,19 @@
                                   res (fetch-table-metadata key)
                                   ;p (println ">o> >>??>> (" key ") raw.res=" res)
 
+                                  p (println ">o> [handle not-additional] \n
+                                  table-name=" table-name "\n
+                                  wl-attr=" wl-attr "\n
+                                  bl-attr=" bl-attr "\n
+                                  rename-attr=" rename-attr "\n
+                                  key=" key "\n
+                                  db-data=" res "\n")
+
                                   res (if (nil? rename-attr)
                                         res
                                         (rename-column-names res rename-attr))
 
-                                  ;p (println "\n>o> >>??>> (" key ") raw.after-rename=" res "\n")
+                                  p (println "\n>o> >>??>> (" key ") raw.after-rename=" res "\n")
 
 
                                   res2 (cond
@@ -729,16 +736,19 @@
                                   ;res2 (raw-type-mapping table-name res2)
 
 
-                                  ;_ (System/exit 0)
+                                  p (println ">o> [handle not-additional]
+                                  table-name=" table-name "\n
+                                  res2=" res2 "\n")
 
-                                  res2 (postgres-cfg-to-schema table-name res2)
+
+                                  res3 (postgres-cfg-to-schema table-name res2)
 
                                   ]
 
-                              (println "\n>o> res2=" res2 "\n")
+                              (println "\n>o> res3=" res3 "\n")
                               (println ">o> -------------------------------------")
 
-                              (into inner-acc res2))        ; Concat res2 into inner-acc
+                              (into inner-acc res3))        ; Concat res2 into inner-acc
 
                             (= (name key) "_additional")
                             (let [p (println ">o> [handle _additional]")
@@ -1168,52 +1178,75 @@
 
 
 
-        ;;; :users-schema-raw
-        ;data {
-        ;      :raw [{:users {}}],
-        ;      :raw-schema-name :users-schema-raw
-        ;      }
-        ;res (create-raw-schema data)
-        ;p (println ">o> create-raw-schema (" (:raw-schema-name data) ") = " res)
-        ;
-        ;
-        ;
-        ;
-        ;;; :groups-schema-response-user-simple-raw
-        ;;; :groups-schema-response-user-simple
-        ;;; :groups-schema-response-put-users
-        ;;; example how to extract & merge meta-data-infos (PUT "/:group-id/users/")
-        ;data {
-        ;      :raw [
-        ;            {:groups {:wl ["email" "person_id"] :rename {"person_id" "person-id"}}}
-        ;            {:users {:wl ["institutional_id" "id" "login" "created_at" "updated_at"] :rename {"institutional_id" "institutional-id"}}}
-        ;            ],
-        ;      :raw-schema-name :groups-schema-response-user-simple-raw
-        ;
-        ;      :schemas [
-        ;                {:groups-schema-response-user-simple {
-        ;                                                      ;:template :groups-schema-response-user-simple-raw
-        ;                                                      :value-types "maybe"
-        ;                                                      :types [{:id {:value-type nil}}]
-        ;                                                      :bl [:login :created_at :updated_at]
-        ;                                                      }}
-        ;
-        ;                {:groups-schema-response-put-users {
-        ;                                                    ;:template :groups-schema-response-user-simple-raw
-        ;                                                    ;:value-types "maybe"
-        ;                                                    :types [
-        ;                                                            {:email {:value-type "maybe"}}
-        ;                                                            ;{:institutional_id {:value-type "maybe"}}
-        ;                                                            {:institutional-id {:value-type "maybe"}}
-        ;                                                            {:login {:value-type "maybe"}}
-        ;                                                            ]
-        ;                                                    ;:bl [:login :created_at :updated_at]
-        ;                                                    }}
-        ;                ]
-        ;      }
-        ;res (create-raw-schema data)
-        ;res2 (create-schemas-by-config data)
-        ;p (println ">o> 6create-raw-schema (" (:raw-schema-name data) ") = " res)
+        ;; :users-schema-raw
+        data {
+              :raw [{:users {}}],
+              :raw-schema-name :users-schema-raw
+              }
+        res (create-raw-schema data)
+        p (println ">o> create-raw-schema (" (:raw-schema-name data) ") = " res)
+
+
+
+
+        ;; :groups-schema-response-user-simple-raw
+        ;; :groups-schema-response-user-simple
+        ;; :groups-schema-response-put-users
+        ;; example how to extract & merge meta-data-infos (PUT "/:group-id/users/")
+        data {
+              :raw [
+                    ;{:groups {:wl ["email" "person_id"] :_rename {"person_id" "person-id"}}}
+                    ;{:users {:wl ["institutional_id" "id" "login" "created_at" "updated_at"] :_rename {"institutional_id" "institutional-id"}}}
+
+                    ;{:groups {:wl [:email :person_id] }}
+                    ;{:users {:wl [:institutional_id :id :login :created_at :updated_at] }}
+
+                    ;{:users {:wl [:email :person_id] }}
+
+                    ;{:users {:wl [:id :email  :institutional_id  :login :created_at :updated_at :person_id] }} ;; broken
+                    {:users {:wl ["id" "email"  "institutional_id"  "login" "created_at" "updated_at" "person_id"] }}
+                    ],
+              :raw-schema-name :groups-schema-response-user-simple-raw
+
+              :schemas [
+                        {:groups.schema-response-user-simple {
+                                                              :alias "schema_response-user-simple"
+                                                              :value-types "maybe"
+                                                              :types [{:id {:value-type TYPE_NOTHING}}]
+                                                              :bl [:login :created_at :updated_at]
+                                                              }}
+
+                        {:groups.schema-update-group-user-list {
+                                                              :alias "schema_update-group-user-list"
+                                                              :key-types "optional"
+                                                              :types [{:id {:key-type TYPE_NOTHING}}]
+                                                              :bl [:login :created_at :updated_at :person_id]
+                                                              }}
+                        ; ;; bak
+                        ;{:groups-schema-response-user-simple {
+                        ;                                      :alias "schema_response-user-simple"
+                        ;                                      ;:template :groups-schema-response-user-simple-raw
+                        ;                                      :value-types "maybe"
+                        ;                                      :types [{:id {:value-type nil}}]
+                        ;                                      :bl [:login :created_at :updated_at]
+                        ;                                      }}
+
+                        ;{:groups-schema-response-put-users {
+                        ;                                    ;:template :groups-schema-response-user-simple-raw
+                        ;                                    ;:value-types "maybe"
+                        ;                                    :types [
+                        ;                                            {:email {:value-type "maybe"}}
+                        ;                                            ;{:institutional_id {:value-type "maybe"}}
+                        ;                                            {:institutional-id {:value-type "maybe"}}
+                        ;                                            {:login {:value-type "maybe"}}
+                        ;                                            ]
+                        ;                                    ;:bl [:login :created_at :updated_at]
+                        ;                                    }}
+                        ]
+              }
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+        p (println ">o> 6create-raw-schema >>> (" (:raw-schema-name data) ") = " res)
         ;p (println ">o> 7create-raw-schema (" (:raw-schema-name data) ") = " res2)
 
 
