@@ -36,6 +36,7 @@
 
 
 
+(def TYPE_NOTHING "nothing")
 (def TYPE_REQUIRED "required")
 (def TYPE_OPTIONAL "optional")
 (def TYPE_MAYBE "maybe")
@@ -128,7 +129,7 @@
         value (into {} value)
 
         res (swap! schema-cache assoc key value)
-        ]res)
+        ] res)
   )
 
 
@@ -139,10 +140,13 @@
                       (s/optional-key :en) (s/maybe s/Str)}
 
 
-        p (println ">o> !!1 type-mapping-enums.key=" key)
+        p (println ">o> !!1 type-mapping-enums.key=" key (class key))
         enum-map {"collections.default_resource_type" (get-enum :collections_default_resource_type)
                   "collections.layout" (get-enum :collections_layout)
                   "collections.sorting" (get-enum :collections_sorting)
+
+
+                  "groups.type" (get-enum :groups.type)
 
 
                   "app_settings.about_pages" schema-de-en
@@ -173,6 +177,7 @@
                   }
 
         ;p (println ">o> akey=" key)
+        p (println ">o> akey=" key (class key))
         ;p (println ">o> akeys=" (keys enum-map))
 
         res (get enum-map key nil)
@@ -251,9 +256,48 @@
   [maps key]
   (some (fn [m] (get m key)) maps))
 
+
+
+
+
+
+
+
+(comment
+  (let [
+        my-type [{:id {:key-type nil}} {:created_by_user_id {:value-type "maybe"}} {:institutional_id {:value-type "maybe"}}
+                 {:institutional_name {:value-type "maybe"}} {:institution {:value-type "maybe"}}]
+
+        res (get-in my-type [:id :key-type])
+
+
+        ;res (fetch-value-by-key types :id)
+        ]
+    res
+    )
+
+  )
+
+
+
+
+
 (defn revise-schema-types [table-name column_name column_type type-spec types key-types value-types]
 
   (let [
+
+        p (println "\n>o> [revise-schema-types] >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n
+        table-name=" table-name "\n
+        column_name=" column_name "\n
+        column_type=" column_type "\n
+        type-spec=" type-spec "\n
+        types=" types "\n
+        keys-types=" key-types "\n
+        value-types=" value-types "\n
+        >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        ")
+
+
         ;;key-type TYPE_OPTIONAL
         ;;value-type TYPE_MAYBE
         ;
@@ -272,11 +316,34 @@
         ;p (println ">o> revise-schema-types.types=" types)
         ;p (println ">o> revise-schema-types.key-types=" key-types)
         ;p (println ">o> revise-schema-types.value-types=" value-types)
+        ;p (println ">o> val=" val)
+
+
+        ;p (println "\n>o> [revise-schema-types] >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+        ;p (println ">o> type-spec=" type-spec)
+        ;p (println ">o> types=" types)
+        ;p (println ">o> key-types=" key-types)
+        ;p (println ">o> value-types=" value-types)
 
         ;; overwrite schema types, use :key-types as default and overwrite it by specific :key-type
         val (fetch-value-by-key types column_name)
+
         key-type (get val :key-type)
         value-type (get val :value-type)
+        ;key-type (:key-type val)
+        ;value-type (:value-type val)
+
+
+        ;key-type (get-in types [(keyword column_name) :key-type])
+        ;value-type (get-in types [(keyword column_name) :value-type])
+
+
+
+
+        ;p (println ">o> val=" val)
+        p (println ">o> >>>>>>>> val=" val)
+        p (println ">o> >>>>>>>> key-type=" key-type)
+        ;p (println ">o> value-type=" value-type)
 
         key-type (if (not (nil? key-types))
                    (if (nil? key-type) key-types key-type)
@@ -289,12 +356,18 @@
 
 
 
-        ;p (println ">o> val=" val)
-        p (println ">o> key-type=" key-type)
-        p (println ">o> value-type=" value-type)
+        ;p (println ">o> final.key-type=" key-type)
+        ;p (println ">o> final.value-type=" value-type)
+        ;p (println ">o> [revise-schema-types] <<<<<<<<<<<<<<< before <<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n
+        ;type-mapping-key=" type-mapping-key "\n
+        ;column_name=" column_name "\n
+        ;key-type=" key-type "\n
+        ;value-type=" value-type "\n
+        ;")
 
         keySection (cond (= key-type TYPE_REQUIRED) (s/required-key (keyword column_name))
                          (= key-type TYPE_OPTIONAL) (s/optional-key (keyword column_name))
+                         (= key-type TYPE_NOTHING)  (keyword column_name)
                          :else (do
                                  ;(println ">o> nix")
                                  (keyword column_name))
@@ -315,7 +388,20 @@
                        )
 
         ;p (println ">o> revise-schema-types, final-result  (" key ")=>> " {keySection valueSection})
-        p (println ">>o> !!! [set-schema], ?? final-result  (" key ")=>> " {keySection valueSection})
+
+        p (println ">o> [revise-schema-types] <<<<<<<<<<<<<<< before <<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n
+        type-mapping-key=" type-mapping-key "\n
+        column_name=" column_name "\n
+        key-type=" key-type "\n
+        value-type=" value-type "\n
+        ")
+
+        p (println ">>o> !!! [set-schema], ?? final-result  (" (table-name "." column_name) ")  (" key ")=>> " {keySection valueSection})
+
+
+        ;p (if (= (table-name "." column_name) :groups.type)
+        ;   (throw (Exception. "groups.type INFO????????????")))
+
         ]
 
     {keySection valueSection}
@@ -379,13 +465,15 @@
                                 key (name key)
 
 
-                                ;p (println ">o> HERE WE GO\n---------------------------------")
-                                ;p (println ">o> table-name=" table-name)
-                                ;p (println ">o> wl-attr=" wl-attr)
-                                ;p (println ">o> bl-attr=" bl-attr)
-                                ;p (println ">o> types-attr=" types-attr)
-                                ;;p (println ">o> rename-attr=" rename-attr)
-                                ;p (println ">o> key=" key)
+                                p (println ">o> X HERE WE GO\n---------------------------------")
+                                p (println ">o> X table-name=" table-name)
+                                p (println ">o> X wl-attr=" wl-attr)
+                                p (println ">o> X bl-attr=" bl-attr)
+                                p (println ">o> X types-attr=" types-attr)
+                                ;p (println ">o> rename-attr=" rename-attr)
+                                p (println ">o> X key=" key)
+                                p (println ">o> X key-types=" key-types)
+                                p (println ">o> X value-types=" value-types)
 
 
                                 res schema-raw
@@ -468,11 +556,23 @@
                                           (keyword column_name))
                                   )
 
-
-                 type-mapping-key (str table-name "." column_name)
+                 ;; FYI: <table>.<column> eg.: "groups.type"
+                 type-mapping-key (str (name table-name) "." column_name)
 
                  type-mapping-enums-res (type-mapping-enums type-mapping-key)
-                 type-mapping-res (type-mapping data_type)
+                 type-mapping-res (type-mapping data_type)  ;raw-mapping
+
+
+                 p (println ">o> abc?????????" type-mapping-key)
+
+                 ;_ (if (= type-mapping-key :groups.type)
+                 ;     (do
+                 p (println ">o> groups.type")
+                 p (println ">o> groups.type =>> type-mapping-res=" type-mapping-res "(" data_type ")")
+                 p (println ">o> groups.type =>> type-mapping-enums-res=" type-mapping-enums-res)
+                 ;(throw (Exception. "groups.type INFO????????????")
+                 ;)
+                 ;))
 
                  ;p (println ">o> final-result =>> type-mapping-key=" type-mapping-key)
 
@@ -484,6 +584,9 @@
                                 ;:else valueSection
 
 
+                                (not (nil? type-mapping-enums-res)) (if (= value-type TYPE_MAYBE)
+                                                                      (s/maybe type-mapping-enums-res)
+                                                                      type-mapping-enums-res)
 
 
                                 (not (nil? type-mapping-res)) (if (= value-type TYPE_MAYBE)
@@ -497,9 +600,6 @@
 
 
 
-                                (not (nil? type-mapping-enums-res)) (if (= value-type TYPE_MAYBE)
-                                                                      (s/maybe type-mapping-enums-res)
-                                                                      type-mapping-enums-res)
 
 
 
@@ -511,7 +611,7 @@
                                 )
 
 
-                 p (println ">o> final-result =>> " {keySection valueSection})
+                 p (println ">o> [postgres-cfg-to-schema] table= " table-name ", final-result =>> " {keySection valueSection})
                  p (println ">oo>  --------------------------------")
 
 
@@ -594,7 +694,7 @@
 
                           (cond
                             (not (str/starts-with? (name key) "_"))
-                            (let [p (println ">o> hmmmmmmm")
+                            (let [p (println ">o> [handle not-additional]")
 
                                   table-name key
                                   wl-attr (:wl value)
@@ -641,7 +741,7 @@
                               (into inner-acc res2))        ; Concat res2 into inner-acc
 
                             (= (name key) "_additional")
-                            (let [p (println ">o> hmmmmmmm22")
+                            (let [p (println ">o> [handle _additional]")
 
                                   table-name key
 
@@ -983,7 +1083,7 @@
               :raw-schema-name :groups-schema-with-pagination-raw
 
               :schemas [
-                        {:groups-schema-with-pagination {:key-types "optional" :alias "schema_query-groups"}}
+                        {:groups.schema-query-groups {:key-types "optional" :alias "schema_query-groups"}}
                         ;{:groups-schema-response-put {
                         ;                              ;:template :groups-schema-with-pagination-raw
                         ;                              :wl ["name" "type" "institution" "institutional_id" "institutional_name" "created_by_user_id"]}}
@@ -1019,25 +1119,44 @@
 
 
 
-        ;;; :groups-schema-raw
-        ;;; :groups-schema-response-put
-        ;data {
-        ;      :raw [{:groups {}}],
-        ;      :raw-schema-name :groups-schema-raw
-        ;      ;:schemas [
-        ;      ;          {:groups-schema-response-put {:alias "schema_update-group"
-        ;                                                   :template :groups-schema-with-pagination-raw
-        ;      ;                                        :wl ["name" "type" "institution" "institutional_id" "institutional_name" "created_by_user_id"]}}
-        ;      ;          ]
-        ;      }
-        ;res (create-raw-schema data)
-        ;;res2 (create-schemas-by-config data)
-        ;p (println ">o> 3create-raw-schema (" (:raw-schema-name data) ") = " res)
-        ;p (println ">o> 4create-raw-schema (" (:raw-schema-name data) ") = " res2)
-        ;
-        ;
-        ;
-        ;
+        ;; :groups-schema-raw
+        ;; :groups-schema-response-put
+        data {
+              :raw [{:groups {}}],
+              :raw-schema-name :groups-schema-raw
+              :schemas [
+                        ;{:groups-schema-response-put {:alias "schema_update-group"
+                        ;                              :template :groups-schema-with-pagination-raw
+                        ;                              :wl ["name" "type" "institution" "institutional_id" "institutional_name" "created_by_user_id"]}
+                        ;                          }
+                        {:groups.schema-update-group {:alias "schema_update-group"
+                                                      :key-types "optional"
+                                                      :value-types "maybe"
+                                                      :types [{:name {:value-type TYPE_NOTHING}} {:type {:value-type TYPE_NOTHING}}]
+                                                      :wl ["name" "type" "institution" "institutional_id" "institutional_name" "created_by_user_id"]}
+                         }
+                        {:groups.schema-export-group {:alias "schema_export-group"
+                                                      :key-types "optional"
+                                                      ;:value-types "maybe"
+                                                      :types [
+                                                              {:id {:key-type TYPE_NOTHING}}
+                                                              {:created_by_user_id {:value-type "maybe"}}
+                                                              {:institutional_id {:value-type "maybe"}}
+                                                              {:institutional_name {:value-type "maybe"}}
+                                                              {:institution {:value-type "maybe"}}]
+                                                      ;:wl ["name" "type" "institution" "institutional_id" "institutional_name" "created_by_user_id"]
+                                                      }
+                         }
+                        ]
+              }
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+        p (println ">o> 3create-raw-schema (" (:raw-schema-name data) ") = " res)
+        p (println ">o> 4create-raw-schema (" (:raw-schema-name data) ") = " res2)
+
+
+
+
         ;;; :users-schema-raw
         ;data {
         ;      :raw [{:users {}}],
