@@ -367,7 +367,7 @@
 
         keySection (cond (= key-type TYPE_REQUIRED) (s/required-key (keyword column_name))
                          (= key-type TYPE_OPTIONAL) (s/optional-key (keyword column_name))
-                         (= key-type TYPE_NOTHING)  (keyword column_name)
+                         (= key-type TYPE_NOTHING) (keyword column_name)
                          :else (do
                                  ;(println ">o> nix")
                                  (keyword column_name))
@@ -1204,7 +1204,7 @@
                     ;{:users {:wl [:email :person_id] }}
 
                     ;{:users {:wl [:id :email  :institutional_id  :login :created_at :updated_at :person_id] }} ;; broken:   ;; TODO: fix this to handle [:foo :bar]
-                    {:users {:wl ["id" "email"  "institutional_id"  "login" "created_at" "updated_at" "person_id"] }}
+                    {:users {:wl ["id" "email" "institutional_id" "login" "created_at" "updated_at" "person_id"]}}
                     ],
               :raw-schema-name :groups-schema-response-user-simple-raw
 
@@ -1217,11 +1217,11 @@
                                                               }}
 
                         {:groups.schema-update-group-user-list {
-                                                              :alias "schema_update-group-user-list"
-                                                              :key-types "optional"
-                                                              :types [{:id {:key-type TYPE_NOTHING}}]
-                                                              :bl [:login :created_at :updated_at :person_id]
-                                                              }}
+                                                                :alias "schema_update-group-user-list"
+                                                                :key-types "optional"
+                                                                :types [{:id {:key-type TYPE_NOTHING}}]
+                                                                :bl [:login :created_at :updated_at :person_id]
+                                                                }}
                         ; ;; bak
                         ;{:groups-schema-response-user-simple {
                         ;                                      :alias "schema_response-user-simple"
@@ -1316,13 +1316,54 @@
 
 (defn create-users-schema []
   (let [
-        ;; :users-schema-raw
-        users-meta-raw (fetch-table-meta-raw "users")
-        _ (set-schema :users-schema-raw users-meta-raw)
 
+        ;; :groups-schema-raw
         ;; :groups-schema-response-put
-        whitelist-key-names ["id" "institutional_id" "email"]
-        _ (set-schema :users-schema-payload (create-schema-by-data "users" users-meta-raw [] [] [] whitelist-key-names))
+        data {
+              :raw [{:users {}}],
+              :raw-schema-name :users-schema-raw
+              :schemas [
+                        ;{:groups-schema-response-put {:alias "schema_update-group"
+                        ;                              :template :groups-schema-with-pagination-raw
+                        ;                              :wl ["name" "type" "institution" "institutional_id" "institutional_name" "created_by_user_id"]}
+                        ;                          }
+                        {:users-schema-payload {:alias "maru.update/schema"
+                                                :key-types "optional"
+                                                :types [{:accepted_usage_terms_id {:value-type TYPE_MAYBE}} {:notes {:value-type TYPE_MAYBE}}]
+                                                ;:wl ["accepted_usage_terms_id" "autocomplete" "email" "institution" "first_name" "last_name" "login" "note" "searchable"]
+                                                :wl [:accepted_usage_terms_id :autocomplete :email :institution :first_name :last_name :login :note :searchable]
+                                                }
+                         }
+                        ;{:users-schema-payload {:alias "schema_update-group"
+                        ;                        :key-types "optional"
+                        ;                        :value-types "maybe"
+                        ;                        :types [{:name {:value-type TYPE_NOTHING}} {:type {:value-type TYPE_NOTHING}}]
+                        ;                        :wl [:name :type :institution :institutional_id :institutional_name :created_by_user_id]
+                        ;                        :wl ["id" "institutional_id" "email"]
+                        ;                        }
+                        ; }
+
+                        ]
+              }
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+        p (println ">o> 3create-raw-schema (" (:raw-schema-name data) ") = " res)
+        p (println ">o> 4create-raw-schema (" (:raw-schema-name data) ") = " res2)
+
+
+
+
+
+
+
+        ;
+        ;;; :users-schema-raw
+        ;users-meta-raw (fetch-table-meta-raw "users")
+        ;_ (set-schema :users-schema-raw users-meta-raw)
+        ;
+        ;;; :groups-schema-response-put
+        ;whitelist-key-names ["id" "institutional_id" "email"]
+        ;_ (set-schema :users-schema-payload (create-schema-by-data "users" users-meta-raw [] [] [] whitelist-key-names))
         ]))
 
 (defn create-admins-schema []
@@ -1672,7 +1713,7 @@
         _ (set-enum :groups.type (s/enum "AuthenticationGroup" "InstitutionalGroup" "Group"))
         ;
         _ (create-groups-schema)
-        ;_ (create-users-schema)
+        _ (create-users-schema)
         ;_ (create-admins-schema)
         ;_ (create-workflows-schema)
         ;_ (create-collections-schema)
