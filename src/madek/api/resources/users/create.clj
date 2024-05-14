@@ -4,6 +4,10 @@
    [honey.sql.helpers :as sql]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
+
+   [madek.api.schema_cache :refer [get-schema]]
+
+
    [madek.api.utils.helper :refer [convert-map-if-exist]]
    [madek.api.utils.helper :refer [convert-map-if-exist f t]]
    [madek.api.utils.helper :refer [mslurp]]
@@ -34,19 +38,19 @@
 
 
 
-(def schema
-  {:person_id s/Uuid
-   (s/optional-key :accepted_usage_terms_id) (s/maybe s/Uuid)
-   (s/optional-key :email) email-validation
-   (s/optional-key :first_name) s/Str
-   (s/optional-key :institution) s/Str
-   (s/optional-key :institutional_id) s/Str
-   (s/optional-key :last_name) s/Str
-   (s/optional-key :login) s/Str
-   (s/optional-key :notes) (s/maybe s/Str)
-
-   ;(s/optional-key :settings) json-and-json-str-validation
-   (s/optional-key :settings) vector-or-hashmap-validation})
+;(def schema
+;  {:person_id s/Uuid
+;   (s/optional-key :accepted_usage_terms_id) (s/maybe s/Uuid)
+;   (s/optional-key :email) email-validation
+;   (s/optional-key :first_name) s/Str
+;   (s/optional-key :institution) s/Str
+;   (s/optional-key :institutional_id) s/Str
+;   (s/optional-key :last_name) s/Str
+;   (s/optional-key :login) s/Str
+;   (s/optional-key :notes) (s/maybe s/Str)
+;
+;   ;(s/optional-key :settings) json-and-json-str-validation
+;   (s/optional-key :settings) vector-or-hashmap-validation})
 
 
 
@@ -61,7 +65,8 @@
    :description (mslurp "./md/admin-users-post.md")
    :handler handle-create-user
    :middleware [wrap-authorize-admin!]
-   :parameters {:body schema}
+   ;:parameters {:body schema}
+   :parameters {:body (get-schema :create.users-schema-payload)}
    :responses {201 {:description "Created."
                     :body s/Any
                     ;:body get-user/schema

@@ -151,8 +151,8 @@
 
                   "groups.type" (get-enum :groups.type)
 
-                  ;"users.settings" vector-or-hashmap-validation
-                  "users.settings" s/Any
+                  "users.settings" vector-or-hashmap-validation
+                  ;"users.settings" s/Any
 
 
                   "app_settings.about_pages" schema-de-en
@@ -1363,20 +1363,19 @@
                                                 }
                          }
 
+                        {:create.users-schema-payload {:alias "mar.users.create/schema"
+                                                :key-types "optional"
 
+                                                :types [
+                                                        {:person_id {:key-type TYPE_NOTHING}}
 
+                                                        {:accepted_usage_terms_id {:value-type TYPE_MAYBE}}
+                                                        {:notes {:value-type TYPE_MAYBE}}
+                                                        ]
 
-
-
-                        ;{:users-schema-payload {:alias "schema_update-group"
-                        ;                        :key-types "optional"
-                        ;                        :value-types "maybe"
-                        ;                        :types [{:name {:value-type TYPE_NOTHING}} {:type {:value-type TYPE_NOTHING}}]
-                        ;                        :wl [:name :type :institution :institutional_id :institutional_name :created_by_user_id]
-                        ;                        :wl ["id" "institutional_id" "email"]
-                        ;                        }
-                        ; }
-
+                                                :wl [:person_id :accepted_usage_terms_id  :email :institution :institution_id :first_name  :last_name :login :note :settings]
+                                                }
+                         }
                         ]
               }
         res (create-raw-schema data)
