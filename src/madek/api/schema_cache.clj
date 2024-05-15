@@ -1404,55 +1404,150 @@
 
 (defn create-collections-schema []
   (let [
-        additional-order [
-                          {:column_name "order", :data_type "enum::collections_sorting"}
-                          {:column_name "me_get_metadata_and_previews", :data_type "boolean"}
-                          {:column_name "me_edit_permission", :data_type "boolean"}
-                          {:column_name "me_edit_metadata_and_relations", :data_type "boolean"}
-                          ]
-        additional-schema-list-raw (concat schema_pagination_raw schema_full_data_raw additional-order)
 
-        ;; :workflows-schema-raw
-        collections-meta-raw (fetch-table-meta-raw "collections" additional-schema-list-raw)
-        p (println ">o> workflows-meta-raw=" collections-meta-raw)
-        _ (set-schema :collections-schema-raw collections-meta-raw)
-        _ (set-schema :collections-schema (create-schema-by-data "collections" collections-meta-raw))
+        data {
+              :raw [{:collections {}}],
+              :raw-schema-name :collections-schema-raw
+              :schemas [
+                        {:collections.schema_collection-import {
+                                                                :alias "mar.collections/schema_collection-import"
+                                                                :key-types "optional"
+                                                                :types [
+                                                                        ;{:id {:key-type TYPE_NOTHING}}
+
+                                                                        ;{:responsible_user_id {:value-type TYPE_MAYBE}}
+                                                                        ;{:clipboard_user_id {:value-type TYPE_MAYBE}}
+                                                                        {:default_context_id {:value-type TYPE_MAYBE}}
+                                                                        {:workflow_id {:value-type TYPE_MAYBE}}
+                                                                        ;{:responsible_delegation_id {:value-type TYPE_MAYBE}}
+                                                                        ]
+                                                                }}
+
+                        {:collections.schema_collection-export {
+                                                                :alias "mar.collections/schema_collection-export"
+                                                                :key-types "optional"
+                                                                :types [
+                                                                        {:id {:key-type TYPE_NOTHING}}
+
+                                                                        {:responsible_user_id {:value-type TYPE_MAYBE}}
+                                                                        {:default_context_id {:value-type TYPE_MAYBE}}
+                                                                        {:clipboard_user_id {:value-type TYPE_MAYBE}}
+                                                                        {:workflow_id {:value-type TYPE_MAYBE}}
+                                                                        {:responsible_delegation_id {:value-type TYPE_MAYBE}}
+                                                                        ]
+                                                                }}
+
+                        {:collections.schema_collection-update {
+                                                                :alias "mar.collections/schema_collection-update"
+                                                                :key-types "optional"
+                                                                :types [
+                                                                        ;{:id {:key-type TYPE_NOTHING}}
+                                                                        ;
+                                                                        ;{:responsible_user_id {:value-type TYPE_MAYBE}}
+                                                                        {:default_context_id {:value-type TYPE_MAYBE}}
+                                                                        ;{:clipboard_user_id {:value-type TYPE_MAYBE}}
+                                                                        {:workflow_id {:value-type TYPE_MAYBE}}
+                                                                        ;{:responsible_delegation_id {:value-type TYPE_MAYBE}}
+                                                                        ]
+                                                                :wl [:layout :is_master :sorting :default_context_id :workflow_id :default_resource_type]
+                                                                }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+        p (println ">o> 6create-raw-schema >>> (" (:raw-schema-name data) ") = " res)
+        ;p (println ">o> 7create-raw-schema (" (:raw-schema-name data) ") = " res2)
 
 
-        ;; :collections-schema-get
-        whitelist-key-names ["collection_id" "creator_id" "responsible_user_id" "clipboard_user_id" "workflow_id" "responsible_delegation_id"
-                             "public_get_metadata_and_previews"]
+        data {
+              :raw [{:collections {:wl ["id" "order" "creator_id" "responsible_user_id" "clipboard_user_id" "workflow_id" "responsible_delegation_id" "get_metadata_and_previews"]
+                                   :rename ["get_metadata_and_previews" "public_get_metadata_and_previews"
+                                            "id" "collection_id"]
+                                   }}
+                    {:collection_user_permissions {:wl ["get_metadata_and_previews" "edit_permission" "edit_metadata_and_relations"]
 
+                                   :rename ["get_metadata_and_previews" "me_get_metadata_and_previews"
+                                            "edit_permission" "me_edit_permission"
+                                            "edit_metadata_and_relations" "me_edit_metadata_and_relations"]
+                                   }}
+                    {:_additional (concat schema_pagination_raw schema_full_data_raw)}
+
+                    ],
+              :raw-schema-name :collections-collection_user_permission-schema-raw
+
+              :schemas [{:collections.schema_collection-query {
+                                                      :alias "mar.collections/schema_collection-query"
+                                                      :key-types "optional"
+                                                      ;:types [
+                                                      ;        ;{:id {:key-type TYPE_NOTHING}}
+                                                      ;        ;
+                                                      ;        ;{:responsible_user_id {:value-type TYPE_MAYBE}}
+                                                      ;        {:default_context_id {:value-type TYPE_MAYBE}}
+                                                      ;        ;{:clipboard_user_id {:value-type TYPE_MAYBE}}
+                                                      ;        {:workflow_id {:value-type TYPE_MAYBE}}
+                                                      ;        ;{:responsible_delegation_id {:value-type TYPE_MAYBE}}
+                                                      ;        ]
+                                                      ;:wl [:layout :is_master :sorting :default_context_id :workflow_id :default_resource_type]
+                                                      }}]
+
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+        ;p (println ">o> 6create-raw-schema >>> (" (:raw-schema-name data) ") = " res)
+        ;p (println ">o> 7create-raw-schema (" (:raw-schema-name data) ") = " res2)
+
+
+        ;additional-order [
+        ;                  {:column_name "order", :data_type "enum::collections_sorting"}
+        ;                  {:column_name "me_get_metadata_and_previews", :data_type "boolean"}
+        ;                  {:column_name "me_edit_permission", :data_type "boolean"}
+        ;                  {:column_name "me_edit_metadata_and_relations", :data_type "boolean"}
+        ;                  ]
         ;additional-schema-list-raw (concat schema_pagination_raw schema_full_data_raw additional-order)
-
-        collections-meta (update-column-value collections-meta-raw "id" "collection_id")
-        collections-meta (update-column-value collections-meta "get_metadata_and_previews" "public_get_metadata_and_previews")
-
-        ;_ (set-schema :collections-schema-get (create-schema-by-data "collections" collections-meta additional-schema-list-raw [] [] whitelist-key-names))
-        _ (set-schema :collections-schema-get (create-schema-by-data "collections" collections-meta [] [] [] whitelist-key-names))
-
-
-
-        ;; :collections-schema-put
-        whitelist-key-names ["layout" "is_master" "sorting" "default_context_id" "workflow_id" "default_resource_type"
-                             ]
-
-        _ (set-schema :collections-schema-put (create-schema-by-data "collections" collections-meta-raw [] [] [] whitelist-key-names))
-
-
-        p (println ">o> ???????? :collections-schema-get=" (get-schema :collections-schema-put))
-
-
-
-
-        ;; :collections-schema-post
-        whitelist-key-names ["layout" "is_master" "sorting" "default_context_id" "workflow_id" "default_resource_type"
-                             "responsible_user_id" "responsible_delegation_id" "get_metadata_and_previews"
-                             ]
-
-        _ (set-schema :collections-schema-post (create-schema-by-data "collections" collections-meta-raw [] [] [] whitelist-key-names))
-
-        p (println ">o> ???????? :collections-schema-get=" (get-schema :collections-schema-post))
+        ;
+        ;;; :workflows-schema-raw
+        ;collections-meta-raw (fetch-table-meta-raw "collections" additional-schema-list-raw)
+        ;p (println ">o> workflows-meta-raw=" collections-meta-raw)
+        ;_ (set-schema :collections-schema-raw collections-meta-raw)
+        ;_ (set-schema :collections-schema (create-schema-by-data "collections" collections-meta-raw))
+        ;
+        ;
+        ;;; :collections-schema-get
+        ;whitelist-key-names ["collection_id" "creator_id" "responsible_user_id" "clipboard_user_id" "workflow_id" "responsible_delegation_id"
+        ;                     "public_get_metadata_and_previews"]
+        ;
+        ;;additional-schema-list-raw (concat schema_pagination_raw schema_full_data_raw additional-order)
+        ;
+        ;collections-meta (update-column-value collections-meta-raw "id" "collection_id")
+        ;collections-meta (update-column-value collections-meta "get_metadata_and_previews" "public_get_metadata_and_previews")
+        ;
+        ;;_ (set-schema :collections-schema-get (create-schema-by-data "collections" collections-meta additional-schema-list-raw [] [] whitelist-key-names))
+        ;_ (set-schema :collections-schema-get (create-schema-by-data "collections" collections-meta [] [] [] whitelist-key-names))
+        ;
+        ;
+        ;
+        ;;; :collections-schema-put
+        ;whitelist-key-names ["layout" "is_master" "sorting" "default_context_id" "workflow_id" "default_resource_type"
+        ;                     ]
+        ;
+        ;_ (set-schema :collections-schema-put (create-schema-by-data "collections" collections-meta-raw [] [] [] whitelist-key-names))
+        ;
+        ;
+        ;p (println ">o> ???????? :collections-schema-get=" (get-schema :collections-schema-put))
+        ;
+        ;
+        ;
+        ;
+        ;;; :collections-schema-post
+        ;whitelist-key-names ["layout" "is_master" "sorting" "default_context_id" "workflow_id" "default_resource_type"
+        ;                     "responsible_user_id" "responsible_delegation_id" "get_metadata_and_previews"
+        ;                     ]
+        ;
+        ;_ (set-schema :collections-schema-post (create-schema-by-data "collections" collections-meta-raw [] [] [] whitelist-key-names))
+        ;
+        ;p (println ">o> ???????? :collections-schema-get=" (get-schema :collections-schema-post))
 
         ]))
 
@@ -1719,7 +1814,7 @@
 
         _ (create-admins-schema)
         _ (create-workflows-schema)
-        ;_ (create-collections-schema)
+        _ (create-collections-schema)
         ;_ (create-collection-media-entry-schema)
         ;_ (create-collection-collection-arcs-schema)
         ;_ (create-app-settings-schema)

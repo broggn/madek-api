@@ -6,6 +6,9 @@
    [madek.api.authorization :as authorization]
    [madek.api.resources.collections.index :refer [get-index]]
    [madek.api.resources.shared :as sd]
+
+   [madek.api.schema_cache :refer [get-schema]]
+
    [madek.api.utils.helper :refer [convert-map-if-exist f t]]
    [madek.api.utils.helper :refer [mslurp]]
    [next.jdbc :as jdbc]
@@ -89,6 +92,11 @@
     (catch Exception ex
       (sd/response_failed (str "Could not delete collection: " (ex-message ex)) 500))))
 
+
+
+
+
+
 ; TODO :layout and :sorting are special types
 (def schema_layout_types
   (s/enum "grid" "list" "miniature" "tiles"))
@@ -141,6 +149,7 @@
   {(s/optional-key :page) s/Int
    (s/optional-key :count) s/Int
    (s/optional-key :full_data) s/Bool
+
    (s/optional-key :collection_id) s/Uuid
    (s/optional-key :order) s/Str
 
@@ -151,7 +160,10 @@
    (s/optional-key :workflow_id) s/Uuid
    (s/optional-key :responsible_delegation_id) s/Uuid
 
+   ;; collections
    (s/optional-key :public_get_metadata_and_previews) s/Bool
+
+   ;; collection_user_permissions
    (s/optional-key :me_get_metadata_and_previews) s/Bool
    (s/optional-key :me_edit_permission) s/Bool
    (s/optional-key :me_edit_metadata_and_relations) s/Bool})
@@ -180,6 +192,12 @@
 
    (s/optional-key :default_resource_type) schema_default_resource_type})
 
+
+
+
+
+
+
 (def ring-routes
   ["/"
    {:swagger {:tags ["api/collection"]}}
@@ -190,7 +208,7 @@
       :swagger {:produces ["application/json" "application/octet-stream"]}
       :parameters {:query schema_collection-query}
       :coercion reitit.coercion.schema/coercion
-      :responses {200 {:body {:collections [schema_collection-export]}}}}}]
+      :responses {200 {:body {:collections [(get-schema :collections.schema_collection-export)]}}}}}]
 
    ["collection"
     {:post
@@ -205,7 +223,7 @@
       :parameters {:body schema_collection-import}
       :middleware [authorization/wrap-authorized-user]
       :coercion reitit.coercion.schema/coercion
-      :responses {200 {:body schema_collection-export}
+      :responses {200 {:body (get-schema :collections.schema_collection-export)}
                   406 {:body s/Any}}}}]
 
    ["collection/:collection_id"
@@ -217,7 +235,7 @@
            :swagger {:produces "application/json"}
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:collection_id s/Uuid}}
-           :responses {200 {:body schema_collection-export}
+           :responses {200 {:body (get-schema :collections.schema_collection-export)}
                        404 {:body s/Any}
                        422 {:body s/Any}}}
 
@@ -245,7 +263,7 @@
                         :consumes "application/json"}
               :coercion reitit.coercion.schema/coercion
               :parameters {:path {:collection_id s/Uuid}}
-              :responses {200 {:body schema_collection-export}
+              :responses {200 {:body (get-schema :collections.schema_collection-export)}
                           404 {:body s/Any}
                           422 {:body s/Any}}}}]])
 
