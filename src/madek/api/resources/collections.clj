@@ -168,6 +168,26 @@
    (s/optional-key :me_edit_permission) s/Bool
    (s/optional-key :me_edit_metadata_and_relations) s/Bool})
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (def schema_collection-export
   {:id s/Uuid
    (s/optional-key :get_metadata_and_previews) s/Bool
@@ -206,7 +226,7 @@
      {:summary (sd/sum_usr "Query/List collections.")
       :handler handle_get-index
       :swagger {:produces ["application/json" "application/octet-stream"]}
-      :parameters {:query schema_collection-query}
+      :parameters {:query (get-schema :collections.schema_collection-query)}
       :coercion reitit.coercion.schema/coercion
       :responses {200 {:body {:collections [(get-schema :collections.schema_collection-export)]}}}}}]
 
