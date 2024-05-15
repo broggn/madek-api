@@ -247,8 +247,8 @@
                      :consumes "application/json"}
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:collection_id s/Uuid}
-                        :body schema_collection-update}
-           :responses {;200 {:body schema_collection-export} ;; TODO: fixme
+                        :body (get-schema :collections.schema_collection-update)}
+           :responses {;200 {:body (get-schema :collections.schema_collection-export)} ;; TODO: fixme
                        200 {:body s/Any}
                        404 {:body s/Any}
                        422 {:body s/Any}}}
