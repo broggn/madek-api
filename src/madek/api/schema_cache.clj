@@ -1545,14 +1545,51 @@
   (let [
         db-table "collection_media_entry_arcs"
 
-        ;; :workflows-schema-raw
-        collections-meta-raw (fetch-table-meta-raw db-table)
-        p (println ">o> collection_media_entry_arcs=" collections-meta-raw)
-        _ (set-schema :collections-schema-media-entry-arcs-raw collections-meta-raw)
-        _ (set-schema :collections-schema-media-entry-arcs (create-schema-by-data db-table collections-meta-raw))
+        data {
+              :raw [{:collection_media_entry_arcs {}}],
+              :raw-schema-name :collection-media-entry-arcs-schema-raw
 
-        _ (set-schema :collections-schema-media-entry-arcs-get (create-schema-by-data db-table collections-meta-raw [] [] [] []))
-        _ (set-schema :collections-schema-media-entry-arcs-modify (create-schema-by-data db-table collections-meta-raw [] [] [] ["highlight" "cover" "order" "position"]))
+              :schemas [
+                        {:collection_mea.schema_collection-media-entry-arc-export {
+                                                                                    :alias "mar.collection-meida-entry-arcs/schema_collection-media-entry-arc-export"
+                                                                                    :types [
+                                                                                            {:cover {:value-type TYPE_MAYBE}}
+                                                                                            {:order {:value-type TYPE_MAYBE}}
+                                                                                            {:position {:value-type TYPE_MAYBE}}
+                                                                                            ]
+                                                                                    }}
+
+
+                        {:collection_mea.schema_collection-media-entry-arc-update {
+                                                                                    :alias "mar.collection-media-entry-arcs/schema_collection-media-entry-arc-update"
+                                                                                    :key-types "optional"
+                                                                                    :wl [:highlight :cover :order :position]
+                                                                                    }}
+
+
+                        {:collection_mea.schema_collection-media-entry-arc-create {
+                                                                                    :alias "mar.collection-media-entry-arcs/schema_collection-media-entry-arc-create"
+                                                                                    :key-types "optional"
+                                                                                    :wl [:highlight :cover :order :position]
+                                                                                    }}
+
+                        ]
+
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+        ;
+        ;
+        ;;; :workflows-schema-raw
+        ;collections-meta-raw (fetch-table-meta-raw db-table)
+        ;p (println ">o> collection_media_entry_arcs=" collections-meta-raw)
+        ;_ (set-schema :collections-schema-media-entry-arcs-raw collections-meta-raw)
+        ;_ (set-schema :collections-schema-media-entry-arcs (create-schema-by-data db-table collections-meta-raw))
+        ;
+        ;_ (set-schema :collections-schema-media-entry-arcs-get (create-schema-by-data db-table collections-meta-raw [] [] [] []))
+        ;_ (set-schema :collections-schema-media-entry-arcs-modify (create-schema-by-data db-table collections-meta-raw [] [] [] ["highlight" "cover" "order" "position"]))
         ]))
 
 
@@ -1803,7 +1840,7 @@
         _ (create-admins-schema)
         _ (create-workflows-schema)
         _ (create-collections-schema)
-        ;_ (create-collection-media-entry-schema)
+        _ (create-collection-media-entry-schema)
         ;_ (create-collection-collection-arcs-schema)
         ;_ (create-app-settings-schema)
         ;_ (create-confidential-links-schema)
