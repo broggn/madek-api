@@ -1238,95 +1238,12 @@
                                                                 :types [{:id {:key-type TYPE_NOTHING}}]
                                                                 :bl [:login :created_at :updated_at :person_id]
                                                                 }}
-                        ; ;; bak
-                        ;{:groups-schema-response-user-simple {
-                        ;                                      :alias "schema_response-user-simple"
-                        ;                                      ;:template :groups-schema-response-user-simple-raw
-                        ;                                      :value-types "maybe"
-                        ;                                      :types [{:id {:value-type nil}}]
-                        ;                                      :bl [:login :created_at :updated_at]
-                        ;                                      }}
-
-                        ;{:groups-schema-response-put-users {
-                        ;                                    ;:template :groups-schema-response-user-simple-raw
-                        ;                                    ;:value-types "maybe"
-                        ;                                    :types [
-                        ;                                            {:email {:value-type "maybe"}}
-                        ;                                            ;{:institutional_id {:value-type "maybe"}}
-                        ;                                            {:institutional-id {:value-type "maybe"}}
-                        ;                                            {:login {:value-type "maybe"}}
-                        ;                                            ]
-                        ;                                    ;:bl [:login :created_at :updated_at]
-                        ;                                    }}
                         ]
               }
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
         p (println ">o> 6create-raw-schema >>> (" (:raw-schema-name data) ") = " res)
         ;p (println ">o> 7create-raw-schema (" (:raw-schema-name data) ") = " res2)
-
-
-
-
-
-
-
-
-
-        ;;; :groups-schema-response-put-users
-        ;data {
-        ;      :raw [
-        ;            {:groups {:rename ["person_id" "person-id" "institutional_id" "institutional-id"]}}
-        ;            ],
-        ;      :raw-schema-name :groups-schema-response-put-users
-        ;      }
-        ;res (create-raw-schema data)
-        ;p (println ">o> create-raw-schema (" (:raw-schema-name data) ") = " res)
-
-
-
-
-
-
-        ;;; :groups-schema-raw
-        ;;groups-meta-raw (fetch-table-meta-raw "groups" [{:column_name "type" :data_type "enum::groups.type" :is_nullable "NO"}])
-        ;additional-schema-list-raw (concat schema_pagination_raw schema_full_data_raw)
-        ;groups-meta-raw (fetch-table-meta-raw "groups" additional-schema-list-raw)
-        ;_ (set-schema :groups-schema-raw groups-meta-raw)
-        ;
-        ;;; :users-schema-raw
-        ;;users-meta-raw (fetch-table-meta-raw "users" [])
-        ;users-meta-raw (fetch-table-meta-raw "users")
-        ;_ (set-schema :users-schema-raw users-meta-raw)
-        ;
-        ;;; :groups-schema-with-pagination
-        ;;additional-schema-list-raw (concat schema_pagination_raw schema_full_data_raw)
-        ;p (println ">o> debug1")
-        ;;res (set-schema :groups-schema-with-pagination (create-schema-by-data "groups" groups-meta-raw additional-schema-list-raw))
-        ;res (set-schema :groups-schema-with-pagination (create-schema-by-data "groups" groups-meta-raw []))
-        ;
-        ;;; :groups-schema-response
-        ;;update-schema-list-raw [{:column_name "id", :data_type "uuid" :is_nullable "NO" :required true}]
-        ;update-schema-list-raw [{:column_name "id", :data_type "uuid"}]
-        ;res (set-schema :groups-schema-response (create-schema-by-data "groups" groups-meta-raw [] [] update-schema-list-raw []))
-        ;
-        ;;; :groups-schema-response-put
-        ;whitelist-key-names ["name" "type" "institution" "institutional_id" "institutional_name" "created_by_user_id"]
-        ;res (set-schema :groups-schema-response-put (create-schema-by-data "groups" groups-meta-raw [] [] [] whitelist-key-names))
-        ;
-        ;
-        ;;; :groups-schema-response-put-users
-        ;;; example how to extract & merge meta-data-infos (PUT "/:group-id/users/")
-        ;groups-users-meta-raw (concat (keep-maps-by-entry-values users-meta-raw ["email" "person_id"])
-        ;                        (keep-maps-by-entry-values groups-meta-raw ["id" "institutional_id"]))
-        ;
-        ;res (set-schema :groups-schema-response-user-simple (create-schema-by-data "groups" groups-users-meta-raw))
-        ;
-        ;;; TODO: needed renaming of keys, fix handler to get rid of this workaround
-        ;groups-users-meta-raw (update-column-value groups-users-meta-raw "person_id" "person-id")
-        ;groups-users-meta-raw (update-column-value groups-users-meta-raw "institutional_id" "institutional-id")
-        ;
-        ;res (set-schema :groups-schema-response-put-users (create-schema-by-data "groups" groups-users-meta-raw)) ;; TODO: name of keys
         ]))
 
 
@@ -1400,11 +1317,30 @@
 
 (defn create-admins-schema []
   (let [
-        ;; :users-schema-raw
-        admins-meta-raw (fetch-table-meta-raw "admins")
-        _ (set-schema :admins-schema-raw admins-meta-raw)
 
-        _ (set-schema :admins-schema (create-schema-by-data "admins" admins-meta-raw))
+        data {
+              :raw [{:admins {}}],
+              :raw-schema-name :groups-schema-raw
+              :schemas [
+                        {:admins.schema-export-admin {
+                                                      :alias "mar.admin/schema_export-admin"
+                                                      :key-types "optional"
+                                                      :types [{:id {:key-type TYPE_NOTHING}}]
+                                                      }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+        p (println ">o> 6create-raw-schema >>> (" (:raw-schema-name data) ") = " res)
+        ;p (println ">o> 7create-raw-schema (" (:raw-schema-name data) ") = " res2)
+
+
+        ;;; :users-schema-raw
+        ;admins-meta-raw (fetch-table-meta-raw "admins")
+        ;_ (set-schema :admins-schema-raw admins-meta-raw)
+        ;
+        ;_ (set-schema :admins-schema (create-schema-by-data "admins" admins-meta-raw))
         ]))
 
 
