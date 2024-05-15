@@ -1597,14 +1597,45 @@
   (let [
         db-table "collection_collection_arcs"
 
-        ;; :workflows-schema-raw
-        collections-meta-raw (fetch-table-meta-raw db-table)
-        p (println ">o> collection_collection_arcs=" collections-meta-raw)
-        _ (set-schema :collections-schema-collection-arcs-raw collections-meta-raw)
-        _ (set-schema :collections-schema-collection-arcs (create-schema-by-data db-table collections-meta-raw))
+        data {
+              :raw [{:collection_collection_arcs {}}],
+              :raw-schema-name :collection_collection_arcs-raw
 
-        _ (set-schema :collections-schema-collection-arcs-all (create-schema-by-data db-table collections-meta-raw [] [] [] []))
-        _ (set-schema :collections-schema-collection-arcs-min (create-schema-by-data db-table collections-meta-raw [] [] [] ["highlight" "order" "position"]))
+              :schemas [
+                        {:collection_carcs.schema_collection-collection-arc-export {
+                                                                                   :alias "mar.collection-collection-arcs/schema_collection-collection-arc-export"
+                                                                                   }}
+
+
+                        {:collection_carcs.schema_collection-collection-arc-update {
+                                                                                   :alias "mar.collection-collection-arcs/schema_collection-collection-arc-update"
+                                                                                   :key-types "optional"
+                                                                                   :wl [:highlight  :order :position]
+                                                                                   }}
+
+
+                        {:collection_carcs.schema_collection-collection-arc-create {
+                                                                                   :alias "mar.collection-collection-arcs/schema_collection-collection-arc-create"
+                                                                                   :key-types "optional"
+                                                                                   :wl [:highlight  :order :position]
+                                                                                   }}
+
+                        ]
+
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+
+        ;;; :workflows-schema-raw
+        ;collections-meta-raw (fetch-table-meta-raw db-table)
+        ;p (println ">o> collection_collection_arcs=" collections-meta-raw)
+        ;_ (set-schema :collections-schema-collection-arcs-raw collections-meta-raw)
+        ;_ (set-schema :collections-schema-collection-arcs (create-schema-by-data db-table collections-meta-raw))
+        ;
+        ;_ (set-schema :collections-schema-collection-arcs-all (create-schema-by-data db-table collections-meta-raw [] [] [] []))
+        ;_ (set-schema :collections-schema-collection-arcs-min (create-schema-by-data db-table collections-meta-raw [] [] [] ["highlight" "order" "position"]))
         ]))
 
 (defn create-app-settings-schema []
@@ -1841,7 +1872,7 @@
         _ (create-workflows-schema)
         _ (create-collections-schema)
         _ (create-collection-media-entry-schema)
-        ;_ (create-collection-collection-arcs-schema)
+        _ (create-collection-collection-arcs-schema)
         ;_ (create-app-settings-schema)
         ;_ (create-confidential-links-schema)
         ;_ (create-context-keys-schema)
