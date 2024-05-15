@@ -1346,6 +1346,40 @@
 
 (defn create-workflows-schema []
   (let [
+
+        data {
+              :raw [{:workflows {}}],
+              :raw-schema-name :workflows-schema-raw
+              :schemas [
+                        {:workflows.schema_create_workflow {
+                                                            :alias "mar.workflow/schema_create_workflow"
+                                                            :key-types "optional"
+                                                            :types [{:name {:key-type TYPE_NOTHING}}]
+                                                            :wl [:name :is_active :configuration]
+                                                            }}
+
+                        {:workflows.schema_update_workflow {
+                                                            :alias "mar.workflow/schema_update_workflow"
+                                                            :key-types "optional"
+                                                            ;:types [{:name {:key-type TYPE_NOTHING}}]
+                                                            :wl [:name :is_active :configuration]
+                                                            }}
+
+                        {:workflows.schema_export_workflow {
+                                                            :alias "mar.workflow/schema_export_workflow"
+                                                            :key-types "optional"
+                                                            :types [{:id {:key-type TYPE_NOTHING}}]
+                                                            :wl [:name :is_active :configuration :creator_id :created_at :updated_at]
+                                                            }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+        p (println ">o> 6create-raw-schema >>> (" (:raw-schema-name data) ") = " res)
+        ;p (println ">o> 7create-raw-schema (" (:raw-schema-name data) ") = " res2)
+
+
         ;; :workflows-schema-raw
         workflows-meta-raw (fetch-table-meta-raw "workflows")
         p (println ">o> workflows-meta-raw=" workflows-meta-raw)
@@ -1684,7 +1718,7 @@
         _ (create-users-schema)
 
         _ (create-admins-schema)
-        ;_ (create-workflows-schema)
+        _ (create-workflows-schema)
         ;_ (create-collections-schema)
         ;_ (create-collection-media-entry-schema)
         ;_ (create-collection-collection-arcs-schema)
