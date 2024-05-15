@@ -220,7 +220,7 @@
       :handler handle_create-collection
       :swagger {:produces "application/json"
                 :consumes "application/json"}
-      :parameters {:body schema_collection-import}
+      :parameters {:body (get-schema :collections.schema_collection-import)}
       :middleware [authorization/wrap-authorized-user]
       :coercion reitit.coercion.schema/coercion
       :responses {200 {:body (get-schema :collections.schema_collection-export)}
