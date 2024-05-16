@@ -172,6 +172,8 @@
                   "vocabularies.descriptions" schema-de-en
                   "vocabularies.labels" schema-de-en
 
+                  "static-pages.contents" schema-de-en
+
                   }
 
         ;p (println ">o> akey=" key)
@@ -2078,16 +2080,48 @@
                                                                 }}
 
                         {:usage_terms.schema_update_usage_terms {
-                                                                :alias "mar.usage-terms/schema_update_usage_terms"
-                                                                :key-types "optional"
-                                                                :wl [:title :version :intro :body]
-                                                                }}
+                                                                 :alias "mar.usage-terms/schema_update_usage_terms"
+                                                                 :key-types "optional"
+                                                                 :wl [:title :version :intro :body]
+                                                                 }}
 
 
                         {:usage_terms.schema_import_usage_terms {
-                                                                :alias "mar.usage-terms/schema_import_usage_terms"
-                                                                :wl [:title :version :intro :body]
-                                                                }}
+                                                                 :alias "mar.usage-terms/schema_import_usage_terms"
+                                                                 :wl [:title :version :intro :body]
+                                                                 }}
+
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+        ]))
+
+
+(defn create-static_pages-schema []
+  (let [
+
+        data {
+              :raw [{:static_pages {}}],
+              :raw-schema-name :static_pages-raw
+
+              :schemas [
+                        {:static_pages.schema_export_static_page {
+                                                                  :alias "mar.static-pages/schema_export_static_page"
+                                                                  }}
+
+                        {:static_pages.schema_update_static_page {
+                                                                  :alias "mar.static-pages/schema_update_static_page"
+                                                                  :key-types "optional"
+                                                                  :wl [:name :contents]
+                                                                  }}
+
+                        {:static_pages.schema_create_static_page {
+                                                                  :alias "mar.static-pages/schema_create_static_page"
+                                                                  :wl [:name :contents]
+                                                                  }}
 
                         ]
               }
@@ -2363,6 +2397,7 @@
         _ (create-edit_session-schema)
         _ (create-vocabularies-schema)
         _ (create-usage_terms-schema)
+        _ (create-static_pages-schema)
 
 
 
