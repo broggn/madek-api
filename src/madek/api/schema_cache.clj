@@ -447,6 +447,7 @@
                                 table-name key
                                 wl-attr (:wl value)
                                 bl-attr (:bl value)
+                                cache-as (:cache-as value)
 
                                 types-attr (:types value)
                                 key-types (:key-types value)
@@ -486,12 +487,14 @@
 
                                 res2 (process-revision-of-schema-types table-name res2 types-attr key-types value-types)
                                 ;p (println ">o> ??? >>>>>>>> AFTER >>>>>>>>> res2=" res2)
-
-
-                                p (println ">o> !!! [set-schema] ?" (keyword key) "/" res2)
-
+                                ;p (println ">o> !!! [set-schema] ?" (keyword key) "/" res2)
 
                                 _ (set-schema (keyword key) res2)
+                                _ (when (not (nil? cache-as))
+                                    (doseq [kw cache-as]
+                                      (set-schema (keyword kw) res2)))
+
+
                                 ;p (println ">o> >>>>>>>>> cache-schema, " key "/" res2)
                                 ]
 
@@ -1825,23 +1828,6 @@
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
 
-
-
-
-
-
-        ;;; :workflows-schema-raw
-        ;context-keys-raw (fetch-table-meta-raw db-table)
-        ;p (println ">o> confidential_links=" context-keys-raw)
-        ;_ (set-schema :context-keys-raw context-keys-raw)
-        ;_ (set-schema :context-keys (create-schema-by-data db-table context-keys-raw))
-        ;_ (set-schema :context-keys-all (create-schema-by-data db-table context-keys-raw))
-        ;
-        ;_ (set-schema :context-keys-min (create-schema-by-data-bl db-table context-keys-raw ["admin_comment" "updated_at" "created_at"]))
-        ;_ (set-schema :context-keys-update (create-schema-by-data-bl db-table context-keys-raw ["id" "context_id" "meta_key_id" "updated_at" "created_at"]))
-        ;_ (set-schema :context-keys-import (create-schema-by-data-bl db-table context-keys-raw ["id" "updated_at" "created_at"]))
-        ;
-        ;p (println ">o> >>> context-keys >>> " (get-schema :context-keys-import))
         ]))
 
 
@@ -1849,17 +1835,73 @@
   (let [
         db-table "contexts"
 
-        ;; :workflows-schema-raw
-        context-keys-raw (fetch-table-meta-raw db-table)
-        p (println ">o> confidential_links=" context-keys-raw)
-        _ (set-schema :contexts-raw context-keys-raw)
-        _ (set-schema :contexts (create-schema-by-data db-table context-keys-raw))
-        _ (set-schema :contexts-all (create-schema-by-data db-table context-keys-raw))
 
-        _ (set-schema :contexts-update (create-schema-by-data-bl db-table context-keys-raw ["id"]))
-        _ (set-schema :contexts-export (create-schema-by-data-bl db-table context-keys-raw ["admin_comment"]))
 
-        p (println ">o> >>> contexts >>> " (get-schema :contexts-export))
+
+
+        data {
+              :raw [{:contexts {}}],
+              :raw-schema-name :contexts-raw
+
+              :schemas [
+                        {:contexts.schema_import_contexts {
+                                                           :alias "mar.contexts/schema_import_contexts"
+                                                           :cache-as [:contexts.schema_export_contexts_adm]
+                                                           :value-types "maybe"
+                                                           :types [
+                                                                   {:id {:value-type TYPE_NOTHING}}
+                                                                   ]
+                                                           }}
+
+                        {:contexts.schema_update_contexts {
+                                                           :alias "mar.contexts/schema_update_contexts"
+                                                           :value-types "maybe"
+                                                           :key-types "maybe"
+                                                           :bl [:id]
+                                                           }}
+
+                        {:contexts.schema_export_contexts_usr {
+                                                               :alias "mar.contexts/schema_export_contexts_usr"
+                                                               ;:value-types "maybe"
+                                                               ;:key-types "maybe"
+                                                               :bl [:admin_comment]
+
+                                                               :types [
+                                                                       {:labels {:value-type TYPE_MAYBE}}
+                                                                       {:descriptions {:value-type TYPE_MAYBE}}
+                                                                       ]
+                                                               }}
+
+                        ;{:contexts.schema_export_contexts_adm {
+                        ;                                   :alias "mar.contexts/schema_export_contexts_adm"
+                        ;                                   ;:value-types "maybe"
+                        ;                                   ;:key-types "maybe"
+                        ;                                   :bl [:admin_comment]
+                        ;
+                        ;                                       :types [
+                        ;                                               {:labels {:value-type TYPE_MAYBE}}
+                        ;                                               {:descriptions {:value-type TYPE_MAYBE}}
+                        ;                                               ]
+                        ;                                   }}
+
+                        ]
+
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+        ;;; :workflows-schema-raw
+        ;context-keys-raw (fetch-table-meta-raw db-table)
+        ;p (println ">o> confidential_links=" context-keys-raw)
+        ;_ (set-schema :contexts-raw context-keys-raw)
+        ;_ (set-schema :contexts (create-schema-by-data db-table context-keys-raw))
+        ;_ (set-schema :contexts-all (create-schema-by-data db-table context-keys-raw))
+        ;
+        ;_ (set-schema :contexts-update (create-schema-by-data-bl db-table context-keys-raw ["id"]))
+        ;_ (set-schema :contexts-export (create-schema-by-data-bl db-table context-keys-raw ["admin_comment"]))
+        ;
+        ;p (println ">o> >>> contexts >>> " (get-schema :contexts-export))
         ]))
 
 (defn create-custom-urls-schema []
@@ -2032,7 +2074,7 @@
         _ (create-app-settings-schema)
         _ (create-confidential-links-schema)
         _ (create-context-keys-schema)
-        ;_ (create-context-schema)
+        _ (create-context-schema)
         ;_ (create-custom-urls-schema)
         ;_ (create-delegation-schema)
 
