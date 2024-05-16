@@ -177,7 +177,7 @@
             :content-type "application/json"
             :accept "application/json"
             :coercion reitit.coercion.schema/coercion
-            :parameters {:body (get-schema :vocabularies.schema_export-vocabulary)}
+            :parameters {:body (get-schema :vocabularies.schema_import-vocabulary)}
             :responses {200 {:body (get-schema :vocabularies.schema_export-vocabulary-admin)}
                         406 {:description "Creation failed."
                              :schema s/Str

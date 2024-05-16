@@ -168,6 +168,10 @@
 
                   "contexts.labels" schema-de-en
                   "contexts.descriptions" schema-de-en
+
+                  "vocabularies.descriptions" schema-de-en
+                  "vocabularies.labels" schema-de-en
+
                   }
 
         ;p (println ">o> akey=" key)
@@ -2103,13 +2107,14 @@
               :raw-schema-name :vocabularies-raw
 
               :schemas [
-                        {:vocabularies.schema_import-vocabulary {
-                                                                 :alias "mar.vocabularies/schema_import-vocabulary"
+                        {:vocabularies.schema_export-vocabulary {
+                                                                 :alias "mar.vocabularies/schema_export-vocabulary"
                                                                  :types [
-                                                                         {:labels {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
-                                                                         {:descriptions {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
+                                                                         {:labels {:value-type TYPE_MAYBE}}
+                                                                         {:descriptions {:value-type TYPE_MAYBE}}
                                                                          {:admin_comment {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
                                                                          ]
+                                                                 :bl [:enabled_for_public_view :enabled_for_public_use]
                                                                  }}
 
                         {:vocabularies.schema_export-vocabulary-admin {
@@ -2121,14 +2126,13 @@
                                                                                ]
                                                                        }}
 
-                        {:vocabularies.schema_export-vocabulary {
-                                                                 :alias "mar.vocabularies/schema_export-vocabulary"
+                        {:vocabularies.schema_import-vocabulary {
+                                                                 :alias "mar.vocabularies/schema_import-vocabulary"
                                                                  :types [
-                                                                         {:labels {:value-type TYPE_MAYBE}}
-                                                                         {:descriptions {:value-type TYPE_MAYBE}}
+                                                                         {:labels {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
+                                                                         {:descriptions {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
                                                                          {:admin_comment {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
                                                                          ]
-                                                                 :bl [:enabled_for_public_view :enabled_for_public_use]
                                                                  }}
 
                         {:vocabularies.schema_update-vocabulary {
@@ -2150,7 +2154,7 @@
 
                         {:vocabularies.schema_export-perms_all_vocabulary {
                                                                            :alias "mar.vocabularies/schema_export-perms_all"
-                                                                           :wl [:enabled_for_public_view :enabled_for_public_use]
+                                                                           :wl [:id :enabled_for_public_view :enabled_for_public_use]
                                                                            }}
                         ]
               }
