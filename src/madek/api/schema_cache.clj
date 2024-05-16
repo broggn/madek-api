@@ -2172,6 +2172,32 @@
 
 
 
+(defn create-previews-schema []
+  (let [
+        data {
+              :raw [{:previews {}}],
+              :raw-schema-name :previews-raw
+
+              :schemas [
+                        {:previews.schema_export_preview {
+                                                    :alias "mar.previews/schema_export_preview"
+                                                    :types [
+                                                            {:width {:value-type TYPE_MAYBE}}
+                                                            {:height {:value-type TYPE_MAYBE}}
+                                                            {:conversion_profile {:value-type TYPE_MAYBE}}
+                                                            ]
+
+                                                    }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+        ]))
+
+
+
 (defn create-vocabularies-schema []
   (let [
 
@@ -2438,6 +2464,7 @@
         _ (create-usage_terms-schema)
         _ (create-static_pages-schema)
         _ (create-roles-schema)
+        _ (create-previews-schema)
 
 
 

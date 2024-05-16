@@ -4,6 +4,10 @@
    [madek.api.resources.media-files :as media-files]
    [madek.api.resources.previews.preview :as preview]
    [madek.api.resources.shared :as sd]
+
+   [madek.api.schema_cache :refer [get-schema]]
+
+
    [reitit.coercion.schema]
    [schema.core :as s]
    [taoensso.timbre :refer [info]]))
@@ -101,7 +105,7 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Str}
                         :query {(s/optional-key :size) s/Str}}
-           :responses {200 {:body schema_export_preview}
+           :responses {200 {:body (get-schema :previews.schema_export_preview )}
                        404 {:body s/Any}}}}]
    ; TODO media-entry preview auth
    ["/:media_entry_id/preview/data-stream"
