@@ -187,7 +187,7 @@
             :swagger {:produces "application/json"}
             :content-type "application/json"
             :coercion reitit.coercion.schema/coercion
-            :responses {200 {:body schema_export-app-settings}}}}]]])
+            :responses {200 {:body (get-schema :app_settings-raw.schema_export-app-settings)}}}}]]])
 ;:responses {200 {:body (get-schema :app_settings-raw.schema_export-app-settings)}}}}]]])
 
 ;### Debug ####################################################################

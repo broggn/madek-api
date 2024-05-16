@@ -63,10 +63,8 @@
                    "boolean" s/Bool
                    "uuid" s/Uuid
                    "text" s/Str
-                   "text[]" s/Str
                    "jsonb" s/Any
                    "character varying" s/Str
-                   "character varying[]" s/Str
                    "timestamp with time zone" s/Any
                    ;; helper
                    "str" s/Str
@@ -178,6 +176,17 @@
                   "app_settings.support_urls" schema-de-en
                   "app_settings.welcome_texts" schema-de-en
                   "app_settings.welcome_titles" schema-de-en
+
+                  "app_settings.available_locales" [s/Str]
+                  "app_settings.contexts_for_entry_extra" [s/Str]
+                  "app_settings.contexts_for_entry_validation" [s/Str]
+                  "app_settings.catalog_context_keys" [s/Str]
+                  "app_settings.contexts_for_dynamic_filters" [s/Str]
+                  "app_settings.contexts_for_collection_extra" [s/Str]
+                  "app_settings.copyright_notice_templates" [s/Str]
+                  "app_settings.contexts_for_entry_edit" [s/Str]
+                  "app_settings.contexts_for_collection_edit" [s/Str]
+                  "app_settings.contexts_for_list_details" [s/Str]
 
                   "context_keys.labels" schema-de-en
                   "context_keys.descriptions" schema-de-en
@@ -578,6 +587,8 @@
 
                  type-mapping-enums-res (type-mapping-enums type-mapping-key)
                  type-mapping-res (type-mapping data_type)  ;raw-mapping
+
+                 p (println ">>o> !!! [set-schema] =>> key=" type-mapping-key  ", type=" data_type ", type: >" type-mapping-res "<")
 
 
                  p (println ">o> abc?????????" type-mapping-key)
@@ -1687,7 +1698,6 @@
                                                                                {:contexts_for_entry_extra {:value-type TYPE_NOTHING}}
                                                                                {:contexts_for_entry_validation {:value-type TYPE_NOTHING}}
                                                                                {:contexts_for_list_details {:value-type TYPE_NOTHING}}
-                                                                               {:copyright_notice_default_text {:value-type TYPE_NOTHING}}
                                                                                {:copyright_notice_templates {:value-type TYPE_NOTHING}}
                                                                                {:created_at {:value-type TYPE_NOTHING}}
                                                                                {:id {:value-type TYPE_NOTHING}}
