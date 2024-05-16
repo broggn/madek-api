@@ -2293,7 +2293,7 @@
                                                                                  {:responsible_delegation_id {:value-type TYPE_MAYBE}}
                                                                                  ]
                                                                          :key-types "optional"
-                                                                         :wl [:id :creator_id :is_published :get_metadata_and_previews :get_full_size :edit_metadata :edit_permissions]
+                                                                         :wl [:id :creator_id :is_published :get_metadata_and_previews :get_full_size :responsible_user_id :responsible_delegation_id]
                                                                          }}
 
                         {:media_entries.schema_update-media-entry-perms {
