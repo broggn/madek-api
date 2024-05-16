@@ -2029,8 +2029,6 @@
 (defn create-edit_session-schema []
   (let [
 
-
-
         data {
               :raw [{:edit_sessions {}}],
               :raw-schema-name :edit_sessions-raw
@@ -2038,12 +2036,12 @@
               :schemas [
 
                         {:edit_sessions.schema_export_edit_session {
-                                                                       :alias "mar.edit_sessions/schema_export_edit_session"
-                                                                       :types [
-                                                                               {:media_entry_id {:value-type TYPE_MAYBE}}
-                                                                               {:collection_id {:value-type TYPE_MAYBE}}
-                                                                               ]
-                                                                       }}
+                                                                    :alias "mar.edit_sessions/schema_export_edit_session"
+                                                                    :types [
+                                                                            {:media_entry_id {:value-type TYPE_MAYBE}}
+                                                                            {:collection_id {:value-type TYPE_MAYBE}}
+                                                                            ]
+                                                                    }}
                         ]
               }
 
@@ -2060,9 +2058,9 @@
 
               :schemas [
                         {:edit_sessions.schema_adm_query_edit_session {
-                                                                    :alias "mar.edit_sessions/schema_adm_query_edit_session"
-                                                                    :key-types "optional"
-                                                                    }}
+                                                                       :alias "mar.edit_sessions/schema_adm_query_edit_session"
+                                                                       :key-types "optional"
+                                                                       }}
 
                         {:edit_sessions.schema_usr_query_edit_session {
                                                                        :alias "mar.edit_sessions/schema_usr_query_edit_session"
@@ -2074,6 +2072,129 @@
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
+
+        ]))
+
+
+(defn create-vocabularies-schema []
+  (let [
+
+        data {
+              :raw [{:vocabularies {}}],
+              :raw-schema-name :vocabularies-raw
+
+              :schemas [
+                        {:vocabularies.schema_import-vocabulary {
+                                                                 :alias "mar.vocabularies/schema_import-vocabulary"
+                                                                 :types [
+                                                                         {:labels {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
+                                                                         {:descriptions {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
+                                                                         {:admin_comment {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
+                                                                         ]
+                                                                 }}
+
+                        {:vocabularies.schema_export-vocabulary-admin {
+                                                                       :alias "mar.vocabularies/schema_export-vocabulary-admin"
+                                                                       :types [
+                                                                               {:labels {:value-type TYPE_MAYBE}}
+                                                                               {:descriptions {:value-type TYPE_MAYBE}}
+                                                                               {:admin_comment {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
+                                                                               ]
+                                                                       }}
+
+                        {:vocabularies.schema_export-vocabulary {
+                                                                 :alias "mar.vocabularies/schema_export-vocabulary"
+                                                                 :types [
+                                                                         {:labels {:value-type TYPE_MAYBE}}
+                                                                         {:descriptions {:value-type TYPE_MAYBE}}
+                                                                         {:admin_comment {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
+                                                                         ]
+                                                                 :bl [:enabled_for_public_view :enabled_for_public_use]
+                                                                 }}
+
+                        {:vocabularies.schema_update-vocabulary {
+                                                                 :alias "mar.vocabularies/schema_update-vocabulary"
+                                                                 :key-types "optional"
+                                                                 :value-types "maybe"
+                                                                 :types [
+                                                                         {:position {:value-type TYPE_NOTHING}}
+                                                                         ]
+                                                                 :bl [:id :enabled_for_public_view :enabled_for_public_use]
+                                                                 }}
+
+                        {:vocabularies.schema_perms-update {
+                                                            :alias "mar.vocabularies/schema_perms-update"
+                                                            :key-types "optional"
+                                                            :wl [:enabled_for_public_view :enabled_for_public_use]
+                                                            }}
+
+
+                        {:vocabularies.schema_export-perms_all_vocabulary {
+                                                                           :alias "mar.vocabularies/schema_export-perms_all"
+                                                                           :wl [:enabled_for_public_view :enabled_for_public_use]
+                                                                           }}
+                        ]
+              }
+
+              res (create-raw-schema data)
+              res2 (create-schemas-by-config data)
+
+
+
+
+
+              data {
+                    :raw [{:vocabulary_group_permissions {}}],
+                    :raw-schema-name :vocabulary_group_permissions-raw
+
+                    :schemas [
+                              {:vocabularies.schema_export-group-perms {
+                                                                        :alias "mar.vocabularies/schema_export-group-perms"
+                                                                        ;:types [
+                                                                        ;        {:labels {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
+                                                                        ;        {:descriptions {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
+                                                                        ;        {:admin_comment {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
+                                                                        ;        ]
+                                                                        }}
+                              ]
+                    }
+
+              res (create-raw-schema data)
+              res2 (create-schemas-by-config data)
+
+
+              data {
+                    :raw [{:vocabulary_user_permissions {}}],
+                    :raw-schema-name :vocabulary_user_permissions-raw
+
+                    :schemas [
+                              {:vocabularies.vocabulary_user_permissions {
+                                                                          :alias "mar.vocabularies/vocabulary_user_permissions"
+                                                                          }}
+
+                              {:vocabularies.schema_perms-update-user-or-group {
+                                                                                :alias "mar.vocabularies/schema_perms-update-user-or-group"
+                                                                                :wl [:use :view]
+                                                                                }}
+                              ]
+                    }
+
+              res (create-raw-schema data)
+              res2 (create-schemas-by-config data)
+
+
+
+
+
+              _ (set-schema :vocabularies.schema_export-perms_all {:vocabulary (get-schema :vocabularies.schema_export-perms_all_vocabulary)
+                                                                   ;:users [schema_export-user-perms]
+                                                                   ;:groups [schema_export-group-perms]})
+                                                                   :users [(get-schema :vocabularies.vocabulary_user_permissions)]
+                                                                   :groups [(get-schema :vocabularies.schema_export-group-perms)]})
+
+
+
+
 
 
         ]))
@@ -2222,6 +2343,7 @@
 
 
         _ (create-edit_session-schema)
+        _ (create-vocabularies-schema)
 
 
 
