@@ -2180,19 +2180,213 @@
 
               :schemas [
                         {:previews.schema_export_preview {
-                                                    :alias "mar.previews/schema_export_preview"
-                                                    :types [
-                                                            {:width {:value-type TYPE_MAYBE}}
-                                                            {:height {:value-type TYPE_MAYBE}}
-                                                            {:conversion_profile {:value-type TYPE_MAYBE}}
-                                                            ]
+                                                          :alias "mar.previews/schema_export_preview"
+                                                          :types [
+                                                                  {:width {:value-type TYPE_MAYBE}}
+                                                                  {:height {:value-type TYPE_MAYBE}}
+                                                                  {:conversion_profile {:value-type TYPE_MAYBE}}
+                                                                  ]
 
-                                                    }}
+                                                          }}
                         ]
               }
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
+
+        ]))
+
+
+(defn create-permissions-schema []
+  (let [
+        data {
+              :raw [{:collection_user_permissions {}}],
+              :raw-schema-name :collection_user_permissions-raw
+
+              :schemas [
+                        {:collection_user_permissions.schema_export-collection-user-permission {
+                                                                                                :alias "mar.permissions/schema_export-collection-user-permission"
+                                                                                                :types [
+                                                                                                        {:updator_id {:value-type TYPE_MAYBE}}
+                                                                                                        {:delegation_id {:value-type TYPE_MAYBE}}
+                                                                                                        ]
+                                                                                                }}
+
+                        {:collection_user_permissions.schema_create-collection-user-permission {
+                                                                                                :alias "mar.permissions/schema_create-collection-user-permission"
+                                                                                                :wl [:get_metadata_and_previews :edit_metadata_and_relations :edit_permissions]
+                                                                                                }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+
+        data {
+              :raw [{:collection_group_permissions {}}],
+              :raw-schema-name :collection_group_permissions-raw
+
+              :schemas [
+                        {:collection_group_permissions.schema_export-collection-group-permission {
+                                                                                                  :alias "mar.permissions/schema_export-collection-group-permission"
+                                                                                                  :types [
+                                                                                                          {:updator_id {:value-type TYPE_MAYBE}}
+                                                                                                          ]
+                                                                                                  }}
+
+                        {:collection_group_permissions.schema_create-collection-group-permission {
+                                                                                                  :alias "mar.permissions/schema_create-collection-group-permission"
+                                                                                                  :wl [:get_metadata_and_previews :edit_metadata_and_relations]
+                                                                                                  }}
+
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+
+        data {
+              :raw [{:media_entry_user_permissions {}}],
+              :raw-schema-name :media_entry_user_permissions-raw
+
+              :schemas [
+                        {:collection_user_permissions.schema_export-media-entry-user-permission {
+                                                                                                 :alias "mar.permissions/schema_export-media-entry-user-permission"
+                                                                                                 :types [
+                                                                                                         {:updator_id {:value-type TYPE_MAYBE}}
+                                                                                                         {:delegation_id {:value-type TYPE_MAYBE}}
+                                                                                                         ]
+                                                                                                 }}
+
+                        {:collection_user_permissions.schema_create-media-entry-user-permission {
+                                                                                                 :alias "mar.permissions/schema_create-media-entry-user-permission"
+                                                                                                 :wl [:get_metadata_and_previews :get_full_size :edit_metadata :edit_permissions]
+                                                                                                 }}
+
+                        ;{:collection_user_permissions.schema_create-media-entry-user-permission {
+                        ;                                                                         :alias "mar.permissions/schema_create-media-entry-user-permission"
+                        ;                                                                         :wl [:get_metadata_and_previews :get_full_size :edit_metadata :edit_permissions]
+                        ;                                                                         }}
+
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+
+        data {
+              :raw [{:media_entries {}}],
+              :raw-schema-name :media_entries-raw
+
+              :schemas [
+                        {:media_entries.schema_export-media-entry-perms {
+                                                                         :alias "mar.permissions/schema_export-media-entry-perms"
+                                                                         :types [
+                                                                                 {:id {:key-type TYPE_NOTHING}}
+                                                                                 {:creator_id {:key-type TYPE_NOTHING}}
+                                                                                 {:is_published {:key-type TYPE_NOTHING}}
+
+                                                                                 {:responsible_user_id {:value-type TYPE_MAYBE}}
+                                                                                 {:responsible_delegation_id {:value-type TYPE_MAYBE}}
+                                                                                 ]
+                                                                         :key-types "optional"
+                                                                         :wl [:id :creator_id :is_published :get_metadata_and_previews :get_full_size :edit_metadata :edit_permissions]
+                                                                         }}
+
+                        {:media_entries.schema_update-media-entry-perms {
+                                                                         :alias "mar.permissions/schema_update-media-entry-perms"
+                                                                         :types [
+                                                                                 {:responsible_user_id {:value-type TYPE_MAYBE}}
+                                                                                 {:responsible_delegation_id {:value-type TYPE_MAYBE}}
+                                                                                 ]
+                                                                         :key-types "optional"
+                                                                         :wl [:get_metadata_and_previews :get_full_size :responsible_user_id :responsible_delegation_id]
+                                                                         }}
+
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+        data {
+              :raw [{:collections {}}],
+              :raw-schema-name :collections-perms-raw
+
+              :schemas [
+                        {:collections-perms.schema_update-collection-perms {
+                                                                            :alias "mar.permissions/schema_update-collection-perms"
+                                                                            :types [
+                                                                                    {:get_metadata_and_previews {:value-type TYPE_NOTHING}}
+                                                                                    ]
+
+                                                                            :key-types "optional"
+                                                                            :value-types "maybe"
+                                                                            :wl [:get_metadata_and_previews :responsible_user_id :clipboard_user_id :workflow_id :responsible_delegation_id]
+                                                                            }}
+
+
+                        {:collections-perms.schema_export-collection-perms {
+                                                                            :alias "mar.permissions/schema_export-collection-perms"
+                                                                            :types [
+                                                                                    {:id {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
+                                                                                    {:creator_id {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
+                                                                                    {:get_metadata_and_previews {:value-type TYPE_NOTHING}}
+                                                                                    ]
+
+                                                                            :key-types "optional"
+                                                                            :value-types "maybe"
+
+
+                                                                            :wl [:id :creator_id :get_metadata_and_previews :responsible_user_id :clipboard_user_id :workflow_id :responsible_delegation_id]
+                                                                            }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+
+
+
+
+
+
+        data {
+              :raw [{:media_entry_group_permissions {}}],
+              :raw-schema-name :media_entry_group_permissions-raw
+
+              :schemas [
+                        {:media_entry_group_permissions.schema_export-media-entry-group-permission {
+                                                                                                    :alias "mar.permissions/schema_export-media-entry-group-permission"
+                                                                                                    :types [
+                                                                                                            {:updator_id {:value-type TYPE_MAYBE}}
+                                                                                                            ]
+                                                                                                    }}
+
+
+                        {:media_entry_group_permissions.schema_create-media-entry-group-permission {
+                                                                                                    :alias "mar.permissions/schema_create-media-entry-group-permission"
+                                                                                                    :wl [:get_metadata_and_previews :get_full_size :edit_metadata]
+                                                                                                    }}
+
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+
+        _ (set-schema :media_entry_user_permissions.schema_export_media-entry-permissions-all {:media_entry (get-schema :media_entries.schema_export-media-entry-perms)
+                                                                                               :users [(get-schema :media_entry_user_permissions.schema_export-media-entry-user-permission)]
+                                                                                               :groups [(get-schema :media_entry_group_permissions.schema_export-media-entry-group-permission)]})
+
+        _ (set-schema :collection_permissions-all.schema_export-collection-permissions-all {:media-resource (get-schema :collections-perms.schema_export-collection-perms)
+                                                                                            :users [(get-schema :collection_user_permissions.schema_export-collection-user-permission)]
+                                                                                            :groups [(get-schema :collection_group_permissions.schema_export-collection-group-permission)]})
 
         ]))
 
@@ -2465,6 +2659,7 @@
         _ (create-static_pages-schema)
         _ (create-roles-schema)
         _ (create-previews-schema)
+        _ (create-permissions-schema)
 
 
 
