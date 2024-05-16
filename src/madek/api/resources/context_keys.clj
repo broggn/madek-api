@@ -4,6 +4,10 @@
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [madek.api.pagination :as pagination]
+
+   [madek.api.schema_cache :refer [get-schema]]
+
+
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.helper :refer [cast-to-hstore t to-uuid]]
@@ -132,6 +136,13 @@
                                     :context_keys colname
                                     :context_key send404))))
 
+
+
+
+
+
+
+
 (def schema_import_context_keys
   {;:id s/Str
    :context_id s/Str
@@ -195,6 +206,13 @@
    :updated_at s/Any
    :created_at s/Any})
 
+
+
+
+
+
+
+
 ; TODO docu
 ; TODO tests
 (def admin-routes
@@ -209,8 +227,8 @@
       :content-type "application/json"
       :accept "application/json"
       :coercion reitit.coercion.schema/coercion
-      :parameters {:body schema_import_context_keys}
-      :responses {200 {:body schema_export_context_key_admin}
+      :parameters {:body (get-schema :context_keys.schema_import_context_keys)}
+      :responses {200 {:body (get-schema :context_keys.schema_export_context_key_admin)}
                   406 {:body s/Any}}}
 
     ; context_key list / query
@@ -228,7 +246,7 @@
                            (s/optional-key :context_id) s/Str
                            (s/optional-key :meta_key_id) s/Str
                            (s/optional-key :is_required) s/Bool}}
-      :responses {200 {:body [schema_export_context_key_admin]}
+      :responses {200 {:body [(get-schema :context_keys.schema_export_context_key_admin)]}
                   406 {:body s/Any}}}}]
    ; edit context_key
    ["/:id"
@@ -239,7 +257,7 @@
                    (wwrap-find-context_key :id :id true)]
       :coercion reitit.coercion.schema/coercion
       :parameters {:path {:id s/Uuid}}
-      :responses {200 {:body schema_export_context_key_admin}
+      :responses {200 {:body (get-schema :context_keys.schema_export_context_key_admin)}
                   404 {:body s/Any}
                   406 {:body s/Any}}}
 
@@ -250,8 +268,8 @@
                    (wwrap-find-context_key :id :id true)]
       :coercion reitit.coercion.schema/coercion
       :parameters {:path {:id s/Uuid}
-                   :body schema_update_context_keys}
-      :responses {200 {:body schema_export_context_key_admin}
+                   :body (get-schema :context_keys.schema_update_context_keys)}
+      :responses {200 {:body (get-schema :context_keys.schema_export_context_key_admin)}
                   404 {:body s/Any}
                   406 {:body s/Any}}}
 
@@ -262,7 +280,7 @@
       :middleware [wrap-authorize-admin!
                    (wwrap-find-context_key :id :id true)]
       :parameters {:path {:id s/Uuid}}
-      :responses {200 {:body schema_export_context_key_admin}
+      :responses {200 {:body (get-schema :context_keys.schema_export_context_key_admin)}
                   404 {:body s/Any}
                   406 {:body s/Any}}}}]])
 
@@ -279,7 +297,7 @@
                            (s/optional-key :context_id) s/Str
                            (s/optional-key :meta_key_id) s/Str
                            (s/optional-key :is_required) s/Bool}}
-      :responses {200 {:body [schema_export_context_key]}
+      :responses {200 {:body [(get-schema :context_keys.schema_export_context_key)]}
                   406 {:body s/Any}}}}]
 
    ["/:id"
@@ -289,7 +307,7 @@
       :middleware [(wwrap-find-context_key :id :id true)]
       :coercion reitit.coercion.schema/coercion
       :parameters {:path {:id s/Uuid}}
-      :responses {200 {:body schema_export_context_key}
+      :responses {200 {:body (get-schema :context_keys.schema_export_context_key)}
 
                   400 {:message "Bad request"
                        :body {:schema {:id s/Str :Keyword s/Str}

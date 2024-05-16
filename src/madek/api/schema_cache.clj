@@ -1733,8 +1733,6 @@
                                                                               ]
                                                                       }}
 
-
-
                         ]
 
               }
@@ -1761,18 +1759,89 @@
   (let [
         db-table "context_keys"
 
-        ;; :workflows-schema-raw
-        context-keys-raw (fetch-table-meta-raw db-table)
-        p (println ">o> confidential_links=" context-keys-raw)
-        _ (set-schema :context-keys-raw context-keys-raw)
-        _ (set-schema :context-keys (create-schema-by-data db-table context-keys-raw))
-        _ (set-schema :context-keys-all (create-schema-by-data db-table context-keys-raw))
 
-        _ (set-schema :context-keys-min (create-schema-by-data-bl db-table context-keys-raw ["admin_comment" "updated_at" "created_at"]))
-        _ (set-schema :context-keys-update (create-schema-by-data-bl db-table context-keys-raw ["id" "context_id" "meta_key_id" "updated_at" "created_at"]))
-        _ (set-schema :context-keys-import (create-schema-by-data-bl db-table context-keys-raw ["id" "updated_at" "created_at"]))
 
-        p (println ">o> >>> context-keys >>> " (get-schema :context-keys-import))
+
+
+        data {
+              :raw [{:context_keys {}}],
+              :raw-schema-name :context_keys-raw
+
+              :schemas [
+                        {:context_keys.schema_export_context_key_admin {
+                                                                        :alias "mar.context_keys/schema_export_context_key_admin"
+                                                                        :types [
+                                                                                {:length_max {:value-type TYPE_MAYBE}}
+                                                                                {:length_min {:value-type TYPE_MAYBE}}
+                                                                                {:labels {:value-type TYPE_MAYBE}}
+                                                                                {:descriptions {:value-type TYPE_MAYBE}}
+                                                                                {:hints {:value-type TYPE_MAYBE}}
+                                                                                {:documentation_urls {:value-type TYPE_MAYBE}}
+                                                                                {:admin_comment {:value-type TYPE_MAYBE}}
+                                                                                ]
+                                                                        }}
+
+                        {:context_keys.schema_export_context_key {
+                                                                  :alias "mar.context_keys/schema_export_context_key"
+                                                                  :types [
+                                                                          {:length_max {:value-type TYPE_MAYBE}}
+                                                                          {:length_min {:value-type TYPE_MAYBE}}
+                                                                          {:labels {:value-type TYPE_MAYBE}}
+                                                                          {:descriptions {:value-type TYPE_MAYBE}}
+                                                                          {:hints {:value-type TYPE_MAYBE}}
+                                                                          {:documentation_urls {:value-type TYPE_MAYBE}}
+                                                                          ]
+                                                                  :bl [:admin_comment :updated_at :created_at]
+                                                                  }}
+
+                        {:context_keys.schema_update_context_keys {
+                                                                   :alias "mar.context_keys/schema_update_context_keys"
+                                                                   :key-types "optional"
+                                                                   :value-types "maybe"
+                                                                   :types [
+                                                                           {:is_required {:value-type TYPE_NOTHING}}
+                                                                           {:position {:value-type TYPE_NOTHING}}
+                                                                           ]
+                                                                   :bl [:id :context_id :meta_key_id :admin_comment :updated_at :created_at]
+                                                                   }}
+
+                        {:context_keys.schema_import_context_keys {
+                                                                   :alias "mar.context_keys/schema_import_context_keys"
+                                                                   :key-types "optional"
+                                                                   :value-types "maybe"
+                                                                   :types [
+                                                                           {:context_id {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
+                                                                           {:meta_key_id {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
+                                                                           {:is_required {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
+                                                                           {:position {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
+                                                                           ]
+                                                                   :bl [:id :context_id :meta_key_id :admin_comment :updated_at :created_at]
+                                                                   }}
+
+                        ]
+
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+
+
+
+
+
+        ;;; :workflows-schema-raw
+        ;context-keys-raw (fetch-table-meta-raw db-table)
+        ;p (println ">o> confidential_links=" context-keys-raw)
+        ;_ (set-schema :context-keys-raw context-keys-raw)
+        ;_ (set-schema :context-keys (create-schema-by-data db-table context-keys-raw))
+        ;_ (set-schema :context-keys-all (create-schema-by-data db-table context-keys-raw))
+        ;
+        ;_ (set-schema :context-keys-min (create-schema-by-data-bl db-table context-keys-raw ["admin_comment" "updated_at" "created_at"]))
+        ;_ (set-schema :context-keys-update (create-schema-by-data-bl db-table context-keys-raw ["id" "context_id" "meta_key_id" "updated_at" "created_at"]))
+        ;_ (set-schema :context-keys-import (create-schema-by-data-bl db-table context-keys-raw ["id" "updated_at" "created_at"]))
+        ;
+        ;p (println ">o> >>> context-keys >>> " (get-schema :context-keys-import))
         ]))
 
 
@@ -1962,7 +2031,7 @@
         _ (create-collection-collection-arcs-schema)
         _ (create-app-settings-schema)
         _ (create-confidential-links-schema)
-        ;_ (create-context-keys-schema)
+        _ (create-context-keys-schema)
         ;_ (create-context-schema)
         ;_ (create-custom-urls-schema)
         ;_ (create-delegation-schema)
