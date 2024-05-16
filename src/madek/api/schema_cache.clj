@@ -63,8 +63,10 @@
                    "boolean" s/Bool
                    "uuid" s/Uuid
                    "text" s/Str
+                   "text[]" s/Str
                    "jsonb" s/Any
                    "character varying" s/Str
+                   "character varying[]" s/Str
                    "timestamp with time zone" s/Any
                    ;; helper
                    "str" s/Str
@@ -176,7 +178,6 @@
                   "app_settings.support_urls" schema-de-en
                   "app_settings.welcome_texts" schema-de-en
                   "app_settings.welcome_titles" schema-de-en
-
 
                   "context_keys.labels" schema-de-en
                   "context_keys.descriptions" schema-de-en
@@ -412,7 +413,7 @@
         value-type=" value-type "\n
         ")
 
-        p (println ">>o> !!! [set-schema], ?? final-result  (" (table-name "." column_name) ")  (" key ")=>> " {keySection valueSection})
+        p (println ">>o> !!! [set-schema] =>> " {keySection valueSection})
 
 
         ;p (if (= (table-name "." column_name) :groups.type)
@@ -1551,27 +1552,27 @@
 
               :schemas [
                         {:collection_mea.schema_collection-media-entry-arc-export {
-                                                                                    :alias "mar.collection-meida-entry-arcs/schema_collection-media-entry-arc-export"
-                                                                                    :types [
-                                                                                            {:cover {:value-type TYPE_MAYBE}}
-                                                                                            {:order {:value-type TYPE_MAYBE}}
-                                                                                            {:position {:value-type TYPE_MAYBE}}
-                                                                                            ]
-                                                                                    }}
+                                                                                   :alias "mar.collection-meida-entry-arcs/schema_collection-media-entry-arc-export"
+                                                                                   :types [
+                                                                                           {:cover {:value-type TYPE_MAYBE}}
+                                                                                           {:order {:value-type TYPE_MAYBE}}
+                                                                                           {:position {:value-type TYPE_MAYBE}}
+                                                                                           ]
+                                                                                   }}
 
 
                         {:collection_mea.schema_collection-media-entry-arc-update {
-                                                                                    :alias "mar.collection-media-entry-arcs/schema_collection-media-entry-arc-update"
-                                                                                    :key-types "optional"
-                                                                                    :wl [:highlight :cover :order :position]
-                                                                                    }}
+                                                                                   :alias "mar.collection-media-entry-arcs/schema_collection-media-entry-arc-update"
+                                                                                   :key-types "optional"
+                                                                                   :wl [:highlight :cover :order :position]
+                                                                                   }}
 
 
                         {:collection_mea.schema_collection-media-entry-arc-create {
-                                                                                    :alias "mar.collection-media-entry-arcs/schema_collection-media-entry-arc-create"
-                                                                                    :key-types "optional"
-                                                                                    :wl [:highlight :cover :order :position]
-                                                                                    }}
+                                                                                   :alias "mar.collection-media-entry-arcs/schema_collection-media-entry-arc-create"
+                                                                                   :key-types "optional"
+                                                                                   :wl [:highlight :cover :order :position]
+                                                                                   }}
 
                         ]
 
@@ -1603,22 +1604,22 @@
 
               :schemas [
                         {:collection_carcs.schema_collection-collection-arc-export {
-                                                                                   :alias "mar.collection-collection-arcs/schema_collection-collection-arc-export"
-                                                                                   }}
+                                                                                    :alias "mar.collection-collection-arcs/schema_collection-collection-arc-export"
+                                                                                    }}
 
 
                         {:collection_carcs.schema_collection-collection-arc-update {
-                                                                                   :alias "mar.collection-collection-arcs/schema_collection-collection-arc-update"
-                                                                                   :key-types "optional"
-                                                                                   :wl [:highlight  :order :position]
-                                                                                   }}
+                                                                                    :alias "mar.collection-collection-arcs/schema_collection-collection-arc-update"
+                                                                                    :key-types "optional"
+                                                                                    :wl [:highlight :order :position]
+                                                                                    }}
 
 
                         {:collection_carcs.schema_collection-collection-arc-create {
-                                                                                   :alias "mar.collection-collection-arcs/schema_collection-collection-arc-create"
-                                                                                   :key-types "optional"
-                                                                                   :wl [:highlight  :order :position]
-                                                                                   }}
+                                                                                    :alias "mar.collection-collection-arcs/schema_collection-collection-arc-create"
+                                                                                    :key-types "optional"
+                                                                                    :wl [:highlight :order :position]
+                                                                                    }}
 
                         ]
 
@@ -1642,16 +1643,75 @@
   (let [
         db-table "app_settings"
 
-        ;; :workflows-schema-raw
-        collections-meta-raw (fetch-table-meta-raw db-table)
-        p (println ">o> collection_collection_arcs=" collections-meta-raw)
-        _ (set-schema :app-settings-schema-raw collections-meta-raw)
-        _ (set-schema :app-settings-schema (create-schema-by-data db-table collections-meta-raw))
 
-        _ (set-schema :app-settings-schema-all (create-schema-by-data db-table collections-meta-raw [] [] [] []))
-        _ (set-schema :app-settings-schema-min (create-schema-by-data db-table collections-meta-raw [] ["created_at" "id" "updated_at" "users_active_until_ui_default"] [] []))
 
-        p (println ">o> >>> create-app-settings-schema >>> " (get-schema :app-settings-schema-min))
+        data {
+              :raw [{:app_settings {}}],
+              :raw-schema-name :app_settings-raw
+
+              :schemas [
+                        ;{:app_settings-raw.schema_update-app-settings {
+                        ;                                               :alias "mar.app-settings/schema_update-app-settings"
+                        ;                                               :key-types "optional"
+                        ;                                               :bl ["id"]
+                        ;                                               :types [
+                        ;                                                       {:brand_logo_url {:value-type TYPE_MAYBE}}
+                        ;                                                       {:context_for_collection_summary {:value-type TYPE_MAYBE}}
+                        ;                                                       {:context_for_entry_summary {:value-type TYPE_MAYBE}}
+                        ;                                                       {:copyright_notice_default_text {:value-type TYPE_MAYBE}}
+                        ;                                                       {:default_locale {:value-type TYPE_MAYBE}}
+                        ;                                                       {:edit_meta_data_power_users_group_id {:value-type TYPE_MAYBE}}
+                        ;                                                       {:ignored_keyword_keys_for_browsing {:value-type TYPE_MAYBE}}
+                        ;                                                       {:media_entry_default_license_id {:value-type TYPE_MAYBE}}
+                        ;                                                       {:media_entry_default_license_meta_key {:value-type TYPE_MAYBE}}
+                        ;                                                       {:media_entry_default_license_usage_meta_key {:value-type TYPE_MAYBE}}
+                        ;                                                       {:media_entry_default_license_usage_text {:value-type TYPE_MAYBE}}
+                        ;                                                       {:section_meta_key_id {:value-type TYPE_MAYBE}}
+                        ;                                                       {:splashscreen_slideshow_set_id {:value-type TYPE_MAYBE}}
+                        ;                                                       {:teaser_set_id {:value-type TYPE_MAYBE}}
+                        ;                                                       {:featured_set_id {:value-type TYPE_MAYBE}}
+                        ;                                                       ]
+                        ;                                               }}
+
+                        {:app_settings-raw.schema_export-app-settings {
+                                                                       :alias "mar.app-settings/schema_export-app-settings"
+                                                                       :key-types "optional"
+                                                                       :value-types "maybe"
+                                                                       :types [
+                                                                               {:available_locales {:value-type TYPE_NOTHING}}
+                                                                               {:catalog_context_keys {:value-type TYPE_NOTHING}}
+                                                                               {:contexts_for_collection_edit {:value-type TYPE_NOTHING}}
+                                                                               {:contexts_for_collection_extra {:value-type TYPE_NOTHING}}
+                                                                               {:contexts_for_dynamic_filters {:value-type TYPE_NOTHING}}
+                                                                               {:contexts_for_entry_edit {:value-type TYPE_NOTHING}}
+                                                                               {:contexts_for_entry_extra {:value-type TYPE_NOTHING}}
+                                                                               {:contexts_for_entry_validation {:value-type TYPE_NOTHING}}
+                                                                               {:contexts_for_list_details {:value-type TYPE_NOTHING}}
+                                                                               {:copyright_notice_default_text {:value-type TYPE_NOTHING}}
+                                                                               {:copyright_notice_templates {:value-type TYPE_NOTHING}}
+                                                                               {:created_at {:value-type TYPE_NOTHING}}
+                                                                               {:id {:value-type TYPE_NOTHING}}
+                                                                               {:time_zone {:value-type TYPE_NOTHING}}
+                                                                               ]
+                                                                       }}
+                        ]
+
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+
+        ;;; :workflows-schema-raw
+        ;collections-meta-raw (fetch-table-meta-raw db-table)
+        ;p (println ">o> collection_collection_arcs=" collections-meta-raw)
+        ;_ (set-schema :app-settings-schema-raw collections-meta-raw)
+        ;_ (set-schema :app-settings-schema (create-schema-by-data db-table collections-meta-raw))
+        ;
+        ;_ (set-schema :app-settings-schema-all (create-schema-by-data db-table collections-meta-raw [] [] [] []))
+        ;_ (set-schema :app-settings-schema-min (create-schema-by-data db-table collections-meta-raw [] ["created_at" "id" "updated_at" "users_active_until_ui_default"] [] []))
+        ;
+        ;p (println ">o> >>> create-app-settings-schema >>> " (get-schema :app-settings-schema-min))
         ]))
 
 (defn create-confidential-links-schema []
@@ -1873,7 +1933,7 @@
         _ (create-collections-schema)
         _ (create-collection-media-entry-schema)
         _ (create-collection-collection-arcs-schema)
-        ;_ (create-app-settings-schema)
+        _ (create-app-settings-schema)
         ;_ (create-confidential-links-schema)
         ;_ (create-context-keys-schema)
         ;_ (create-context-schema)

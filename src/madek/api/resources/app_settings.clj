@@ -4,6 +4,10 @@
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [madek.api.resources.shared :as sd]
+
+
+   [madek.api.schema_cache :refer [get-schema]]
+
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t]]
    [madek.api.utils.helper :refer [mslurp]]
@@ -184,6 +188,7 @@
             :content-type "application/json"
             :coercion reitit.coercion.schema/coercion
             :responses {200 {:body schema_export-app-settings}}}}]]])
+;:responses {200 {:body (get-schema :app_settings-raw.schema_export-app-settings)}}}}]]])
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)
