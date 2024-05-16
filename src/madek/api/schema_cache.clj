@@ -8,13 +8,7 @@
    [clojure.string :as str]
    [honey.sql :refer [format] :rename {format sql-format}]
 
-
-
    [honey.sql.helpers :as sql]
-
-
-
-
 
    [madek.api.db.core :refer [get-ds]]
    [madek.api.db.core :refer [get-ds]]
@@ -22,11 +16,7 @@
    [madek.api.resources.shared :as sd]
    [madek.api.utils.validation :refer [vector-or-hashmap-validation]]
 
-
-
    [next.jdbc :as jdbc]
-
-
 
    ;[madek.api.utils.helper :refer [merge-query-parts to-uuids]]
 
@@ -122,19 +112,6 @@
 
 
 
-(defn get-schema-converted [key]
-  (let [
-        res (get-schema key)
-        ;res (into {} res)
-
-        ;p (println ">o> get-schema-by-name.key=" key)
-        ;p (println ">o> get-schema-by-name.val=" val)
-        ] res)
-  )
-
-
-
-
 (defn set-schema [key value]
   (let [
         p (println ">o> !!! [set-schema] (" key ") ->" value)
@@ -158,12 +135,9 @@
                   "collections.layout" (get-enum :collections_layout)
                   "collections.sorting" (get-enum :collections_sorting)
 
-
                   "groups.type" (get-enum :groups.type)
 
                   "users.settings" vector-or-hashmap-validation
-                  ;"users.settings" s/Any
-
 
                   "app_settings.about_pages" schema-de-en
                   "app_settings.brand_texts" schema-de-en
@@ -195,11 +169,6 @@
 
                   "contexts.labels" schema-de-en
                   "contexts.descriptions" schema-de-en
-                  ;"get.body.my-enum" schema-de-en
-
-
-                  ;"groups.id" "uuid"
-
                   }
 
         ;p (println ">o> akey=" key)
@@ -211,10 +180,6 @@
         p (println ">o> !!1 res=" res)
         ]
     res))
-
-;(def schema_full_data_raw [{:column_name "full_data", :data_type "boolean" :key-type TYPE_OPTIONAL}])
-;(def schema_pagination_raw [{:column_name "page", :data_type "int4" :key-type TYPE_OPTIONAL}
-;                            {:column_name "count", :data_type "int4" :key-type TYPE_OPTIONAL}])
 
 (def schema_full_data_raw [{:column_name "full_data", :data_type "boolean"}])
 (def schema_pagination_raw [{:column_name "page", :data_type "int4"}
