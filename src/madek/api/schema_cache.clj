@@ -1921,24 +1921,24 @@
 
               :schemas [
                         {:custom_urls.schema_export_custom_url {
-                                                           :alias "mar.custom_urls/schema_export_custom_url"
-                                                           :types [
-                                                                   {:media_entry_id {:value-type TYPE_MAYBE}}
-                                                                   {:collection_id {:value-type TYPE_MAYBE}}
-                                                                   ]
-                                                           }}
+                                                                :alias "mar.custom_urls/schema_export_custom_url"
+                                                                :types [
+                                                                        {:media_entry_id {:value-type TYPE_MAYBE}}
+                                                                        {:collection_id {:value-type TYPE_MAYBE}}
+                                                                        ]
+                                                                }}
 
 
                         {:custom_urls.schema_update_custom_url {
-                                                           :alias "mar.custom_urls/schema_update_custom_url"
-                                                           :key-types "optional"
-                                                             :wl [:id :is_primary]
-                                                           }}
+                                                                :alias "mar.custom_urls/schema_update_custom_url"
+                                                                :key-types "optional"
+                                                                :wl [:id :is_primary]
+                                                                }}
 
                         {:custom_urls.schema_create_custom_url {
-                                                           :alias "mar.custom_urls/schema_create_custom_url"
-                                                             :wl [:id :is_primary]
-                                                           }}
+                                                                :alias "mar.custom_urls/schema_create_custom_url"
+                                                                :wl [:id :is_primary]
+                                                                }}
                         ]
 
               }
@@ -1962,17 +1962,67 @@
   (let [
         db-table "delegations"
 
-        ;; :workflows-schema-raw
-        context-keys-raw (fetch-table-meta-raw db-table)
-        p (println ">o> >>> delegations.raw >>> " context-keys-raw)
-        _ (set-schema :delegations-raw context-keys-raw)
-        _ (set-schema :delegations-all (create-schema-by-data db-table context-keys-raw))
-        _ (set-schema :delegations-min (create-schema-by-data-bl db-table context-keys-raw ["id"]))
 
-        p (println "\n\n>o> >>> delegations.all >>> " (get-schema :delegations-all))
-        p (println ">o> >>> delegations.min >>> " (get-schema :delegations-min))
 
-        ;_ (System/exit 0)
+
+        data {
+              :raw [{:delegations {}}],
+              :raw-schema-name :delegations-raw
+
+              :schemas [
+                        {:delegations.schema_export_delegations {
+                                                                 :alias "mar.delegations/schema_export_delegations"
+                                                                 :types [
+                                                                         {:admin_comment {:value-type TYPE_MAYBE}}
+                                                                         ]
+                                                                 }}
+
+
+                        {:delegations.schema_get_delegations {
+                                                              :alias "mar.delegations/schema_get_delegations"
+                                                              :key-types "optional"
+                                                              :types [
+                                                                      {:admin_comment {:value-type TYPE_MAYBE}}
+                                                                      {:id {:key-type TYPE_NOTHING}}
+                                                                      ]
+                                                              }}
+
+                        {:delegations.schema_update_delegations {
+                                                              :alias "mar.delegations/schema_update_delegations"
+                                                              :key-types "optional"
+                                                              :types [
+                                                                      {:admin_comment {:value-type TYPE_MAYBE}}
+                                                                      ]
+                                                                 :bl [:id]
+                                                              }}
+
+
+                        {:delegations.schema_import_delegations {
+                                                                 :alias "mar.delegations/schema_import_delegations"
+                                                                 :types [
+                                                                         {:admin_comment {:value-type TYPE_MAYBE}}
+                                                                         ]
+                                                                 :bl [:id]
+                                                                 }}
+
+                        ]
+
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+        ;;; :workflows-schema-raw
+        ;context-keys-raw (fetch-table-meta-raw db-table)
+        ;p (println ">o> >>> delegations.raw >>> " context-keys-raw)
+        ;_ (set-schema :delegations-raw context-keys-raw)
+        ;_ (set-schema :delegations-all (create-schema-by-data db-table context-keys-raw))
+        ;_ (set-schema :delegations-min (create-schema-by-data-bl db-table context-keys-raw ["id"]))
+        ;
+        ;p (println "\n\n>o> >>> delegations.all >>> " (get-schema :delegations-all))
+        ;p (println ">o> >>> delegations.min >>> " (get-schema :delegations-min))
+        ;
+        ;;_ (System/exit 0)
 
         ]))
 
@@ -2115,7 +2165,7 @@
         _ (create-context-keys-schema)
         _ (create-context-schema)
         _ (create-custom-urls-schema)
-        ;_ (create-delegation-schema)
+        _ (create-delegation-schema)
 
         ;_ (create-test-schema)
 
