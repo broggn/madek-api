@@ -1626,28 +1626,32 @@
               :raw-schema-name :app_settings-raw
 
               :schemas [
-                        ;{:app_settings-raw.schema_update-app-settings {
-                        ;                                               :alias "mar.app-settings/schema_update-app-settings"
-                        ;                                               :key-types "optional"
-                        ;                                               :bl ["id"]
-                        ;                                               :types [
-                        ;                                                       {:brand_logo_url {:value-type TYPE_MAYBE}}
-                        ;                                                       {:context_for_collection_summary {:value-type TYPE_MAYBE}}
-                        ;                                                       {:context_for_entry_summary {:value-type TYPE_MAYBE}}
-                        ;                                                       {:copyright_notice_default_text {:value-type TYPE_MAYBE}}
-                        ;                                                       {:default_locale {:value-type TYPE_MAYBE}}
-                        ;                                                       {:edit_meta_data_power_users_group_id {:value-type TYPE_MAYBE}}
-                        ;                                                       {:ignored_keyword_keys_for_browsing {:value-type TYPE_MAYBE}}
-                        ;                                                       {:media_entry_default_license_id {:value-type TYPE_MAYBE}}
-                        ;                                                       {:media_entry_default_license_meta_key {:value-type TYPE_MAYBE}}
-                        ;                                                       {:media_entry_default_license_usage_meta_key {:value-type TYPE_MAYBE}}
-                        ;                                                       {:media_entry_default_license_usage_text {:value-type TYPE_MAYBE}}
-                        ;                                                       {:section_meta_key_id {:value-type TYPE_MAYBE}}
-                        ;                                                       {:splashscreen_slideshow_set_id {:value-type TYPE_MAYBE}}
-                        ;                                                       {:teaser_set_id {:value-type TYPE_MAYBE}}
-                        ;                                                       {:featured_set_id {:value-type TYPE_MAYBE}}
-                        ;                                                       ]
-                        ;                                               }}
+                        {:app_settings-raw.schema_update-app-settings {
+                                                                       :alias "mar.app-settings/schema_update-app-settings"
+                                                                       :key-types "optional"
+                                                                       :bl ["id"]
+                                                                       :types [
+                                                                               {:brand_logo_url {:value-type TYPE_MAYBE}}
+                                                                               {:context_for_collection_summary {:value-type TYPE_MAYBE}}
+                                                                               {:context_for_entry_summary {:value-type TYPE_MAYBE}}
+                                                                               {:copyright_notice_default_text {:value-type TYPE_MAYBE}}
+                                                                               {:default_locale {:value-type TYPE_MAYBE}}
+                                                                               {:edit_meta_data_power_users_group_id {:value-type TYPE_MAYBE}}
+                                                                               {:ignored_keyword_keys_for_browsing {:value-type TYPE_MAYBE}}
+                                                                               {:media_entry_default_license_id {:value-type TYPE_MAYBE}}
+                                                                               {:media_entry_default_license_meta_key {:value-type TYPE_MAYBE}}
+                                                                               {:media_entry_default_license_usage_meta_key {:value-type TYPE_MAYBE}}
+                                                                               {:media_entry_default_license_usage_text {:value-type TYPE_MAYBE}}
+
+                                                                               {:provenance_notices {:value-type TYPE_MAYBE}}
+
+                                                                               {:section_meta_key_id {:value-type TYPE_MAYBE}}
+                                                                               {:sitemap {:value-type TYPE_MAYBE}}
+                                                                               {:splashscreen_slideshow_set_id {:value-type TYPE_MAYBE}}
+                                                                               {:teaser_set_id {:value-type TYPE_MAYBE}}
+                                                                               {:featured_set_id {:value-type TYPE_MAYBE}}
+                                                                               ]
+                                                                       }}
 
                         {:app_settings-raw.schema_export-app-settings {
                                                                        :alias "mar.app-settings/schema_export-app-settings"
@@ -1909,7 +1913,7 @@
         _ (create-collection-media-entry-schema)
         _ (create-collection-collection-arcs-schema)
         _ (create-app-settings-schema)
-        ;_ (create-confidential-links-schema)
+        _ (create-confidential-links-schema)
         ;_ (create-context-keys-schema)
         ;_ (create-context-schema)
         ;_ (create-custom-urls-schema)
