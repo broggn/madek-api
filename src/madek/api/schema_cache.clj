@@ -1911,14 +1911,50 @@
   (let [
         db-table "custom_urls"
 
-        ;; :workflows-schema-raw
-        context-keys-raw (fetch-table-meta-raw db-table)
-        p (println ">o> confidential_links=" context-keys-raw)
-        _ (set-schema :custom-urls-raw context-keys-raw)
-        _ (set-schema :custom-urls-all (create-schema-by-data db-table context-keys-raw))
-        _ (set-schema :custom-urls-min (create-schema-by-data-wl db-table context-keys-raw ["id" "is_primary"]))
 
-        p (println ">o> >>> contexts >>> " (get-schema :custom-urls-all))
+
+
+
+        data {
+              :raw [{:custom_urls {}}],
+              :raw-schema-name :custom_urls-raw
+
+              :schemas [
+                        {:custom_urls.schema_export_custom_url {
+                                                           :alias "mar.custom_urls/schema_export_custom_url"
+                                                           :types [
+                                                                   {:media_entry_id {:value-type TYPE_MAYBE}}
+                                                                   {:collection_id {:value-type TYPE_MAYBE}}
+                                                                   ]
+                                                           }}
+
+
+                        {:custom_urls.schema_update_custom_url {
+                                                           :alias "mar.custom_urls/schema_update_custom_url"
+                                                           :key-types "optional"
+                                                             :wl [:id :is_primary]
+                                                           }}
+
+                        {:custom_urls.schema_create_custom_url {
+                                                           :alias "mar.custom_urls/schema_create_custom_url"
+                                                             :wl [:id :is_primary]
+                                                           }}
+                        ]
+
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+
+        ;;; :workflows-schema-raw
+        ;context-keys-raw (fetch-table-meta-raw db-table)
+        ;p (println ">o> confidential_links=" context-keys-raw)
+        ;_ (set-schema :custom-urls-raw context-keys-raw)
+        ;_ (set-schema :custom-urls-all (create-schema-by-data db-table context-keys-raw))
+        ;_ (set-schema :custom-urls-min (create-schema-by-data-wl db-table context-keys-raw ["id" "is_primary"]))
+        ;
+        ;p (println ">o> >>> contexts >>> " (get-schema :custom-urls-all))
         ]))
 
 
@@ -2078,7 +2114,7 @@
         _ (create-confidential-links-schema)
         _ (create-context-keys-schema)
         _ (create-context-schema)
-        ;_ (create-custom-urls-schema)
+        _ (create-custom-urls-schema)
         ;_ (create-delegation-schema)
 
         ;_ (create-test-schema)
