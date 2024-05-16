@@ -1818,7 +1818,7 @@
                                                                            {:is_required {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
                                                                            {:position {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
                                                                            ]
-                                                                   :bl [:id :context_id :meta_key_id :admin_comment :updated_at :created_at]
+                                                                   :bl [:id]
                                                                    }}
 
                         ]
@@ -1856,8 +1856,11 @@
                         {:contexts.schema_update_contexts {
                                                            :alias "mar.contexts/schema_update_contexts"
                                                            :value-types "maybe"
-                                                           :key-types "maybe"
-                                                           :bl [:id]
+                                                           :key-types "optional"
+                                                           ;:bl [:id]
+                                                           :types [
+                                                                   {:id {:value-type TYPE_NOTHING}}
+                                                                   ]
                                                            }}
 
                         {:contexts.schema_export_contexts_usr {

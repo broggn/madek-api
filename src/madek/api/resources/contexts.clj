@@ -137,9 +137,9 @@
 ;
 ;(def schema_export_contexts_adm
 ;  {:id s/Str
+;   :admin_comment (s/maybe s/Str)})
 ;   :labels (s/maybe sd/schema_ml_list)
 ;   :descriptions (s/maybe sd/schema_ml_list)
-;   :admin_comment (s/maybe s/Str)})
 
 
 

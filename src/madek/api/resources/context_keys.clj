@@ -48,8 +48,8 @@
   [req]
   (let [req-query (-> req :parameters :query)
         db-query (-> (sql/select :id :context_id :meta_key_id
-                                 :is_required :position :length_min :length_max
-                                 :labels :hints :descriptions :documentation_urls)
+                       :is_required :position :length_min :length_max
+                       :labels :hints :descriptions :documentation_urls)
                      (sql/from :context_keys)
                      (sd/build-query-param req-query :id)
                      (sd/build-query-param req-query :context_id)
@@ -132,9 +132,9 @@
 (defn wwrap-find-context_key [param colname send404]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler
-                                    param
-                                    :context_keys colname
-                                    :context_key send404))))
+                    param
+                    :context_keys colname
+                    :context_key send404))))
 
 
 
@@ -143,68 +143,68 @@
 
 
 
-(def schema_import_context_keys
-  {;:id s/Str
-   :context_id s/Str
-   :meta_key_id s/Str
-   :is_required s/Bool
-   (s/optional-key :length_max) (s/maybe s/Int)
-   (s/optional-key :length_min) (s/maybe s/Int)
-   :position s/Int
-   (s/optional-key :admin_comment) (s/maybe s/Str)
-   ; hstore
-   (s/optional-key :labels) (s/maybe sd/schema_ml_list)
-   (s/optional-key :descriptions) (s/maybe sd/schema_ml_list)
-   (s/optional-key :hints) (s/maybe sd/schema_ml_list)
-   (s/optional-key :documentation_urls) (s/maybe sd/schema_ml_list)})
-
-(def schema_update_context_keys
-  {;(s/optional-key :id) s/Str
-   ;:context_id s/Str
-   ;(s/optional-key :meta_key_id) s/Str
-   (s/optional-key :is_required) s/Bool
-   (s/optional-key :length_max) (s/maybe s/Int)
-   (s/optional-key :length_min) (s/maybe s/Int)
-   (s/optional-key :position) s/Int
-   (s/optional-key :admin_comment) (s/maybe s/Str)
-   (s/optional-key :labels) (s/maybe sd/schema_ml_list)
-   (s/optional-key :descriptions) (s/maybe sd/schema_ml_list)
-   (s/optional-key :hints) (s/maybe sd/schema_ml_list)
-   (s/optional-key :documentation_urls) (s/maybe sd/schema_ml_list)})
-
-(def schema_export_context_key
-  {:id s/Uuid
-   :context_id s/Str
-   :meta_key_id s/Str
-   :is_required s/Bool
-   :length_max (s/maybe s/Int)
-   :length_min (s/maybe s/Int)
-   :position s/Int
-
-   :labels (s/maybe sd/schema_ml_list)
-   :descriptions (s/maybe sd/schema_ml_list)
-   :hints (s/maybe sd/schema_ml_list)
-
-   :documentation_urls (s/maybe sd/schema_ml_list)})
-
-(def schema_export_context_key_admin
-  {:id s/Uuid
-   :context_id s/Str
-   :meta_key_id s/Str
-   :is_required s/Bool
-   :length_max (s/maybe s/Int)
-   :length_min (s/maybe s/Int)
-   :position s/Int
-
-   :labels (s/maybe sd/schema_ml_list)
-   :descriptions (s/maybe sd/schema_ml_list)
-   :hints (s/maybe sd/schema_ml_list)
-
-   :documentation_urls (s/maybe sd/schema_ml_list)
-
-   :admin_comment (s/maybe s/Str)
-   :updated_at s/Any
-   :created_at s/Any})
+;(def schema_import_context_keys
+;  {;:id s/Str
+;   :context_id s/Str
+;   :meta_key_id s/Str
+;   :is_required s/Bool
+;   (s/optional-key :length_max) (s/maybe s/Int)
+;   (s/optional-key :length_min) (s/maybe s/Int)
+;   :position s/Int
+;   (s/optional-key :admin_comment) (s/maybe s/Str)
+;   ; hstore
+;   (s/optional-key :labels) (s/maybe sd/schema_ml_list)
+;   (s/optional-key :descriptions) (s/maybe sd/schema_ml_list)
+;   (s/optional-key :hints) (s/maybe sd/schema_ml_list)
+;   (s/optional-key :documentation_urls) (s/maybe sd/schema_ml_list)})
+;
+;(def schema_update_context_keys
+;  {;(s/optional-key :id) s/Str
+;   ;:context_id s/Str
+;   ;(s/optional-key :meta_key_id) s/Str
+;   (s/optional-key :is_required) s/Bool
+;   (s/optional-key :length_max) (s/maybe s/Int)
+;   (s/optional-key :length_min) (s/maybe s/Int)
+;   (s/optional-key :position) s/Int
+;   (s/optional-key :admin_comment) (s/maybe s/Str)
+;   (s/optional-key :labels) (s/maybe sd/schema_ml_list)
+;   (s/optional-key :descriptions) (s/maybe sd/schema_ml_list)
+;   (s/optional-key :hints) (s/maybe sd/schema_ml_list)
+;   (s/optional-key :documentation_urls) (s/maybe sd/schema_ml_list)})
+;
+;(def schema_export_context_key
+;  {:id s/Uuid
+;   :context_id s/Str
+;   :meta_key_id s/Str
+;   :is_required s/Bool
+;   :length_max (s/maybe s/Int)
+;   :length_min (s/maybe s/Int)
+;   :position s/Int
+;
+;   :labels (s/maybe sd/schema_ml_list)
+;   :descriptions (s/maybe sd/schema_ml_list)
+;   :hints (s/maybe sd/schema_ml_list)
+;
+;   :documentation_urls (s/maybe sd/schema_ml_list)})
+;
+;(def schema_export_context_key_admin
+;  {:id s/Uuid
+;   :context_id s/Str
+;   :meta_key_id s/Str
+;   :is_required s/Bool
+;   :length_max (s/maybe s/Int)
+;   :length_min (s/maybe s/Int)
+;   :position s/Int
+;
+;   :labels (s/maybe sd/schema_ml_list)
+;   :descriptions (s/maybe sd/schema_ml_list)
+;   :hints (s/maybe sd/schema_ml_list)
+;
+;   :documentation_urls (s/maybe sd/schema_ml_list)
+;
+;   :admin_comment (s/maybe s/Str)
+;   :updated_at s/Any
+;   :created_at s/Any})
 
 
 
@@ -231,7 +231,7 @@
       :responses {200 {:body (get-schema :context_keys.schema_export_context_key_admin)}
                   406 {:body s/Any}}}
 
-    ; context_key list / query
+     ; context_key list / query
      :get
      {:summary (sd/sum_adm "Query context_keys.")
       :handler handle_adm-list-context_keys
