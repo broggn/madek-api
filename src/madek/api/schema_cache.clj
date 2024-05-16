@@ -174,6 +174,8 @@
 
                   "static-pages.contents" schema-de-en
 
+                  "roles.labels" schema-de-en
+
                   }
 
         ;p (println ">o> akey=" key)
@@ -2133,6 +2135,43 @@
 
 
 
+(defn create-roles-schema []
+  (let [
+        data {
+              :raw [{:roles {}}],
+              :raw-schema-name :roles-raw
+
+              :schemas [
+                        {:roles.schema_export-role {
+                                                    :alias "mar.roles/schema_export-role"
+                                                    :types [
+                                                            {:creator_id {:key-type TYPE_OPTIONAL}}
+                                                            {:created_at {:key-type TYPE_OPTIONAL}}
+                                                            {:updated_at {:key-type TYPE_OPTIONAL}}
+                                                            ]
+
+                                                    }}
+
+                        {:roles.schema_update-role {
+                                                    :alias "mar.roles/schema_update-role"
+                                                    :wl [:labels]
+                                                    }}
+
+                        {:roles.schema_create-role {
+                                                    :alias "mar.roles/schema_create-role"
+                                                    :wl [:meta_key_id :labels]
+                                                    }}
+
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+        ]))
+
+
+
 (defn create-vocabularies-schema []
   (let [
 
@@ -2398,6 +2437,7 @@
         _ (create-vocabularies-schema)
         _ (create-usage_terms-schema)
         _ (create-static_pages-schema)
+        _ (create-roles-schema)
 
 
 
