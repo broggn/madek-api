@@ -11,7 +11,6 @@
    [honey.sql.helpers :as sql]
 
    [madek.api.db.core :refer [get-ds]]
-   [madek.api.db.core :refer [get-ds]]
 
    [madek.api.resources.shared :as sd]
    [madek.api.utils.validation :refer [vector-or-hashmap-validation]]
@@ -1960,11 +1959,6 @@
 
 (defn create-delegation-schema []
   (let [
-        db-table "delegations"
-
-
-
-
         data {
               :raw [{:delegations {}}],
               :raw-schema-name :delegations-raw
@@ -2006,23 +2000,10 @@
                                                                  }}
 
                         ]
-
               }
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-
-        ;;; :workflows-schema-raw
-        ;context-keys-raw (fetch-table-meta-raw db-table)
-        ;p (println ">o> >>> delegations.raw >>> " context-keys-raw)
-        ;_ (set-schema :delegations-raw context-keys-raw)
-        ;_ (set-schema :delegations-all (create-schema-by-data db-table context-keys-raw))
-        ;_ (set-schema :delegations-min (create-schema-by-data-bl db-table context-keys-raw ["id"]))
-        ;
-        ;p (println "\n\n>o> >>> delegations.all >>> " (get-schema :delegations-all))
-        ;p (println ">o> >>> delegations.min >>> " (get-schema :delegations-min))
-        ;
-        ;;_ (System/exit 0)
 
         ]))
 
@@ -2074,6 +2055,44 @@
         res2 (create-schemas-by-config data)
 
         ]))
+
+
+(defn create-usage_terms-schema []
+  (let [
+
+        data {
+              :raw [{:usage_terms {}}],
+              :raw-schema-name :usage_terms-raw
+
+              :schemas [
+                        {:usage_terms.schema_export_usage_term {
+                                                                :alias "mar.usage-terms/schema_export_usage_term"
+                                                                :key-types "optional"
+                                                                :types [
+                                                                        {:id {:key-type TYPE_NOTHING}}
+                                                                        ]
+                                                                }}
+
+                        {:usage_terms.schema_update_usage_terms {
+                                                                :alias "mar.usage-terms/schema_update_usage_terms"
+                                                                :key-types "optional"
+                                                                :wl [:title :version :intro :body]
+                                                                }}
+
+
+                        {:usage_terms.schema_import_usage_terms {
+                                                                :alias "mar.usage-terms/schema_import_usage_terms"
+                                                                :wl [:title :version :intro :body]
+                                                                }}
+
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+        ]))
+
 
 
 (defn create-vocabularies-schema []
@@ -2136,66 +2155,61 @@
                         ]
               }
 
-              res (create-raw-schema data)
-              res2 (create-schemas-by-config data)
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
 
 
 
 
 
-              data {
-                    :raw [{:vocabulary_group_permissions {}}],
-                    :raw-schema-name :vocabulary_group_permissions-raw
+        data {
+              :raw [{:vocabulary_group_permissions {}}],
+              :raw-schema-name :vocabulary_group_permissions-raw
 
-                    :schemas [
-                              {:vocabularies.schema_export-group-perms {
-                                                                        :alias "mar.vocabularies/schema_export-group-perms"
-                                                                        ;:types [
-                                                                        ;        {:labels {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
-                                                                        ;        {:descriptions {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
-                                                                        ;        {:admin_comment {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
-                                                                        ;        ]
-                                                                        }}
-                              ]
-                    }
+              :schemas [
+                        {:vocabularies.schema_export-group-perms {
+                                                                  :alias "mar.vocabularies/schema_export-group-perms"
+                                                                  ;:types [
+                                                                  ;        {:labels {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
+                                                                  ;        {:descriptions {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
+                                                                  ;        {:admin_comment {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
+                                                                  ;        ]
+                                                                  }}
+                        ]
+              }
 
-              res (create-raw-schema data)
-              res2 (create-schemas-by-config data)
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
 
 
-              data {
-                    :raw [{:vocabulary_user_permissions {}}],
-                    :raw-schema-name :vocabulary_user_permissions-raw
+        data {
+              :raw [{:vocabulary_user_permissions {}}],
+              :raw-schema-name :vocabulary_user_permissions-raw
 
-                    :schemas [
-                              {:vocabularies.vocabulary_user_permissions {
-                                                                          :alias "mar.vocabularies/vocabulary_user_permissions"
+              :schemas [
+                        {:vocabularies.vocabulary_user_permissions {
+                                                                    :alias "mar.vocabularies/vocabulary_user_permissions"
+                                                                    }}
+
+                        {:vocabularies.schema_perms-update-user-or-group {
+                                                                          :alias "mar.vocabularies/schema_perms-update-user-or-group"
+                                                                          :wl [:use :view]
                                                                           }}
+                        ]
+              }
 
-                              {:vocabularies.schema_perms-update-user-or-group {
-                                                                                :alias "mar.vocabularies/schema_perms-update-user-or-group"
-                                                                                :wl [:use :view]
-                                                                                }}
-                              ]
-                    }
-
-              res (create-raw-schema data)
-              res2 (create-schemas-by-config data)
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
 
 
 
 
 
-              _ (set-schema :vocabularies.schema_export-perms_all {:vocabulary (get-schema :vocabularies.schema_export-perms_all_vocabulary)
-                                                                   ;:users [schema_export-user-perms]
-                                                                   ;:groups [schema_export-group-perms]})
-                                                                   :users [(get-schema :vocabularies.vocabulary_user_permissions)]
-                                                                   :groups [(get-schema :vocabularies.schema_export-group-perms)]})
-
-
-
-
-
+        _ (set-schema :vocabularies.schema_export-perms_all {:vocabulary (get-schema :vocabularies.schema_export-perms_all_vocabulary)
+                                                             ;:users [schema_export-user-perms]
+                                                             ;:groups [schema_export-group-perms]})
+                                                             :users [(get-schema :vocabularies.vocabulary_user_permissions)]
+                                                             :groups [(get-schema :vocabularies.schema_export-group-perms)]})
 
         ]))
 
@@ -2344,6 +2358,7 @@
 
         _ (create-edit_session-schema)
         _ (create-vocabularies-schema)
+        _ (create-usage_terms-schema)
 
 
 
