@@ -4,6 +4,9 @@
             [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
+
+            [madek.api.schema_cache :refer [get-schema]]
+
             [madek.api.resources.shared :as sd]
             [next.jdbc :as jdbc]
             [reitit.coercion.schema]
@@ -165,7 +168,7 @@
             :coercion reitit.coercion.schema/coercion
             :parameters {:path {:media_entry_id s/Uuid}
                          :body schema_import_conf_link}
-            :responses {200 {:body schema_export_conf_link}
+            :responses {200 {:body (get-schema :confidential_links.schema_export_conf_link)}
                         406 {:body s/Any}}}
 
      :get {:summary (sd/sum_adm "List workflows.")
@@ -175,7 +178,7 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Uuid}
                         :query {(s/optional-key :full_data) s/Bool}}
-           :responses {200 {:body [schema_export_conf_link]}
+           :responses {200 {:body [(get-schema :confidential_links.schema_export_conf_link)]}
                        406 {:body s/Any}}}}]
 
    ["/conf-link/:id"
@@ -186,7 +189,7 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Uuid
                                :id s/Uuid}}
-           :responses {200 {:body schema_export_conf_link}
+           :responses {200 {:body (get-schema :confidential_links.schema_export_conf_link)}
                        404 {:body s/Any}}}
 
      :put {:summary (sd/sum_adm "Update confidential link with id.")
@@ -197,7 +200,7 @@
            :parameters {:path {:media_entry_id s/Uuid
                                :id s/Uuid}
                         :body schema_update_conf_link}
-           :responses {200 {:body schema_export_conf_link}
+           :responses {200 {:body (get-schema :confidential_links.schema_export_conf_link)}
                        404 {:body s/Any}
                        406 {:body s/Any}}}
 
@@ -208,7 +211,7 @@
                            sd/ring-wrap-authorization-edit-permissions]
               :parameters {:path {:media_entry_id s/Uuid
                                   :id s/Uuid}}
-              :responses {200 {:body schema_export_conf_link}
+              :responses {200 {:body (get-schema :confidential_links.schema_export_conf_link)}
                           404 {:body s/Any}}}}]])
 
 ; TODO check can edit permissions
@@ -223,7 +226,7 @@
             :coercion reitit.coercion.schema/coercion
             :parameters {:path {:collection_id s/Uuid}
                          :body schema_import_conf_link}
-            :responses {200 {:body schema_export_conf_link}
+            :responses {200 {:body (get-schema :confidential_links.schema_export_conf_link)}
                         406 {:body s/Any}}}
 
      :get {:summary (sd/sum_adm "List workflows.")
@@ -232,7 +235,7 @@
                         sd/ring-wrap-authorization-edit-permissions]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:collection_id s/Uuid}}
-           :responses {200 {:body [schema_export_conf_link]}
+           :responses {200 {:body [(get-schema :confidential_links.schema_export_conf_link)]}
                        406 {:body s/Any}}}}]
 
    ["/conf-link/:id"
@@ -243,7 +246,7 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:collection_id s/Uuid
                                :id s/Uuid}}
-           :responses {200 {:body schema_export_conf_link}
+           :responses {200 {:body (get-schema :confidential_links.schema_export_conf_link)}
                        404 {:body s/Any}}}
 
      :put {:summary (sd/sum_adm "Update confidential link with id.")
@@ -254,7 +257,7 @@
            :parameters {:path {:collection_id s/Uuid
                                :id s/Uuid}
                         :body schema_update_conf_link}
-           :responses {200 {:body schema_export_conf_link}
+           :responses {200 {:body (get-schema :confidential_links.schema_export_conf_link)}
                        404 {:body s/Any}
                        406 {:body s/Any}}}
 
@@ -265,5 +268,5 @@
                            sd/ring-wrap-authorization-edit-permissions]
               :parameters {:path {:collection_id s/Uuid
                                   :id s/Uuid}}
-              :responses {200 {:body schema_export_conf_link}
+              :responses {200 {:body (get-schema :confidential_links.schema_export_conf_link)}
                           404 {:body s/Any}}}}]])

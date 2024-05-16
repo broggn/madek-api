@@ -553,7 +553,7 @@
                  type-mapping-enums-res (type-mapping-enums type-mapping-key)
                  type-mapping-res (type-mapping data_type)  ;raw-mapping
 
-                 p (println ">>o> !!! [set-schema] =>> key=" type-mapping-key  ", type=" data_type ", type: >" type-mapping-res "<")
+                 p (println ">>o> !!! [set-schema] =>> key=" type-mapping-key ", type=" data_type ", type: >" type-mapping-res "<")
 
 
                  p (println ">o> abc?????????" type-mapping-key)
@@ -1697,16 +1697,64 @@
   (let [
         db-table "confidential_links"
 
-        ;; :workflows-schema-raw
-        confidential-links-raw (fetch-table-meta-raw db-table)
-        p (println ">o> confidential_links=" confidential-links-raw)
-        _ (set-schema :confidential-links-schema-raw confidential-links-raw)
-        _ (set-schema :confidential-links-schema (create-schema-by-data db-table confidential-links-raw))
 
-        _ (set-schema :confidential-links-schema-all (create-schema-by-data db-table confidential-links-raw [] [] [] []))
-        _ (set-schema :confidential-links-schema-min (create-schema-by-data db-table confidential-links-raw [] [] [] ["revoked" "description" "expires_at"]))
 
-        p (println ">o> >>> create-app-settings-schema >>> " (get-schema :app-settings-schema-min))
+        data {
+              :raw [{:confidential_links {}}],
+              :raw-schema-name :confidential_links-raw
+
+              :schemas [
+                        {:confidential_links.schema_export_conf_link {
+                                                                      :alias "mar.confidential_links/schema_export_conf_link"
+                                                                      :types [
+                                                                              {:description {:value-type TYPE_MAYBE}}
+                                                                              {:expires_at {:value-type TYPE_MAYBE}}
+                                                                              ]
+                                                                      }}
+
+
+                        {:confidential_links.schema_update_conf_link {
+                                                                      :alias "mar.confidential_links/schema_update_conf_link"
+                                                                      :key-types "optional"
+                                                                      :value-types "maybe"
+                                                                      :wl [:revoked :description :expires_at]
+                                                                      :types [
+                                                                              {:revoked {:value-type TYPE_NOTHING}}
+                                                                              ]
+                                                                      }}
+
+                        {:confidential_links.schema_import_conf_link {
+                                                                      :alias "mar.confidential_links/schema_import_conf_link"
+                                                                      :key-types "optional"
+                                                                      :value-types "maybe"
+                                                                      :wl [:revoked :description :expires_at]
+                                                                      :types [
+                                                                              {:revoked {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
+                                                                              ]
+                                                                      }}
+
+
+
+                        ]
+
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+
+
+
+        ;;; :workflows-schema-raw
+        ;confidential-links-raw (fetch-table-meta-raw db-table)
+        ;p (println ">o> confidential_links=" confidential-links-raw)
+        ;_ (set-schema :confidential-links-schema-raw confidential-links-raw)
+        ;_ (set-schema :confidential-links-schema (create-schema-by-data db-table confidential-links-raw))
+        ;
+        ;_ (set-schema :confidential-links-schema-all (create-schema-by-data db-table confidential-links-raw [] [] [] []))
+        ;_ (set-schema :confidential-links-schema-min (create-schema-by-data db-table confidential-links-raw [] [] [] ["revoked" "description" "expires_at"]))
+        ;
+        ;p (println ">o> >>> create-app-settings-schema >>> " (get-schema :app-settings-schema-min))
         ]))
 
 (defn create-context-keys-schema []
