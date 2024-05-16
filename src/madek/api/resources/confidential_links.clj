@@ -113,39 +113,39 @@
           (sd/response_not_found "No such confidential link"))))
     (catch Exception ex (sd/response_exception ex))))
 
-(def schema_import_conf_link
-  {;:id s/Uuid
-   ;:resource_type s/Str
-   ;:resource_id s/Uuid
-   ;:token s/Str
-   :revoked s/Bool
-   (s/optional-key :description) (s/maybe s/Str)
-   ;:created_at s/Any
-   ;:updated_at s/Any
-   (s/optional-key :expires_at) (s/maybe s/Inst)})
-
-(def schema_update_conf_link
-  {;:id s/Uuid
-   ;:resource_type s/Str
-   ;:resource_id s/Uuid
-   ;:token s/Str
-   (s/optional-key :revoked) s/Bool
-   (s/optional-key :description) (s/maybe s/Str)
-   ;:created_at s/Any
-   ;:updated_at s/Any
-   (s/optional-key :expires_at) (s/maybe s/Inst)})
-
-(def schema_export_conf_link
-  {:id s/Uuid
-   :user_id s/Uuid
-   :resource_type s/Str
-   :resource_id s/Uuid
-   :token s/Str
-   :revoked s/Bool
-   :description (s/maybe s/Str)
-   :created_at s/Any
-   :updated_at s/Any
-   :expires_at (s/maybe s/Any)})
+;(def schema_import_conf_link
+;  {;:id s/Uuid
+;   ;:resource_type s/Str
+;   ;:resource_id s/Uuid
+;   ;:token s/Str
+;   :revoked s/Bool
+;   (s/optional-key :description) (s/maybe s/Str)
+;   ;:created_at s/Any
+;   ;:updated_at s/Any
+;   (s/optional-key :expires_at) (s/maybe s/Inst)})
+;
+;(def schema_update_conf_link
+;  {;:id s/Uuid
+;   ;:resource_type s/Str
+;   ;:resource_id s/Uuid
+;   ;:token s/Str
+;   (s/optional-key :revoked) s/Bool
+;   (s/optional-key :description) (s/maybe s/Str)
+;   ;:created_at s/Any
+;   ;:updated_at s/Any
+;   (s/optional-key :expires_at) (s/maybe s/Inst)})
+;
+;(def schema_export_conf_link
+;  {:id s/Uuid
+;   :user_id s/Uuid
+;   :resource_type s/Str
+;   :resource_id s/Uuid
+;   :token s/Str
+;   :revoked s/Bool
+;   :description (s/maybe s/Str)
+;   :created_at s/Any
+;   :updated_at s/Any
+;   :expires_at (s/maybe s/Any)})
 
 (def public-routes
   ["/confidential-link/:token/access"])
@@ -199,7 +199,7 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Uuid
                                :id s/Uuid}
-                        :body schema_update_conf_link}
+                        :body (get-schema :confidential_links.schema_update_conf_link)}
            :responses {200 {:body (get-schema :confidential_links.schema_export_conf_link)}
                        404 {:body s/Any}
                        406 {:body s/Any}}}
@@ -256,7 +256,7 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:collection_id s/Uuid
                                :id s/Uuid}
-                        :body schema_update_conf_link}
+                        :body (get-schema :confidential_links.schema_update_conf_link)}
            :responses {200 {:body (get-schema :confidential_links.schema_export_conf_link)}
                        404 {:body s/Any}
                        406 {:body s/Any}}}
