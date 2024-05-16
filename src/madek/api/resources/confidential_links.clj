@@ -167,7 +167,7 @@
                          sd/ring-wrap-authorization-edit-permissions]
             :coercion reitit.coercion.schema/coercion
             :parameters {:path {:media_entry_id s/Uuid}
-                         :body schema_import_conf_link}
+                         :body (get-schema :confidential_links.schema_import_conf_link)}
             :responses {200 {:body (get-schema :confidential_links.schema_export_conf_link)}
                         406 {:body s/Any}}}
 
@@ -225,7 +225,7 @@
                          sd/ring-wrap-authorization-edit-permissions]
             :coercion reitit.coercion.schema/coercion
             :parameters {:path {:collection_id s/Uuid}
-                         :body schema_import_conf_link}
+                         :body (get-schema :confidential_links.schema_import_conf_link)}
             :responses {200 {:body (get-schema :confidential_links.schema_export_conf_link)}
                         406 {:body s/Any}}}
 
