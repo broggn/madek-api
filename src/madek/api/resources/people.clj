@@ -112,68 +112,68 @@
    :created_at s/Any
    :updated_at s/Any})
 
-(def schema_import_person
-  {:subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
-   (s/optional-key :description) s/Str
-   (s/optional-key :external_uris) [s/Str]
-   (s/optional-key :first_name) (s/maybe s/Str)
-   (s/optional-key :id) s/Uuid
-   (s/optional-key :institutional_id) s/Str
-   (s/optional-key :last_name) s/Str
-   (s/optional-key :pseudonym) s/Str
-   (s/optional-key :searchable) s/Str})
-
-(def schema_import_person_result
-  {:subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
-   (s/optional-key :created_at) s/Any
-   (s/optional-key :description) (s/maybe s/Str)
-   (s/optional-key :external_uri) (s/maybe s/Str)
-   (s/optional-key :external_uris) [s/Str]
-   (s/optional-key :first_name) (s/maybe s/Str)
-   (s/optional-key :id) s/Uuid
-   (s/optional-key :institutional_id) (s/maybe s/Str)
-   (s/optional-key :last_name) (s/maybe s/Str)
-   (s/optional-key :pseudonym) (s/maybe s/Str)
-   (s/optional-key :updated_at) s/Any})
-
-(def schema_export_people
-  {:id s/Uuid
-   :subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
-   (s/optional-key :created_at) s/Any
-   (s/optional-key :description) (s/maybe s/Str)
-   (s/optional-key :external_uri) (s/maybe s/Str)
-   (s/optional-key :external_uris) [s/Str]
-   (s/optional-key :first_name) (s/maybe s/Str)
-   (s/optional-key :institutional_id) (s/maybe s/Str)
-   (s/optional-key :last_name) (s/maybe s/Str)
-   (s/optional-key :pseudonym) (s/maybe s/Str)
-   (s/optional-key :searchable) s/Str
-   (s/optional-key :updated_at) s/Any})
-
-(def schema_update_person
-  {(s/optional-key :id) s/Uuid
-   (s/optional-key :description) s/Str
-   (s/optional-key :external_uris) [s/Str]
-   (s/optional-key :first_name) (s/maybe s/Str)
-   (s/optional-key :institutional_id) s/Str
-   (s/optional-key :last_name) s/Str
-   (s/optional-key :pseudonym) s/Str
-   (s/optional-key :searchable) s/Str})
-
-(def schema_query_people
-  {(s/optional-key :count) s/Int
-   (s/optional-key :description) s/Str
-   (s/optional-key :first_name) s/Str
-   (s/optional-key :full_data) s/Bool
-   (s/optional-key :id) s/Uuid
-   (s/optional-key :institutional_id) s/Str
-   (s/optional-key :last_name) s/Str
-   (s/optional-key :page) s/Int
-   (s/optional-key :pseudonym) s/Str
-   (s/optional-key :searchable) s/Str
-   (s/optional-key :subtype) (s/enum "Person"
-                                     "PeopleGroup"
-                                     "PeopleInstitutionalGroup")})
+;(def schema_import_person
+;  {:subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
+;   (s/optional-key :description) s/Str
+;   (s/optional-key :external_uris) [s/Str]
+;   (s/optional-key :first_name) (s/maybe s/Str)
+;   (s/optional-key :id) s/Uuid
+;   (s/optional-key :institutional_id) s/Str
+;   (s/optional-key :last_name) s/Str
+;   (s/optional-key :pseudonym) s/Str
+;   (s/optional-key :searchable) s/Str})
+;
+;(def schema_import_person_result
+;  {:subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
+;   (s/optional-key :created_at) s/Any
+;   (s/optional-key :description) (s/maybe s/Str)
+;   (s/optional-key :external_uri) (s/maybe s/Str)
+;   (s/optional-key :external_uris) [s/Str]
+;   (s/optional-key :first_name) (s/maybe s/Str)
+;   (s/optional-key :id) s/Uuid
+;   (s/optional-key :institutional_id) (s/maybe s/Str)
+;   (s/optional-key :last_name) (s/maybe s/Str)
+;   (s/optional-key :pseudonym) (s/maybe s/Str)
+;   (s/optional-key :updated_at) s/Any})
+;
+;(def schema_export_people
+;  {:id s/Uuid
+;   :subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
+;   (s/optional-key :created_at) s/Any
+;   (s/optional-key :description) (s/maybe s/Str)
+;   (s/optional-key :external_uri) (s/maybe s/Str)
+;   (s/optional-key :external_uris) [s/Str]
+;   (s/optional-key :first_name) (s/maybe s/Str)
+;   (s/optional-key :institutional_id) (s/maybe s/Str)
+;   (s/optional-key :last_name) (s/maybe s/Str)
+;   (s/optional-key :pseudonym) (s/maybe s/Str)
+;   (s/optional-key :searchable) s/Str
+;   (s/optional-key :updated_at) s/Any})
+;
+;(def schema_update_person
+;  {(s/optional-key :id) s/Uuid
+;   (s/optional-key :description) s/Str
+;   (s/optional-key :external_uris) [s/Str]
+;   (s/optional-key :first_name) (s/maybe s/Str)
+;   (s/optional-key :institutional_id) s/Str
+;   (s/optional-key :last_name) s/Str
+;   (s/optional-key :pseudonym) s/Str
+;   (s/optional-key :searchable) s/Str})
+;
+;(def schema_query_people
+;  {(s/optional-key :count) s/Int
+;   (s/optional-key :description) s/Str
+;   (s/optional-key :first_name) s/Str
+;   (s/optional-key :full_data) s/Bool
+;   (s/optional-key :id) s/Uuid
+;   (s/optional-key :institutional_id) s/Str
+;   (s/optional-key :last_name) s/Str
+;   (s/optional-key :page) s/Int
+;   (s/optional-key :pseudonym) s/Str
+;   (s/optional-key :searchable) s/Str
+;   (s/optional-key :subtype) (s/enum "Person"
+;                                     "PeopleGroup"
+;                                     "PeopleInstitutionalGroup")})
 
 ;; TODO: not in use?
 ;"TODO check subtype, catch errors"

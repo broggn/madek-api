@@ -1988,13 +1988,13 @@
                                                               }}
 
                         {:delegations.schema_update_delegations {
-                                                              :alias "mar.delegations/schema_update_delegations"
-                                                              :key-types "optional"
-                                                              :types [
-                                                                      {:admin_comment {:value-type TYPE_MAYBE}}
-                                                                      ]
+                                                                 :alias "mar.delegations/schema_update_delegations"
+                                                                 :key-types "optional"
+                                                                 :types [
+                                                                         {:admin_comment {:value-type TYPE_MAYBE}}
+                                                                         ]
                                                                  :bl [:id]
-                                                              }}
+                                                                 }}
 
 
                         {:delegations.schema_import_delegations {
@@ -2023,6 +2023,58 @@
         ;p (println ">o> >>> delegations.min >>> " (get-schema :delegations-min))
         ;
         ;;_ (System/exit 0)
+
+        ]))
+
+(defn create-edit_session-schema []
+  (let [
+
+
+
+        data {
+              :raw [{:edit_sessions {}}],
+              :raw-schema-name :edit_sessions-raw
+
+              :schemas [
+
+                        {:edit_sessions.schema_export_edit_session {
+                                                                       :alias "mar.edit_sessions/schema_export_edit_session"
+                                                                       :types [
+                                                                               {:media_entry_id {:value-type TYPE_MAYBE}}
+                                                                               {:collection_id {:value-type TYPE_MAYBE}}
+                                                                               ]
+                                                                       }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+
+
+        data {
+              :raw [{:edit_sessions {}}
+                    {:_additional (concat schema_pagination_raw schema_full_data_raw)}
+                    ],
+              :raw-schema-name :edit_sessions-with-pagination-raw
+
+              :schemas [
+                        {:edit_sessions.schema_adm_query_edit_session {
+                                                                    :alias "mar.edit_sessions/schema_adm_query_edit_session"
+                                                                    :key-types "optional"
+                                                                    }}
+
+                        {:edit_sessions.schema_usr_query_edit_session {
+                                                                       :alias "mar.edit_sessions/schema_usr_query_edit_session"
+                                                                       :key-types "optional"
+                                                                       :bl [:created_at]
+                                                                       }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
 
         ]))
 
@@ -2166,6 +2218,14 @@
         _ (create-context-schema)
         _ (create-custom-urls-schema)
         _ (create-delegation-schema)
+
+
+
+        _ (create-edit_session-schema)
+
+
+
+
 
         ;_ (create-test-schema)
 
