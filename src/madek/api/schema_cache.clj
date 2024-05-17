@@ -2252,6 +2252,50 @@
 
         ]))
 
+
+(defn create-io_interfaces-schema []
+  (let [
+        data {
+              :raw [
+                    {:io_interfaces {}}
+                    ],
+              :raw-schema-name :io_interfaces-raw
+
+              :schemas [
+                        {:io_interfaces.schema_export_io_interfaces {
+                                                                     :alias "mar.io_interfaces/schema_export_io_interfaces"
+                                                                     :types [
+                                                                             {:description {:value-type TYPE_MAYBE}}
+                                                                             ]
+                                                                     }}
+
+                        {:io_interfaces.schema_export_io_interfaces_opt {
+                                                                         :alias "mar.io_interfaces/schema_export_io_interfaces_opt"
+                                                                         :key-values "optional"
+                                                                         :types [
+                                                                                 {:id {:key-type TYPE_NOTHING}}
+                                                                                 {:description {:value-type TYPE_MAYBE}}
+                                                                                 ]
+                                                                         }}
+
+                        {:io_interfaces.schema_update_io_interfaces {
+                                                                         :alias "mar.io_interfaces/schema_update_io_interfaces"
+                                                                         :key-values "optional"
+                                                                         :wl [:description]
+                                                                         }}
+
+                        {:io_interfaces.schema_import_io_interfaces {
+                                                                         :alias "mar.io_interfaces/schema_import_io_interfaces"
+                                                                         :wl [:id :description]
+                                                                         }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+        ]))
+
 (defn create-people-schema []
   (let [
         data {
@@ -3170,6 +3214,7 @@
         _ (create-meta_entries-schema)                      ;; TODO
 
         _ (create-delegations_users-schema)
+        _ (create-io_interfaces-schema)
 
 
 

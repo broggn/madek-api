@@ -4,6 +4,11 @@
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [madek.api.resources.shared :as sd]
+
+   [madek.api.schema_cache :refer [get-schema]]
+
+
+
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
@@ -89,25 +94,25 @@
 
 ;### swagger io schema ########################################################
 
-(def schema_import_io_interfaces
-  {:id s/Str
-   :description s/Str})
-
-(def schema_update_io_interfaces
-  {;(s/optional-key :id) s/Str
-   (s/optional-key :description) s/Str})
-
-(def schema_export_io_interfaces_opt
-  {:id s/Str
-   (s/optional-key :description) (s/maybe s/Str)
-   (s/optional-key :created_at) s/Any
-   (s/optional-key :updated_at) s/Any})
-
-(def schema_export_io_interfaces
-  {:id s/Str
-   :description (s/maybe s/Str)
-   :created_at s/Any
-   :updated_at s/Any})
+;(def schema_import_io_interfaces
+;  {:id s/Str
+;   :description s/Str})
+;
+;(def schema_update_io_interfaces
+;  {;(s/optional-key :id) s/Str
+;   (s/optional-key :description) s/Str})
+;
+;(def schema_export_io_interfaces_opt
+;  {:id s/Str
+;   (s/optional-key :description) (s/maybe s/Str)
+;   (s/optional-key :created_at) s/Any
+;   (s/optional-key :updated_at) s/Any})
+;
+;(def schema_export_io_interfaces
+;  {:id s/Str
+;   :description (s/maybe s/Str)
+;   :created_at s/Any
+;   :updated_at s/Any})
 
 ;### routes ###################################################################
 ; TODO docu
@@ -120,8 +125,8 @@
       :handler handle_create-io_interfaces
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
-      :parameters {:body schema_import_io_interfaces}
-      :responses {200 {:body schema_export_io_interfaces}
+      :parameters {:body (get-schema  :io_interfaces.schema_import_io_interfaces )}
+      :responses {200 {:body (get-schema  :io_interfaces.schema_export_io_interfaces )}
                   406 {:body s/Any}}}
 
      ; io_interface list / query
@@ -131,7 +136,7 @@
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
       :parameters {:query {(s/optional-key :full_data) s/Bool}}
-      :responses {200 {:body [schema_export_io_interfaces_opt]}}}}]
+      :responses {200 {:body [(get-schema  :io_interfaces.schema_export_io_interfaces_opt )]}}}}]
 
    ; edit io_interface
    ["/:id"
@@ -142,7 +147,7 @@
                    wrap-find-io_interface]
       :coercion reitit.coercion.schema/coercion
       :parameters {:path {:id s/Str}}
-      :responses {200 {:body schema_export_io_interfaces}
+      :responses {200 {:body (get-schema  :io_interfaces.schema_export_io_interfaces )}
                   404 {:body s/Any}}}
 
      :put
@@ -152,8 +157,8 @@
                    wrap-find-io_interface]
       :coercion reitit.coercion.schema/coercion
       :parameters {:path {:id s/Str}
-                   :body schema_update_io_interfaces}
-      :responses {200 {:body schema_export_io_interfaces}
+                   :body (get-schema  :io_interfaces.schema_update_io_interfaces )}
+      :responses {200 {:body (get-schema  :io_interfaces.schema_export_io_interfaces )}
                   404 {:body s/Any}
                   406 {:body s/Any}}}
 
@@ -164,6 +169,6 @@
       :middleware [wrap-authorize-admin!
                    wrap-find-io_interface]
       :parameters {:path {:id s/Str}}
-      :responses {200 {:body schema_export_io_interfaces}
+      :responses {200 {:body (get-schema  :io_interfaces.schema_export_io_interfaces )}
                   404 {:body s/Any}
                   406 {:body s/Any}}}}]])
