@@ -176,7 +176,9 @@
 
                   "roles.labels" schema-de-en
 
-                  "people.external_uris"  [s/Str]
+                  "people.external_uris" [s/Str]
+                  "keywords.external_uris" [s/Str]
+                  ;"keywords.external_uris" [s/Any]
 
                   }
 
@@ -2217,8 +2219,123 @@
                                                  ;{:conversion_profile {:value-type TYPE_MAYBE}}
                                                  ]
 
-                                         :bl [:id :created_at :updated_at  :searchable]
+                                         :bl [:id :created_at :updated_at :searchable]
                                          }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+        ]))
+
+
+(defn create-keywords-schema []
+  (let [
+        data {
+              :raw [{:keywords {}}],
+              :raw-schema-name :keywords-raw
+
+              :schemas [
+                        {:keywords.schema_create_keyword {
+                                                          :alias "mar.keywords/schema_create_keyword"
+                                                          :key-types "optional"
+                                                          ;:value-types "maybe"
+
+                                                          :types [
+                                                                  {:meta_key_id {:key-type TYPE_NOTHING}}
+                                                                  {:term {:key-type TYPE_NOTHING}}
+
+                                                                  {:description {:value-type TYPE_MAYBE}}
+                                                                  {:position {:value-type TYPE_MAYBE}}
+                                                                  ]
+
+                                                          :wl [:meta_key_id :term :description :position :external_uris :rdf_class]
+                                                          }}
+
+                        {:keywords.schema_update_keyword {
+                                                          :alias "mar.keywords/schema_update_keyword"
+                                                          :key-types "optional"
+
+                                                          :types [
+                                                                  {:description {:value-type TYPE_MAYBE}}
+                                                                  ]
+
+                                                          :wl [:term :description :position :external_uris :rdf_class]
+                                                          }}
+
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+
+
+        data {
+              :raw [{:keywords {}}
+                    {:_additional [{:column_name "external_uri", :data_type "str"}] }
+                    ],
+              :raw-schema-name :keywords-extended-raw
+
+              :schemas [
+
+                        {:keywords.schema_export_keyword_usr {
+                                                              :alias "mar.keywords/schema_export_keyword_usr"
+                                                              ;:key-types "optional"
+
+                                                              :types [
+                                                                      {:description {:value-type TYPE_MAYBE}}
+                                                                      {:position {:value-type TYPE_MAYBE}}
+                                                                      {:external_uri {:value-type TYPE_MAYBE}}
+                                                                      ]
+
+                                                              :bl [:created_at :updated_at :creator_id]
+                                                              }}
+
+                        {:keywords.schema_export_keyword_adm {
+                                                              :alias "mar.keywords/schema_export_keyword_adm"
+                                                              ;:key-types "optional"
+
+                                                              :types [
+                                                                      {:description {:value-type TYPE_MAYBE}}
+                                                                      {:position {:value-type TYPE_MAYBE}}
+                                                                      {:external_uri {:value-type TYPE_MAYBE}}
+                                                                      {:creator_id {:value-type TYPE_MAYBE}}
+                                                                      ]
+
+                                                              ;:bl [ :created_at :updated_at ]
+                                                              }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+
+
+        data {
+              :raw [{:keywords {
+                                :wl [:id :meta_key_id :term :description :rdf_class]
+                                }}
+                    {:_additional schema_pagination_raw }
+                    ],
+              :raw-schema-name :keywords-raw
+
+              :schemas [
+                        {:keywords.schema_query_keyword {
+                                                         :alias "mar.keywords/schema_query_keyword"
+                                                         :key-types "optional"
+                                                         ;
+                                                         ;:types [
+                                                         ;        {:description {:value-type TYPE_MAYBE}}
+                                                         ;        {:position {:value-type TYPE_MAYBE}}
+                                                         ;        {:external_uri {:value-type TYPE_MAYBE}}
+                                                         ;        {:creator_id {:value-type TYPE_MAYBE}}
+                                                         ;        ]
+                                                         ;
+                                                         ;:bl [:created_at :updated_at :creator_id :position]
+                                                         }}
                         ]
               }
 
@@ -2693,6 +2810,7 @@
         _ (create-permissions-schema)
 
         _ (create-people-schema)
+        _ (create-keywords-schema)
 
 
 
