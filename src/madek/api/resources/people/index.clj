@@ -6,6 +6,9 @@
    [madek.api.resources.people.common :as common]
    [madek.api.resources.people.get :as get-person]
    [madek.api.resources.shared :as sd]
+
+   [madek.api.schema_cache :refer [get-schema]]
+
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.helper :refer [parse-specific-keys t]]
    [madek.api.utils.pagination :as pagination]
@@ -77,7 +80,7 @@
    :handler handler
    :middleware [wrap-authorize-admin!]
    :coercion reitit.coercion.schema/coercion
-   :responses {200 {:body {:people [get-person/schema]}}}})
+   :responses {200 {:body {:people [(get-schema :people.get.schema)]}}}})
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)

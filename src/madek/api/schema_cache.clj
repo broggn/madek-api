@@ -128,6 +128,8 @@
         schema-de-en {(s/optional-key :de) (s/maybe s/Str)
                       (s/optional-key :en) (s/maybe s/Str)}
 
+        schema-subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
+
 
         p (println ">o> !!1 type-mapping-enums.key=" key (class key))
         enum-map {"collections.default_resource_type" (get-enum :collections_default_resource_type)
@@ -177,6 +179,7 @@
                   "roles.labels" schema-de-en
 
                   "people.external_uris" [s/Str]
+                  "people.subtype" schema-subtype
                   "keywords.external_uris" [s/Str]
                   ;"keywords.external_uris" [s/Any]
 
@@ -2220,6 +2223,26 @@
                                                  ]
 
                                          :bl [:id :created_at :updated_at :searchable]
+                                         }}
+
+                        {:people.get.schema {
+                                         ;; TODO: fix definition
+                                         :alias "marp.get/schema"
+                                         ;:key-types "optional"
+                                         :value-types "maybe"
+
+                                         :types [
+                                                 {:description {:value-type TYPE_MAYBE}}
+                                                 {:first_name {:value-type TYPE_MAYBE}}
+                                                 {:institutional_id {:value-type TYPE_MAYBE}}
+                                                 {:last_name {:value-type TYPE_MAYBE}}
+                                                 {:admin_comment {:value-type TYPE_MAYBE}}
+                                                 {:pseudonym {:value-type TYPE_MAYBE}}
+                                                 ]
+
+                                         :bl [
+                                              ;:admin_comment
+                                              :searchable]
                                          }}
                         ]
               }
