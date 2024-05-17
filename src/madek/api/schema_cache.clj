@@ -206,6 +206,8 @@
                   "meta_keys.hints" schema-de-en
                   "meta_keys.documentation_urls" schema-de-en
 
+                  "media_files.conversion_profiles" [s/Any]
+
                   }
 
         ;p (println ">o> akey=" key)
@@ -2276,6 +2278,125 @@
         ]))
 
 
+(defn create-meta_entries-schema []
+  (let [
+        data {
+              :raw [{:media_entries {}}],
+              :raw-schema-name :media_entries-raw
+
+              :schemas [
+                        {:media-entiry.schema_export_media_entry {
+                                                                  :alias "mar.media-entries/schema_export_media_entry"
+                                                                  :key-types "optional"
+                                                                  :types [
+                                                                          {:id {:key-type TYPE_NOTHING}}
+                                                                          {:responsible_delegation_id {:value-type TYPE_MAYBE}}
+                                                                          ]
+                                                                  }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+
+        data {
+              :raw [{:collection_media_entry_arcs {}}],
+              :raw-schema-name :collection_media_entry_arcs-raw
+
+              :schemas [
+                        {:media-entiry.schema_export_col_arc {
+                                                              :alias "mar.media-entries/schema_export_col_arc"
+                                                              :types [
+                                                                      ;{:id {:key-type TYPE_NOTHING}}
+                                                                      {:order {:value-type TYPE_MAYBE}}
+                                                                      {:position {:value-type TYPE_MAYBE}}
+                                                                      ]
+                                                              :wl [:media_entry_id :id :order :position :created_at :updated_at]
+                                                              }}
+
+
+                        {:media-entiry.schema_export_preview {
+                                                              :alias "mar.media-entries/schema_export_preview"
+                                                              :raw-schema-name :preview-raw ;;TODO
+                                                              :types [
+                                                                      ;{:id {:key-type TYPE_NOTHING}}
+                                                                      {:width {:value-type TYPE_MAYBE}}
+                                                                      {:height {:value-type TYPE_MAYBE}}
+                                                                      {:conversion_profile {:value-type TYPE_MAYBE}}
+                                                                      ]
+                                                              ;:wl [:media_entry_id :id :order :position :created_at :updated_at]
+                                                              }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+
+        data {
+              :raw [{:meta_data {}}],
+              :raw-schema-name :meta_data-raw
+
+              :schemas [
+                        {:media-entiry.schema_export_meta_data {
+                                                              :alias "mar.media-entries/schema_export_meta_data"
+                                                              :types [
+                                                                      ;{:id {:key-type TYPE_NOTHING}}
+                                                                      {:media_entry_id {:value-type TYPE_MAYBE}}
+                                                                      {:collection_id {:value-type TYPE_MAYBE}}
+                                                                      {:string {:value-type TYPE_MAYBE}}
+                                                                      {:json {:value-type TYPE_MAYBE}}
+                                                                      {:other_media_entry_id {:value-type TYPE_MAYBE}}
+                                                                      ]
+                                                              ;:wl [:media_entry_id :id :order :position :created_at :updated_at]
+                                                                :bl [:created_by_id]
+                                                              }}
+
+
+                        ;{:media-entiry.schema_export_preview {
+                        ;                                      :alias "mar.media-entries/schema_export_preview"
+                        ;                                      :raw-schema-name :preview-raw ;;TODO
+                        ;                                      :types [
+                        ;                                              ;{:id {:key-type TYPE_NOTHING}}
+                        ;                                              {:width {:value-type TYPE_MAYBE}}
+                        ;                                              {:height {:value-type TYPE_MAYBE}}
+                        ;                                              {:conversion_profile {:value-type TYPE_MAYBE}}
+                        ;                                              ]
+                        ;                                      ;:wl [:media_entry_id :id :order :position :created_at :updated_at]
+                        ;                                      }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+
+
+        data {
+              :raw [{:media_files {}}],
+              :raw-schema-name :media_files-raw
+
+              :schemas [
+                        {:media-files.schema_export_media_file {
+                                                              :alias "mar.media-entries/schema_export_media_file"
+                                                              :types [
+                                                                      ;{:id {:key-type TYPE_NOTHING}}
+                                                                      {:media_type {:value-type TYPE_MAYBE}}
+                                                                      {:width {:value-type TYPE_MAYBE}}
+                                                                      {:height {:value-type TYPE_MAYBE}}
+                                                                      {:meta_data {:value-type TYPE_MAYBE}}
+                                                                      ]
+                                                              }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+        ]))
+
+
 (defn create-meta_keys-schema []
   (let [
         data {
@@ -3022,7 +3143,9 @@
         _ (create-people-schema)
         _ (create-keywords-schema)
         _ (create-meta_keys-schema)
+        _ (create-meta_entries-schema)                      ;; TODO
 
+        _ (create-delegations_users-schema)
 
 
 
