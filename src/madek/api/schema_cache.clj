@@ -193,23 +193,18 @@
                   "keywords.external_uris" [s/Str]
                   ;"keywords.external_uris" [s/Any]
 
+                  ;; TODO: check if this is correct, should be "meta_keys .."
                   "meta-keys.meta_datum_object_type" schema-meta_datum
                   "meta-keys.allowed_people_subtypes" schema-allowed_people_subtypes
                   "meta-keys.scope" schema-scope
-                  ;
-                  ;"meta-keys.labels" schema-de-en
-                  ;"meta-keys.descriptions" schema-de-en
-                  ;"meta-keys.hints" schema-de-en
-                  ;"meta-keys.documentation_urls" schema-de-en
+                  ;"meta_keys.meta_datum_object_type" schema-meta_datum
+                  ;"meta_keys.allowed_people_subtypes" schema-allowed_people_subtypes
+                  ;"meta_keys.scope" schema-scope
 
                   "meta_keys.labels" schema-de-en
                   "meta_keys.descriptions" schema-de-en
                   "meta_keys.hints" schema-de-en
                   "meta_keys.documentation_urls" schema-de-en
-
-                  ;"meta_keys.meta_datum_object_type" schema-meta_datum
-                  ;"meta_keys.allowed_people_subtypes" schema-allowed_people_subtypes
-                  ;"meta_keys.scope" schema-scope
 
                   }
 
