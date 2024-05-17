@@ -57,6 +57,7 @@
                    "timestamp with time zone" s/Any
                    ;; helper
                    "str" s/Str
+                   "any" s/Any
                    }
   )
 
@@ -130,6 +131,15 @@
 
         schema-subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
 
+        schema-meta_datum (s/enum "MetaDatum::Text"
+                            "MetaDatum::TextDate"
+                            "MetaDatum::JSON"
+                            "MetaDatum::Keywords"
+                            "MetaDatum::People"
+                            "MetaDatum::Roles")
+        schema-allowed_people_subtypes (s/enum "People" "PeopleGroup")
+
+        schema-scope (s/enum "view" "use")
 
         p (println ">o> !!1 type-mapping-enums.key=" key (class key))
         enum-map {"collections.default_resource_type" (get-enum :collections_default_resource_type)
@@ -182,6 +192,24 @@
                   "people.subtype" schema-subtype
                   "keywords.external_uris" [s/Str]
                   ;"keywords.external_uris" [s/Any]
+
+                  "meta-keys.meta_datum_object_type" schema-meta_datum
+                  "meta-keys.allowed_people_subtypes" schema-allowed_people_subtypes
+                  "meta-keys.scope" schema-scope
+                  ;
+                  ;"meta-keys.labels" schema-de-en
+                  ;"meta-keys.descriptions" schema-de-en
+                  ;"meta-keys.hints" schema-de-en
+                  ;"meta-keys.documentation_urls" schema-de-en
+
+                  "meta_keys.labels" schema-de-en
+                  "meta_keys.descriptions" schema-de-en
+                  "meta_keys.hints" schema-de-en
+                  "meta_keys.documentation_urls" schema-de-en
+
+                  ;"meta_keys.meta_datum_object_type" schema-meta_datum
+                  ;"meta_keys.allowed_people_subtypes" schema-allowed_people_subtypes
+                  ;"meta_keys.scope" schema-scope
 
                   }
 
@@ -2226,24 +2254,188 @@
                                          }}
 
                         {:people.get.schema {
-                                         ;; TODO: fix definition
-                                         :alias "marp.get/schema"
-                                         ;:key-types "optional"
-                                         :value-types "maybe"
+                                             ;; TODO: fix definition
+                                             :alias "marp.get/schema"
+                                             ;:key-types "optional"
+                                             :value-types "maybe"
 
-                                         :types [
-                                                 {:description {:value-type TYPE_MAYBE}}
-                                                 {:first_name {:value-type TYPE_MAYBE}}
-                                                 {:institutional_id {:value-type TYPE_MAYBE}}
-                                                 {:last_name {:value-type TYPE_MAYBE}}
-                                                 {:admin_comment {:value-type TYPE_MAYBE}}
-                                                 {:pseudonym {:value-type TYPE_MAYBE}}
-                                                 ]
+                                             :types [
+                                                     {:description {:value-type TYPE_MAYBE}}
+                                                     {:first_name {:value-type TYPE_MAYBE}}
+                                                     {:institutional_id {:value-type TYPE_MAYBE}}
+                                                     {:last_name {:value-type TYPE_MAYBE}}
+                                                     {:admin_comment {:value-type TYPE_MAYBE}}
+                                                     {:pseudonym {:value-type TYPE_MAYBE}}
+                                                     ]
 
-                                         :bl [
-                                              ;:admin_comment
-                                              :searchable]
-                                         }}
+                                             :bl [
+                                                  ;:admin_comment
+                                                  :searchable]
+                                             }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+        ]))
+
+
+(defn create-meta_keys-schema []
+  (let [
+        data {
+              :raw [{:meta_keys {}}],
+              :raw-schema-name :meta_keys-raw
+
+              :schemas [
+                        {:meta-keys.schema_create-meta-key {
+                                                            ;; TODO: fix definition
+                                                            :alias "mar.meta-keys/schema_create-meta-key"
+                                                            :key-types "optional"
+                                                            ;:value-types "maybe"
+
+                                                            :types [
+                                                                    {:id {:key-type TYPE_NOTHING}}
+                                                                    {:is_extensible_list {:key-type TYPE_NOTHING}}
+                                                                    {:meta_datum_object_type {:key-type TYPE_NOTHING}}
+                                                                    {:is_enabled_for_media_entries {:key-type TYPE_NOTHING}}
+                                                                    {:is_enabled_for_collections {:key-type TYPE_NOTHING}}
+                                                                    {:vocabulary_id {:key-type TYPE_NOTHING}}
+
+                                                                    {:allowed_rdf_class {:value-type TYPE_MAYBE}}
+                                                                    {:labels {:value-type TYPE_MAYBE}}
+                                                                    {:descriptions {:value-type TYPE_MAYBE}}
+                                                                    {:hints {:value-type TYPE_MAYBE}}
+                                                                    {:documentation_urls {:value-type TYPE_MAYBE}}
+                                                                    {:admin_comment {:value-type TYPE_MAYBE}}
+
+                                                                    ;{:height {:value-type TYPE_MAYBE}}
+                                                                    ;{:conversion_profile {:value-type TYPE_MAYBE}}
+                                                                    ]
+
+                                                            ;:bl [:id :created_at :updated_at :searchable]
+                                                            }}
+
+                        {:meta-keys.schema_update-meta-key {
+                                                            ;; TODO: fix definition
+                                                            :alias "mar.meta-keys/schema_update-meta-key"
+                                                            :key-types "optional"
+                                                            ;:value-types "maybe"
+
+                                                            :types [
+                                                                    {:id {:key-type TYPE_NOTHING}}
+                                                                    {:is_extensible_list {:key-type TYPE_NOTHING}}
+                                                                    {:meta_datum_object_type {:key-type TYPE_NOTHING}}
+                                                                    {:is_enabled_for_media_entries {:key-type TYPE_NOTHING}}
+                                                                    {:is_enabled_for_collections {:key-type TYPE_NOTHING}}
+                                                                    {:vocabulary_id {:key-type TYPE_NOTHING}}
+
+                                                                    {:allowed_rdf_class {:value-type TYPE_MAYBE}}
+                                                                    {:labels {:value-type TYPE_MAYBE}}
+                                                                    {:descriptions {:value-type TYPE_MAYBE}}
+                                                                    {:hints {:value-type TYPE_MAYBE}}
+                                                                    {:documentation_urls {:value-type TYPE_MAYBE}}
+                                                                    {:admin_comment {:value-type TYPE_MAYBE}}
+
+                                                                    ;{:height {:value-type TYPE_MAYBE}}
+                                                                    ;{:conversion_profile {:value-type TYPE_MAYBE}}
+                                                                    ]
+
+                                                            :bl [:id :vocabulary_id :meta_datum_object_type]
+                                                            }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+
+
+        data {
+              :raw [{:meta_keys {}}
+                    {:_additional [{:column_name "scope", :data_type "any"}]}
+                    ],
+              :raw-schema-name :meta_keys-scope-raw
+
+              :schemas [
+                        {:meta-keys.schema_query-meta-key {
+                                                           :alias "mar.meta-keys/schema_query-meta-key"
+                                                           :key-types "optional"
+                                                           :wl [:id :vocabulary_id :meta_datum_object_type :is_enabled_for_collections :is_enabled_for_media_entries :scope]
+                                                           }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+
+
+        data {
+              :raw [
+                    {:meta_keys {
+                                 ;:bl ["admin_comment"]
+                                 }}
+                    {:vocabularies {:rename {
+                                             "id" "id_2"
+                                             "enabled_for_public_use" "enabled_for_public_use_2"
+                                             "enabled_for_public_view" "enabled_for_public_view_2"
+                                             "position" "position_2"
+                                             "labels" "labels_2"
+                                             "descriptions" "descriptions_2"
+                                             "admin_comment" "admin_comment_2"
+                                             }
+                                    ;:bl ["admin_comment"]
+                                    }}
+                    {:_additional [{:column_name "io_mappings", :data_type "any"}]}
+
+                    ],
+              :raw-schema-name :meta_keys-vocabularies-raw
+
+              :schemas [
+                        {:meta-keys.schema_export-meta-key-usr {
+                                                                ;; TODO: fix definition
+                                                                :alias "mar.meta-keys/schema_export-meta-key-usr"
+                                                                :key-types "optional"
+                                                                :types [
+                                                                        {:id {:key-type TYPE_NOTHING}}
+                                                                        {:labels {:key-type TYPE_NOTHING}}
+                                                                        {:descriptions {:key-type TYPE_NOTHING}}
+                                                                        {:hints {:key-type TYPE_NOTHING}}
+                                                                        {:documentation_urls {:key-type TYPE_NOTHING}}
+                                                                        {:vocabulary_id {:key-type TYPE_NOTHING}}
+
+                                                                        {:allowed_rdf_class {:value-type TYPE_MAYBE}}
+                                                                        {:labels {:value-type TYPE_MAYBE}}
+                                                                        {:descriptions {:value-type TYPE_MAYBE}}
+                                                                        {:hints {:value-type TYPE_MAYBE}}
+                                                                        {:documentation_urls {:value-type TYPE_MAYBE}}
+                                                                        ]
+                                                                :bl [:admin_comment]
+                                                                }}
+
+                        {:meta-keys.schema_export-meta-key-adm {
+                                                                ;; TODO: fix definition
+                                                                :alias "mar.meta-keys/schema_export-meta-key-adm"
+                                                                :key-types "optional"
+                                                                :types [
+                                                                        {:id {:key-type TYPE_NOTHING}}
+                                                                        {:labels {:key-type TYPE_NOTHING}}
+                                                                        {:descriptions {:key-type TYPE_NOTHING}}
+                                                                        {:hints {:key-type TYPE_NOTHING}}
+                                                                        {:documentation_urls {:key-type TYPE_NOTHING}}
+                                                                        {:vocabulary_id {:key-type TYPE_NOTHING}}
+
+                                                                        {:admin_comment {:key-type TYPE_NOTHING :value-type TYPE_MAYBE}}
+
+                                                                        {:allowed_rdf_class {:value-type TYPE_MAYBE}}
+                                                                        {:labels {:value-type TYPE_MAYBE}}
+                                                                        {:descriptions {:value-type TYPE_MAYBE}}
+                                                                        {:hints {:value-type TYPE_MAYBE}}
+                                                                        {:documentation_urls {:value-type TYPE_MAYBE}}
+                                                                        {:admin_comment_2 {:value-type TYPE_MAYBE}}
+                                                                        ]
+                                                                }}
                         ]
               }
 
@@ -2297,7 +2489,7 @@
 
         data {
               :raw [{:keywords {}}
-                    {:_additional [{:column_name "external_uri", :data_type "str"}] }
+                    {:_additional [{:column_name "external_uri", :data_type "str"}]}
                     ],
               :raw-schema-name :keywords-extended-raw
 
@@ -2341,7 +2533,7 @@
               :raw [{:keywords {
                                 :wl [:id :meta_key_id :term :description :rdf_class]
                                 }}
-                    {:_additional schema_pagination_raw }
+                    {:_additional schema_pagination_raw}
                     ],
               :raw-schema-name :keywords-raw
 
@@ -2834,6 +3026,7 @@
 
         _ (create-people-schema)
         _ (create-keywords-schema)
+        _ (create-meta_keys-schema)
 
 
 
