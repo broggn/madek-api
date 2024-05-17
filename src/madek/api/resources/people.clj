@@ -96,21 +96,21 @@
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)
 
-(def schema_export_person
-  {:id s/Uuid
-   :first_name (s/maybe s/Str)
-   :last_name (s/maybe s/Str)
-   :description (s/maybe s/Str)
-   :subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
-   :institutional_id (s/maybe s/Str)
-   :pseudonym (s/maybe s/Str)
-
-   ; TODO when to use old vs new style?
-   :external_uris [s/Str]
-   :external_uri (s/maybe s/Str)
-
-   :created_at s/Any
-   :updated_at s/Any})
+;(def schema_export_person
+;  {:id s/Uuid
+;   :first_name (s/maybe s/Str)
+;   :last_name (s/maybe s/Str)
+;   :description (s/maybe s/Str)
+;   :subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
+;   :institutional_id (s/maybe s/Str)
+;   :pseudonym (s/maybe s/Str)
+;
+;   ; TODO when to use old vs new style?
+;   :external_uris [s/Str]
+;   :external_uri (s/maybe s/Str)
+;
+;   :created_at s/Any
+;   :updated_at s/Any})
 
 ;(def schema_import_person
 ;  {:subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")

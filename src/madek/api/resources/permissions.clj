@@ -264,144 +264,144 @@
 ;(def valid_permission_keys
 ;  (map keyword valid_permission_names))
 
-(def schema_update-collection-perms
-  {(s/optional-key :get_metadata_and_previews) s/Bool
-   (s/optional-key :responsible_user_id) (s/maybe s/Uuid)
-   (s/optional-key :clipboard_user_id) (s/maybe s/Uuid)
-   (s/optional-key :workflow_id) (s/maybe s/Uuid)
-   (s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)})
-
-(def schema_create-collection-user-permission
-  {:get_metadata_and_previews s/Bool
-   :edit_metadata_and_relations s/Bool
-   :edit_permissions s/Bool})
-
-(def schema_export-collection-user-permission
-  {:id s/Uuid
-
-   ;; collection_user_permissions
-   :get_metadata_and_previews s/Bool
-   :edit_metadata_and_relations s/Bool
-   :edit_permissions s/Bool
-   :collection_id s/Uuid
-
-   :user_id s/Uuid
-   :updator_id (s/maybe s/Uuid)
-   :created_at s/Any
-   :updated_at s/Any
-   :delegation_id (s/maybe s/Uuid)
-   }
-  )
-
-
-
-
-
-
-(def schema_create-collection-group-permission
-  {:get_metadata_and_previews s/Bool
-   :edit_metadata_and_relations s/Bool})
-
-(def schema_export-collection-group-permission
-  {:id s/Uuid
-   :updator_id (s/maybe s/Uuid)
-   :collection_id s/Uuid
-   :group_id s/Uuid
-   :get_metadata_and_previews s/Bool
-   :edit_metadata_and_relations s/Bool
-   ;:delegation_id (s/maybe s/Uuid)
-   :created_at s/Any
-   :updated_at s/Any})
+;(def schema_update-collection-perms
+;  {(s/optional-key :get_metadata_and_previews) s/Bool
+;   (s/optional-key :responsible_user_id) (s/maybe s/Uuid)
+;   (s/optional-key :clipboard_user_id) (s/maybe s/Uuid)
+;   (s/optional-key :workflow_id) (s/maybe s/Uuid)
+;   (s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)})
+;
+;(def schema_create-collection-user-permission
+;  {:get_metadata_and_previews s/Bool
+;   :edit_metadata_and_relations s/Bool
+;   :edit_permissions s/Bool})
+;
+;(def schema_export-collection-user-permission
+;  {:id s/Uuid
+;
+;   ;; collection_user_permissions
+;   :get_metadata_and_previews s/Bool
+;   :edit_metadata_and_relations s/Bool
+;   :edit_permissions s/Bool
+;   :collection_id s/Uuid
+;
+;   :user_id s/Uuid
+;   :updator_id (s/maybe s/Uuid)
+;   :created_at s/Any
+;   :updated_at s/Any
+;   :delegation_id (s/maybe s/Uuid)
+;   }
+;  )
+;
 
 
 
 
 
-
-
-(def schema_export-collection-perms
-  {:id s/Uuid
-   :creator_id s/Uuid
-   (s/optional-key :get_metadata_and_previews) s/Bool
-   (s/optional-key :responsible_user_id) (s/maybe s/Uuid)
-
-   (s/optional-key :clipboard_user_id) (s/maybe s/Uuid)
-   (s/optional-key :workflow_id) (s/maybe s/Uuid)
-   (s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)})
-
-(def schema_export_collection-permissions-all
-  {:media-resource schema_export-collection-perms
-   :users [(get-schema :collection_user_permissions.schema_export-collection-user-permission)]
-   :groups [(get-schema :collection_group_permissions.schema_export-collection-group-permission)]})
-
-
-
-
-
-
-
-
-
-(def schema_update-media-entry-perms
-  {(s/optional-key :get_metadata_and_previews) s/Bool
-   (s/optional-key :get_full_size) s/Bool
-   (s/optional-key :responsible_user_id) (s/maybe s/Uuid)
-   (s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)})
-
-(def schema_export-media-entry-perms
-  {:id s/Uuid
-   :creator_id s/Uuid
-   :is_published s/Bool
-   (s/optional-key :get_metadata_and_previews) s/Bool
-   (s/optional-key :get_full_size) s/Bool
-   (s/optional-key :responsible_user_id) (s/maybe s/Uuid)
-   (s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)})
-
-(def schema_create-media-entry-user-permission
-  {:get_metadata_and_previews s/Bool
-   :get_full_size s/Bool
-   :edit_metadata s/Bool
-   :edit_permissions s/Bool})
-
-(def schema_export-media-entry-user-permission
-  {:id s/Uuid
-   :updator_id (s/maybe s/Uuid)
-   :media_entry_id s/Uuid
-   :user_id s/Uuid
-   :get_metadata_and_previews s/Bool
-   :get_full_size s/Bool
-   :edit_metadata s/Bool
-   :edit_permissions s/Bool
-   :delegation_id (s/maybe s/Uuid)
-   :created_at s/Any
-   :updated_at s/Any})
-
-
-
-
-
-
-
-(def schema_create-media-entry-group-permission
-  {:get_metadata_and_previews s/Bool
-   :get_full_size s/Bool
-   :edit_metadata s/Bool})
-
-(def schema_export-media-entry-group-permission
-  {:id s/Uuid
-   :updator_id (s/maybe s/Uuid)
-   :media_entry_id s/Uuid
-   :group_id s/Uuid
-   :get_metadata_and_previews s/Bool
-   :get_full_size s/Bool
-   :edit_metadata s/Bool
-   :created_at s/Any
-   :updated_at s/Any})
-
-(def schema_export_media-entry-permissions-all
-  {:media-resource schema_export-media-entry-perms
-   :users [schema_export-media-entry-user-permission]
-   :groups [schema_export-media-entry-group-permission]})
+;(def schema_create-collection-group-permission
+;  {:get_metadata_and_previews s/Bool
+;   :edit_metadata_and_relations s/Bool})
+;
+;(def schema_export-collection-group-permission
+;  {:id s/Uuid
+;   :updator_id (s/maybe s/Uuid)
+;   :collection_id s/Uuid
+;   :group_id s/Uuid
+;   :get_metadata_and_previews s/Bool
+;   :edit_metadata_and_relations s/Bool
+;   ;:delegation_id (s/maybe s/Uuid)
+;   :created_at s/Any
+;   :updated_at s/Any})
+;
+;
+;
+;
+;
+;
+;
+;(def schema_export-collection-perms
+;  {:id s/Uuid
+;   :creator_id s/Uuid
+;   (s/optional-key :get_metadata_and_previews) s/Bool
+;   (s/optional-key :responsible_user_id) (s/maybe s/Uuid)
+;
+;   (s/optional-key :clipboard_user_id) (s/maybe s/Uuid)
+;   (s/optional-key :workflow_id) (s/maybe s/Uuid)
+;   (s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)})
+;
+;(def schema_export_collection-permissions-all
+;  {:media-resource schema_export-collection-perms
+;   :users [(get-schema :collection_user_permissions.schema_export-collection-user-permission)]
+;   :groups [(get-schema :collection_group_permissions.schema_export-collection-group-permission)]})
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;(def schema_update-media-entry-perms
+;  {(s/optional-key :get_metadata_and_previews) s/Bool
+;   (s/optional-key :get_full_size) s/Bool
+;   (s/optional-key :responsible_user_id) (s/maybe s/Uuid)
+;   (s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)})
+;
+;(def schema_export-media-entry-perms
+;  {:id s/Uuid
+;   :creator_id s/Uuid
+;   :is_published s/Bool
+;   (s/optional-key :get_metadata_and_previews) s/Bool
+;   (s/optional-key :get_full_size) s/Bool
+;   (s/optional-key :responsible_user_id) (s/maybe s/Uuid)
+;   (s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)})
+;
+;(def schema_create-media-entry-user-permission
+;  {:get_metadata_and_previews s/Bool
+;   :get_full_size s/Bool
+;   :edit_metadata s/Bool
+;   :edit_permissions s/Bool})
+;
+;(def schema_export-media-entry-user-permission
+;  {:id s/Uuid
+;   :updator_id (s/maybe s/Uuid)
+;   :media_entry_id s/Uuid
+;   :user_id s/Uuid
+;   :get_metadata_and_previews s/Bool
+;   :get_full_size s/Bool
+;   :edit_metadata s/Bool
+;   :edit_permissions s/Bool
+;   :delegation_id (s/maybe s/Uuid)
+;   :created_at s/Any
+;   :updated_at s/Any})
+;
+;
+;
+;
+;
+;
+;
+;(def schema_create-media-entry-group-permission
+;  {:get_metadata_and_previews s/Bool
+;   :get_full_size s/Bool
+;   :edit_metadata s/Bool})
+;
+;(def schema_export-media-entry-group-permission
+;  {:id s/Uuid
+;   :updator_id (s/maybe s/Uuid)
+;   :media_entry_id s/Uuid
+;   :group_id s/Uuid
+;   :get_metadata_and_previews s/Bool
+;   :get_full_size s/Bool
+;   :edit_metadata s/Bool
+;   :created_at s/Any
+;   :updated_at s/Any})
+;
+;(def schema_export_media-entry-permissions-all
+;  {:media-resource schema_export-media-entry-perms
+;   :users [schema_export-media-entry-user-permission]
+;   :groups [schema_export-media-entry-group-permission]})
 
 
 

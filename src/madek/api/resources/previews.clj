@@ -52,19 +52,19 @@
   (fn [request]
     (ring-add-media-resource-preview request handler)))
 
-(def schema_export_preview
-  {:id s/Uuid
-   :media_file_id s/Uuid
-   :media_type s/Str
-   :content_type s/Str
-   ;(s/enum "small" "small_125" "medium" "large" "x-large" "maximum")
-   :thumbnail s/Str
-   :width (s/maybe s/Int)
-   :height (s/maybe s/Int)
-   :filename s/Str
-   :conversion_profile (s/maybe s/Str)
-   :updated_at s/Any
-   :created_at s/Any})
+;(def schema_export_preview
+;  {:id s/Uuid
+;   :media_file_id s/Uuid
+;   :media_type s/Str
+;   :content_type s/Str
+;   ;(s/enum "small" "small_125" "medium" "large" "x-large" "maximum")
+;   :thumbnail s/Str
+;   :width (s/maybe s/Int)
+;   :height (s/maybe s/Int)
+;   :filename s/Str
+;   :conversion_profile (s/maybe s/Str)
+;   :updated_at s/Any
+;   :created_at s/Any})
 
 ; TODO tests
 (def preview-routes

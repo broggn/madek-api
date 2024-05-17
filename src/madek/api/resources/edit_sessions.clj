@@ -129,32 +129,32 @@
 
 
 
-(def schema_usr_query_edit_session
-  {(s/optional-key :full_data) s/Bool
-   (s/optional-key :page) s/Int
-   (s/optional-key :count) s/Int
-
-   (s/optional-key :id) s/Uuid
-   (s/optional-key :media_entry_id) s/Uuid
-   (s/optional-key :collection_id) s/Uuid})
-
-(def schema_adm_query_edit_session
-
-  {(s/optional-key :full_data) s/Bool
-   (s/optional-key :page) s/Int
-   (s/optional-key :count) s/Int
-
-   (s/optional-key :id) s/Uuid
-   (s/optional-key :user_id) s/Uuid
-   (s/optional-key :media_entry_id) s/Uuid
-   (s/optional-key :collection_id) s/Uuid})
-
-(def schema_export_edit_session
-  {:id s/Uuid
-   :user_id s/Uuid
-   :created_at s/Any
-   :media_entry_id (s/maybe s/Uuid)
-   :collection_id (s/maybe s/Uuid)})
+;(def schema_usr_query_edit_session
+;  {(s/optional-key :full_data) s/Bool
+;   (s/optional-key :page) s/Int
+;   (s/optional-key :count) s/Int
+;
+;   (s/optional-key :id) s/Uuid
+;   (s/optional-key :media_entry_id) s/Uuid
+;   (s/optional-key :collection_id) s/Uuid})
+;
+;(def schema_adm_query_edit_session
+;
+;  {(s/optional-key :full_data) s/Bool
+;   (s/optional-key :page) s/Int
+;   (s/optional-key :count) s/Int
+;
+;   (s/optional-key :id) s/Uuid
+;   (s/optional-key :user_id) s/Uuid
+;   (s/optional-key :media_entry_id) s/Uuid
+;   (s/optional-key :collection_id) s/Uuid})
+;
+;(def schema_export_edit_session
+;  {:id s/Uuid
+;   :user_id s/Uuid
+;   :created_at s/Any
+;   :media_entry_id (s/maybe s/Uuid)
+;   :collection_id (s/maybe s/Uuid)})
 
 
 
