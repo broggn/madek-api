@@ -176,6 +176,8 @@
 
                   "roles.labels" schema-de-en
 
+                  "people.external_uris"  [s/Str]
+
                   }
 
         ;p (println ">o> akey=" key)
@@ -2196,6 +2198,35 @@
 
         ]))
 
+(defn create-people-schema []
+  (let [
+        data {
+              :raw [{:people {}}],
+              :raw-schema-name :people-raw
+
+              :schemas [
+                        {:people.schema {
+                                         ;; TODO: fix definition
+                                         :alias "marp.create/schema"
+                                         :key-types "optional"
+                                         :value-types "maybe"
+
+                                         :types [
+                                                 {:subtype {:key-type TYPE_NOTHING}}
+                                                 ;{:height {:value-type TYPE_MAYBE}}
+                                                 ;{:conversion_profile {:value-type TYPE_MAYBE}}
+                                                 ]
+
+                                         :bl [:id :created_at :updated_at  :searchable]
+                                         }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+        ]))
+
 
 (defn create-permissions-schema []
   (let [
@@ -2660,6 +2691,8 @@
         _ (create-roles-schema)
         _ (create-previews-schema)
         _ (create-permissions-schema)
+
+        _ (create-people-schema)
 
 
 

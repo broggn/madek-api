@@ -5,8 +5,14 @@
    [honey.sql.helpers :as sql]
    [madek.api.resources.people.common :refer [find-person-by-uid]]
    [madek.api.resources.people.create :as create]
+
+   [madek.api.schema_cache :refer [get-schema]]
+
    [madek.api.resources.people.get :as get-person]
    [madek.api.resources.shared :as sd]
+
+   [madek.api.schema_cache :refer [get-schema]]
+
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
    [next.jdbc :as jdbc]
@@ -43,9 +49,9 @@
    :content-type "application/json"
    :accept "application/json"
    :parameters {:path {:id s/Uuid}
-                :body (-> create/schema
+                :body (-> (get-schema :people.schema)
                           (dissoc :subtype)
-                          (assoc (s/optional-key :subtype) (:subtype create/schema)))}
+                          (assoc (s/optional-key :subtype) (:subtype (get-schema :people.schema))))}
    :handler update-person-handler
    :middleware [wrap-authorize-admin!]
    :responses {200 {:body get-person/schema}
