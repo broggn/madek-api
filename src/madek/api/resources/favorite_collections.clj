@@ -4,6 +4,10 @@
             [logbug.catcher :as catcher]
             [madek.api.authorization :as authorization]
             [madek.api.resources.shared :as sd]
+
+            [madek.api.schema_cache :refer [get-schema]]
+
+
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
             [madek.api.utils.helper :refer [f t]]
             [next.jdbc :as jdbc]
@@ -111,11 +115,11 @@
                                     :collections :id
                                     :collection true))))
 
-(def schema_favorite_collection_export
-  {:user_id s/Uuid
-   (s/optional-key :collection_id) s/Uuid
-   (s/optional-key :updated_at) s/Any
-   (s/optional-key :created_at) s/Any})
+;(def schema_favorite_collection_export
+;  {:user_id s/Uuid
+;   (s/optional-key :collection_id) s/Uuid
+;   (s/optional-key :updated_at) s/Any
+;   (s/optional-key :created_at) s/Any})
 
 ; TODO docu
 ; TODO tests
@@ -171,7 +175,7 @@
        :parameters {:query {;(s/optional-key :user_id) s/Uuid
                             ;(s/optional-key :collection_id) s/Uuid
                             (s/optional-key :full_data) s/Bool}}
-       :responses {200 {:body [schema_favorite_collection_export]}}}}]
+       :responses {200 {:body [(get-schema  :favorite_collections.schema_favorite_collection_export )]}}}}]
     ; edit favorite collections for other users
     ["/favorite/collections/:collection_id/:user_id"
      {:post {:summary (sd/sum_adm "Create favorite_collection for user and collection.")
@@ -184,7 +188,7 @@
              :coercion reitit.coercion.schema/coercion
              :parameters {:path {:user_id s/Uuid
                                  :collection_id s/Uuid}}
-             :responses {200 {:body schema_favorite_collection_export}
+             :responses {200 {:body (get-schema  :favorite_collections.schema_favorite_collection_export )}
                          404 {:body s/Any}
                          406 {:body s/Any}}}
 
@@ -195,7 +199,7 @@
             :coercion reitit.coercion.schema/coercion
             :parameters {:path {:user_id s/Uuid
                                 :collection_id s/Uuid}}
-            :responses {200 {:body schema_favorite_collection_export}
+            :responses {200 {:body (get-schema  :favorite_collections.schema_favorite_collection_export )}
                         404 {:body s/Any}
                         406 {:body s/Any}}}
 
@@ -206,6 +210,6 @@
                             (wwrap-find-favorite_collection true)]
                :parameters {:path {:user_id s/Uuid
                                    :collection_id s/Uuid}}
-               :responses {200 {:body schema_favorite_collection_export}
+               :responses {200 {:body (get-schema  :favorite_collections.schema_favorite_collection_export )}
                            404 {:body s/Any}
                            406 {:body s/Any}}}}]]])

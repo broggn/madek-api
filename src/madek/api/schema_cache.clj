@@ -2296,6 +2296,34 @@
 
         ]))
 
+
+
+(defn create-io_interfaces-schema []
+  (let [
+        data {
+              :raw [
+                    {:favorite_collections {}}
+                    ],
+              :raw-schema-name :favorite_collections-raw
+
+              :schemas [
+
+                        {:favorite_collections.schema_favorite_collection_export {
+                                                                         :alias "mar.favorite_collections/schema_favorite_collection_export"
+                                                                         :key-values "optional"
+                                                                         :types [
+                                                                                 {:user_id {:key-type TYPE_NOTHING}}
+                                                                                 ]
+                                                                         }}
+
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+        ]))
+
 (defn create-people-schema []
   (let [
         data {
