@@ -4,7 +4,7 @@
             [logbug.catcher :as catcher]
             [madek.api.resources.shared :as sd]
 
-            [madek.api.schema_cache :refer [get-schema]]
+            [madek.api.db.dynamic_schema.schema_cache :refer [get-schema]]
 
             [next.jdbc :as jdbc]
             [reitit.coercion.schema]

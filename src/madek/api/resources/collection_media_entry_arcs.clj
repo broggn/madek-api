@@ -5,7 +5,7 @@
    [logbug.catcher :as catcher]
    [madek.api.pagination :as pagination]
 
-   [madek.api.schema_cache :refer [get-schema]]
+   [madek.api.db.dynamic_schema.schema_cache :refer [get-schema]]
 
 
    [madek.api.resources.shared :as sd]

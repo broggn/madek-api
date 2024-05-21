@@ -5,7 +5,7 @@
    [madek.api.resources.previews.preview :as preview]
    [madek.api.resources.shared :as sd]
 
-   [madek.api.schema_cache :refer [get-schema]]
+   [madek.api.db.dynamic_schema.schema_cache :refer [get-schema]]
 
 
    [reitit.coercion.schema]

@@ -7,7 +7,7 @@
    [madek.api.resources.people.get :as get-person]
    [madek.api.resources.shared :as sd]
 
-   [madek.api.schema_cache :refer [get-schema]]
+   [madek.api.db.dynamic_schema.schema_cache :refer [get-schema]]
 
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.helper :refer [parse-specific-keys t]]

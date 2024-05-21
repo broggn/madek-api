@@ -5,7 +5,7 @@
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
 
-   [madek.api.schema_cache :refer [get-schema]]
+   [madek.api.db.dynamic_schema.schema_cache :refer [get-schema]]
 
 
    [madek.api.utils.helper :refer [convert-map-if-exist]]

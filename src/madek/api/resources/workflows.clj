@@ -6,7 +6,7 @@
             [madek.api.resources.shared :as sd]
             [next.jdbc :as jdbc]
 
-            [madek.api.schema_cache :refer [get-schema]]
+            [madek.api.db.dynamic_schema.schema_cache :refer [get-schema]]
 
 
             [reitit.coercion.schema]

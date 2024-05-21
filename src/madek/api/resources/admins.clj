@@ -7,7 +7,7 @@
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.helper :refer [t]]
 
-   [madek.api.schema_cache :refer [get-schema]]
+   [madek.api.db.dynamic_schema.schema_cache :refer [get-schema]]
 
 
    [next.jdbc :as jdbc]
@@ -77,7 +77,7 @@
 
 ;;### swagger io schema ########################################################
 ;
-;(def schema_export-admin
+;(def :schema_export-admin
 ;  {:id s/Uuid
 ;   (s/optional-key :user_id) s/Uuid
 ;   (s/optional-key :updated_at) s/Any
@@ -96,7 +96,7 @@
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
       :parameters {:query {(s/optional-key :full_data) s/Bool}}
-      :responses {200 {:body {:admins [(get-schema :admins.schema-export-admin)]}}}}}]
+      :responses {200 {:body {:admins [(get-schema :schema_export-admin)]}}}}}]
    ; edit admin
    ["/:id"
     {:get
@@ -106,7 +106,7 @@
                    (wwrap-find-admin :id :id true)]
       :coercion reitit.coercion.schema/coercion
       :parameters {:path {:id s/Uuid}}
-      :responses {200 {:body (get-schema :admins.schema-export-admin)}
+      :responses {200 {:body (get-schema :schema_export-admin)}
                   404 {:body s/Any}}}
 
      :delete
@@ -116,7 +116,7 @@
       :middleware [wrap-authorize-admin!
                    (wwrap-find-admin :id :id true)]
       :parameters {:path {:id s/Uuid}}
-      :responses {200 {:body (get-schema :admins.schema-export-admin)}
+      :responses {200 {:body (get-schema :schema_export-admin)}
                   404 {:body s/Any}
                   406 {:body s/Any}}}}]
 
@@ -130,7 +130,7 @@
                    (wwrap-find-admin :user_id :user_id false)]
       :coercion reitit.coercion.schema/coercion
       :parameters {:path {:user_id s/Uuid}}
-      :responses {200 {:body (get-schema :admins.schema-export-admin)}
+      :responses {200 {:body (get-schema :schema_export-admin)}
                   404 {:body s/Any}
                   406 {:body s/Any}}}
 
@@ -141,7 +141,7 @@
                    (wwrap-find-admin :user_id :user_id true)]
       :coercion reitit.coercion.schema/coercion
       :parameters {:path {:user_id s/Uuid}}
-      :responses {200 {:body (get-schema :admins.schema-export-admin)}
+      :responses {200 {:body (get-schema :schema_export-admin)}
                   404 {:body s/Any}
                   406 {:body s/Any}}}
 
@@ -152,6 +152,6 @@
       :middleware [wrap-authorize-admin!
                    (wwrap-find-admin :user_id :user_id true)]
       :parameters {:path {:user_id s/Uuid}}
-      :responses {200 {:body (get-schema :admins.schema-export-admin)}
+      :responses {200 {:body (get-schema :schema_export-admin)}
                   404 {:body s/Any}
                   406 {:body s/Any}}}}]])

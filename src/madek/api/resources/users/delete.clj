@@ -6,7 +6,7 @@
    [madek.api.resources.shared :as sd]
    [madek.api.resources.users.common :refer [wrap-find-user]]
 
-   [madek.api.schema_cache :refer [get-schema]]
+   [madek.api.db.dynamic_schema.schema_cache :refer [get-schema]]
 
    [madek.api.resources.users.get :as get-user]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]

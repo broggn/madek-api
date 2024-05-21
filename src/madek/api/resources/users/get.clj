@@ -5,7 +5,7 @@
    [madek.api.resources.users.common :refer [wrap-find-user]]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
 
-   [madek.api.schema_cache :refer [get-schema]]
+   [madek.api.db.dynamic_schema.schema_cache :refer [get-schema]]
 
 
    [madek.api.utils.validation :refer [vector-or-hashmap-validation]]

@@ -3,7 +3,7 @@
    [clojure.tools.logging :as logging]
    [logbug.catcher :as catcher]
 
-   [madek.api.schema_cache :refer [get-schema]]
+   [madek.api.db.dynamic_schema.schema_cache :refer [get-schema]]
 
    [logbug.debug :as debug :refer [I>]]
    [logbug.ring :as logbug-ring :refer [wrap-handler-with-logging]]

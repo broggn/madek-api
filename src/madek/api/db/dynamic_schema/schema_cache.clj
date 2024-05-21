@@ -1,4 +1,4 @@
-(ns madek.api.schema_cache
+(ns madek.api.db.dynamic_schema.schema_cache
   (:require
    ;; all needed imports
    ;[leihs.core.db :as db]
@@ -12,7 +12,6 @@
 
    [madek.api.db.core :refer [get-ds]]
 
-   [madek.api.resources.shared :as sd]
    [madek.api.utils.validation :refer [vector-or-hashmap-validation]]
 
    [next.jdbc :as jdbc]
@@ -1131,7 +1130,6 @@
         ;; :groups-schema-response
         data {
               :raw [
-                    ;{:groups {:wl ["name" "id"] :rename {"name" "my-name"}}}
                     {:groups {}}
                     {:_additional (concat schema_pagination_raw schema_full_data_raw)}
                     ]
@@ -1139,38 +1137,10 @@
 
               :schemas [
                         {:groups.schema-query-groups {:key-types "optional" :alias "schema_query-groups"}}
-                        ;{:groups-schema-response-put {
-                        ;                              ;:template :groups-schema-with-pagination-raw
-                        ;                              :wl ["name" "type" "institution" "institutional_id" "institutional_name" "created_by_user_id"]}}
                         ]
               }
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-
-        ;_ (doseq [k [:groups-schema-with-pagination-raw :groups-schema-with-pagination :groups-schema-response-put]]
-        ;    (try
-        ;      (println ">>>> print-schema (" k "): " (get-schema-converted k)
-        ;        ", get-schema-converted=" (s/checker (get-schema-converted k))
-        ;        ", get-schema=" (get-schema k)
-        ;        ", isValid=" (map? (get-schema-converted k))
-        ;        )
-        ;      ;(println ">>>> print-schema (" k "): " (get-schema k) ", isValid=" (s/checker (get-schema k)))
-        ;      ;(println ">>>> print-schema (" k "): " (get-schema k) )
-        ;
-        ;      (catch Exception e (println ">>>> ERROR: print-schema (" k "): " (.getMessage e)))
-        ;      )
-        ;    )
-
-
-        p (println ">o> 1create-raw-schema (" (:raw-schema-name data) ") = " res)
-        p (println ">o> 2create-raw-schema (" (:raw-schema-name data) ") = " res2)
-
-        ;_ (System/exit 0)
-
-
-        ; list of keywords want to iterate
-        ;(map keyword ["name" "type" "institution" "institutional_id" "institutional_name" "created_by_user_id"])
-
 
 
 
@@ -1180,10 +1150,6 @@
               :raw [{:groups {}}],
               :raw-schema-name :groups-schema-raw
               :schemas [
-                        ;{:groups-schema-response-put {:alias "schema_update-group"
-                        ;                              :template :groups-schema-with-pagination-raw
-                        ;                              :wl ["name" "type" "institution" "institutional_id" "institutional_name" "created_by_user_id"]}
-                        ;                          }
                         {:groups.schema-update-group {:alias "schema_update-group"
                                                       :key-types "optional"
                                                       :value-types "maybe"
@@ -1223,13 +1189,13 @@
 
 
 
-        ;; :users-schema-raw
-        data {
-              :raw [{:users {}}],
-              :raw-schema-name :users-schema-raw
-              }
-        res (create-raw-schema data)
-        p (println ">o> create-raw-schema (" (:raw-schema-name data) ") = " res)
+        ;;; :users-schema-raw
+        ;data {
+        ;      :raw [{:users {}}],
+        ;      :raw-schema-name :users-schema-raw
+        ;      }
+        ;res (create-raw-schema data)
+        ;p (println ">o> create-raw-schema (" (:raw-schema-name data) ") = " res)
 
 
 
@@ -1240,15 +1206,7 @@
         ;; example how to extract & merge meta-data-infos (PUT "/:group-id/users/")
         data {
               :raw [
-                    ;{:groups {:wl ["email" "person_id"] :_rename {"person_id" "person-id"}}}
-                    ;{:users {:wl ["institutional_id" "id" "login" "created_at" "updated_at"] :_rename {"institutional_id" "institutional-id"}}}
-
-                    ;{:groups {:wl [:email :person_id] }}
-                    ;{:users {:wl [:institutional_id :id :login :created_at :updated_at] }}
-
-                    ;{:users {:wl [:email :person_id] }}
-
-                    ;{:users {:wl [:id :email  :institutional_id  :login :created_at :updated_at :person_id] }} ;; broken:   ;; TODO: fix this to handle [:foo :bar]
+                    ;; TODO: fix this to handle [:foo :bar]
                     {:users {:wl ["id" "email" "institutional_id" "login" "created_at" "updated_at" "person_id"]}}
                     ],
               :raw-schema-name :groups-schema-response-user-simple-raw
@@ -1271,8 +1229,6 @@
               }
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-        p (println ">o> 6create-raw-schema >>> (" (:raw-schema-name data) ") = " res)
-        ;p (println ">o> 7create-raw-schema (" (:raw-schema-name data) ") = " res2)
         ]))
 
 
@@ -1290,11 +1246,9 @@
                         {:users-schema-payload {:alias "maru.update/schema"
                                                 :key-types "optional"
                                                 :types [{:accepted_usage_terms_id {:value-type TYPE_MAYBE}} {:notes {:value-type TYPE_MAYBE}}]
-                                                ;:wl ["accepted_usage_terms_id" "autocomplete" "email" "institution" "first_name" "last_name" "login" "note" "searchable"]
                                                 :wl [:accepted_usage_terms_id :autocomplete :email :institution :first_name :last_name :login :note :searchable]
                                                 }
                          }
-
                         {:get.users-schema-payload {:alias "mar.users.get/schema"
                                                     :value-types "maybe"
                                                     :types [{:created_at {:value-type TYPE_NOTHING}}
@@ -1308,16 +1262,13 @@
                                                     :bl [:searchable :active_until :autocomplete]
                                                     }
                          }
-
                         {:create.users-schema-payload {:alias "mar.users.create/schema"
                                                        :key-types "optional"
-
                                                        :types [
                                                                {:person_id {:key-type TYPE_NOTHING}}
                                                                {:accepted_usage_terms_id {:value-type TYPE_MAYBE}}
                                                                {:notes {:value-type TYPE_MAYBE}}
                                                                ]
-
                                                        :wl [:person_id :accepted_usage_terms_id :email :institution :institution_id :first_name :last_name :login :note :settings]
                                                        }
                          }
@@ -1325,23 +1276,7 @@
               }
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-        p (println ">o> 3create-raw-schema (" (:raw-schema-name data) ") = " res)
-        p (println ">o> 4create-raw-schema (" (:raw-schema-name data) ") = " res2)
 
-
-
-
-
-
-
-        ;
-        ;;; :users-schema-raw
-        ;users-meta-raw (fetch-table-meta-raw "users")
-        ;_ (set-schema :users-schema-raw users-meta-raw)
-        ;
-        ;;; :groups-schema-response-put
-        ;whitelist-key-names ["id" "institutional_id" "email"]
-        ;_ (set-schema :users-schema-payload (create-schema-by-data "users" users-meta-raw [] [] [] whitelist-key-names))
         ]))
 
 (defn create-admins-schema []
@@ -1364,7 +1299,6 @@
         p (println ">o> 6create-raw-schema >>> (" (:raw-schema-name data) ") = " res)
         ;p (println ">o> 7create-raw-schema (" (:raw-schema-name data) ") = " res2)
 
-
         ;;; :users-schema-raw
         ;admins-meta-raw (fetch-table-meta-raw "admins")
         ;_ (set-schema :admins-schema-raw admins-meta-raw)
@@ -1375,7 +1309,6 @@
 
 (defn create-workflows-schema []
   (let [
-
         data {
               :raw [{:workflows {}}],
               :raw-schema-name :workflows-schema-raw
@@ -1405,20 +1338,20 @@
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-        p (println ">o> 6create-raw-schema >>> (" (:raw-schema-name data) ") = " res)
-        ;p (println ">o> 7create-raw-schema (" (:raw-schema-name data) ") = " res2)
-
-
-        ;; :workflows-schema-raw
-        workflows-meta-raw (fetch-table-meta-raw "workflows")
-        p (println ">o> workflows-meta-raw=" workflows-meta-raw)
-        _ (set-schema :workflows-schema-raw workflows-meta-raw)
-
-
-        _ (set-schema :workflows-schema (create-schema-by-data "workflows" workflows-meta-raw))
-
-        whitelist-key-names ["name" "is_active" "configuration"]
-        _ (set-schema :workflows-schema-min (create-schema-by-data "workflows" workflows-meta-raw [] [] [] whitelist-key-names))
+        ;p (println ">o> 6create-raw-schema >>> (" (:raw-schema-name data) ") = " res)
+        ;;p (println ">o> 7create-raw-schema (" (:raw-schema-name data) ") = " res2)
+        ;
+        ;
+        ;;; :workflows-schema-raw
+        ;workflows-meta-raw (fetch-table-meta-raw "workflows")
+        ;p (println ">o> workflows-meta-raw=" workflows-meta-raw)
+        ;_ (set-schema :workflows-schema-raw workflows-meta-raw)
+        ;
+        ;
+        ;_ (set-schema :workflows-schema (create-schema-by-data "workflows" workflows-meta-raw))
+        ;
+        ;whitelist-key-names ["name" "is_active" "configuration"]
+        ;_ (set-schema :workflows-schema-min (create-schema-by-data "workflows" workflows-meta-raw [] [] [] whitelist-key-names))
         ]))
 
 
@@ -1433,7 +1366,6 @@
 
 (defn create-collections-schema []
   (let [
-
         data {
               :raw [{:collections {}}],
               :raw-schema-name :collections-schema-raw
@@ -1485,9 +1417,6 @@
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-        p (println ">o> 6create-raw-schema >>> (" (:raw-schema-name data) ") = " res)
-        ;p (println ">o> 7create-raw-schema (" (:raw-schema-name data) ") = " res2)
-
 
         data {
               :raw [{:collections {:wl ["collection_id" "order" "creator_id" "responsible_user_id" "clipboard_user_id" "workflow_id" "responsible_delegation_id" "public_get_metadata_and_previews"]
@@ -1512,68 +1441,12 @@
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-        ;p (println ">o> 6create-raw-schema >>> (" (:raw-schema-name data) ") = " res)
-        ;p (println ">o> 7create-raw-schema (" (:raw-schema-name data) ") = " res2)
-
-
-        ;additional-order [
-        ;                  {:column_name "order", :data_type "enum::collections_sorting"}
-        ;                  {:column_name "me_get_metadata_and_previews", :data_type "boolean"}
-        ;                  {:column_name "me_edit_permission", :data_type "boolean"}
-        ;                  {:column_name "me_edit_metadata_and_relations", :data_type "boolean"}
-        ;                  ]
-        ;additional-schema-list-raw (concat schema_pagination_raw schema_full_data_raw additional-order)
-        ;
-        ;;; :workflows-schema-raw
-        ;collections-meta-raw (fetch-table-meta-raw "collections" additional-schema-list-raw)
-        ;p (println ">o> workflows-meta-raw=" collections-meta-raw)
-        ;_ (set-schema :collections-schema-raw collections-meta-raw)
-        ;_ (set-schema :collections-schema (create-schema-by-data "collections" collections-meta-raw))
-        ;
-        ;
-        ;;; :collections-schema-get
-        ;whitelist-key-names ["collection_id" "creator_id" "responsible_user_id" "clipboard_user_id" "workflow_id" "responsible_delegation_id"
-        ;                     "public_get_metadata_and_previews"]
-        ;
-        ;;additional-schema-list-raw (concat schema_pagination_raw schema_full_data_raw additional-order)
-        ;
-        ;collections-meta (update-column-value collections-meta-raw "id" "collection_id")
-        ;collections-meta (update-column-value collections-meta "get_metadata_and_previews" "public_get_metadata_and_previews")
-        ;
-        ;;_ (set-schema :collections-schema-get (create-schema-by-data "collections" collections-meta additional-schema-list-raw [] [] whitelist-key-names))
-        ;_ (set-schema :collections-schema-get (create-schema-by-data "collections" collections-meta [] [] [] whitelist-key-names))
-        ;
-        ;
-        ;
-        ;;; :collections-schema-put
-        ;whitelist-key-names ["layout" "is_master" "sorting" "default_context_id" "workflow_id" "default_resource_type"
-        ;                     ]
-        ;
-        ;_ (set-schema :collections-schema-put (create-schema-by-data "collections" collections-meta-raw [] [] [] whitelist-key-names))
-        ;
-        ;
-        ;p (println ">o> ???????? :collections-schema-get=" (get-schema :collections-schema-put))
-        ;
-        ;
-        ;
-        ;
-        ;;; :collections-schema-post
-        ;whitelist-key-names ["layout" "is_master" "sorting" "default_context_id" "workflow_id" "default_resource_type"
-        ;                     "responsible_user_id" "responsible_delegation_id" "get_metadata_and_previews"
-        ;                     ]
-        ;
-        ;_ (set-schema :collections-schema-post (create-schema-by-data "collections" collections-meta-raw [] [] [] whitelist-key-names))
-        ;
-        ;p (println ">o> ???????? :collections-schema-get=" (get-schema :collections-schema-post))
-
-        ]))
+             ]))
 
 
 
 (defn create-collection-media-entry-schema []
   (let [
-        db-table "collection_media_entry_arcs"
-
         data {
               :raw [{:collection_media_entry_arcs {}}],
               :raw-schema-name :collection-media-entry-arcs-schema-raw
@@ -1587,45 +1460,26 @@
                                                                                            {:position {:value-type TYPE_MAYBE}}
                                                                                            ]
                                                                                    }}
-
-
                         {:collection_mea.schema_collection-media-entry-arc-update {
                                                                                    :alias "mar.collection-media-entry-arcs/schema_collection-media-entry-arc-update"
                                                                                    :key-types "optional"
                                                                                    :wl [:highlight :cover :order :position]
                                                                                    }}
-
-
                         {:collection_mea.schema_collection-media-entry-arc-create {
                                                                                    :alias "mar.collection-media-entry-arcs/schema_collection-media-entry-arc-create"
                                                                                    :key-types "optional"
                                                                                    :wl [:highlight :cover :order :position]
                                                                                    }}
-
                         ]
-
               }
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-
-        ;
-        ;
-        ;;; :workflows-schema-raw
-        ;collections-meta-raw (fetch-table-meta-raw db-table)
-        ;p (println ">o> collection_media_entry_arcs=" collections-meta-raw)
-        ;_ (set-schema :collections-schema-media-entry-arcs-raw collections-meta-raw)
-        ;_ (set-schema :collections-schema-media-entry-arcs (create-schema-by-data db-table collections-meta-raw))
-        ;
-        ;_ (set-schema :collections-schema-media-entry-arcs-get (create-schema-by-data db-table collections-meta-raw [] [] [] []))
-        ;_ (set-schema :collections-schema-media-entry-arcs-modify (create-schema-by-data db-table collections-meta-raw [] [] [] ["highlight" "cover" "order" "position"]))
         ]))
 
 
 (defn create-collection-collection-arcs-schema []
   (let [
-        db-table "collection_collection_arcs"
-
         data {
               :raw [{:collection_collection_arcs {}}],
               :raw-schema-name :collection_collection_arcs-raw
@@ -1655,24 +1509,10 @@
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-
-
-        ;;; :workflows-schema-raw
-        ;collections-meta-raw (fetch-table-meta-raw db-table)
-        ;p (println ">o> collection_collection_arcs=" collections-meta-raw)
-        ;_ (set-schema :collections-schema-collection-arcs-raw collections-meta-raw)
-        ;_ (set-schema :collections-schema-collection-arcs (create-schema-by-data db-table collections-meta-raw))
-        ;
-        ;_ (set-schema :collections-schema-collection-arcs-all (create-schema-by-data db-table collections-meta-raw [] [] [] []))
-        ;_ (set-schema :collections-schema-collection-arcs-min (create-schema-by-data db-table collections-meta-raw [] [] [] ["highlight" "order" "position"]))
         ]))
 
 (defn create-app-settings-schema []
   (let [
-        db-table "app_settings"
-
-
-
         data {
               :raw [{:app_settings {}}],
               :raw-schema-name :app_settings-raw
@@ -1731,26 +1571,10 @@
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-
-
-        ;;; :workflows-schema-raw
-        ;collections-meta-raw (fetch-table-meta-raw db-table)
-        ;p (println ">o> collection_collection_arcs=" collections-meta-raw)
-        ;_ (set-schema :app-settings-schema-raw collections-meta-raw)
-        ;_ (set-schema :app-settings-schema (create-schema-by-data db-table collections-meta-raw))
-        ;
-        ;_ (set-schema :app-settings-schema-all (create-schema-by-data db-table collections-meta-raw [] [] [] []))
-        ;_ (set-schema :app-settings-schema-min (create-schema-by-data db-table collections-meta-raw [] ["created_at" "id" "updated_at" "users_active_until_ui_default"] [] []))
-        ;
-        ;p (println ">o> >>> create-app-settings-schema >>> " (get-schema :app-settings-schema-min))
         ]))
 
 (defn create-confidential-links-schema []
   (let [
-        db-table "confidential_links"
-
-
-
         data {
               :raw [{:confidential_links {}}],
               :raw-schema-name :confidential_links-raw
@@ -1784,37 +1608,15 @@
                                                                               {:revoked {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
                                                                               ]
                                                                       }}
-
                         ]
-
               }
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-
-
-
-
-        ;;; :workflows-schema-raw
-        ;confidential-links-raw (fetch-table-meta-raw db-table)
-        ;p (println ">o> confidential_links=" confidential-links-raw)
-        ;_ (set-schema :confidential-links-schema-raw confidential-links-raw)
-        ;_ (set-schema :confidential-links-schema (create-schema-by-data db-table confidential-links-raw))
-        ;
-        ;_ (set-schema :confidential-links-schema-all (create-schema-by-data db-table confidential-links-raw [] [] [] []))
-        ;_ (set-schema :confidential-links-schema-min (create-schema-by-data db-table confidential-links-raw [] [] [] ["revoked" "description" "expires_at"]))
-        ;
-        ;p (println ">o> >>> create-app-settings-schema >>> " (get-schema :app-settings-schema-min))
         ]))
 
 (defn create-context-keys-schema []
   (let [
-        db-table "context_keys"
-
-
-
-
-
         data {
               :raw [{:context_keys {}}],
               :raw-schema-name :context_keys-raw
@@ -1869,7 +1671,6 @@
                                                                            ]
                                                                    :bl [:id]
                                                                    }}
-
                         ]
 
               }
@@ -1882,12 +1683,6 @@
 
 (defn create-context-schema []
   (let [
-        db-table "contexts"
-
-
-
-
-
         data {
               :raw [{:contexts {}}],
               :raw-schema-name :contexts-raw
@@ -1906,64 +1701,28 @@
                                                            :alias "mar.contexts/schema_update_contexts"
                                                            :value-types "maybe"
                                                            :key-types "optional"
-                                                           ;:bl [:id]
                                                            :types [
                                                                    {:id {:value-type TYPE_NOTHING}}
                                                                    ]
                                                            }}
-
                         {:contexts.schema_export_contexts_usr {
                                                                :alias "mar.contexts/schema_export_contexts_usr"
-                                                               ;:value-types "maybe"
-                                                               ;:key-types "maybe"
                                                                :bl [:admin_comment]
-
                                                                :types [
                                                                        {:labels {:value-type TYPE_MAYBE}}
                                                                        {:descriptions {:value-type TYPE_MAYBE}}
                                                                        ]
                                                                }}
-
-                        ;{:contexts.schema_export_contexts_adm {
-                        ;                                   :alias "mar.contexts/schema_export_contexts_adm"
-                        ;                                   ;:value-types "maybe"
-                        ;                                   ;:key-types "maybe"
-                        ;                                   :bl [:admin_comment]
-                        ;
-                        ;                                       :types [
-                        ;                                               {:labels {:value-type TYPE_MAYBE}}
-                        ;                                               {:descriptions {:value-type TYPE_MAYBE}}
-                        ;                                               ]
-                        ;                                   }}
-
                         ]
 
               }
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-
-        ;;; :workflows-schema-raw
-        ;context-keys-raw (fetch-table-meta-raw db-table)
-        ;p (println ">o> confidential_links=" context-keys-raw)
-        ;_ (set-schema :contexts-raw context-keys-raw)
-        ;_ (set-schema :contexts (create-schema-by-data db-table context-keys-raw))
-        ;_ (set-schema :contexts-all (create-schema-by-data db-table context-keys-raw))
-        ;
-        ;_ (set-schema :contexts-update (create-schema-by-data-bl db-table context-keys-raw ["id"]))
-        ;_ (set-schema :contexts-export (create-schema-by-data-bl db-table context-keys-raw ["admin_comment"]))
-        ;
-        ;p (println ">o> >>> contexts >>> " (get-schema :contexts-export))
         ]))
 
 (defn create-custom-urls-schema []
   (let [
-        db-table "custom_urls"
-
-
-
-
-
         data {
               :raw [{:custom_urls {}}],
               :raw-schema-name :custom_urls-raw
@@ -1976,34 +1735,20 @@
                                                                         {:collection_id {:value-type TYPE_MAYBE}}
                                                                         ]
                                                                 }}
-
-
                         {:custom_urls.schema_update_custom_url {
                                                                 :alias "mar.custom_urls/schema_update_custom_url"
                                                                 :key-types "optional"
                                                                 :wl [:id :is_primary]
                                                                 }}
-
                         {:custom_urls.schema_create_custom_url {
                                                                 :alias "mar.custom_urls/schema_create_custom_url"
                                                                 :wl [:id :is_primary]
                                                                 }}
                         ]
-
               }
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-
-
-        ;;; :workflows-schema-raw
-        ;context-keys-raw (fetch-table-meta-raw db-table)
-        ;p (println ">o> confidential_links=" context-keys-raw)
-        ;_ (set-schema :custom-urls-raw context-keys-raw)
-        ;_ (set-schema :custom-urls-all (create-schema-by-data db-table context-keys-raw))
-        ;_ (set-schema :custom-urls-min (create-schema-by-data-wl db-table context-keys-raw ["id" "is_primary"]))
-        ;
-        ;p (println ">o> >>> contexts >>> " (get-schema :custom-urls-all))
         ]))
 
 
@@ -2059,7 +1804,6 @@
 
 (defn create-edit_session-schema []
   (let [
-
         data {
               :raw [{:edit_sessions {}}],
               :raw-schema-name :edit_sessions-raw
@@ -2078,8 +1822,6 @@
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-
-
 
         data {
               :raw [{:edit_sessions {}}
@@ -2109,7 +1851,6 @@
 
 (defn create-usage_terms-schema []
   (let [
-
         data {
               :raw [{:usage_terms {}}],
               :raw-schema-name :usage_terms-raw
@@ -2134,7 +1875,6 @@
                                                                  :alias "mar.usage-terms/schema_import_usage_terms"
                                                                  :wl [:title :version :intro :body]
                                                                  }}
-
                         ]
               }
 
@@ -2166,15 +1906,12 @@
                                                                   :alias "mar.static-pages/schema_create_static_page"
                                                                   :wl [:name :contents]
                                                                   }}
-
                         ]
               }
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-
         ]))
-
 
 
 (defn create-roles-schema []
@@ -2191,27 +1928,21 @@
                                                             {:created_at {:key-type TYPE_OPTIONAL}}
                                                             {:updated_at {:key-type TYPE_OPTIONAL}}
                                                             ]
-
                                                     }}
-
                         {:roles.schema_update-role {
                                                     :alias "mar.roles/schema_update-role"
                                                     :wl [:labels]
                                                     }}
-
                         {:roles.schema_create-role {
                                                     :alias "mar.roles/schema_create-role"
                                                     :wl [:meta_key_id :labels]
                                                     }}
-
                         ]
               }
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-
         ]))
-
 
 
 (defn create-previews-schema []
@@ -2245,8 +1976,6 @@
               :raw [
                     {:delegations_users {}}
                     {:users {:wl ["updated_at" "created_at"]}}
-                    ;{:_additional (concat schema_pagination_raw schema_full_data_raw)}
-
                     ],
               :raw-schema-name :delegations-users-raw
 
@@ -2266,11 +1995,8 @@
 (defn create-io_interfaces-schema []
   (let [
         data {
-              :raw [
-                    {:io_interfaces {}}
-                    ],
+              :raw [{:io_interfaces {}}],
               :raw-schema-name :io_interfaces-raw
-
               :schemas [
                         {:io_interfaces.schema_export_io_interfaces {
                                                                      :alias "mar.io_interfaces/schema_export_io_interfaces"
@@ -2303,9 +2029,7 @@
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-
         ]))
-
 
 
 (defn create-io_interfaces-schema []
@@ -2325,7 +2049,6 @@
                                                                                           {:user_id {:key-type TYPE_NOTHING}}
                                                                                           ]
                                                                                   }}
-
                         ]
               }
 
@@ -2343,35 +2066,24 @@
                     {:media_files {:wl ["id" "media_entry_id" "media_type" "content_type" "filename" "previews" "size" "updated_at" "created_at"]}}
                     ],
               :raw-schema-name :media_files-raw
-
               :schemas [
-
                         {:media_files.schema_export-media-file {
                                                                 :alias "mar.media-files/schema_export-media-file"
-                                                                :types [
-                                                                        {:media_type {:value-type TYPE_MAYBE}}
-                                                                        ]
+                                                                :types [{:media_type {:value-type TYPE_MAYBE}}]
                                                                 }}
                         ]
               }
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-
         ]))
-
 
 
 (defn create-meta-data-schema []
   (let [
         data {
-              :raw [
-                    {:meta_data {}
-
-                     ;{:wl ["id" "media_entry_id" "media_type" "content_type" "filename" "previews" "size" "updated_at" "created_at"]}
-                     }
-                    {:_additional [{:column_name "value", :data_type "str"}]}
-                    ],
+              :raw [{:meta_data {}}
+                    {:_additional [{:column_name "value", :data_type "str"}]}],
               :raw-schema-name :meta_data-schema-raw
 
               :schemas [
@@ -2380,9 +2092,7 @@
                                                                      :wl [:id :meta_key_id :type :value :media_entry_id :collection_id]
                                                                      :types [
                                                                              {:value {:value-type TYPE_EITHER
-                                                                                      ;:either-condition (s/->Either [[{:id s/Uuid}] s/Str])}
-                                                                                      :either-condition [[{:id s/Uuid}] s/Str]}
-                                                                              }
+                                                                                      :either-condition [[{:id s/Uuid}] s/Str]}}
                                                                              {:media_entry_id {:key-type TYPE_OPTIONAL}}
                                                                              {:collection_id {:key-type TYPE_OPTIONAL}}
                                                                              ]
@@ -2392,7 +2102,6 @@
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-
         ]))
 
 
@@ -2406,38 +2115,34 @@
 
               :schemas [
                         {:meta-data-role-schema.schema_export_mdrole {
-                                                                     :alias "mar.meta-data/schema_export_mdrole"
-                                                                     :types [
-                                                                             {:role_id {:value-type TYPE_MAYBE}}
-                                                                             ]
-                                                                     }}
+                                                                      :alias "mar.meta-data/schema_export_mdrole"
+                                                                      :types [
+                                                                              {:role_id {:value-type TYPE_MAYBE}}
+                                                                              ]
+                                                                      }}
                         ]
               }
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-
         ]))
 
 
 (defn create-favorite-media-entries-schema []
   (let [
         data {
-              :raw [
-                    {:favorite-media-entries {}}
-                    ],
+              :raw [{:favorite-media-entries {}}],
               :raw-schema-name :favorite-media-entries-raw
 
               :schemas [
                         {:favorite-media-entries-raw.schema_favorite_media_entries_export {
-                                                                     :alias "mar.favorite-media-entries-raw/schema_favorite_media_entries_export"
-                                                                     }}
+                                                                                           :alias "mar.favorite-media-entries-raw/schema_favorite_media_entries_export"
+                                                                                           }}
                         ]
               }
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-
         ]))
 
 (defn create-people-schema []
@@ -2453,21 +2158,14 @@
                                          :key-types "optional"
                                          :value-types "maybe"
 
-                                         :types [
-                                                 {:subtype {:key-type TYPE_NOTHING}}
-                                                 ;{:height {:value-type TYPE_MAYBE}}
-                                                 ;{:conversion_profile {:value-type TYPE_MAYBE}}
-                                                 ]
-
+                                         :types [{:subtype {:key-type TYPE_NOTHING}}]
                                          :bl [:id :created_at :updated_at :searchable]
                                          }}
 
                         {:people.get.schema {
                                              ;; TODO: fix definition
                                              :alias "marp.get/schema"
-                                             ;:key-types "optional"
                                              :value-types "maybe"
-
                                              :types [
                                                      {:description {:value-type TYPE_MAYBE}}
                                                      {:first_name {:value-type TYPE_MAYBE}}
@@ -2476,10 +2174,7 @@
                                                      {:admin_comment {:value-type TYPE_MAYBE}}
                                                      {:pseudonym {:value-type TYPE_MAYBE}}
                                                      ]
-
-                                             :bl [
-                                                  ;:admin_comment
-                                                  :searchable]
+                                             :bl [:searchable]
                                              }}
                         ]
               }
@@ -2525,8 +2220,6 @@
                                                                        ]
                                                                :wl [:media_entry_id :id :order :position :created_at :updated_at]
                                                                }}
-
-
                         {:media-entries.schema_export_preview {
                                                                :alias "mar.media-entries/schema_export_preview"
                                                                :raw-schema-name :preview-raw ;;TODO
@@ -2565,6 +2258,7 @@
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
 
+
         data {
               :raw [
                     {:media_entries {:wl ["public_get_metadata_and_previews" "public_get_full_size"]
@@ -2575,12 +2269,12 @@
                     {:collection_media_entry_arcs {:wl ["collection_id" "order"]}}
 
                     {:media_entry_user_permissions {:wl ["me_get_metadata_and_previews" "me_get_full_size" "me_edit_metadata" "me_edit_permissions"]
-                                                   :rename {"get_metadata_and_previews" "me_get_metadata_and_previews"
-                                                            "get_full_size" "me_get_full_size"
-                                                            "edit_metadata" "me_edit_metadata"
-                                                            "edit_permissions" "me_edit_permissions"
-                                                            }
-                                                   }}
+                                                    :rename {"get_metadata_and_previews" "me_get_metadata_and_previews"
+                                                             "get_full_size" "me_get_full_size"
+                                                             "edit_metadata" "me_edit_metadata"
+                                                             "edit_permissions" "me_edit_permissions"
+                                                             }
+                                                    }}
                     {:_additional (concat schema_pagination_raw schema_full_data_raw [{:column_name "filter_by", :data_type "str"}])}
                     ],
               :raw-schema-name :media_entries-media_entry_user_permission-collection_media_entry_arcs-raw
@@ -2595,8 +2289,6 @@
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-
-
 
         data {
               :raw [{:media_files {}}],
@@ -2623,14 +2315,12 @@
                                                                              :media_entry_id s/Uuid
                                                                              :has_meta_data [{s/Any s/Bool}]}})
 
-
         _ (set-schema :media-entries-schema-schema_query_media_entries_related_result {:media_entries [(get-schema :media-entries.schema_export_media_entry)]
                                                                                        :meta_data [[(get-schema :media-entries.schema_export_meta_data)]]
                                                                                        :media_files [(s/maybe (get-schema :media-files.schema_export_media_file))]
                                                                                        :previews [[(s/maybe (get-schema :media-entries.schema_export_preview))]]
                                                                                        (s/optional-key :col_arcs) [(get-schema :media-entries.schema_export_col_arc)]
                                                                                        (s/optional-key :col_meta_data) [(get-schema :media-entries.schema_export_meta_data)]})
-
         ]))
 
 
@@ -2645,8 +2335,6 @@
                                                             ;; TODO: fix definition
                                                             :alias "mar.meta-keys/schema_create-meta-key"
                                                             :key-types "optional"
-                                                            ;:value-types "maybe"
-
                                                             :types [
                                                                     {:id {:key-type TYPE_NOTHING}}
                                                                     {:is_extensible_list {:key-type TYPE_NOTHING}}
@@ -2661,20 +2349,13 @@
                                                                     {:hints {:value-type TYPE_MAYBE}}
                                                                     {:documentation_urls {:value-type TYPE_MAYBE}}
                                                                     {:admin_comment {:value-type TYPE_MAYBE}}
-
-                                                                    ;{:height {:value-type TYPE_MAYBE}}
-                                                                    ;{:conversion_profile {:value-type TYPE_MAYBE}}
                                                                     ]
-
-                                                            ;:bl [:id :created_at :updated_at :searchable]
                                                             }}
 
                         {:meta-keys.schema_update-meta-key {
                                                             ;; TODO: fix definition
                                                             :alias "mar.meta-keys/schema_update-meta-key"
                                                             :key-types "optional"
-                                                            ;:value-types "maybe"
-
                                                             :types [
                                                                     {:id {:key-type TYPE_NOTHING}}
                                                                     {:is_extensible_list {:key-type TYPE_NOTHING}}
@@ -2689,9 +2370,6 @@
                                                                     {:hints {:value-type TYPE_MAYBE}}
                                                                     {:documentation_urls {:value-type TYPE_MAYBE}}
                                                                     {:admin_comment {:value-type TYPE_MAYBE}}
-
-                                                                    ;{:height {:value-type TYPE_MAYBE}}
-                                                                    ;{:conversion_profile {:value-type TYPE_MAYBE}}
                                                                     ]
 
                                                             :bl [:id :vocabulary_id :meta_datum_object_type]
@@ -2701,7 +2379,6 @@
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-
 
 
         data {
@@ -2723,12 +2400,9 @@
         res2 (create-schemas-by-config data)
 
 
-
         data {
               :raw [
-                    {:meta_keys {
-                                 ;:bl ["admin_comment"]
-                                 }}
+                    {:meta_keys {}}
                     {:vocabularies {:rename {
                                              "id" "id_2"
                                              "enabled_for_public_use" "enabled_for_public_use_2"
@@ -2738,7 +2412,6 @@
                                              "descriptions" "descriptions_2"
                                              "admin_comment" "admin_comment_2"
                                              }
-                                    ;:bl ["admin_comment"]
                                     }}
                     {:_additional [{:column_name "io_mappings", :data_type "any"}]}
 
@@ -2794,7 +2467,6 @@
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-
         ]))
 
 
@@ -2808,8 +2480,6 @@
                         {:keywords.schema_create_keyword {
                                                           :alias "mar.keywords/schema_create_keyword"
                                                           :key-types "optional"
-                                                          ;:value-types "maybe"
-
                                                           :types [
                                                                   {:meta_key_id {:key-type TYPE_NOTHING}}
                                                                   {:term {:key-type TYPE_NOTHING}}
@@ -2817,7 +2487,6 @@
                                                                   {:description {:value-type TYPE_MAYBE}}
                                                                   {:position {:value-type TYPE_MAYBE}}
                                                                   ]
-
                                                           :wl [:meta_key_id :term :description :position :external_uris :rdf_class]
                                                           }}
 
@@ -2839,7 +2508,6 @@
         res2 (create-schemas-by-config data)
 
 
-
         data {
               :raw [{:keywords {}}
                     {:_additional [{:column_name "external_uri", :data_type "str"}]}
@@ -2847,7 +2515,6 @@
               :raw-schema-name :keywords-extended-raw
 
               :schemas [
-
                         {:keywords.schema_export_keyword_usr {
                                                               :alias "mar.keywords/schema_export_keyword_usr"
                                                               ;:key-types "optional"
@@ -2863,23 +2530,18 @@
 
                         {:keywords.schema_export_keyword_adm {
                                                               :alias "mar.keywords/schema_export_keyword_adm"
-                                                              ;:key-types "optional"
-
                                                               :types [
                                                                       {:description {:value-type TYPE_MAYBE}}
                                                                       {:position {:value-type TYPE_MAYBE}}
                                                                       {:external_uri {:value-type TYPE_MAYBE}}
                                                                       {:creator_id {:value-type TYPE_MAYBE}}
                                                                       ]
-
-                                                              ;:bl [ :created_at :updated_at ]
                                                               }}
                         ]
               }
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-
 
 
         data {
@@ -2894,22 +2556,12 @@
                         {:keywords.schema_query_keyword {
                                                          :alias "mar.keywords/schema_query_keyword"
                                                          :key-types "optional"
-                                                         ;
-                                                         ;:types [
-                                                         ;        {:description {:value-type TYPE_MAYBE}}
-                                                         ;        {:position {:value-type TYPE_MAYBE}}
-                                                         ;        {:external_uri {:value-type TYPE_MAYBE}}
-                                                         ;        {:creator_id {:value-type TYPE_MAYBE}}
-                                                         ;        ]
-                                                         ;
-                                                         ;:bl [:created_at :updated_at :creator_id :position]
                                                          }}
                         ]
               }
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
-
         ]))
 
 
@@ -2980,12 +2632,6 @@
                                                                                                  :alias "mar.permissions/schema_create-media-entry-user-permission"
                                                                                                  :wl [:get_metadata_and_previews :get_full_size :edit_metadata :edit_permissions]
                                                                                                  }}
-
-                        ;{:collection_user_permissions.schema_create-media-entry-user-permission {
-                        ;                                                                         :alias "mar.permissions/schema_create-media-entry-user-permission"
-                        ;                                                                         :wl [:get_metadata_and_previews :get_full_size :edit_metadata :edit_permissions]
-                        ;                                                                         }}
-
                         ]
               }
 
@@ -3028,6 +2674,7 @@
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
 
+
         data {
               :raw [{:collections {}}],
               :raw-schema-name :collections-perms-raw
@@ -3066,11 +2713,6 @@
         res2 (create-schemas-by-config data)
 
 
-
-
-
-
-
         data {
               :raw [{:media_entry_group_permissions {}}],
               :raw-schema-name :media_entry_group_permissions-raw
@@ -3103,14 +2745,12 @@
         _ (set-schema :collection_permissions-all.schema_export-collection-permissions-all {:media-resource (get-schema :collections-perms.schema_export-collection-perms)
                                                                                             :users [(get-schema :collection_user_permissions.schema_export-collection-user-permission)]
                                                                                             :groups [(get-schema :collection_group_permissions.schema_export-collection-group-permission)]})
-
         ]))
 
 
 
 (defn create-vocabularies-schema []
   (let [
-
         data {
               :raw [{:vocabularies {}}],
               :raw-schema-name :vocabularies-raw
@@ -3160,7 +2800,6 @@
                                                             :wl [:enabled_for_public_view :enabled_for_public_use]
                                                             }}
 
-
                         {:vocabularies.schema_export-perms_all_vocabulary {
                                                                            :alias "mar.vocabularies/schema_export-perms_all"
                                                                            :wl [:id :enabled_for_public_view :enabled_for_public_use]
@@ -3172,22 +2811,12 @@
         res2 (create-schemas-by-config data)
 
 
-
-
-
         data {
               :raw [{:vocabulary_group_permissions {}}],
               :raw-schema-name :vocabulary_group_permissions-raw
 
               :schemas [
-                        {:vocabularies.schema_export-group-perms {
-                                                                  :alias "mar.vocabularies/schema_export-group-perms"
-                                                                  ;:types [
-                                                                  ;        {:labels {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
-                                                                  ;        {:descriptions {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
-                                                                  ;        {:admin_comment {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
-                                                                  ;        ]
-                                                                  }}
+                        {:vocabularies.schema_export-group-perms {:alias "mar.vocabularies/schema_export-group-perms"}}
                         ]
               }
 
@@ -3210,17 +2839,11 @@
                                                                           }}
                         ]
               }
-
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
 
 
-
-
-
         _ (set-schema :vocabularies.schema_export-perms_all {:vocabulary (get-schema :vocabularies.schema_export-perms_all_vocabulary)
-                                                             ;:users [schema_export-user-perms]
-                                                             ;:groups [schema_export-group-perms]})
                                                              :users [(get-schema :vocabularies.vocabulary_user_permissions)]
                                                              :groups [(get-schema :vocabularies.schema_export-group-perms)]})
 
@@ -3228,9 +2851,6 @@
 
 (defn rename-by-keys
   [maps key-map]
-
-  (println ">o> >>??>> rename-by-keys=" maps key-map)
-
   (map
     (fn [m]
       (reduce
@@ -3248,107 +2868,13 @@
 
 
 
-
-
-
-
-
-
-;(defn create-test-schema []
-;  (let [
-;
-;        ;; featues
-;        ;; - rename raw-schema
-;        ;; - blacklist & whitelist
-;        ;; - add additinal schema
-;
-;        data {
-;
-;              ;{:column_name "count", :data_type "int4" :key-type TYPE_OPTIONAL}])
-;
-;
-;              :raw [
-;                    {:groups {:wl ["name" "id"] :rename {"name" "my-name"}}}
-;                    ;{:groups {:wl [:name :id]}}
-;                    {:_additional [{:column_name "my-int" :data_type "int4"} {:column_name "date-id" :data_type "uuid"} {:column_name "my-enum" :data_type "enum::collections_sorting"}]}
-;                    {:delegations {:bl ["id" "name"] :rename {"admin_comment" "my-comment"}}}
-;                    ;{:delegations {:bl ["id" "name"]} }
-;                    ],
-;              :raw-schema-name :schema-groups-raw,
-;
-;              :schemas [
-;                        ;{:put.body {:bl ["id" "dates" "my-int" "my-enum"]}}
-;
-;                        ;; works?
-;                        ;{:put.body1 {:bl [:id :dates :my-int :my-enum]}}
-;                        ;{:put.body2 {:wl [:id :dates :my-int :my-enum]}}
-;                        ;{:put.body3 {}}
-;
-;
-;
-;                        ;; TODO: support :types
-;
-;                        {:get.body {
-;                                    ;:wl ["id" "name"],
-;                                    ;:wl [:id :date-id :name :my-int :my-enum]
-;                                    :wl [:id :date-id :my-int :my-enum]
-;                                    :types [
-;                                            {:my-int {:key-type "optional" :value-type "maybe"}}
-;                                            ;{:id {:value-type nil}}
-;                                            {:id {:key-type "required" :value-type nil}}
-;                                            ]
-;                                    }}
-;
-;                        {:post.body {
-;                                     :bl [:id :sum],
-;                                     :types [
-;                                             {:my-comment {:key-type "optional" :value-type "maybe"}}
-;                                             {:id {:value-type nil}}
-;                                             ]
-;                                     }}
-;                        ]
-;
-;              }
-;
-;
-;        p (println ">o> >>>>> BEFORE >>>>>>")
-;        res (create-raw-schema data)
-;
-;
-;
-;        p (println ">o> >>>> AFTER >>>>>>> res=" res)
-;
-;        _ (println ">o> LOADED / final res=" (get-schema :get.body))
-;
-;
-;        res (create-schemas-by-config data)
-;
-;        ]))
-
-
-
-
-
 (defn init-schema-by-db []
-
-  (println ">o> before db-fetch")
-  ;(fetch-table-metadata "groups")
-  ;(prepare-schema "groups")
-
   (let [
-
         ;;; init enums
         _ (set-enum :collections_sorting (create-enum-spec "collection_sorting"))
         _ (set-enum :collections_layout (create-enum-spec "collection_layout"))
         _ (set-enum :collections_default_resource_type (create-enum-spec "collection_default_resource_type"))
-        ;
-        ;
-        ;
-        ;
-        ;te_pr (println ">o> 11??=" :collections_sorting (get-enum :collections_sorting))
-        ;te_pr (println ">o> 11??=" :collections_layout (get-enum :collections_layout))
-        ;te_pr (println ">o> 11??=" :collections_default_resource_type (get-enum :collections_default_resource_type))
-        ;
+
         ;;;; TODO: revise db-ddl to use enum
         _ (set-enum :groups.type (s/enum "AuthenticationGroup" "InstitutionalGroup" "Group"))
         ;
@@ -3366,8 +2892,6 @@
         _ (create-context-schema)
         _ (create-custom-urls-schema)
         _ (create-delegation-schema)
-
-
 
         _ (create-edit_session-schema)
         _ (create-vocabularies-schema)
@@ -3388,31 +2912,10 @@
         _ (create-meta-data-schema)
         _ (create-meta-data-role-schema)
         _ (create-favorite-media-entries-schema)
-
-
-
-
-        ;_ (create-test-schema)
-
         ]))
 
 
-
-
-;(ns leihs.my.back.html
-;    (:refer-clojure :exclude [keyword str])
-;    (:require
-;      [hiccup.page :refer [html5]]
-;      [honey.sql :refer [format] :rename {format sql-format}]
-;      [honey.sql.helpers :as sql]
-;      [leihs.core.http-cache-buster2 :as cache-buster]
-;      [leihs.core.json :refer [to-json]]
-;      [leihs.core.remote-navbar.shared :refer [navbar-props]]
-;      [leihs.core.shared :refer [head]]
-;      [leihs.core.url.core :as url]
-;      [leihs.my.authorization :as auth]
-;      [leihs.core.db :as db]
-;      [next.jdbc :as jdbc]))
+;;; Example to save/fetch schema-configuration ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (comment
   (let [
@@ -3429,23 +2932,14 @@
 
         tx (get-ds)
 
-        ;data {:foo "bar" :baz "qux"}
 
         data [:cast (json/generate-string data) :jsonb]
-
-
         ins-data {:id "abc" :key "test-me" :config data}
-
         query (-> (sql/insert-into :schema_definition)
                   (sql/values [ins-data])
                   (sql/returning :*)
                   sql-format
                   )
-
-        ;query (-> (sql/select :*)
-        ;          (sql/from :schema_definition)
-        ;          sql-format
-        ;          )
 
         p (println ">o> query=" query)
 
@@ -3460,11 +2954,6 @@
   )
 
 
-(defn- context_transform_ml [context]
-  (assoc context
-         :config (sd/transform_ml (:config context))
-         ;:descriptions (sd/transform_ml (:descriptions context))
-         ))
 
 (comment
   (let [

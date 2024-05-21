@@ -10,7 +10,7 @@
 
    [madek.api.constants]
    [madek.api.db.core :as db]
-   [madek.api.schema_cache :refer [init-schema-by-db]]
+   [madek.api.db.dynamic_schema.schema_cache :refer [init-schema-by-db]]
    [madek.api.utils.config :as config :refer [get-config]]
    [madek.api.utils.exit :as exit]
    [madek.api.utils.logging :as logging]
