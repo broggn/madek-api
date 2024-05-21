@@ -2326,6 +2326,32 @@
 
         ]))
 
+
+
+(defn create-media-files-schema []
+  (let [
+        data {
+              :raw [
+                    {:media_files {:wl ["id" "media_entry_id" "media_type" "content_type" "filename" "previews" "size" "updated_at" "created_at"]}}
+                    ],
+              :raw-schema-name :media_files-raw
+
+              :schemas [
+
+                        {:media_files.schema_export-media-file {
+                                                                :alias "mar.media-files/schema_export-media-file"
+                                                                :types [
+                                                                        {:media_type {:value-type TYPE_MAYBE}}
+                                                                        ]
+                                                                }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+        ]))
+
 (defn create-people-schema []
   (let [
         data {
@@ -2506,16 +2532,16 @@
 
 
         _ (set-schema :media-entries-schema-schema_publish_failed {:message {:is_publishable s/Bool
-                                                                           :media_entry_id s/Uuid
-                                                                           :has_meta_data [{s/Any s/Bool}]}} )
+                                                                             :media_entry_id s/Uuid
+                                                                             :has_meta_data [{s/Any s/Bool}]}})
 
 
         _ (set-schema :media-entries-schema-schema_query_media_entries_related_result {:media_entries [(get-schema :media-entries.schema_export_media_entry)]
-                                                                                     :meta_data [[(get-schema :media-entries.schema_export_meta_data)]]
-                                                                                     :media_files [(s/maybe (get-schema :media-files.schema_export_media_file))]
-                                                                                     :previews [[(s/maybe (get-schema :media-entries.schema_export_preview))]]
-                                                                                     (s/optional-key :col_arcs) [(get-schema :media-entries.schema_export_col_arc)]
-                                                                                     (s/optional-key :col_meta_data) [(get-schema :media-entries.schema_export_meta_data)]} )
+                                                                                       :meta_data [[(get-schema :media-entries.schema_export_meta_data)]]
+                                                                                       :media_files [(s/maybe (get-schema :media-files.schema_export_media_file))]
+                                                                                       :previews [[(s/maybe (get-schema :media-entries.schema_export_preview))]]
+                                                                                       (s/optional-key :col_arcs) [(get-schema :media-entries.schema_export_col_arc)]
+                                                                                       (s/optional-key :col_meta_data) [(get-schema :media-entries.schema_export_meta_data)]})
 
         ]))
 
@@ -3270,6 +3296,7 @@
 
         _ (create-delegations_users-schema)
         _ (create-io_interfaces-schema)
+        _ (create-media-files-schema)
 
 
 
