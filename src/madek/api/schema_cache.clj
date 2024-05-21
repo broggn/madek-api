@@ -2404,7 +2404,6 @@
                         {:media-entries.schema_export_col_arc {
                                                                :alias "mar.media-entries/schema_export_col_arc"
                                                                :types [
-                                                                       ;{:id {:key-type TYPE_NOTHING}}
                                                                        {:order {:value-type TYPE_MAYBE}}
                                                                        {:position {:value-type TYPE_MAYBE}}
                                                                        ]
@@ -2416,12 +2415,10 @@
                                                                :alias "mar.media-entries/schema_export_preview"
                                                                :raw-schema-name :preview-raw ;;TODO
                                                                :types [
-                                                                       ;{:id {:key-type TYPE_NOTHING}}
                                                                        {:width {:value-type TYPE_MAYBE}}
                                                                        {:height {:value-type TYPE_MAYBE}}
                                                                        {:conversion_profile {:value-type TYPE_MAYBE}}
                                                                        ]
-                                                               ;:wl [:media_entry_id :id :order :position :created_at :updated_at]
                                                                }}
                         ]
               }
@@ -2438,17 +2435,14 @@
                         {:media-entries.schema_export_meta_data {
                                                                  :alias "mar.media-entries/schema_export_meta_data"
                                                                  :types [
-                                                                         ;{:id {:key-type TYPE_NOTHING}}
                                                                          {:media_entry_id {:value-type TYPE_MAYBE}}
                                                                          {:collection_id {:value-type TYPE_MAYBE}}
                                                                          {:string {:value-type TYPE_MAYBE}}
                                                                          {:json {:value-type TYPE_MAYBE}}
                                                                          {:other_media_entry_id {:value-type TYPE_MAYBE}}
                                                                          ]
-                                                                 ;:wl [:media_entry_id :id :order :position :created_at :updated_at]
                                                                  :bl [:created_by_id]
                                                                  }}
-
                         ]
               }
 
@@ -2470,11 +2464,7 @@
                                                             "edit_permissions" "me_edit_permissions"
                                                             }
                                                    }}
-                    ;{:_additional [(concat schema_pagination_raw schema_full_data_raw [{:column_name "filter_by", :data_type "str"}]) ]}
-                    ;{:_additional [(concat (concat schema_pagination_raw schema_full_data_raw ) [{:column_name "filter_by", :data_type "str"}]) ]}
-                    ;{:_additional (concat (concat schema_pagination_raw schema_full_data_raw ) [{:column_name "filter_by", :data_type "str"}]) }
                     {:_additional (concat schema_pagination_raw schema_full_data_raw [{:column_name "filter_by", :data_type "str"}])}
-
                     ],
               :raw-schema-name :media_entries-media_entry_user_permission-collection_media_entry_arcs-raw
 
@@ -2500,7 +2490,6 @@
                         {:media-files.schema_export_media_file {
                                                                 :alias "mar.media-entries/schema_export_media_file"
                                                                 :types [
-                                                                        ;{:id {:key-type TYPE_NOTHING}}
                                                                         {:media_type {:value-type TYPE_MAYBE}}
                                                                         {:width {:value-type TYPE_MAYBE}}
                                                                         {:height {:value-type TYPE_MAYBE}}
@@ -3262,7 +3251,7 @@
         _ (create-people-schema)
         _ (create-keywords-schema)
         _ (create-meta_keys-schema)
-        _ (create-media_entries-schema)                     ;; TODO
+        _ (create-media_entries-schema)
 
         _ (create-delegations_users-schema)
         _ (create-io_interfaces-schema)
