@@ -465,176 +465,157 @@
 
                                                 }])
 
-;(defn create-app-settings-schema []
-;  (let [
-;        data {
-;              :raw [{:app_settings {}}],
-;              :raw-schema-name :app_settings-raw
-;
-;              :schemas [
-;                        {:app_settings-raw.schema_update-app-settings {
-;                                                                       :alias "mar.app-settings/schema_update-app-settings"
-;                                                                       :key-types "optional"
-;                                                                       :bl ["id"]
-;                                                                       :types [
-;                                                                               {:brand_logo_url {:value-type TYPE_MAYBE}}
-;                                                                               {:context_for_collection_summary {:value-type TYPE_MAYBE}}
-;                                                                               {:context_for_entry_summary {:value-type TYPE_MAYBE}}
-;                                                                               {:copyright_notice_default_text {:value-type TYPE_MAYBE}}
-;                                                                               {:default_locale {:value-type TYPE_MAYBE}}
-;                                                                               {:edit_meta_data_power_users_group_id {:value-type TYPE_MAYBE}}
-;                                                                               {:ignored_keyword_keys_for_browsing {:value-type TYPE_MAYBE}}
-;                                                                               {:media_entry_default_license_id {:value-type TYPE_MAYBE}}
-;                                                                               {:media_entry_default_license_meta_key {:value-type TYPE_MAYBE}}
-;                                                                               {:media_entry_default_license_usage_meta_key {:value-type TYPE_MAYBE}}
-;                                                                               {:media_entry_default_license_usage_text {:value-type TYPE_MAYBE}}
-;
-;                                                                               {:provenance_notices {:value-type TYPE_MAYBE}}
-;
-;                                                                               {:section_meta_key_id {:value-type TYPE_MAYBE}}
-;                                                                               {:sitemap {:value-type TYPE_MAYBE}}
-;                                                                               {:splashscreen_slideshow_set_id {:value-type TYPE_MAYBE}}
-;                                                                               {:teaser_set_id {:value-type TYPE_MAYBE}}
-;                                                                               {:featured_set_id {:value-type TYPE_MAYBE}}
-;                                                                               ]
-;                                                                       }}
-;
-;                        {:app_settings-raw.schema_export-app-settings {
-;                                                                       :alias "mar.app-settings/schema_export-app-settings"
-;                                                                       :key-types "optional"
-;                                                                       :value-types "maybe"
-;                                                                       :types [
-;                                                                               {:available_locales {:value-type TYPE_NOTHING}}
-;                                                                               {:catalog_context_keys {:value-type TYPE_NOTHING}}
-;                                                                               {:contexts_for_collection_edit {:value-type TYPE_NOTHING}}
-;                                                                               {:contexts_for_collection_extra {:value-type TYPE_NOTHING}}
-;                                                                               {:contexts_for_dynamic_filters {:value-type TYPE_NOTHING}}
-;                                                                               {:contexts_for_entry_edit {:value-type TYPE_NOTHING}}
-;                                                                               {:contexts_for_entry_extra {:value-type TYPE_NOTHING}}
-;                                                                               {:contexts_for_entry_validation {:value-type TYPE_NOTHING}}
-;                                                                               {:contexts_for_list_details {:value-type TYPE_NOTHING}}
-;                                                                               {:copyright_notice_templates {:value-type TYPE_NOTHING}}
-;                                                                               {:created_at {:value-type TYPE_NOTHING}}
-;                                                                               {:id {:value-type TYPE_NOTHING}}
-;                                                                               {:time_zone {:value-type TYPE_NOTHING}}
-;                                                                               ]
-;                                                                       }}
-;                        ]
-;
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;        ]))
-;
-;(defn create-confidential-links-schema []
-;  (let [
-;        data {
-;              :raw [{:confidential_links {}}],
-;              :raw-schema-name :confidential_links-raw
-;
-;              :schemas [
-;                        {:confidential_links.schema_export_conf_link {
-;                                                                      :alias "mar.confidential_links/schema_export_conf_link"
-;                                                                      :types [
-;                                                                              {:description {:value-type TYPE_MAYBE}}
-;                                                                              {:expires_at {:value-type TYPE_MAYBE}}
-;                                                                              ]
-;                                                                      }}
-;
-;
-;                        {:confidential_links.schema_update_conf_link {
-;                                                                      :alias "mar.confidential_links/schema_update_conf_link"
-;                                                                      :key-types "optional"
-;                                                                      :value-types "maybe"
-;                                                                      :wl [:revoked :description :expires_at]
-;                                                                      :types [
-;                                                                              {:revoked {:value-type TYPE_NOTHING}}
-;                                                                              ]
-;                                                                      }}
-;
-;                        {:confidential_links.schema_import_conf_link {
-;                                                                      :alias "mar.confidential_links/schema_import_conf_link"
-;                                                                      :key-types "optional"
-;                                                                      :value-types "maybe"
-;                                                                      :wl [:revoked :description :expires_at]
-;                                                                      :types [
-;                                                                              {:revoked {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
-;                                                                              ]
-;                                                                      }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;        ]))
-;
-;(defn create-context-keys-schema []
-;  (let [
-;        data {
-;              :raw [{:context_keys {}}],
-;              :raw-schema-name :context_keys-raw
-;
-;              :schemas [
-;                        {:context_keys.schema_export_context_key_admin {
-;                                                                        :alias "mar.context_keys/schema_export_context_key_admin"
-;                                                                        :types [
-;                                                                                {:length_max {:value-type TYPE_MAYBE}}
-;                                                                                {:length_min {:value-type TYPE_MAYBE}}
-;                                                                                {:labels {:value-type TYPE_MAYBE}}
-;                                                                                {:descriptions {:value-type TYPE_MAYBE}}
-;                                                                                {:hints {:value-type TYPE_MAYBE}}
-;                                                                                {:documentation_urls {:value-type TYPE_MAYBE}}
-;                                                                                {:admin_comment {:value-type TYPE_MAYBE}}
-;                                                                                ]
-;                                                                        }}
-;
-;                        {:context_keys.schema_export_context_key {
-;                                                                  :alias "mar.context_keys/schema_export_context_key"
-;                                                                  :types [
-;                                                                          {:length_max {:value-type TYPE_MAYBE}}
-;                                                                          {:length_min {:value-type TYPE_MAYBE}}
-;                                                                          {:labels {:value-type TYPE_MAYBE}}
-;                                                                          {:descriptions {:value-type TYPE_MAYBE}}
-;                                                                          {:hints {:value-type TYPE_MAYBE}}
-;                                                                          {:documentation_urls {:value-type TYPE_MAYBE}}
-;                                                                          ]
-;                                                                  :bl [:admin_comment :updated_at :created_at]
-;                                                                  }}
-;
-;                        {:context_keys.schema_update_context_keys {
-;                                                                   :alias "mar.context_keys/schema_update_context_keys"
-;                                                                   :key-types "optional"
-;                                                                   :value-types "maybe"
-;                                                                   :types [
-;                                                                           {:is_required {:value-type TYPE_NOTHING}}
-;                                                                           {:position {:value-type TYPE_NOTHING}}
-;                                                                           ]
-;                                                                   :bl [:id :context_id :meta_key_id :admin_comment :updated_at :created_at]
-;                                                                   }}
-;
-;                        {:context_keys.schema_import_context_keys {
-;                                                                   :alias "mar.context_keys/schema_import_context_keys"
-;                                                                   :key-types "optional"
-;                                                                   :value-types "maybe"
-;                                                                   :types [
-;                                                                           {:context_id {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
-;                                                                           {:meta_key_id {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
-;                                                                           {:is_required {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
-;                                                                           {:position {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
-;                                                                           ]
-;                                                                   :bl [:id]
-;                                                                   }}
-;                        ]
-;
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;
-;        ]))
-;
-;
+(def create-app-settings-schema [{
+                                  :raw [{:app_settings {}}],
+                                  :raw-schema-name :app_settings-raw
+
+                                  :schemas [
+                                            {:app_settings-raw.schema_update-app-settings {
+                                                                                           :alias "mar.app-settings/schema_update-app-settings"
+                                                                                           :key-types "optional"
+                                                                                           :bl ["id"]
+                                                                                           :types [
+                                                                                                   {:brand_logo_url {:value-type TYPE_MAYBE}}
+                                                                                                   {:context_for_collection_summary {:value-type TYPE_MAYBE}}
+                                                                                                   {:context_for_entry_summary {:value-type TYPE_MAYBE}}
+                                                                                                   {:copyright_notice_default_text {:value-type TYPE_MAYBE}}
+                                                                                                   {:default_locale {:value-type TYPE_MAYBE}}
+                                                                                                   {:edit_meta_data_power_users_group_id {:value-type TYPE_MAYBE}}
+                                                                                                   {:ignored_keyword_keys_for_browsing {:value-type TYPE_MAYBE}}
+                                                                                                   {:media_entry_default_license_id {:value-type TYPE_MAYBE}}
+                                                                                                   {:media_entry_default_license_meta_key {:value-type TYPE_MAYBE}}
+                                                                                                   {:media_entry_default_license_usage_meta_key {:value-type TYPE_MAYBE}}
+                                                                                                   {:media_entry_default_license_usage_text {:value-type TYPE_MAYBE}}
+
+                                                                                                   {:provenance_notices {:value-type TYPE_MAYBE}}
+
+                                                                                                   {:section_meta_key_id {:value-type TYPE_MAYBE}}
+                                                                                                   {:sitemap {:value-type TYPE_MAYBE}}
+                                                                                                   {:splashscreen_slideshow_set_id {:value-type TYPE_MAYBE}}
+                                                                                                   {:teaser_set_id {:value-type TYPE_MAYBE}}
+                                                                                                   {:featured_set_id {:value-type TYPE_MAYBE}}
+                                                                                                   ]
+                                                                                           }}
+
+                                            {:app_settings-raw.schema_export-app-settings {
+                                                                                           :alias "mar.app-settings/schema_export-app-settings"
+                                                                                           :key-types "optional"
+                                                                                           :value-types "maybe"
+                                                                                           :types [
+                                                                                                   {:available_locales {:value-type TYPE_NOTHING}}
+                                                                                                   {:catalog_context_keys {:value-type TYPE_NOTHING}}
+                                                                                                   {:contexts_for_collection_edit {:value-type TYPE_NOTHING}}
+                                                                                                   {:contexts_for_collection_extra {:value-type TYPE_NOTHING}}
+                                                                                                   {:contexts_for_dynamic_filters {:value-type TYPE_NOTHING}}
+                                                                                                   {:contexts_for_entry_edit {:value-type TYPE_NOTHING}}
+                                                                                                   {:contexts_for_entry_extra {:value-type TYPE_NOTHING}}
+                                                                                                   {:contexts_for_entry_validation {:value-type TYPE_NOTHING}}
+                                                                                                   {:contexts_for_list_details {:value-type TYPE_NOTHING}}
+                                                                                                   {:copyright_notice_templates {:value-type TYPE_NOTHING}}
+                                                                                                   {:created_at {:value-type TYPE_NOTHING}}
+                                                                                                   {:id {:value-type TYPE_NOTHING}}
+                                                                                                   {:time_zone {:value-type TYPE_NOTHING}}
+                                                                                                   ]
+                                                                                           }}
+                                            ]
+
+                                  }])
+
+(def create-confidential-links-schema [{
+                                        :raw [{:confidential_links {}}],
+                                        :raw-schema-name :confidential_links-raw
+
+                                        :schemas [
+                                                  {:confidential_links.schema_export_conf_link {
+                                                                                                :alias "mar.confidential_links/schema_export_conf_link"
+                                                                                                :types [
+                                                                                                        {:description {:value-type TYPE_MAYBE}}
+                                                                                                        {:expires_at {:value-type TYPE_MAYBE}}
+                                                                                                        ]
+                                                                                                }}
+
+
+                                                  {:confidential_links.schema_update_conf_link {
+                                                                                                :alias "mar.confidential_links/schema_update_conf_link"
+                                                                                                :key-types "optional"
+                                                                                                :value-types "maybe"
+                                                                                                :wl [:revoked :description :expires_at]
+                                                                                                :types [
+                                                                                                        {:revoked {:value-type TYPE_NOTHING}}
+                                                                                                        ]
+                                                                                                }}
+
+                                                  {:confidential_links.schema_import_conf_link {
+                                                                                                :alias "mar.confidential_links/schema_import_conf_link"
+                                                                                                :key-types "optional"
+                                                                                                :value-types "maybe"
+                                                                                                :wl [:revoked :description :expires_at]
+                                                                                                :types [
+                                                                                                        {:revoked {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
+                                                                                                        ]
+                                                                                                }}
+                                                  ]
+                                        }])
+
+
+(def create-context-keys-schema [{
+                                  :raw [{:context_keys {}}],
+                                  :raw-schema-name :context_keys-raw
+
+                                  :schemas [
+                                            {:context_keys.schema_export_context_key_admin {
+                                                                                            :alias "mar.context_keys/schema_export_context_key_admin"
+                                                                                            :types [
+                                                                                                    {:length_max {:value-type TYPE_MAYBE}}
+                                                                                                    {:length_min {:value-type TYPE_MAYBE}}
+                                                                                                    {:labels {:value-type TYPE_MAYBE}}
+                                                                                                    {:descriptions {:value-type TYPE_MAYBE}}
+                                                                                                    {:hints {:value-type TYPE_MAYBE}}
+                                                                                                    {:documentation_urls {:value-type TYPE_MAYBE}}
+                                                                                                    {:admin_comment {:value-type TYPE_MAYBE}}
+                                                                                                    ]
+                                                                                            }}
+
+                                            {:context_keys.schema_export_context_key {
+                                                                                      :alias "mar.context_keys/schema_export_context_key"
+                                                                                      :types [
+                                                                                              {:length_max {:value-type TYPE_MAYBE}}
+                                                                                              {:length_min {:value-type TYPE_MAYBE}}
+                                                                                              {:labels {:value-type TYPE_MAYBE}}
+                                                                                              {:descriptions {:value-type TYPE_MAYBE}}
+                                                                                              {:hints {:value-type TYPE_MAYBE}}
+                                                                                              {:documentation_urls {:value-type TYPE_MAYBE}}
+                                                                                              ]
+                                                                                      :bl [:admin_comment :updated_at :created_at]
+                                                                                      }}
+
+                                            {:context_keys.schema_update_context_keys {
+                                                                                       :alias "mar.context_keys/schema_update_context_keys"
+                                                                                       :key-types "optional"
+                                                                                       :value-types "maybe"
+                                                                                       :types [
+                                                                                               {:is_required {:value-type TYPE_NOTHING}}
+                                                                                               {:position {:value-type TYPE_NOTHING}}
+                                                                                               ]
+                                                                                       :bl [:id :context_id :meta_key_id :admin_comment :updated_at :created_at]
+                                                                                       }}
+
+                                            {:context_keys.schema_import_context_keys {
+                                                                                       :alias "mar.context_keys/schema_import_context_keys"
+                                                                                       :key-types "optional"
+                                                                                       :value-types "maybe"
+                                                                                       :types [
+                                                                                               {:context_id {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
+                                                                                               {:meta_key_id {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
+                                                                                               {:is_required {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
+                                                                                               {:position {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
+                                                                                               ]
+                                                                                       :bl [:id]
+                                                                                       }}
+                                            ]
+                                  }])
+
+
 ;(defn create-context-schema []
 ;  (let [
 ;        data {
