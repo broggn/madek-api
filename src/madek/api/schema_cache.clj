@@ -2407,15 +2407,30 @@
               :schemas [
                         {:meta-data-role-schema.schema_export_mdrole {
                                                                      :alias "mar.meta-data/schema_export_mdrole"
-                                                                     ;:wl [:id :meta_key_id :type :value :media_entry_id :collection_id]
                                                                      :types [
-                                                                             ;{:value {:value-type TYPE_EITHER
-                                                                             ;         ;:either-condition (s/->Either [[{:id s/Uuid}] s/Str])}
-                                                                             ;         :either-condition [[{:id s/Uuid}] s/Str]}
-                                                                             ; }
-                                                                             ;{:media_entry_id {:key-type TYPE_OPTIONAL}}
                                                                              {:role_id {:value-type TYPE_MAYBE}}
                                                                              ]
+                                                                     }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+        ]))
+
+
+(defn create-favorite-media-entries-schema []
+  (let [
+        data {
+              :raw [
+                    {:favorite-media-entries {}}
+                    ],
+              :raw-schema-name :favorite-media-entries-raw
+
+              :schemas [
+                        {:favorite-media-entries-raw.schema_favorite_media_entries_export {
+                                                                     :alias "mar.favorite-media-entries-raw/schema_favorite_media_entries_export"
                                                                      }}
                         ]
               }
@@ -3372,6 +3387,7 @@
         _ (create-media-files-schema)
         _ (create-meta-data-schema)
         _ (create-meta-data-role-schema)
+        _ (create-favorite-media-entries-schema)
 
 
 
