@@ -219,6 +219,8 @@
   {(s/optional-key :collection_id) s/Uuid
    ; TODO order enum docu
    ;(s/optional-key :order) (s/enum "desc" "asc" "title_asc" "title_desc" "last_change" "manual_asc" "manual_desc" "stored_in_collection")
+
+   ;; :collection_media_entry_arcs
    (s/optional-key :order) s/Any
    ; TODO filterby json docu
    (s/optional-key :filter_by) s/Str
@@ -247,14 +249,17 @@
    ;  (s/optional-key :search) s/Str
    ;  }
 
+   ;; media_entry_user_permission
    (s/optional-key :me_get_metadata_and_previews) s/Bool
    (s/optional-key :me_get_full_size) s/Bool
 
    (s/optional-key :me_edit_metadata) s/Bool
    (s/optional-key :me_edit_permissions) s/Bool
 
+   ;; media_entries
    (s/optional-key :public_get_metadata_and_previews) s/Bool
    (s/optional-key :public_get_full_size) s/Bool
+
    (s/optional-key :page) s/Int
    (s/optional-key :count) s/Int
    (s/optional-key :full_data) s/Bool})

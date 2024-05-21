@@ -2374,7 +2374,7 @@
         ]))
 
 
-(defn create-meta_entries-schema []
+(defn create-media_entries-schema []
   (let [
         data {
               :raw [{:media_entries {}}],
@@ -2449,18 +2449,38 @@
                                                                 :bl [:created_by_id]
                                                                 }}
 
+                        ]
+              }
 
-                        ;{:media-entiry.schema_export_preview {
-                        ;                                      :alias "mar.media-entries/schema_export_preview"
-                        ;                                      :raw-schema-name :preview-raw ;;TODO
-                        ;                                      :types [
-                        ;                                              ;{:id {:key-type TYPE_NOTHING}}
-                        ;                                              {:width {:value-type TYPE_MAYBE}}
-                        ;                                              {:height {:value-type TYPE_MAYBE}}
-                        ;                                              {:conversion_profile {:value-type TYPE_MAYBE}}
-                        ;                                              ]
-                        ;                                      ;:wl [:media_entry_id :id :order :position :created_at :updated_at]
-                        ;                                      }}
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+        data {
+              :raw [
+                    {:media_entries {:wl ["public_get_metadata_and_previews" "public_get_full_size"]
+                                     :rename {"get_metadata_and_previews" "public_get_metadata_and_previews"
+                                              "get_full_size" "public_get_full_size"
+                                              }
+                                     }}
+                    {:media_entry_user_permission {:wl ["collection_id" "order"]}}
+                    {:collection_media_entry_arcs {:wl ["me_get_metadata_and_previews" "me_get_full_size" "me_edit_metadata" "me_edit_permissions"]
+                                                   :rename {"get_metadata_and_previews" "me_get_metadata_and_previews"
+                                                            "get_full_size" "me_get_full_size"
+                                                            "edit_metadata""me_edit_metadata"
+                                                            "edit_permissions" "me_edit_permissions"
+                                                            }
+                                                   }}
+                    {:_additional [(concat schema_pagination_raw schema_full_data_raw {:column_name "filter_by", :data_type "str"}) ]}
+
+                    ],
+              :raw-schema-name :meta_data-raw
+
+              :schemas [
+                        {:media-entries.schema_query_media_entries {
+                                                                :alias "mar.media-entries/schema_query_media_entries"
+                                                                    :key-types "optional"
+                                                                }}
+
                         ]
               }
 
@@ -3239,7 +3259,7 @@
         _ (create-people-schema)
         _ (create-keywords-schema)
         _ (create-meta_keys-schema)
-        _ (create-meta_entries-schema)                      ;; TODO
+        _ (create-media_entries-schema)                      ;; TODO
 
         _ (create-delegations_users-schema)
         _ (create-io_interfaces-schema)
