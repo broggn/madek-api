@@ -42,6 +42,7 @@
 (def TYPE_REQUIRED "required")
 (def TYPE_OPTIONAL "optional")
 (def TYPE_MAYBE "maybe")
+(def TYPE_EITHER "either")
 
 
 (require '[schema.core :as schema])
@@ -361,6 +362,7 @@
 
         key-type (get val :key-type)
         value-type (get val :value-type)
+        either-condition (get val :either-condition)
         ;key-type (:key-type val)
         ;value-type (:value-type val)
 
@@ -374,7 +376,7 @@
         ;p (println ">o> val=" val)
         p (println ">o> >>>>>>>> val=" val)
         p (println ">o> >>>>>>>> key-type=" key-type)
-        ;p (println ">o> value-type=" value-type)
+        p (println ">o> >>>>>>>> value-type=" value-type)
 
         key-type (if (not (nil? key-types))
                    (if (nil? key-type) key-types key-type)
@@ -398,11 +400,16 @@
 
         keySection (cond (= key-type TYPE_REQUIRED) (s/required-key (keyword column_name))
                          (= key-type TYPE_OPTIONAL) (s/optional-key (keyword column_name))
+                         ;(= key-type TYPE_EITHER) (s/optional-key (keyword column_name))
                          (= key-type TYPE_NOTHING) (keyword column_name)
                          :else (do
                                  ;(println ">o> nix")
                                  (keyword column_name))
                          )
+
+
+
+        _ (when (= key-type TYPE_EITHER) (throw (Exception. "TYPE_EITHER not supported")))
 
         ;; revise schema types by mapping
         type-mapping-key (str (name table-name) "." (name column_name))
@@ -414,6 +421,7 @@
                        (not (nil? type-mapping-enums-res)) (if (= value-type TYPE_MAYBE)
                                                              (s/maybe type-mapping-enums-res)
                                                              type-mapping-enums-res)
+                       (and (= value-type TYPE_EITHER) (not (nil? either-condition))) (s/->Either either-condition)
                        (= value-type TYPE_MAYBE) (s/maybe column_type)
                        :else column_type
                        )
@@ -2352,6 +2360,71 @@
 
         ]))
 
+
+
+(defn create-meta-data-schema []
+  (let [
+        data {
+              :raw [
+                    {:meta_data {}
+
+                     ;{:wl ["id" "media_entry_id" "media_type" "content_type" "filename" "previews" "size" "updated_at" "created_at"]}
+                     }
+                    {:_additional [{:column_name "value", :data_type "str"}]}
+                    ],
+              :raw-schema-name :meta_data-schema-raw
+
+              :schemas [
+                        {:meta-data-schema.schema_export_meta-datum {
+                                                                     :alias "mar.meta-data/schema_export_meta-datum"
+                                                                     :wl [:id :meta_key_id :type :value :media_entry_id :collection_id]
+                                                                     :types [
+                                                                             {:value {:value-type TYPE_EITHER
+                                                                                      ;:either-condition (s/->Either [[{:id s/Uuid}] s/Str])}
+                                                                                      :either-condition [[{:id s/Uuid}] s/Str]}
+                                                                              }
+                                                                             {:media_entry_id {:key-type TYPE_OPTIONAL}}
+                                                                             {:collection_id {:key-type TYPE_OPTIONAL}}
+                                                                             ]
+                                                                     }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+        ]))
+
+
+(defn create-meta-data-role-schema []
+  (let [
+        data {
+              :raw [
+                    {:meta_data_roles {}}
+                    ],
+              :raw-schema-name :meta_data_roles-schema-raw
+
+              :schemas [
+                        {:meta-data-role-schema.schema_export_mdrole {
+                                                                     :alias "mar.meta-data/schema_export_mdrole"
+                                                                     ;:wl [:id :meta_key_id :type :value :media_entry_id :collection_id]
+                                                                     :types [
+                                                                             ;{:value {:value-type TYPE_EITHER
+                                                                             ;         ;:either-condition (s/->Either [[{:id s/Uuid}] s/Str])}
+                                                                             ;         :either-condition [[{:id s/Uuid}] s/Str]}
+                                                                             ; }
+                                                                             ;{:media_entry_id {:key-type TYPE_OPTIONAL}}
+                                                                             {:role_id {:value-type TYPE_MAYBE}}
+                                                                             ]
+                                                                     }}
+                        ]
+              }
+
+        res (create-raw-schema data)
+        res2 (create-schemas-by-config data)
+
+        ]))
+
 (defn create-people-schema []
   (let [
         data {
@@ -3297,6 +3370,8 @@
         _ (create-delegations_users-schema)
         _ (create-io_interfaces-schema)
         _ (create-media-files-schema)
+        _ (create-meta-data-schema)
+        _ (create-meta-data-role-schema)
 
 
 
