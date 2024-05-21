@@ -6,7 +6,7 @@
             [honey.sql.helpers :as sql]
             [madek.api.authorization :as authorization]
 
-            [madek.api.db.dynamic_schema.schema_cache :refer [get-schema]]
+            [madek.api.db.dynamic_schema.core :refer [get-schema]]
 
             [madek.api.constants :refer [FILE_STORAGE_DIR]]
             [madek.api.resources.media-entries.index :refer [get-index

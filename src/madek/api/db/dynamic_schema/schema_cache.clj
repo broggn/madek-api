@@ -3,24 +3,14 @@
    ;; all needed imports
    ;[leihs.core.db :as db]
 
-   [cheshire.core :as json]
+   [madek.api.db.dynamic_schema.core :refer [init-enums-by-db
+                                             create-dynamic-schema
+                                             ;convert-to-enum-spec
+                                             ]]
 
-   [clojure.string :as str]
-   [honey.sql :refer [format] :rename {format sql-format}]
+   [madek.api.db.dynamic_schema.schema_definitions :as d]
 
-   [honey.sql.helpers :as sql]
-
-   [madek.api.db.core :refer [get-ds]]
-
-   [madek.api.utils.validation :refer [vector-or-hashmap-validation]]
-
-   [next.jdbc :as jdbc]
-
-   [madek.api.db.dynamic_schema.core :refer [set-enum get-enum]]
-
-   ;[madek.api.utils.helper :refer [merge-query-parts to-uuids]]
-
-   ))
+   ;[madek.api.utils.helper :refer [merge-query-parts to-uuids]]))
 ;(def type-mapping {"varchar" s/Str
 ;                   "int4" s/Int
 ;                   "integer" s/Int
@@ -34,7 +24,13 @@
 ;                   "str" s/Str
 ;                   "any" s/Any
 ;                   }
-;  )
+  ))
+
+
+
+
+
+
 
 
 ;
@@ -290,48 +286,45 @@
 
 (defn init-schema-by-db []
   (let [
-        ;;; init enums
-        _ (set-enum :collections_sorting (create-enum-spec "collection_sorting"))
-        _ (set-enum :collections_layout (create-enum-spec "collection_layout"))
-        _ (set-enum :collections_default_resource_type (create-enum-spec "collection_default_resource_type"))
+        x (init-enums-by-db)
 
-        ;;;; TODO: revise db-ddl to use enum
-        _ (set-enum :groups.type (s/enum "AuthenticationGroup" "InstitutionalGroup" "Group"))
+
+        ;merged-vec (into [] (concat (d/create-groups-schema) [{}]))
+
+        _  (create-dynamic-schema d/create-groups-schema)
+        ;_ (create-dynamic-schema d/create-users-schema)
+
+        ;_ (create-dynamic-schema d/create-admins-schema)
+        ;_ (create-dynamic-schema d/create-workflows-schema)
+        ;_ (create-dynamic-schema d/create-collections-schema)
+        ;_ (create-dynamic-schema d/create-collection-media-entry-schema)
+        ;_ (create-dynamic-schema d/create-collection-collection-arcs-schema)
+        ;_ (create-dynamic-schema d/create-app-settings-schema)
+        ;_ (create-dynamic-schema d/create-confidential-links-schema)
+        ;_ (create-dynamic-schema d/create-context-keys-schema)
+        ;_ (create-dynamic-schema d/create-context-schema)
+        ;_ (create-dynamic-schema d/create-custom-urls-schema)
+        ;_ (create-dynamic-schema d/create-delegation-schema)
         ;
-        _ (d/create-groups-schema)
-        _ (d/create-users-schema)
-
-        _ (d/create-admins-schema)
-        _ (d/create-workflows-schema)
-        _ (d/create-collections-schema)
-        _ (d/create-collection-media-entry-schema)
-        _ (d/create-collection-collection-arcs-schema)
-        _ (d/create-app-settings-schema)
-        _ (d/create-confidential-links-schema)
-        _ (d/create-context-keys-schema)
-        _ (d/create-context-schema)
-        _ (d/create-custom-urls-schema)
-        _ (d/create-delegation-schema)
-
-        _ (d/create-edit_session-schema)
-        _ (d/create-vocabularies-schema)
-        _ (d/create-usage_terms-schema)
-        _ (d/create-static_pages-schema)
-        _ (d/create-roles-schema)
-        _ (d/create-previews-schema)
-        _ (d/create-permissions-schema)
-
-        _ (d/create-people-schema)
-        _ (d/create-keywords-schema)
-        _ (d/create-meta_keys-schema)
-        _ (d/create-media_entries-schema)
-
-        _ (d/create-delegations_users-schema)
-        _ (d/create-io_interfaces-schema)
-        _ (d/create-media-files-schema)
-        _ (d/create-meta-data-schema)
-        _ (d/create-meta-data-role-schema)
-        _ (d/create-favorite-media-entries-schema)
+        ;_ (create-dynamic-schema d/create-edit_session-schema)
+        ;_ (create-dynamic-schema d/create-vocabularies-schema)
+        ;_ (create-dynamic-schema d/create-usage_terms-schema)
+        ;_ (create-dynamic-schema d/create-static_pages-schema)
+        ;_ (create-dynamic-schema d/create-roles-schema)
+        ;_ (create-dynamic-schema d/create-previews-schema)
+        ;_ (create-dynamic-schema d/create-permissions-schema)
+        ;
+        ;_ (create-dynamic-schema d/create-people-schema)
+        ;_ (create-dynamic-schema d/create-keywords-schema)
+        ;_ (create-dynamic-schema d/create-meta_keys-schema)
+        ;_ (create-dynamic-schema d/create-media_entries-schema)
+        ;
+        ;_ (create-dynamic-schema d/create-delegations_users-schema)
+        ;_ (create-dynamic-schema d/create-io_interfaces-schema)
+        ;_ (create-dynamic-schema d/create-media-files-schema)
+        ;_ (create-dynamic-schema d/create-meta-data-schema)
+        ;_ (create-dynamic-schema d/create-meta-data-role-schema)
+        ;_ (create-dynamic-schema d/create-favorite-media-entries-schema)
         ]))
 
 

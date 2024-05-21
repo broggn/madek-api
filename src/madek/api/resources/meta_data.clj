@@ -7,7 +7,7 @@
             [madek.api.db.core :refer [builder-fn-options-default]]
             [madek.api.resources.meta-data.index :as meta-data.index]
 
-            [madek.api.db.dynamic_schema.schema_cache :refer [get-schema]]
+            [madek.api.db.dynamic_schema.core :refer [get-schema]]
 
 
             [madek.api.resources.meta-data.meta-datum :as meta-datum]

@@ -7,7 +7,7 @@
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.helper :refer [t]]
 
-   [madek.api.db.dynamic_schema.schema_cache :refer [get-schema]]
+   [madek.api.db.dynamic_schema.core :refer [get-schema]]
 
 
    [next.jdbc :as jdbc]

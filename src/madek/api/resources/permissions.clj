@@ -4,7 +4,7 @@
    [madek.api.resources.media-resources.permissions :as mr-permissions]
    [madek.api.resources.shared :as sd]
 
-   [madek.api.db.dynamic_schema.schema_cache :refer [get-schema]]
+[madek.api.db.dynamic_schema.core :refer [get-schema]]
 
 
    [madek.api.utils.helper :refer [t]]

@@ -9,10 +9,12 @@
    [honey.sql.helpers :as sql]
 
 
-   [madek.api.utils.validation :refer [vector-or-hashmap-validation]]
-   [madek.api.db.dynamic_schema.schema_definitions :refer [schema-de-en type-mapping schema-subtype schema-meta_datum schema-allowed_people_subtypes schema-scope]]
-
    [madek.api.db.core :refer [get-ds]]
+
+   ;[madek.api.db.dynamic_schema.schema_cache :refer [get-enum set-enum]]
+
+   [madek.api.db.dynamic_schema.schema_definitions :refer [raw-type-mapping type-mapping type-mapping-enums]]
+   [madek.api.db.dynamic_schema.statics :refer [TYPE_EITHER TYPE_MAYBE TYPE_NOTHING TYPE_OPTIONAL TYPE_REQUIRED]]
 
    ;[madek.api.utils.helper :refer [merge-query-parts to-uuids]]
 
@@ -28,7 +30,7 @@
    ; [taoensso.timbre :as timbre]
    ; [clojure.core.cache :as cache]
    [taoensso.timbre :refer [spy]])
-)
+  )
 
 (defn pr [key fnc]
   (println ">oo> HELPER / " key "=" fnc)
@@ -36,38 +38,39 @@
   )
 
 
-(def enum-cache (atom {}))
+
 (def schema-cache (atom {}))
 
 
 
 
 
-(def TYPE_NOTHING "nothing")
-(def TYPE_REQUIRED "required")
-(def TYPE_OPTIONAL "optional")
-(def TYPE_MAYBE "maybe")
-(def TYPE_EITHER "either")
+;(def TYPE_NOTHING "nothing")
+;(def TYPE_REQUIRED "required")
+;(def TYPE_OPTIONAL "optional")
+;(def TYPE_MAYBE "maybe")
+;(def TYPE_EITHER "either")
 
 
 (require '[schema.core :as schema])
 
 ;;;; db-operations
 
-(defn fetch-table-metadata [table-name]
-  (println ">o> fetch-table-metadata by DB!!!!!!!!" table-name)
-  (let [ds (get-ds)]
-    (try (jdbc/execute! ds
-           ;(-> (sql/select :column_name :data_type :is_nullable)
-           (-> (sql/select :column_name :data_type)
-               (sql/from :information_schema.columns)
-               (sql/where [:= :table_name table-name])
-               sql-format
-               spy
-               ))
-         (catch Exception e
-           (println ">o> ERROR: fetch-table-metadata" (.getMessage e))
-           (throw (Exception. "Unable to establish a database connection"))))))
+;;;; cache access helpers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(def enum-cache (atom {}))
+(defn get-enum [key & [default]]
+
+  (let [
+        val (get @enum-cache key default)
+        p (println ">o> key=" key)
+        p (println ">o> val=" val)
+        p (println ">o> default=" default)
+
+        ] val)
+
+  ;(println ">oo> get-enum.key=" key)
+  ;(pr key (get @enum-cache key default))
+  )
 
 
 (defn fetch-enum [enum-name]
@@ -92,6 +95,118 @@
            (println ">o> ERROR: fetch-table-metadata" (.getMessage e))
            (throw (Exception. "Unable to establish a database connection"))))))
 
+
+(defn convert-to-enum-spec
+  "Creates a Spec enum definition from a sequence of maps with namespaced keys."
+  [enum-data]
+
+  (println ">o> enum-data=" enum-data)
+
+  (apply s/enum (mapv #(:enumlabel %) enum-data)))
+;(apply s/enum (mapv #(:pg_enum/enumlabel %) enum-data)))
+
+
+(defn create-enum-spec [table-name]
+  (let [
+        res (fetch-enum table-name)
+        p (println ">o> 1ares=" res)
+        res (convert-to-enum-spec res)
+        p (println ">o> 2ares=" res)
+
+        ] res))
+
+
+(defn set-enum [key value]
+  (println ">oo> set-enum.key=" key)
+  (swap! enum-cache assoc key value))
+
+
+(defn init-enums-by-db []
+
+  (let [
+
+        ;;; init enums
+        _ (set-enum :collections_sorting (create-enum-spec "collection_sorting"))
+        _ (set-enum :collections_layout (create-enum-spec "collection_layout"))
+        _ (set-enum :collections_default_resource_type (create-enum-spec "collection_default_resource_type"))
+
+        ;;;; TODO: revise db-ddl to use enum
+        _ (set-enum :groups.type (s/enum "AuthenticationGroup" "InstitutionalGroup" "Group"))
+        ;
+        ])
+
+  )
+
+
+
+
+(defn fetch-table-metadata [table-name]
+  (println ">o> fetch-table-metadata by DB!!!!!!!!" table-name)
+  (let [ds (get-ds)]
+    (try (jdbc/execute! ds
+           ;(-> (sql/select :column_name :data_type :is_nullable)
+           (-> (sql/select :column_name :data_type)
+               (sql/from :information_schema.columns)
+               (sql/where [:= :table_name table-name])
+               sql-format
+               spy
+               ))
+         (catch Exception e
+           (println ">o> ERROR: fetch-table-metadata" (.getMessage e))
+           (throw (Exception. "Unable to establish a database connection"))))))
+
+
+
+
+
+
+(defn transform-column [row table-name enum-map]
+  (let [
+        mkey (keyword (str table-name "." (row :column_name)))
+        new-data-type (get enum-map mkey)
+
+        ;p (println ">o> mkey=" mkey)
+        ;p (println ">o> new-data-type=" new-data-type)
+        ]
+    (if new-data-type
+      (assoc row :data_type new-data-type)
+      row)))
+
+(defn transform-schema [data table-name enum-map]
+  (map #(transform-column % table-name enum-map) data))
+
+
+
+
+
+;; TODO: remove this
+(defn process-raw-type-mapping [table-name metadata]
+
+  (let [
+
+        ;raw-type-mapping {
+        ;                  ;:delegations.test "enum::test"
+        ;                  ;:groups.id "enum::what-the-fuck"
+        ;                  :groups.type "enum::groups.type"
+        ;
+        ;                  }
+
+        res metadata
+
+        p (println ">o> !!!!!!1 res=" res)
+
+        ;; FYI: modify raw-type if raw-type-mapping-mapping is found
+        res (transform-schema metadata table-name raw-type-mapping)
+
+        p (println ">o> !!!!!!2 res=" res)
+
+        ;p (System/exit 0)
+
+        ]
+
+    res
+    )
+  )
 
 (defn remove-maps-by-entry-values
   "Removes maps from a list where the specified entry key matches any of the values in the provided list."
@@ -138,49 +253,8 @@
 
 
 
-(defn transform-column [row table-name enum-map]
-  (let [
-        mkey (keyword (str table-name "." (row :column_name)))
-        new-data-type (get enum-map mkey)
-
-        ;p (println ">o> mkey=" mkey)
-        ;p (println ">o> new-data-type=" new-data-type)
-        ]
-    (if new-data-type
-      (assoc row :data_type new-data-type)
-      row)))
-
-(defn transform-schema [data table-name enum-map]
-  (map #(transform-column % table-name enum-map) data))
 
 
-(defn raw-type-mapping [table-name metadata]
-
-  (let [
-
-        raw-type-mapping {
-                          ;:delegations.test "enum::test"
-                          ;:groups.id "enum::what-the-fuck"
-                          :groups.type "enum::groups.type"
-
-                          }
-
-        res metadata
-
-        p (println ">o> !!!!!!1 res=" res)
-
-        ;; FYI: modify raw-type if raw-type-mapping-mapping is found
-        res (transform-schema metadata table-name raw-type-mapping)
-
-        p (println ">o> !!!!!!2 res=" res)
-
-        ;p (System/exit 0)
-
-        ]
-
-    res
-    )
-  )
 
 
 
@@ -216,7 +290,7 @@
          res (concat res update-data)
 
          ;res (type-mapping table-name res)
-         res (raw-type-mapping table-name res)
+         res (process-raw-type-mapping table-name res)
 
          ;res (map normalize-map res)
          ;p (println ">o> 2res=" res)
@@ -225,100 +299,11 @@
          ;res (replace-elem res update-data :column_name)    ;;??
 
          ] res))
-
   )
 
 
 
 
-(defn type-mapping-enums [key] "Maps a <table>.<key> to a Spec type, eg.: enum OR schema-definition "
-
-  (let [
-        ;schema-de-en {(s/optional-key :de) (s/maybe s/Str)
-        ;              (s/optional-key :en) (s/maybe s/Str)}
-        ;
-        ;schema-subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup")
-        ;
-        ;schema-meta_datum (s/enum "MetaDatum::Text"
-        ;                    "MetaDatum::TextDate"
-        ;                    "MetaDatum::JSON"
-        ;                    "MetaDatum::Keywords"
-        ;                    "MetaDatum::People"
-        ;                    "MetaDatum::Roles")
-        ;schema-allowed_people_subtypes (s/enum "People" "PeopleGroup")
-        ;
-        ;schema-scope (s/enum "view" "use")
-
-        p (println ">o> !!1 type-mapping-enums.key=" key (class key))
-        enum-map {"collections.default_resource_type" (get-enum :collections_default_resource_type)
-                  "collections.layout" (get-enum :collections_layout)
-                  "collections.sorting" (get-enum :collections_sorting)
-
-                  "groups.type" (get-enum :groups.type)
-
-                  "users.settings" vector-or-hashmap-validation
-
-                  "app_settings.about_pages" schema-de-en
-                  "app_settings.brand_texts" schema-de-en
-                  "app_settings.catalog_subtitles" schema-de-en
-                  "app_settings.catalog_titles" schema-de-en
-                  "app_settings.featured_set_subtitles" schema-de-en
-                  "app_settings.featured_set_titles" schema-de-en
-                  "app_settings.provenance_notices" schema-de-en
-                  "app_settings.site_titles" schema-de-en
-                  "app_settings.support_urls" schema-de-en
-                  "app_settings.welcome_texts" schema-de-en
-                  "app_settings.welcome_titles" schema-de-en
-
-                  "app_settings.available_locales" [s/Str]
-                  "app_settings.contexts_for_entry_extra" [s/Str]
-                  "app_settings.contexts_for_entry_validation" [s/Str]
-                  "app_settings.catalog_context_keys" [s/Str]
-                  "app_settings.contexts_for_dynamic_filters" [s/Str]
-                  "app_settings.contexts_for_collection_extra" [s/Str]
-                  "app_settings.copyright_notice_templates" [s/Str]
-                  "app_settings.contexts_for_entry_edit" [s/Str]
-                  "app_settings.contexts_for_collection_edit" [s/Str]
-                  "app_settings.contexts_for_list_details" [s/Str]
-
-                  "context_keys.labels" schema-de-en
-                  "context_keys.descriptions" schema-de-en
-                  "context_keys.hints" schema-de-en
-                  "context_keys.documentation_urls" schema-de-en
-
-                  "contexts.labels" schema-de-en
-                  "contexts.descriptions" schema-de-en
-
-                  "vocabularies.descriptions" schema-de-en
-                  "vocabularies.labels" schema-de-en
-
-                  "static-pages.contents" schema-de-en
-
-                  "roles.labels" schema-de-en
-
-                  "people.external_uris" [s/Str]
-                  "people.subtype" schema-subtype
-                  "keywords.external_uris" [s/Str]
-
-                  ;; TODO: check if this is correct, should be "meta_keys .."
-                  "meta-keys.meta_datum_object_type" schema-meta_datum
-                  "meta-keys.allowed_people_subtypes" schema-allowed_people_subtypes
-                  "meta-keys.scope" schema-scope
-                  ;"meta_keys.meta_datum_object_type" schema-meta_datum
-                  ;"meta_keys.allowed_people_subtypes" schema-allowed_people_subtypes
-                  ;"meta_keys.scope" schema-scope
-
-                  "meta_keys.labels" schema-de-en
-                  "meta_keys.descriptions" schema-de-en
-                  "meta_keys.hints" schema-de-en
-                  "meta_keys.documentation_urls" schema-de-en
-
-                  "media_files.conversion_profiles" [s/Any]
-                  }
-
-        res (get enum-map key nil)
-        ]
-    res))
 
 
 
@@ -359,7 +344,7 @@
                  ;; FYI: <table>.<column> eg.: "groups.type"
                  type-mapping-key (str (name table-name) "." column_name)
 
-                 type-mapping-enums-res (type-mapping-enums type-mapping-key)
+                 type-mapping-enums-res (type-mapping-enums type-mapping-key get-enum)
                  type-mapping-res (type-mapping data_type)  ;raw-mapping
 
                  p (println ">>o> !!! [set-schema] =>> key=" type-mapping-key ", type=" data_type ", type: >" type-mapping-res "<")
@@ -495,6 +480,34 @@
 
 
 
+(defn rename-column-names
+  [maps key-map]
+
+  (println ">o> >>??>> X key-map=" key-map)
+  (println ">o> >>??>> X maps=" maps)
+
+  (map
+    (fn [m]
+      (if-let [new-col-name (get key-map (:column_name m))]
+        (assoc m :column_name new-col-name)
+        m))
+    maps))
+
+
+
+(defn set-schema [key value]
+  (let [
+        ;; TODO: quiet helpful for debugging
+        p (println ">o> !!! [set-schema] (" key ") ->" value)
+
+        value (into {} value)
+
+        res (swap! schema-cache assoc key value)
+        ] res)
+  )
+
+
+
 (defn create-raw-schema [data]
   (let [raw (data :raw)
         raw-schema-name (data :raw-schema-name)
@@ -607,12 +620,7 @@
 
 
 
-(defn create-dynamic-schema [cfg-array]
-  (doseq [c cfg-array]
-    (let [_ (create-raw-schema data)
-          _ (when (contains? c :schemas)
-              (create-schemas-by-config data)
-              )])))
+
 
 
 
@@ -630,15 +638,6 @@
     maps))
 
 
-(defn convert-to-enum-spec
-  "Creates a Spec enum definition from a sequence of maps with namespaced keys."
-  [enum-data]
-
-  (println ">o> enum-data=" enum-data)
-
-  (apply s/enum (mapv #(:enumlabel %) enum-data)))
-;(apply s/enum (mapv #(:pg_enum/enumlabel %) enum-data)))
-
 
 (defn create-enum-spec [table-name]
   (let [
@@ -647,18 +646,20 @@
         res (convert-to-enum-spec res)
         p (println ">o> 2ares=" res)
 
-        ] res)
+        ] res))
 
 
 
+(defn fetch-value-by-key
+  [maps key]
+  (some (fn [m] (get m key)) maps))
 
 
+(defn revise-schema-types [table-name column_name column_type type-spec types key-types value-types]
 
-  (defn revise-schema-types [table-name column_name column_type type-spec types key-types value-types]
+  (let [
 
-    (let [
-
-          p (println "\n>o> [revise-schema-types] >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n
+        p (println "\n>o> [revise-schema-types] >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n
         table-name=" table-name "\n
         column_name=" column_name "\n
         column_type=" column_type "\n
@@ -670,260 +671,232 @@
         ")
 
 
-          ;;key-type TYPE_OPTIONAL
-          ;;value-type TYPE_MAYBE
-          ;
-          ;p (println "--------------\nColumn Name (column_name):" column_name)
-          ;p (println "Column Type (column_type):" column_type)
-          ;p (println "Type Specification (type-spec):" type-spec)
-          ;p (println "types:" types)
-          ;
-          ;data_type column_type
-          ;
-          ;keySection nil
-          ;valueSection nil
+        ;;key-type TYPE_OPTIONAL
+        ;;value-type TYPE_MAYBE
+        ;
+        ;p (println "--------------\nColumn Name (column_name):" column_name)
+        ;p (println "Column Type (column_type):" column_type)
+        ;p (println "Type Specification (type-spec):" type-spec)
+        ;p (println "types:" types)
+        ;
+        ;data_type column_type
+        ;
+        ;keySection nil
+        ;valueSection nil
 
 
-          ;p (println ">o> ----------------- HEREEEEE")
-          ;p (println ">o> revise-schema-types.types=" types)
-          ;p (println ">o> revise-schema-types.key-types=" key-types)
-          ;p (println ">o> revise-schema-types.value-types=" value-types)
-          ;p (println ">o> val=" val)
+        ;p (println ">o> ----------------- HEREEEEE")
+        ;p (println ">o> revise-schema-types.types=" types)
+        ;p (println ">o> revise-schema-types.key-types=" key-types)
+        ;p (println ">o> revise-schema-types.value-types=" value-types)
+        ;p (println ">o> val=" val)
 
 
-          ;p (println "\n>o> [revise-schema-types] >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-          ;p (println ">o> type-spec=" type-spec)
-          ;p (println ">o> types=" types)
-          ;p (println ">o> key-types=" key-types)
-          ;p (println ">o> value-types=" value-types)
+        ;p (println "\n>o> [revise-schema-types] >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+        ;p (println ">o> type-spec=" type-spec)
+        ;p (println ">o> types=" types)
+        ;p (println ">o> key-types=" key-types)
+        ;p (println ">o> value-types=" value-types)
 
-          ;; overwrite schema types, use :key-types as default and overwrite it by specific :key-type
-          val (fetch-value-by-key types column_name)
+        ;; overwrite schema types, use :key-types as default and overwrite it by specific :key-type
+        val (fetch-value-by-key types column_name)
 
-          key-type (get val :key-type)
-          value-type (get val :value-type)
-          either-condition (get val :either-condition)
-          ;key-type (:key-type val)
-          ;value-type (:value-type val)
-
-
-          ;key-type (get-in types [(keyword column_name) :key-type])
-          ;value-type (get-in types [(keyword column_name) :value-type])
+        key-type (get val :key-type)
+        value-type (get val :value-type)
+        either-condition (get val :either-condition)
+        ;key-type (:key-type val)
+        ;value-type (:value-type val)
 
 
-
-
-          ;p (println ">o> val=" val)
-          p (println ">o> >>>>>>>> val=" val)
-          p (println ">o> >>>>>>>> key-type=" key-type)
-          p (println ">o> >>>>>>>> value-type=" value-type)
-
-          key-type (if (not (nil? key-types))
-                     (if (nil? key-type) key-types key-type)
-                     key-type)
-
-          value-type (if (not (nil? value-types))
-                       ;value-types
-                       (if (nil? value-type) value-types value-type)
-                       value-type)
+        ;key-type (get-in types [(keyword column_name) :key-type])
+        ;value-type (get-in types [(keyword column_name) :value-type])
 
 
 
-          ;p (println ">o> final.key-type=" key-type)
-          ;p (println ">o> final.value-type=" value-type)
-          ;p (println ">o> [revise-schema-types] <<<<<<<<<<<<<<< before <<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n
-          ;type-mapping-key=" type-mapping-key "\n
-          ;column_name=" column_name "\n
-          ;key-type=" key-type "\n
-          ;value-type=" value-type "\n
-          ;")
 
-          keySection (cond (= key-type TYPE_REQUIRED) (s/required-key (keyword column_name))
-                           (= key-type TYPE_OPTIONAL) (s/optional-key (keyword column_name))
-                           ;(= key-type TYPE_EITHER) (s/optional-key (keyword column_name))
-                           (= key-type TYPE_NOTHING) (keyword column_name)
-                           :else (do
-                                   ;(println ">o> nix")
-                                   (keyword column_name))
-                           )
+        ;p (println ">o> val=" val)
+        p (println ">o> >>>>>>>> val=" val)
+        p (println ">o> >>>>>>>> key-type=" key-type)
+        p (println ">o> >>>>>>>> value-type=" value-type)
+
+        key-type (if (not (nil? key-types))
+                   (if (nil? key-type) key-types key-type)
+                   key-type)
+
+        value-type (if (not (nil? value-types))
+                     ;value-types
+                     (if (nil? value-type) value-types value-type)
+                     value-type)
 
 
 
-          _ (when (= key-type TYPE_EITHER) (throw (Exception. "TYPE_EITHER not supported")))
+        ;p (println ">o> final.key-type=" key-type)
+        ;p (println ">o> final.value-type=" value-type)
+        ;p (println ">o> [revise-schema-types] <<<<<<<<<<<<<<< before <<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n
+        ;type-mapping-key=" type-mapping-key "\n
+        ;column_name=" column_name "\n
+        ;key-type=" key-type "\n
+        ;value-type=" value-type "\n
+        ;")
 
-          ;; revise schema types by mapping
-          type-mapping-key (str (name table-name) "." (name column_name))
-          type-mapping-enums-res (type-mapping-enums type-mapping-key)
-          ;p (println ">o> ?????????? type-mapping-key => " type-mapping-key "/" type-mapping-enums-res)
-          ;
-          ;p (println ">o> ?????????? value-type=" value-type)
-          valueSection (cond
-                         (not (nil? type-mapping-enums-res)) (if (= value-type TYPE_MAYBE)
-                                                               (s/maybe type-mapping-enums-res)
-                                                               type-mapping-enums-res)
-                         (and (= value-type TYPE_EITHER) (not (nil? either-condition))) (s/->Either either-condition)
-                         (= value-type TYPE_MAYBE) (s/maybe column_type)
-                         :else column_type
+        keySection (cond (= key-type TYPE_REQUIRED) (s/required-key (keyword column_name))
+                         (= key-type TYPE_OPTIONAL) (s/optional-key (keyword column_name))
+                         ;(= key-type TYPE_EITHER) (s/optional-key (keyword column_name))
+                         (= key-type TYPE_NOTHING) (keyword column_name)
+                         :else (do
+                                 ;(println ">o> nix")
+                                 (keyword column_name))
                          )
 
-          ;p (println ">o> revise-schema-types, final-result  (" key ")=>> " {keySection valueSection})
 
-          p (println ">o> [revise-schema-types] <<<<<<<<<<<<<<< before <<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n
+
+        _ (when (= key-type TYPE_EITHER) (throw (Exception. "TYPE_EITHER not supported")))
+
+        ;; revise schema types by mapping
+        type-mapping-key (str (name table-name) "." (name column_name))
+        type-mapping-enums-res (type-mapping-enums type-mapping-key get-enum)
+        ;p (println ">o> ?????????? type-mapping-key => " type-mapping-key "/" type-mapping-enums-res)
+        ;
+        ;p (println ">o> ?????????? value-type=" value-type)
+        valueSection (cond
+                       (not (nil? type-mapping-enums-res)) (if (= value-type TYPE_MAYBE)
+                                                             (s/maybe type-mapping-enums-res)
+                                                             type-mapping-enums-res)
+                       (and (= value-type TYPE_EITHER) (not (nil? either-condition))) (s/->Either either-condition)
+                       (= value-type TYPE_MAYBE) (s/maybe column_type)
+                       :else column_type
+                       )
+
+        ;p (println ">o> revise-schema-types, final-result  (" key ")=>> " {keySection valueSection})
+
+        p (println ">o> [revise-schema-types] <<<<<<<<<<<<<<< before <<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n
         type-mapping-key=" type-mapping-key "\n
         column_name=" column_name "\n
         key-type=" key-type "\n
         value-type=" value-type "\n
         ")
 
-          ;; TODO: quiet helpful for debugging
-          p (println ">>o> !!! [set-schema] =>> " {keySection valueSection})
+        ;; TODO: quiet helpful for debugging
+        p (println ">>o> !!! [set-schema] =>> " {keySection valueSection})
 
 
-          ;p (if (= (table-name "." column_name) :groups.type)
-          ;   (throw (Exception. "groups.type INFO????????????")))
+        ;p (if (= (table-name "." column_name) :groups.type)
+        ;   (throw (Exception. "groups.type INFO????????????")))
 
-          ]
+        ]
 
-      {keySection valueSection}
-      ))
-
-
-  (defn process-revision-of-schema-types
-    [table-name list-of-maps types key-types value-types]
-    (map
-      (fn [[col-name col-type]]
-        (let [type-spec (some (fn [type-map]
-                                (get type-map col-name))
-                          types)]
-          (revise-schema-types table-name col-name col-type type-spec types key-types value-types)))
-      list-of-maps))
+    {keySection valueSection}
+    ))
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  (defn remove-by-keys [data keys-to-remove]
-
-    (let [
-          ;data (when-not (nil? (:rename data)) (rename-by-keys data (:rename data)))
-          ;p (println ">o> >>> mod.data=" data)
-          ;_ (System/exit 0)
-          res (remove (fn [[key _]]
-                        (some #{key} keys-to-remove))
-                data)
-
-          ] res))
-
-
-  (defn keep-by-keys [data keys-to-keep]
-    (let [
-          ;data (when-not (nil? (:rename data)) (rename-by-keys data (:rename data)))
-          res (filter (fn [[key _]]
-                        (some #{key} keys-to-keep))
-                data)
-
-          ] res))
-
-
-  (defn fetch-value-by-key
-    [maps key]
-    (some (fn [m] (get m key)) maps))
-
-
-
-  ;;;; cache access helpers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  (defn get-enum [key & [default]]
-
-    (let [
-          val (get @enum-cache key default)
-          p (println ">o> key=" key)
-          p (println ">o> val=" val)
-          p (println ">o> default=" default)
-
-          ] val)
-
-    ;(println ">oo> get-enum.key=" key)
-    ;(pr key (get @enum-cache key default))
-    )
-
-
-  (defn set-enum [key value]
-    (println ">oo> set-enum.key=" key)
-    (swap! enum-cache assoc key value))
-
-
-  (defn get-schema [key & [default]]
-    (let [
-          val (get @schema-cache key default)
-          ;val2 (get @schema-cache (name key) default)
-          ;p (println ">o>s get-schema.key=" key)
-          ;p (println ">o>s get-schema.val=" val)
-          ;p (println ">o>s val2=" val2)
-
-          ;_ (if (nil? val) (System/exit 0 ))
-          val (if (nil? val)
-                (do
-                  ;(println ">o> CAUTION !!!!! no-schema-found!!!" key)
-                  s/Any)
-                ;(s/Any)
-                ;s/Any
-
-                ;val)
-                (into {} val)
-                )
-
-
-
-          p (println ">o> [get-schema] " key "=" val)
-
-          ] val)
-    )
-
-
-
-  (defn set-schema [key value]
-    (let [
-          ;; TODO: quiet helpful for debugging
-          p (println ">o> !!! [set-schema] (" key ") ->" value)
-
-          value (into {} value)
-
-          res (swap! schema-cache assoc key value)
-          ] res)
-    )
-
-
-
-
-
-
-  (defn rename-column-names
-  [maps key-map]
-
-  (println ">o> >>??>> X key-map=" key-map)
-  (println ">o> >>??>> X maps=" maps)
-
+(defn process-revision-of-schema-types
+  [table-name list-of-maps types key-types value-types]
   (map
-    (fn [m]
-      (if-let [new-col-name (get key-map (:column_name m))]
-        (assoc m :column_name new-col-name)
-        m))
-    maps))
+    (fn [[col-name col-type]]
+      (let [type-spec (some (fn [type-map]
+                              (get type-map col-name))
+                        types)]
+        (revise-schema-types table-name col-name col-type type-spec types key-types value-types)))
+    list-of-maps))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(defn remove-by-keys [data keys-to-remove]
+
+  (let [
+        ;data (when-not (nil? (:rename data)) (rename-by-keys data (:rename data)))
+        ;p (println ">o> >>> mod.data=" data)
+        ;_ (System/exit 0)
+        res (remove (fn [[key _]]
+                      (some #{key} keys-to-remove))
+              data)
+
+        ] res))
+
+
+(defn keep-by-keys [data keys-to-keep]
+  (let [
+        ;data (when-not (nil? (:rename data)) (rename-by-keys data (:rename data)))
+        res (filter (fn [[key _]]
+                      (some #{key} keys-to-keep))
+              data)
+
+        ] res))
+
+
+
+
+
+
+;;;;; cache access helpers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;(defn get-enum [key & [default]]
+;
+;  (let [
+;        val (get @enum-cache key default)
+;        p (println ">o> key=" key)
+;        p (println ">o> val=" val)
+;        p (println ">o> default=" default)
+;
+;        ] val)
+;
+;  ;(println ">oo> get-enum.key=" key)
+;  ;(pr key (get @enum-cache key default))
+;  )
+;
+;
+;(defn set-enum [key value]
+;  (println ">oo> set-enum.key=" key)
+;  (swap! enum-cache assoc key value))
+
+
+(defn get-schema [key & [default]]
+  (let [
+        val (get @schema-cache key default)
+        ;val2 (get @schema-cache (name key) default)
+        ;p (println ">o>s get-schema.key=" key)
+        ;p (println ">o>s get-schema.val=" val)
+        ;p (println ">o>s val2=" val2)
+
+        ;_ (if (nil? val) (System/exit 0 ))
+        val (if (nil? val)
+              (do
+                ;(println ">o> CAUTION !!!!! no-schema-found!!!" key)
+                s/Any)
+              ;(s/Any)
+              ;s/Any
+
+              ;val)
+              (into {} val)
+              )
+
+
+
+        p (println ">o> [get-schema] " key "=" val)
+
+        ] val)
+  )
+
+
+
+
+
 
 
 
@@ -1038,9 +1011,9 @@
 
 (defn create-dynamic-schema [cfg-array]
   (doseq [c cfg-array]
-    (let [_ (create-raw-schema data)
+    (let [_ (create-raw-schema c)
           _ (when (contains? c :schemas)
-              (create-schemas-by-config data)
+              (create-schemas-by-config c)
               )])))
 
 

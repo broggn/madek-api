@@ -7,7 +7,7 @@
    [madek.api.resources.collections.index :refer [get-index]]
    [madek.api.resources.shared :as sd]
 
-   [madek.api.db.dynamic_schema.schema_cache :refer [get-schema]]
+[madek.api.db.dynamic_schema.core :refer [get-schema]]
 
    [madek.api.utils.helper :refer [convert-map-if-exist f t]]
    [madek.api.utils.helper :refer [mslurp]]

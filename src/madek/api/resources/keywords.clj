@@ -5,7 +5,7 @@
    [logbug.catcher :as catcher]
    [madek.api.resources.keywords.keyword :as kw]
 
-   [madek.api.db.dynamic_schema.schema_cache :refer [get-schema]]
+[madek.api.db.dynamic_schema.core :refer [get-schema]]
 
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]

@@ -4,7 +4,7 @@
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
 
-   [madek.api.db.dynamic_schema.schema_cache :refer [get-schema]]
+[madek.api.db.dynamic_schema.core :refer [get-schema]]
 
    [madek.api.pagination :as pagination]
    [madek.api.resources.shared :as sd]
