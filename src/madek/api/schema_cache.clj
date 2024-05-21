@@ -114,6 +114,7 @@
 
 (defn set-schema [key value]
   (let [
+        ;; TODO: quiet helpful for debugging
         p (println ">o> !!! [set-schema] (" key ") ->" value)
 
         value (into {} value)
@@ -426,6 +427,7 @@
         value-type=" value-type "\n
         ")
 
+        ;; TODO: quiet helpful for debugging
         p (println ">>o> !!! [set-schema] =>> " {keySection valueSection})
 
 
@@ -2456,8 +2458,9 @@
                                               "get_full_size" "public_get_full_size"
                                               }
                                      }}
-                    {:media_entry_user_permission {:wl ["collection_id" "order"]}}
-                    {:collection_media_entry_arcs {:wl ["me_get_metadata_and_previews" "me_get_full_size" "me_edit_metadata" "me_edit_permissions"]
+                    {:collection_media_entry_arcs {:wl ["collection_id" "order"]}}
+
+                    {:media_entry_user_permissions {:wl ["me_get_metadata_and_previews" "me_get_full_size" "me_edit_metadata" "me_edit_permissions"]
                                                    :rename {"get_metadata_and_previews" "me_get_metadata_and_previews"
                                                             "get_full_size" "me_get_full_size"
                                                             "edit_metadata" "me_edit_metadata"
@@ -2473,7 +2476,6 @@
                                                                     :alias "mar.media-entries/schema_query_media_entries"
                                                                     :key-types "optional"
                                                                     }}
-
                         ]
               }
 
@@ -2501,6 +2503,19 @@
 
         res (create-raw-schema data)
         res2 (create-schemas-by-config data)
+
+
+        _ (set-schema :media-entries-schema-schema_publish_failed {:message {:is_publishable s/Bool
+                                                                           :media_entry_id s/Uuid
+                                                                           :has_meta_data [{s/Any s/Bool}]}} )
+
+
+        _ (set-schema :media-entries-schema-schema_query_media_entries_related_result {:media_entries [(get-schema :media-entries.schema_export_media_entry)]
+                                                                                     :meta_data [[(get-schema :media-entries.schema_export_meta_data)]]
+                                                                                     :media_files [(s/maybe (get-schema :media-files.schema_export_media_file))]
+                                                                                     :previews [[(s/maybe (get-schema :media-entries.schema_export_preview))]]
+                                                                                     (s/optional-key :col_arcs) [(get-schema :media-entries.schema_export_col_arc)]
+                                                                                     (s/optional-key :col_meta_data) [(get-schema :media-entries.schema_export_meta_data)]} )
 
         ]))
 

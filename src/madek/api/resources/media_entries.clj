@@ -291,10 +291,10 @@
 ;   :created_at s/Any
 ;   :updated_at s/Any})
 
-;; TODO: not in use
-(def schema_query_media_entries_result
-  {:media_entries [(get-schema  :media-entries.schema_export_media_entry )]
-   (s/optional-key :col_arcs) [(get-schema :media-entries.schema_export_col_arc)]})
+;;; TODO: not in use
+;(def schema_query_media_entries_result
+;  {:media_entries [(get-schema  :media-entries.schema_export_media_entry )]
+;   (s/optional-key :col_arcs) [(get-schema :media-entries.schema_export_col_arc)]})
 
 ;(def schema_export_media_file
 ;  {:id s/Uuid
@@ -341,18 +341,18 @@
 ;   :meta_data_updated_at s/Any
 ;   :other_media_entry_id (s/maybe s/Uuid)})
 
-(def schema_query_media_entries_related_result
-  {:media_entries [(get-schema  :media-entries.schema_export_media_entry )]
-   :meta_data [[(get-schema :media-entries.schema_export_meta_data)]]
-   :media_files [(s/maybe (get-schema :media-files.schema_export_media_file))]
-   :previews [[(s/maybe (get-schema :media-entries.schema_export_preview))]]
-   (s/optional-key :col_arcs) [(get-schema :media-entries.schema_export_col_arc)]
-   (s/optional-key :col_meta_data) [(get-schema :media-entries.schema_export_meta_data)]})
-
-(def schema_publish_failed
-  {:message {:is_publishable s/Bool
-             :media_entry_id s/Uuid
-             :has_meta_data [{s/Any s/Bool}]}})
+;(def schema_query_media_entries_related_result
+;  {:media_entries [(get-schema  :media-entries.schema_export_media_entry )]
+;   :meta_data [[(get-schema :media-entries.schema_export_meta_data)]]
+;   :media_files [(s/maybe (get-schema :media-files.schema_export_media_file))]
+;   :previews [[(s/maybe (get-schema :media-entries.schema_export_preview))]]
+;   (s/optional-key :col_arcs) [(get-schema :media-entries.schema_export_col_arc)]
+;   (s/optional-key :col_meta_data) [(get-schema :media-entries.schema_export_meta_data)]})
+;
+;(def schema_publish_failed
+;  {:message {:is_publishable s/Bool
+;             :media_entry_id s/Uuid
+;             :has_meta_data [{s/Any s/Bool}]}})
 
 (def ring-routes
   ["/"
@@ -377,7 +377,7 @@
       :middleware [sd/ring-wrap-parse-json-query-parameters]
       :coercion reitit.coercion.schema/coercion
       :parameters {:query (get-schema  :media-entries.schema_query_media_entries )}
-      :responses {200 {:body schema_query_media_entries_related_result}}}}]])
+      :responses {200 {:body (get-schema :media-entries-schema-schema_query_media_entries_related_result)}}}}]])
 
 (sa/def ::copy_me_id string?)
 (sa/def ::collection_id string?)
@@ -433,7 +433,7 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Uuid}}
            :responses {200 {:body (get-schema  :media-entries.schema_export_media_entry )}
-                       406 {:body schema_publish_failed}}}}]])
+                       406 {:body (get-schema :media-entries-schema-schema_publish_failed)}}}}]])
 
 ;### Debug ####################################################################
 ;(debug/debug-ns *ns*)
