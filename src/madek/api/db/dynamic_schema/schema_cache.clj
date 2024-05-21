@@ -3,28 +3,28 @@
    ;; all needed imports
    ;[leihs.core.db :as db]
 
-   [madek.api.db.dynamic_schema.core :refer [init-enums-by-db
-                                             create-dynamic-schema
+   [madek.api.db.dynamic_schema.core :refer [create-dynamic-schema
+                                             init-enums-by-db
                                              ;convert-to-enum-spec
                                              ]]
 
    [madek.api.db.dynamic_schema.schema_definitions :as d]
 
    ;[madek.api.utils.helper :refer [merge-query-parts to-uuids]]))
-;(def type-mapping {"varchar" s/Str
-;                   "int4" s/Int
-;                   "integer" s/Int
-;                   "boolean" s/Bool
-;                   "uuid" s/Uuid
-;                   "text" s/Str
-;                   "jsonb" s/Any
-;                   "character varying" s/Str
-;                   "timestamp with time zone" s/Any
-;                   ;; helper
-;                   "str" s/Str
-;                   "any" s/Any
-;                   }
-  ))
+   ;(def type-mapping {"varchar" s/Str
+   ;                   "int4" s/Int
+   ;                   "integer" s/Int
+   ;                   "boolean" s/Bool
+   ;                   "uuid" s/Uuid
+   ;                   "text" s/Str
+   ;                   "jsonb" s/Any
+   ;                   "character varying" s/Str
+   ;                   "timestamp with time zone" s/Any
+   ;                   ;; helper
+   ;                   "str" s/Str
+   ;                   "any" s/Any
+   ;                   }
+   ))
 
 
 
@@ -291,11 +291,11 @@
 
         ;merged-vec (into [] (concat (d/create-groups-schema) [{}]))
 
-        _  (create-dynamic-schema d/create-groups-schema)
-        ;_ (create-dynamic-schema d/create-users-schema)
+        _ (create-dynamic-schema d/create-groups-schema)
+        _ (create-dynamic-schema d/create-users-schema)
 
-        ;_ (create-dynamic-schema d/create-admins-schema)
-        ;_ (create-dynamic-schema d/create-workflows-schema)
+        _ (create-dynamic-schema d/create-admins-schema)
+        _ (create-dynamic-schema d/create-workflows-schema)
         ;_ (create-dynamic-schema d/create-collections-schema)
         ;_ (create-dynamic-schema d/create-collection-media-entry-schema)
         ;_ (create-dynamic-schema d/create-collection-collection-arcs-schema)
