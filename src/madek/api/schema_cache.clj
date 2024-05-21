@@ -2279,15 +2279,15 @@
                                                                          }}
 
                         {:io_interfaces.schema_update_io_interfaces {
-                                                                         :alias "mar.io_interfaces/schema_update_io_interfaces"
-                                                                         :key-values "optional"
-                                                                         :wl [:description]
-                                                                         }}
+                                                                     :alias "mar.io_interfaces/schema_update_io_interfaces"
+                                                                     :key-values "optional"
+                                                                     :wl [:description]
+                                                                     }}
 
                         {:io_interfaces.schema_import_io_interfaces {
-                                                                         :alias "mar.io_interfaces/schema_import_io_interfaces"
-                                                                         :wl [:id :description]
-                                                                         }}
+                                                                     :alias "mar.io_interfaces/schema_import_io_interfaces"
+                                                                     :wl [:id :description]
+                                                                     }}
                         ]
               }
 
@@ -2309,12 +2309,12 @@
               :schemas [
 
                         {:favorite_collections.schema_favorite_collection_export {
-                                                                         :alias "mar.favorite_collections/schema_favorite_collection_export"
-                                                                         :key-values "optional"
-                                                                         :types [
-                                                                                 {:user_id {:key-type TYPE_NOTHING}}
-                                                                                 ]
-                                                                         }}
+                                                                                  :alias "mar.favorite_collections/schema_favorite_collection_export"
+                                                                                  :key-values "optional"
+                                                                                  :types [
+                                                                                          {:user_id {:key-type TYPE_NOTHING}}
+                                                                                          ]
+                                                                                  }}
 
                         ]
               }
@@ -2381,14 +2381,14 @@
               :raw-schema-name :media_entries-raw
 
               :schemas [
-                        {:media-entiry.schema_export_media_entry {
-                                                                  :alias "mar.media-entries/schema_export_media_entry"
-                                                                  :key-types "optional"
-                                                                  :types [
-                                                                          {:id {:key-type TYPE_NOTHING}}
-                                                                          {:responsible_delegation_id {:value-type TYPE_MAYBE}}
-                                                                          ]
-                                                                  }}
+                        {:media-entries.schema_export_media_entry {
+                                                                   :alias "mar.media-entries/schema_export_media_entry"
+                                                                   :key-types "optional"
+                                                                   :types [
+                                                                           {:id {:key-type TYPE_NOTHING}}
+                                                                           {:responsible_delegation_id {:value-type TYPE_MAYBE}}
+                                                                           ]
+                                                                   }}
                         ]
               }
 
@@ -2401,28 +2401,28 @@
               :raw-schema-name :collection_media_entry_arcs-raw
 
               :schemas [
-                        {:media-entiry.schema_export_col_arc {
-                                                              :alias "mar.media-entries/schema_export_col_arc"
-                                                              :types [
-                                                                      ;{:id {:key-type TYPE_NOTHING}}
-                                                                      {:order {:value-type TYPE_MAYBE}}
-                                                                      {:position {:value-type TYPE_MAYBE}}
-                                                                      ]
-                                                              :wl [:media_entry_id :id :order :position :created_at :updated_at]
-                                                              }}
+                        {:media-entries.schema_export_col_arc {
+                                                               :alias "mar.media-entries/schema_export_col_arc"
+                                                               :types [
+                                                                       ;{:id {:key-type TYPE_NOTHING}}
+                                                                       {:order {:value-type TYPE_MAYBE}}
+                                                                       {:position {:value-type TYPE_MAYBE}}
+                                                                       ]
+                                                               :wl [:media_entry_id :id :order :position :created_at :updated_at]
+                                                               }}
 
 
-                        {:media-entiry.schema_export_preview {
-                                                              :alias "mar.media-entries/schema_export_preview"
-                                                              :raw-schema-name :preview-raw ;;TODO
-                                                              :types [
-                                                                      ;{:id {:key-type TYPE_NOTHING}}
-                                                                      {:width {:value-type TYPE_MAYBE}}
-                                                                      {:height {:value-type TYPE_MAYBE}}
-                                                                      {:conversion_profile {:value-type TYPE_MAYBE}}
-                                                                      ]
-                                                              ;:wl [:media_entry_id :id :order :position :created_at :updated_at]
-                                                              }}
+                        {:media-entries.schema_export_preview {
+                                                               :alias "mar.media-entries/schema_export_preview"
+                                                               :raw-schema-name :preview-raw ;;TODO
+                                                               :types [
+                                                                       ;{:id {:key-type TYPE_NOTHING}}
+                                                                       {:width {:value-type TYPE_MAYBE}}
+                                                                       {:height {:value-type TYPE_MAYBE}}
+                                                                       {:conversion_profile {:value-type TYPE_MAYBE}}
+                                                                       ]
+                                                               ;:wl [:media_entry_id :id :order :position :created_at :updated_at]
+                                                               }}
                         ]
               }
 
@@ -2435,19 +2435,19 @@
               :raw-schema-name :meta_data-raw
 
               :schemas [
-                        {:media-entiry.schema_export_meta_data {
-                                                                :alias "mar.media-entries/schema_export_meta_data"
-                                                                :types [
-                                                                        ;{:id {:key-type TYPE_NOTHING}}
-                                                                        {:media_entry_id {:value-type TYPE_MAYBE}}
-                                                                        {:collection_id {:value-type TYPE_MAYBE}}
-                                                                        {:string {:value-type TYPE_MAYBE}}
-                                                                        {:json {:value-type TYPE_MAYBE}}
-                                                                        {:other_media_entry_id {:value-type TYPE_MAYBE}}
-                                                                        ]
-                                                                ;:wl [:media_entry_id :id :order :position :created_at :updated_at]
-                                                                :bl [:created_by_id]
-                                                                }}
+                        {:media-entries.schema_export_meta_data {
+                                                                 :alias "mar.media-entries/schema_export_meta_data"
+                                                                 :types [
+                                                                         ;{:id {:key-type TYPE_NOTHING}}
+                                                                         {:media_entry_id {:value-type TYPE_MAYBE}}
+                                                                         {:collection_id {:value-type TYPE_MAYBE}}
+                                                                         {:string {:value-type TYPE_MAYBE}}
+                                                                         {:json {:value-type TYPE_MAYBE}}
+                                                                         {:other_media_entry_id {:value-type TYPE_MAYBE}}
+                                                                         ]
+                                                                 ;:wl [:media_entry_id :id :order :position :created_at :updated_at]
+                                                                 :bl [:created_by_id]
+                                                                 }}
 
                         ]
               }
@@ -2466,20 +2466,23 @@
                     {:collection_media_entry_arcs {:wl ["me_get_metadata_and_previews" "me_get_full_size" "me_edit_metadata" "me_edit_permissions"]
                                                    :rename {"get_metadata_and_previews" "me_get_metadata_and_previews"
                                                             "get_full_size" "me_get_full_size"
-                                                            "edit_metadata""me_edit_metadata"
+                                                            "edit_metadata" "me_edit_metadata"
                                                             "edit_permissions" "me_edit_permissions"
                                                             }
                                                    }}
-                    {:_additional [(concat schema_pagination_raw schema_full_data_raw {:column_name "filter_by", :data_type "str"}) ]}
+                    ;{:_additional [(concat schema_pagination_raw schema_full_data_raw [{:column_name "filter_by", :data_type "str"}]) ]}
+                    ;{:_additional [(concat (concat schema_pagination_raw schema_full_data_raw ) [{:column_name "filter_by", :data_type "str"}]) ]}
+                    ;{:_additional (concat (concat schema_pagination_raw schema_full_data_raw ) [{:column_name "filter_by", :data_type "str"}]) }
+                    {:_additional (concat schema_pagination_raw schema_full_data_raw [{:column_name "filter_by", :data_type "str"}])}
 
                     ],
-              :raw-schema-name :meta_data-raw
+              :raw-schema-name :media_entries-media_entry_user_permission-collection_media_entry_arcs-raw
 
               :schemas [
                         {:media-entries.schema_query_media_entries {
-                                                                :alias "mar.media-entries/schema_query_media_entries"
+                                                                    :alias "mar.media-entries/schema_query_media_entries"
                                                                     :key-types "optional"
-                                                                }}
+                                                                    }}
 
                         ]
               }
@@ -3259,7 +3262,7 @@
         _ (create-people-schema)
         _ (create-keywords-schema)
         _ (create-meta_keys-schema)
-        _ (create-media_entries-schema)                      ;; TODO
+        _ (create-media_entries-schema)                     ;; TODO
 
         _ (create-delegations_users-schema)
         _ (create-io_interfaces-schema)
