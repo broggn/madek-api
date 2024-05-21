@@ -1,11 +1,11 @@
 (ns madek.api.db.dynamic_schema.schema_definitions
   (:require
    ;[madek.api.db.dynamic_schema.core :refer [create-dynamic-schema get-enum]]
+   [madek.api.db.dynamic_schema.statics :refer [TYPE_MAYBE TYPE_NOTHING TYPE_OPTIONAL]]
+
    [madek.api.utils.validation :refer [vector-or-hashmap-validation]]
 
    [schema.core :as s]
-
-   [madek.api.db.dynamic_schema.statics :refer [TYPE_NOTHING TYPE_REQUIRED TYPE_OPTIONAL TYPE_MAYBE TYPE_EITHER]]
 
    )
   ;(:declare get-enum)
@@ -298,206 +298,173 @@
 
 
 
-(def create-admins-schema  [
-         {
-              :raw [{:admins {}}],
-              :raw-schema-name :groups-schema-raw
-              :schemas [
-                        {:admins.schema-export-admin {
-                                                      :alias "mar.admin/schema_export-admin"
-                                                      :key-types "optional"
-                                                      :types [{:id {:key-type TYPE_NOTHING}}]
-                                                      }}
-                        ]
-              }
-        ])
+(def create-admins-schema [
+                           {
+                            :raw [{:admins {}}],
+                            :raw-schema-name :groups-schema-raw
+                            :schemas [
+                                      {:admins.schema-export-admin {
+                                                                    :alias "mar.admin/schema_export-admin"
+                                                                    :key-types "optional"
+                                                                    :types [{:id {:key-type TYPE_NOTHING}}]
+                                                                    }}
+                                      ]
+                            }
+                           ])
 
 
-(def create-workflows-schema  [
-         {
-              :raw [{:workflows {}}],
-              :raw-schema-name :workflows-schema-raw
-              :schemas [
-                        {:workflows.schema_create_workflow {
-                                                            :alias "mar.workflow/schema_create_workflow"
-                                                            :key-types "optional"
-                                                            :types [{:name {:key-type TYPE_NOTHING}}]
-                                                            :wl [:name :is_active :configuration]
-                                                            }}
+(def create-workflows-schema [
+                              {
+                               :raw [{:workflows {}}],
+                               :raw-schema-name :workflows-schema-raw
+                               :schemas [
+                                         {:workflows.schema_create_workflow {
+                                                                             :alias "mar.workflow/schema_create_workflow"
+                                                                             :key-types "optional"
+                                                                             :types [{:name {:key-type TYPE_NOTHING}}]
+                                                                             :wl [:name :is_active :configuration]
+                                                                             }}
 
-                        {:workflows.schema_update_workflow {
-                                                            :alias "mar.workflow/schema_update_workflow"
-                                                            :key-types "optional"
-                                                            :wl [:name :is_active :configuration]
-                                                            }}
+                                         {:workflows.schema_update_workflow {
+                                                                             :alias "mar.workflow/schema_update_workflow"
+                                                                             :key-types "optional"
+                                                                             :wl [:name :is_active :configuration]
+                                                                             }}
 
-                        {:workflows.schema_export_workflow {
-                                                            :alias "mar.workflow/schema_export_workflow"
-                                                            :key-types "optional"
-                                                            :types [{:id {:key-type TYPE_NOTHING}}]
-                                                            :wl [:name :is_active :configuration :creator_id :created_at :updated_at]
-                                                            }}
-                        ]
-              }
-  ])
+                                         {:workflows.schema_export_workflow {
+                                                                             :alias "mar.workflow/schema_export_workflow"
+                                                                             :key-types "optional"
+                                                                             :types [{:id {:key-type TYPE_NOTHING}}]
+                                                                             :wl [:name :is_active :configuration :creator_id :created_at :updated_at]
+                                                                             }}
+                                         ]
+                               }
+                              ])
 
 
-;(def schema_sorting_types
-;  (s/enum "created_at ASC"
-;    "created_at DESC"
-;    "title ASC"
-;    "title DESC"
-;    "last_change"
-;    "manual ASC"
-;    "manual DESC"))
-;
-;(defn create-collections-schema []
-;  (let [
-;        data {
-;              :raw [{:collections {}}],
-;              :raw-schema-name :collections-schema-raw
-;              :schemas [
-;                        {:collections.schema_collection-import {
-;                                                                :alias "mar.collections/schema_collection-import"
-;                                                                :key-types "optional"
-;                                                                :types [
-;                                                                        ;{:id {:key-type TYPE_NOTHING}}
-;
-;                                                                        ;{:responsible_user_id {:value-type TYPE_MAYBE}}
-;                                                                        ;{:clipboard_user_id {:value-type TYPE_MAYBE}}
-;                                                                        {:default_context_id {:value-type TYPE_MAYBE}}
-;                                                                        {:workflow_id {:value-type TYPE_MAYBE}}
-;                                                                        ;{:responsible_delegation_id {:value-type TYPE_MAYBE}}
-;                                                                        ]
-;                                                                }}
-;
-;                        {:collections.schema_collection-export {
-;                                                                :alias "mar.collections/schema_collection-export"
-;                                                                :key-types "optional"
-;                                                                :types [
-;                                                                        {:id {:key-type TYPE_NOTHING}}
-;
-;                                                                        {:responsible_user_id {:value-type TYPE_MAYBE}}
-;                                                                        {:default_context_id {:value-type TYPE_MAYBE}}
-;                                                                        {:clipboard_user_id {:value-type TYPE_MAYBE}}
-;                                                                        {:workflow_id {:value-type TYPE_MAYBE}}
-;                                                                        {:responsible_delegation_id {:value-type TYPE_MAYBE}}
-;                                                                        ]
-;                                                                }}
-;
-;                        {:collections.schema_collection-update {
-;                                                                :alias "mar.collections/schema_collection-update"
-;                                                                :key-types "optional"
-;                                                                :types [
-;                                                                        ;{:id {:key-type TYPE_NOTHING}}
-;                                                                        ;
-;                                                                        ;{:responsible_user_id {:value-type TYPE_MAYBE}}
-;                                                                        {:default_context_id {:value-type TYPE_MAYBE}}
-;                                                                        ;{:clipboard_user_id {:value-type TYPE_MAYBE}}
-;                                                                        {:workflow_id {:value-type TYPE_MAYBE}}
-;                                                                        ;{:responsible_delegation_id {:value-type TYPE_MAYBE}}
-;                                                                        ]
-;                                                                :wl [:layout :is_master :sorting :default_context_id :workflow_id :default_resource_type]
-;                                                                }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;
-;        data {
-;              :raw [{:collections {:wl ["collection_id" "order" "creator_id" "responsible_user_id" "clipboard_user_id" "workflow_id" "responsible_delegation_id" "public_get_metadata_and_previews"]
-;                                   :rename {"get_metadata_and_previews" "public_get_metadata_and_previews"
-;                                            "id" "collection_id"}
-;                                   }}
-;                    {:collection_user_permissions {:wl ["me_get_metadata_and_previews" "me_edit_permission" "me_edit_metadata_and_relations"]
-;                                                   :rename {"get_metadata_and_previews" "me_get_metadata_and_previews"
-;                                                            "edit_permission" "me_edit_permission"
-;                                                            "edit_metadata_and_relations" "me_edit_metadata_and_relations"}
-;                                                   }}
-;                    {:_additional (concat schema_pagination_raw schema_full_data_raw)}
-;                    ],
-;              :raw-schema-name :collections-collection_user_permission-schema-raw
-;
-;              :schemas [{:collections.schema_collection-query {
-;                                                               :alias "mar.collections/schema_collection-query"
-;                                                               :key-types "optional"
-;                                                               }}]
-;
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;        ]))
-;
-;
-;
-;(defn create-collection-media-entry-schema []
-;  (let [
-;        data {
-;              :raw [{:collection_media_entry_arcs {}}],
-;              :raw-schema-name :collection-media-entry-arcs-schema-raw
-;
-;              :schemas [
-;                        {:collection_mea.schema_collection-media-entry-arc-export {
-;                                                                                   :alias "mar.collection-meida-entry-arcs/schema_collection-media-entry-arc-export"
-;                                                                                   :types [
-;                                                                                           {:cover {:value-type TYPE_MAYBE}}
-;                                                                                           {:order {:value-type TYPE_MAYBE}}
-;                                                                                           {:position {:value-type TYPE_MAYBE}}
-;                                                                                           ]
-;                                                                                   }}
-;                        {:collection_mea.schema_collection-media-entry-arc-update {
-;                                                                                   :alias "mar.collection-media-entry-arcs/schema_collection-media-entry-arc-update"
-;                                                                                   :key-types "optional"
-;                                                                                   :wl [:highlight :cover :order :position]
-;                                                                                   }}
-;                        {:collection_mea.schema_collection-media-entry-arc-create {
-;                                                                                   :alias "mar.collection-media-entry-arcs/schema_collection-media-entry-arc-create"
-;                                                                                   :key-types "optional"
-;                                                                                   :wl [:highlight :cover :order :position]
-;                                                                                   }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;        ]))
-;
-;
-;(defn create-collection-collection-arcs-schema []
-;  (let [
-;        data {
-;              :raw [{:collection_collection_arcs {}}],
-;              :raw-schema-name :collection_collection_arcs-raw
-;
-;              :schemas [
-;                        {:collection_carcs.schema_collection-collection-arc-export {
-;                                                                                    :alias "mar.collection-collection-arcs/schema_collection-collection-arc-export"
-;                                                                                    }}
-;
-;
-;                        {:collection_carcs.schema_collection-collection-arc-update {
-;                                                                                    :alias "mar.collection-collection-arcs/schema_collection-collection-arc-update"
-;                                                                                    :key-types "optional"
-;                                                                                    :wl [:highlight :order :position]
-;                                                                                    }}
-;
-;
-;                        {:collection_carcs.schema_collection-collection-arc-create {
-;                                                                                    :alias "mar.collection-collection-arcs/schema_collection-collection-arc-create"
-;                                                                                    :key-types "optional"
-;                                                                                    :wl [:highlight :order :position]
-;                                                                                    }}
-;
-;                        ]
-;
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;        ]))
-;
+(def schema_sorting_types
+  (s/enum "created_at ASC"
+    "created_at DESC"
+    "title ASC"
+    "title DESC"
+    "last_change"
+    "manual ASC"
+    "manual DESC"))
+
+(def create-collections-schema [
+                                {
+                                 :raw [{:collections {}}],
+                                 :raw-schema-name :collections-schema-raw
+                                 :schemas [
+                                           {:collections.schema_collection-import {
+                                                                                   :alias "mar.collections/schema_collection-import"
+                                                                                   :key-types "optional"
+                                                                                   :types [
+                                                                                           {:default_context_id {:value-type TYPE_MAYBE}}
+                                                                                           {:workflow_id {:value-type TYPE_MAYBE}}
+                                                                                           ]
+                                                                                   }}
+
+                                           {:collections.schema_collection-export {
+                                                                                   :alias "mar.collections/schema_collection-export"
+                                                                                   :key-types "optional"
+                                                                                   :types [
+                                                                                           {:id {:key-type TYPE_NOTHING}}
+                                                                                           {:responsible_user_id {:value-type TYPE_MAYBE}}
+                                                                                           {:default_context_id {:value-type TYPE_MAYBE}}
+                                                                                           {:clipboard_user_id {:value-type TYPE_MAYBE}}
+                                                                                           {:workflow_id {:value-type TYPE_MAYBE}}
+                                                                                           {:responsible_delegation_id {:value-type TYPE_MAYBE}}
+                                                                                           ]
+                                                                                   }}
+
+                                           {:collections.schema_collection-update {
+                                                                                   :alias "mar.collections/schema_collection-update"
+                                                                                   :key-types "optional"
+                                                                                   :types [
+                                                                                           {:default_context_id {:value-type TYPE_MAYBE}}
+                                                                                           {:workflow_id {:value-type TYPE_MAYBE}}
+                                                                                           ]
+                                                                                   :wl [:layout :is_master :sorting :default_context_id :workflow_id :default_resource_type]
+                                                                                   }}
+                                           ]
+                                 } {
+                                    :raw [{:collections {:wl ["collection_id" "order" "creator_id" "responsible_user_id" "clipboard_user_id" "workflow_id" "responsible_delegation_id" "public_get_metadata_and_previews"]
+                                                         :rename {"get_metadata_and_previews" "public_get_metadata_and_previews"
+                                                                  "id" "collection_id"}
+                                                         }}
+                                          {:collection_user_permissions {:wl ["me_get_metadata_and_previews" "me_edit_permission" "me_edit_metadata_and_relations"]
+                                                                         :rename {"get_metadata_and_previews" "me_get_metadata_and_previews"
+                                                                                  "edit_permission" "me_edit_permission"
+                                                                                  "edit_metadata_and_relations" "me_edit_metadata_and_relations"}
+                                                                         }}
+                                          {:_additional (concat schema_pagination_raw schema_full_data_raw)}
+                                          ],
+                                    :raw-schema-name :collections-collection_user_permission-schema-raw
+                                    :schemas [{:collections.schema_collection-query {
+                                                                                     :alias "mar.collections/schema_collection-query"
+                                                                                     :key-types "optional"
+                                                                                     }}]
+
+                                    }])
+
+
+
+(def create-collection-media-entry-schema [
+                                           {
+                                            :raw [{:collection_media_entry_arcs {}}],
+                                            :raw-schema-name :collection-media-entry-arcs-schema-raw
+
+                                            :schemas [
+                                                      {:collection_mea.schema_collection-media-entry-arc-export {
+                                                                                                                 :alias "mar.collection-meida-entry-arcs/schema_collection-media-entry-arc-export"
+                                                                                                                 :types [
+                                                                                                                         {:cover {:value-type TYPE_MAYBE}}
+                                                                                                                         {:order {:value-type TYPE_MAYBE}}
+                                                                                                                         {:position {:value-type TYPE_MAYBE}}
+                                                                                                                         ]
+                                                                                                                 }}
+                                                      {:collection_mea.schema_collection-media-entry-arc-update {
+                                                                                                                 :alias "mar.collection-media-entry-arcs/schema_collection-media-entry-arc-update"
+                                                                                                                 :key-types "optional"
+                                                                                                                 :wl [:highlight :cover :order :position]
+                                                                                                                 }}
+                                                      {:collection_mea.schema_collection-media-entry-arc-create {
+                                                                                                                 :alias "mar.collection-media-entry-arcs/schema_collection-media-entry-arc-create"
+                                                                                                                 :key-types "optional"
+                                                                                                                 :wl [:highlight :cover :order :position]
+                                                                                                                 }}
+                                                      ]
+                                            }])
+
+
+(def create-collection-collection-arcs-schema [{
+                                                :raw [{:collection_collection_arcs {}}],
+                                                :raw-schema-name :collection_collection_arcs-raw
+
+                                                :schemas [
+                                                          {:collection_carcs.schema_collection-collection-arc-export {
+                                                                                                                      :alias "mar.collection-collection-arcs/schema_collection-collection-arc-export"
+                                                                                                                      }}
+
+
+                                                          {:collection_carcs.schema_collection-collection-arc-update {
+                                                                                                                      :alias "mar.collection-collection-arcs/schema_collection-collection-arc-update"
+                                                                                                                      :key-types "optional"
+                                                                                                                      :wl [:highlight :order :position]
+                                                                                                                      }}
+
+
+                                                          {:collection_carcs.schema_collection-collection-arc-create {
+                                                                                                                      :alias "mar.collection-collection-arcs/schema_collection-collection-arc-create"
+                                                                                                                      :key-types "optional"
+                                                                                                                      :wl [:highlight :order :position]
+                                                                                                                      }}
+
+                                                          ]
+
+                                                }])
+
 ;(defn create-app-settings-schema []
 ;  (let [
 ;        data {

@@ -296,9 +296,9 @@
 
         _ (create-dynamic-schema d/create-admins-schema)
         _ (create-dynamic-schema d/create-workflows-schema)
-        ;_ (create-dynamic-schema d/create-collections-schema)
-        ;_ (create-dynamic-schema d/create-collection-media-entry-schema)
-        ;_ (create-dynamic-schema d/create-collection-collection-arcs-schema)
+        _ (create-dynamic-schema d/create-collections-schema)
+        _ (create-dynamic-schema d/create-collection-media-entry-schema)
+        _ (create-dynamic-schema d/create-collection-collection-arcs-schema)
         ;_ (create-dynamic-schema d/create-app-settings-schema)
         ;_ (create-dynamic-schema d/create-confidential-links-schema)
         ;_ (create-dynamic-schema d/create-context-keys-schema)
