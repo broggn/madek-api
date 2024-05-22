@@ -5,7 +5,7 @@
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
 
-[madek.api.db.dynamic_schema.common :refer [get-schema]]
+   [madek.api.db.dynamic_schema.common :refer [get-schema]]
 
    [madek.api.resources.shared :as sd]
    [madek.api.resources.shared :refer [generate-swagger-pagination-params]]
@@ -85,9 +85,6 @@
           (sd/response_not_found "No such vocabulary."))))
     (catch Exception ex (sd/parsed_response_exception ex))))
 
-
-
-
 ;(def schema_export-vocabulary
 ;  {:id s/Str
 ;   :position s/Int
@@ -150,9 +147,6 @@
 ;;
 ;;   :users [schema_export-user-perms]
 ;;   :groups [schema_export-group-perms]})
-
-
-
 
 ; TODO vocab permission
 (def admin-routes

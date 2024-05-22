@@ -3,9 +3,9 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-   [madek.api.resources.keywords.keyword :as kw]
+   [madek.api.db.dynamic_schema.common :refer [get-schema]]
 
-[madek.api.db.dynamic_schema.common :refer [get-schema]]
+   [madek.api.resources.keywords.keyword :as kw]
 
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
@@ -209,7 +209,7 @@
                                        :format "int32"
                                        :default 10}}]}
 
-      :responses {200 {:body {:keywords [(get-schema :keywords.schema_export_keyword_usr )]}}
+      :responses {200 {:body {:keywords [(get-schema :keywords.schema_export_keyword_usr)]}}
                   202 {:description "Successful response, list of items."
                        :schema {} ;; Define your response schema as needed
                        :examples {"application/json" {:message "Here are your items."
@@ -225,7 +225,7 @@
       :middleware [wrap-find-keyword]
       :coercion reitit.coercion.schema/coercion
       :parameters {:path {:id s/Uuid}}
-      :responses {200 {:body (get-schema :keywords.schema_export_keyword_usr )}
+      :responses {200 {:body (get-schema :keywords.schema_export_keyword_usr)}
                   404 {:body s/Any}}
       :description "Get keyword for id. Returns 404, if no such keyword exists."}}]])
 
@@ -238,8 +238,8 @@
       :handler handle_adm-query-keywords
       :middleware [wrap-authorize-admin!]
       :coercion reitit.coercion.schema/coercion
-      :parameters {:query (get-schema :keywords.schema_query_keyword )}
-      :responses {200 {:body {:keywords [(get-schema :keywords.schema_export_keyword_adm )]}}}
+      :parameters {:query (get-schema :keywords.schema_query_keyword)}
+      :responses {200 {:body {:keywords [(get-schema :keywords.schema_export_keyword_adm)]}}}
       :description "Get keywords id list. TODO query parameters and paging. TODO get full data."}
 
      :post
@@ -247,8 +247,8 @@
       :coercion reitit.coercion.schema/coercion
       :handler handle_create-keyword
       :middleware [wrap-authorize-admin!]
-      :parameters {:body (get-schema :keywords.schema_create_keyword )}
-      :responses {200 {:body (get-schema :keywords.schema_export_keyword_adm )}
+      :parameters {:body (get-schema :keywords.schema_create_keyword)}
+      :responses {200 {:body (get-schema :keywords.schema_export_keyword_adm)}
                   406 {:body s/Any}}}}]
    ["/:id"
     {:get
@@ -258,7 +258,7 @@
                    wrap-find-keyword]
       :coercion reitit.coercion.schema/coercion
       :parameters {:path {:id s/Uuid}}
-      :responses {200 {:body (get-schema :keywords.schema_export_keyword_adm )}
+      :responses {200 {:body (get-schema :keywords.schema_export_keyword_adm)}
                   404 {:body s/Any}}
       :description "Get keyword for id. Returns 404, if no such keyword exists."}
 
@@ -269,8 +269,8 @@
                    wrap-find-keyword]
       :coercion reitit.coercion.schema/coercion
       :parameters {:path {:id s/Uuid}
-                   :body (get-schema :keywords.schema_update_keyword )}
-      :responses {200 {:body (get-schema :keywords.schema_export_keyword_adm )}
+                   :body (get-schema :keywords.schema_update_keyword)}
+      :responses {200 {:body (get-schema :keywords.schema_export_keyword_adm)}
                   404 {:body s/Any}
                   406 {:body s/Any}}}
 
@@ -281,7 +281,7 @@
                    wrap-find-keyword]
       :coercion reitit.coercion.schema/coercion
       :parameters {:path {:id s/Uuid}}
-      :responses {200 {:body (get-schema :keywords.schema_export_keyword_adm )}
+      :responses {200 {:body (get-schema :keywords.schema_export_keyword_adm)}
                   404 {:body s/Any}
                   406 {:body s/Any}}}}]])
 

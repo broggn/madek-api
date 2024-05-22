@@ -2,10 +2,10 @@
   (:require
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
+   [madek.api.db.dynamic_schema.common :refer [get-schema]]
    [madek.api.resources.shared :as sd]
-   [madek.api.utils.helper :refer [t]]
 
-[madek.api.db.dynamic_schema.common :refer [get-schema]]
+   [madek.api.utils.helper :refer [t]]
 
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
@@ -151,7 +151,7 @@
             :swagger {:produces "application/json"}
             :coercion reitit.coercion.schema/coercion
             :parameters {:path {:delegation_id s/Uuid}}
-            :responses {200 {:body (get-schema  :delegations-users.schema_delegations_users_export )}
+            :responses {200 {:body (get-schema :delegations-users.schema_delegations_users_export)}
                         404 {:body s/Any}
                         406 {:body s/Any}}}
 
@@ -161,7 +161,7 @@
                         (wwrap-find-delegations_user-by-auth true)]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:delegation_id s/Uuid}}
-           :responses {200 {:body (get-schema  :delegations-users.schema_delegations_users_export )}
+           :responses {200 {:body (get-schema :delegations-users.schema_delegations_users_export)}
                        404 {:body s/Any}
                        406 {:body s/Any}}}
 
@@ -171,7 +171,7 @@
               :middleware [(wwrap-find-delegation :delegation_id)
                            (wwrap-find-delegations_user-by-auth true)]
               :parameters {:path {:delegation_id s/Uuid}}
-              :responses {200 {:body (get-schema  :delegations-users.schema_delegations_users_export )}
+              :responses {200 {:body (get-schema :delegations-users.schema_delegations_users_export)}
                           404 {:body s/Any}
                           406 {:body s/Any}}}}]])
 

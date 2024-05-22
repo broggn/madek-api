@@ -4,10 +4,10 @@
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [madek.api.authorization :as authorization]
+   [madek.api.db.dynamic_schema.common :refer [get-schema]]
    [madek.api.resources.collections.index :refer [get-index]]
-   [madek.api.resources.shared :as sd]
 
-[madek.api.db.dynamic_schema.common :refer [get-schema]]
+   [madek.api.resources.shared :as sd]
 
    [madek.api.utils.helper :refer [convert-map-if-exist f t]]
    [madek.api.utils.helper :refer [mslurp]]
@@ -92,11 +92,6 @@
     (catch Exception ex
       (sd/response_failed (str "Could not delete collection: " (ex-message ex)) 500))))
 
-
-
-
-
-
 ;; TODO :layout and :sorting are special types
 ;(def schema_layout_types
 ;  (s/enum "grid" "list" "miniature" "tiles"))
@@ -168,7 +163,6 @@
 ;   (s/optional-key :me_edit_permission) s/Bool
 ;   (s/optional-key :me_edit_metadata_and_relations) s/Bool})
 
-
 ;(def schema_collection-export
 ;  {:id s/Uuid
 ;   (s/optional-key :get_metadata_and_previews) s/Bool
@@ -192,12 +186,6 @@
 ;   (s/optional-key :responsible_delegation_id) (s/maybe s/Uuid)
 ;
 ;   (s/optional-key :default_resource_type) schema_default_resource_type})
-
-
-
-
-
-
 
 (def ring-routes
   ["/"

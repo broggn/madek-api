@@ -27,12 +27,12 @@
 
 (def cli-options
   (concat
-    [["-h" "--help"]
-     ["-d" "--dev-mode"]]
-    exit/cli-options
-    nrepl/cli-options
-    cli_parser/cli-options
-    db/cli-options))
+   [["-h" "--help"]
+    ["-d" "--dev-mode"]]
+   exit/cli-options
+   nrepl/cli-options
+   cli_parser/cli-options
+   db/cli-options))
 
 (defn main-usage [options-summary & more]
   (->> ["Madek API"
@@ -47,7 +47,7 @@
           ["-------------------------------------------------------------------"
            (with-out-str (pprint more))
            "-------------------------------------------------------------------"])]
-    flatten (clojure.string/join \newline)))
+       flatten (clojure.string/join \newline)))
 
 (defn helpnexit [summary args options]
   (println (main-usage summary {:args args :options options})))
@@ -61,30 +61,30 @@
 
 (defn run [options]
   (catcher/snatch
-    {:level :fatal
-     :throwable Throwable
-     :return-fn (fn [e] (System/exit -1))}
-    (info 'madek.api.main "initializing ...")
-    (madek.api.utils.config/initialize
-      {:filenames ["./config/settings.yml"
-                   "../config/settings.yml",
-                   "./datalayer/config/settings.yml",
-                   "../webapp/datalayer/config/settings.yml",
-                   "./config/settings.local.yml"
-                   "../config/settings.local.yml"]})
-    (info "Effective startup options " options)
-    (info "Effective startup config " (get-config))
+   {:level :fatal
+    :throwable Throwable
+    :return-fn (fn [e] (System/exit -1))}
+   (info 'madek.api.main "initializing ...")
+   (madek.api.utils.config/initialize
+    {:filenames ["./config/settings.yml"
+                 "../config/settings.yml",
+                 "./datalayer/config/settings.yml",
+                 "../webapp/datalayer/config/settings.yml",
+                 "./config/settings.local.yml"
+                 "../config/settings.local.yml"]})
+   (info "Effective startup options " options)
+   (info "Effective startup config " (get-config))
     ; WIP switching to new db container; remove old rdbms later
     ;(rdbms/initialize (config/get-db-spec :api))
-    (db/init options)
+   (db/init options)
     ;
-    (nrepl/init options)
-    (madek.api.constants/initialize (get-config))
+   (nrepl/init options)
+   (madek.api.constants/initialize (get-config))
 
     ;; TODO: fetch schemas from db
-    (init-schema-by-db)
-    (dynamic-web-initialize options)
-    (info 'madek.api.main "... initialized")))
+   (init-schema-by-db)
+   (dynamic-web-initialize options)
+   (info 'madek.api.main "... initialized")))
 
 ;; main ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

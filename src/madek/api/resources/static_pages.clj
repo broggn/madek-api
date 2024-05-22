@@ -3,10 +3,9 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
+   [madek.api.db.dynamic_schema.common :refer [get-schema]]
+
    [madek.api.resources.shared :as sd]
-
-[madek.api.db.dynamic_schema.common :refer [get-schema]]
-
 
    [madek.api.utils.helper :refer [cast-to-hstore]]
    [madek.api.utils.helper :refer [cast-to-hstore t]]
@@ -99,8 +98,6 @@
                                     :static_pages :id
                                     :static_page true))))
 
-
-
 ;(def schema_create_static_page
 ;  {:name s/Str
 ;   :contents sd/schema_ml_list})
@@ -117,8 +114,6 @@
 ;   :created_at s/Any ; TODO as Inst
 ;   :updated_at s/Any})
 
-
-
 ; TODO auth admin
 ; TODO response coercion
 ; TODO docu
@@ -133,7 +128,7 @@
             :handler handle_create-static_page
             :coercion reitit.coercion.schema/coercion
             :parameters {:body (get-schema :static_pages.schema_create_static_page)}
-            :responses {200 {:body (get-schema :static_pages.schema_export_static_page )}
+            :responses {200 {:body (get-schema :static_pages.schema_export_static_page)}
                         406 {:description "Not Acceptable."
                              :schema s/Str
                              :examples {"application/json" {:message "Could not create static_page."}}}
@@ -152,7 +147,7 @@
            :middleware [(wwrap-find-static_page :id)]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Uuid}}
-           :responses {200 {:body (get-schema :static_pages.schema_export_static_page )}
+           :responses {200 {:body (get-schema :static_pages.schema_export_static_page)}
                        404 {:description "Not Found."
                             :schema s/Str
                             :examples {"application/json" {:message "No such entity in :static_pages as :id with <id>"}}}}}
@@ -163,7 +158,7 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:id s/Uuid}
                         :body (get-schema :static_pages.schema_update_static_page)}
-           :responses {200 {:body (get-schema :static_pages.schema_export_static_page )}
+           :responses {200 {:body (get-schema :static_pages.schema_export_static_page)}
                        406 {:body s/Any}
                        404 {:description "Not Found."
                             :schema s/Str
@@ -174,7 +169,7 @@
               :handler handle_delete-static_page
               :middleware [(wwrap-find-static_page :id)]
               :parameters {:path {:id s/Uuid}}
-              :responses {200 {:body (get-schema :static_pages.schema_export_static_page )}
+              :responses {200 {:body (get-schema :static_pages.schema_export_static_page)}
                           404 {:description "Not Found."
                                :schema s/Str
                                :examples {"application/json" {:message "No such entity in :static_pages as :id with <id>"}}}

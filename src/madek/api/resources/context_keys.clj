@@ -3,10 +3,9 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
+   [madek.api.db.dynamic_schema.common :refer [get-schema]]
+
    [madek.api.pagination :as pagination]
-
-[madek.api.db.dynamic_schema.common :refer [get-schema]]
-
 
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
@@ -48,8 +47,8 @@
   [req]
   (let [req-query (-> req :parameters :query)
         db-query (-> (sql/select :id :context_id :meta_key_id
-                       :is_required :position :length_min :length_max
-                       :labels :hints :descriptions :documentation_urls)
+                                 :is_required :position :length_min :length_max
+                                 :labels :hints :descriptions :documentation_urls)
                      (sql/from :context_keys)
                      (sd/build-query-param req-query :id)
                      (sd/build-query-param req-query :context_id)
@@ -132,16 +131,9 @@
 (defn wwrap-find-context_key [param colname send404]
   (fn [handler]
     (fn [request] (sd/req-find-data request handler
-                    param
-                    :context_keys colname
-                    :context_key send404))))
-
-
-
-
-
-
-
+                                    param
+                                    :context_keys colname
+                                    :context_key send404))))
 
 ;(def schema_import_context_keys
 ;  {;:id s/Str
@@ -205,13 +197,6 @@
 ;   :admin_comment (s/maybe s/Str)
 ;   :updated_at s/Any
 ;   :created_at s/Any})
-
-
-
-
-
-
-
 
 ; TODO docu
 ; TODO tests

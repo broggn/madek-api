@@ -1,11 +1,10 @@
 (ns madek.api.resources.permissions
   (:require
    [logbug.catcher :as catcher]
+   [madek.api.db.dynamic_schema.common :refer [get-schema]]
    [madek.api.resources.media-resources.permissions :as mr-permissions]
+
    [madek.api.resources.shared :as sd]
-
-[madek.api.db.dynamic_schema.common :refer [get-schema]]
-
 
    [madek.api.utils.helper :refer [t]]
    [next.jdbc :as jdbc]
@@ -294,10 +293,6 @@
 ;  )
 ;
 
-
-
-
-
 ;(def schema_create-collection-group-permission
 ;  {:get_metadata_and_previews s/Bool
 ;   :edit_metadata_and_relations s/Bool})
@@ -403,11 +398,6 @@
 ;   :users [schema_export-media-entry-user-permission]
 ;   :groups [schema_export-media-entry-group-permission]})
 
-
-
-
-
-
 (def media-entry-routes
   ["/media-entry/:media_entry_id/perms"
    {:swagger {:tags ["media-entry/perms"]}}
@@ -462,7 +452,7 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Uuid
                                :perm_name (s/enum "get_metadata_and_previews"
-                                            "get_full_size")
+                                                  "get_full_size")
                                :perm_val s/Bool}}
            :responses {200 {:body (get-schema :media_entries.schema_export-media-entry-perms)}}}}]
 
@@ -523,9 +513,9 @@
            :parameters {:path {:media_entry_id s/Uuid
                                :user_id s/Uuid
                                :perm_name (s/enum "get_metadata_and_previews"
-                                            "get_full_size"
-                                            "edit_metadata"
-                                            "edit_permissions")
+                                                  "get_full_size"
+                                                  "edit_metadata"
+                                                  "edit_permissions")
                                :perm_val s/Bool}}
            :responses {200 {:body (get-schema :collection_user_permissions.schema_export-media-entry-user-permission)}}}}]
 
@@ -586,8 +576,8 @@
            :parameters {:path {:media_entry_id s/Uuid
                                :group_id s/Uuid
                                :perm_name (s/enum "get_metadata_and_previews"
-                                            "get_full_size"
-                                            "edit_metadata")
+                                                  "get_full_size"
+                                                  "edit_metadata")
                                :perm_val s/Bool}}
            :responses {200 {:body (get-schema :media_entry_group_permissions.schema_export-media-entry-group-permission)}}}}]])
 
@@ -697,8 +687,8 @@
            :parameters {:path {:collection_id s/Uuid
                                :user_id s/Uuid
                                :perm_name (s/enum "get_metadata_and_previews"
-                                            "edit_metadata_and_relations"
-                                            "edit_permissions")
+                                                  "edit_metadata_and_relations"
+                                                  "edit_permissions")
                                :perm_val s/Bool}}
            :responses {200 {:body (get-schema :collection_user_permissions.schema_export-collection-user-permission)}}}}]
 
@@ -759,7 +749,7 @@
            :parameters {:path {:collection_id s/Uuid
                                :group_id s/Uuid
                                :perm_name (s/enum "get_metadata_and_previews"
-                                            "edit_metadata_and_relations")
+                                                  "edit_metadata_and_relations")
                                :perm_val s/Bool}}
            :responses {200 {:body (get-schema :collection_group_permissions.schema_export-collection-group-permission)}}}}]])
 

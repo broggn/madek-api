@@ -1,12 +1,11 @@
 (ns madek.api.resources.previews
   (:require
+   [madek.api.db.dynamic_schema.common :refer [get-schema]]
    [madek.api.resources.media-entries.media-entry :refer [get-media-entry-for-preview]]
    [madek.api.resources.media-files :as media-files]
    [madek.api.resources.previews.preview :as preview]
+
    [madek.api.resources.shared :as sd]
-
-[madek.api.db.dynamic_schema.common :refer [get-schema]]
-
 
    [reitit.coercion.schema]
    [schema.core :as s]
@@ -105,7 +104,7 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Str}
                         :query {(s/optional-key :size) s/Str}}
-           :responses {200 {:body (get-schema :previews.schema_export_preview )}
+           :responses {200 {:body (get-schema :previews.schema_export_preview)}
                        404 {:body s/Any}}}}]
    ; TODO media-entry preview auth
    ["/:media_entry_id/preview/data-stream"

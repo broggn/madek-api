@@ -1,12 +1,11 @@
 (ns madek.api.resources.users.get
   (:require
    [clojure.data.json :as json]
+   [madek.api.db.dynamic_schema.common :refer [get-schema]]
    [madek.api.resources.shared :as sd]
    [madek.api.resources.users.common :refer [wrap-find-user]]
+
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-
-[madek.api.db.dynamic_schema.common :refer [get-schema]]
-
 
    [madek.api.utils.validation :refer [vector-or-hashmap-validation]]
    [reitit.coercion.schema]
@@ -23,14 +22,6 @@
     (json/read-str json-str)
     (catch Exception e
       false)))
-
-
-
-
-
-
-
-
 
 ;(def schema
 ;  {:accepted_usage_terms_id (s/maybe s/Uuid)
@@ -60,7 +51,6 @@
 ;:get.users-schema-payload = {:institution (maybe Str), :institutional_id (maybe Str), :first_name (maybe Str),
 ;:person_id java.util.UUID, :login (maybe Str), :updated_at Any, #schema.core.OptionalKey{:k :settings} Any,
 ;:id java.util.UUID, :notes (maybe Str), :last_name (maybe Str), :last_signed_in_at (maybe Any), :created_at Any}
-
 
 (defn handler
   [{user :user :as req}]

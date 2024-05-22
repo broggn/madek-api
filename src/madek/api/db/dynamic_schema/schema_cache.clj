@@ -3,8 +3,7 @@
    [madek.api.db.dynamic_schema.common :refer [set-schema]]
    [madek.api.db.dynamic_schema.core :refer [create-dynamic-schema
                                              init-enums-by-db]]
-   [madek.api.db.dynamic_schema.schema_definitions :as d]
-   ))
+   [madek.api.db.dynamic_schema.schema_definitions :as d]))
 
 (defn set-schema-by-map [schema-map]
   (map (fn [[k v]]
@@ -12,8 +11,7 @@
          schema-map)))
 
 (defn init-schema-by-db []
-  (let [
-        _ (init-enums-by-db)
+  (let [_ (init-enums-by-db)
 
         _ (create-dynamic-schema d/create-groups-schema)
         _ (create-dynamic-schema d/create-users-schema)
@@ -54,9 +52,7 @@
         _ (create-dynamic-schema d/create-media-files-schema)
         _ (create-dynamic-schema d/create-meta-data-schema)
         _ (create-dynamic-schema d/create-meta-data-role-schema)
-        _ (create-dynamic-schema d/create-favorite-media-entries-schema)
-        ]))
-
+        _ (create-dynamic-schema d/create-favorite-media-entries-schema)]))
 
 ;;; Example to save/fetch schema-configuration ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -95,8 +91,6 @@
 ;    res
 ;    )
 ;  )
-
-
 
 ;(comment
 ;  (let [

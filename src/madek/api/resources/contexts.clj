@@ -3,11 +3,10 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
+   [madek.api.db.dynamic_schema.common :refer [get-schema]]
    [madek.api.resources.shared :as sd]
+
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-
-[madek.api.db.dynamic_schema.common :refer [get-schema]]
-
 
    [madek.api.utils.helper :refer [cast-to-hstore t]]
    [next.jdbc :as jdbc]
@@ -112,12 +111,6 @@
                                     :contexts colname
                                     :context send404))))
 
-
-
-
-
-
-
 ;(def schema_import_contexts
 ;  {:id s/Str
 ;   :admin_comment (s/maybe s/Str)
@@ -140,10 +133,6 @@
 ;   :admin_comment (s/maybe s/Str)})
 ;   :labels (s/maybe sd/schema_ml_list)
 ;   :descriptions (s/maybe sd/schema_ml_list)
-
-
-
-
 
 ; TODO more checks
 ; TODO response coercion

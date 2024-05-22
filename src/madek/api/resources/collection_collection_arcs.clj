@@ -4,7 +4,7 @@
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
 
-[madek.api.db.dynamic_schema.common :refer [get-schema]]
+   [madek.api.db.dynamic_schema.common :refer [get-schema]]
 
    [madek.api.pagination :as pagination]
    [madek.api.resources.shared :as sd]
@@ -114,8 +114,6 @@
           (sd/response_failed "Could not delete collection collection arc." 422))))
     (catch Exception e (sd/response_exception e))))
 
-
-
 ;;; not in use
 ;(def schema_collection-collection-arc-export
 ;  {:id s/Uuid
@@ -126,9 +124,6 @@
 ;   :position s/Int
 ;   :created_at s/Any
 ;   :updated_at s/Any})
-
-
-
 
 ;(def schema_collection-collection-arc-update
 ;  {;(s/optional-key :id) s/Uuid
@@ -148,10 +143,6 @@
 ;   (s/optional-key :highlight) s/Bool
 ;   (s/optional-key :order) s/Num
 ;   (s/optional-key :position) s/Int})
-
-
-
-
 
 ; TODO add permission checks
 (def ring-routes

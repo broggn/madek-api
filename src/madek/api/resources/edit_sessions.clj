@@ -4,10 +4,9 @@
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
 
-[madek.api.db.dynamic_schema.common :refer [get-schema]]
-
-
    [madek.api.authorization :as authorization]
+
+   [madek.api.db.dynamic_schema.common :refer [get-schema]]
    [madek.api.pagination :as pagination]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
@@ -126,9 +125,6 @@
           (sd/response_failed (str "No such edit_session : " id) 404))))
     (catch Exception ex (sd/parsed_response_exception ex))))
 
-
-
-
 ;(def schema_usr_query_edit_session
 ;  {(s/optional-key :full_data) s/Bool
 ;   (s/optional-key :page) s/Int
@@ -155,9 +151,6 @@
 ;   :created_at s/Any
 ;   :media_entry_id (s/maybe s/Uuid)
 ;   :collection_id (s/maybe s/Uuid)})
-
-
-
 
 (def admin-routes
   ["/edit_sessions"

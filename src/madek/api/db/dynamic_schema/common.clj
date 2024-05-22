@@ -1,8 +1,7 @@
 (ns madek.api.db.dynamic_schema.common
   (:require
    [madek.api.db.dynamic_schema.schema_logger :refer [slog]]
-   [schema.core :as s]
-   ))
+   [schema.core :as s]))
 
 (def schema-cache (atom {}))
 (def enum-cache (atom {}))

@@ -2,11 +2,10 @@
   (:require
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
+   [madek.api.db.dynamic_schema.common :refer [get-schema]]
    [madek.api.resources.shared :as sd]
+
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-
-[madek.api.db.dynamic_schema.common :refer [get-schema]]
-
 
    [madek.api.utils.helper :refer [convert-map-if-exist]]
    [madek.api.utils.helper :refer [convert-map-if-exist f t]]
@@ -35,9 +34,6 @@
       (error "handle-create-user failed" {:request req})
       (sd/parsed_response_exception e))))
 
-
-
-
 ;(def schema
 ;  {:person_id s/Uuid
 ;   (s/optional-key :accepted_usage_terms_id) (s/maybe s/Uuid)
@@ -51,10 +47,6 @@
 ;
 ;   ;(s/optional-key :settings) json-and-json-str-validation
 ;   (s/optional-key :settings) vector-or-hashmap-validation})
-
-
-
-
 
 ;; post /users
 (def route

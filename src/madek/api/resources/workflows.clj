@@ -3,11 +3,10 @@
             [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
             [madek.api.authorization :as authorization]
-            [madek.api.resources.shared :as sd]
-            [next.jdbc :as jdbc]
-
             [madek.api.db.dynamic_schema.common :refer [get-schema]]
+            [madek.api.resources.shared :as sd]
 
+            [next.jdbc :as jdbc]
 
             [reitit.coercion.schema]
             [schema.core :as s]
@@ -95,9 +94,6 @@
                                     :workflows :id
                                     :workflow true))))
 
-
-
-
 ;(def schema_create_workflow
 ;  {;:id is db assigned or optional
 ;   :name s/Str
@@ -123,9 +119,6 @@
 ;   (s/optional-key :creator_id) s/Uuid
 ;   (s/optional-key :created_at) s/Any ; TODO as Inst
 ;   (s/optional-key :updated_at) s/Any})
-
-
-
 
 ; TODO response coercion
 ; TODO docu

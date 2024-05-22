@@ -2,9 +2,9 @@
   (:require [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
             [logbug.catcher :as catcher]
-            [madek.api.resources.shared :as sd]
-
             [madek.api.db.dynamic_schema.common :refer [get-schema]]
+
+            [madek.api.resources.shared :as sd]
 
             [next.jdbc :as jdbc]
             [reitit.coercion.schema]
@@ -142,9 +142,6 @@
           (sd/response_failed (str "No such custom_url " col-name " : " mr-id) 404))))
     (catch Exception ex (sd/response_exception ex))))
 
-
-
-
 ;(def schema_create_custom_url
 ;  {:id s/Str
 ;   :is_primary s/Bool})
@@ -162,10 +159,6 @@
 ;   :created_at s/Any
 ;   :media_entry_id (s/maybe s/Uuid)
 ;   :collection_id (s/maybe s/Uuid)})
-
-
-
-
 
 ; TODO custom urls response coercion
 (def query-routes

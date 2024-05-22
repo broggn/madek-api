@@ -2,14 +2,12 @@
   (:require
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
+   [madek.api.db.dynamic_schema.common :refer [get-schema]]
    [madek.api.resources.shared :as sd]
    [madek.api.resources.users.common :refer [find-user-by-uid wrap-find-user]]
    [madek.api.resources.users.get :as get-user]
+
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-
-[madek.api.db.dynamic_schema.common :refer [get-schema]]
-
-
 
    [madek.api.utils.helper :refer [f t]]
    [madek.api.utils.helper :refer [mslurp]]
@@ -37,10 +35,6 @@
     (sd/response_ok (find-user-by-uid user-id tx) 200)
     (sd/response_not_found "No such user.")))
 
-
-
-
-
 ;(def schema
 ;  {(s/optional-key :accepted_usage_terms_id) (s/maybe s/Uuid) ; TODO
 ;   (s/optional-key :autocomplete) s/Str
@@ -51,7 +45,6 @@
 ;   (s/optional-key :login) s/Str
 ;   (s/optional-key :notes) (s/maybe s/Str) ; TODO
 ;   (s/optional-key :searchable) s/Str})
-
 
 (def route
   {:summary (sd/sum_adm "Update user with id")

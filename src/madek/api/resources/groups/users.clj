@@ -183,9 +183,6 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-
-
 ;(def schema_export-group-user
 ;  {:id s/Uuid
 ;   :email (s/maybe s/Str)
@@ -209,9 +206,6 @@
 ;   [{(s/required-key :id) s/Uuid
 ;     (s/optional-key :institutional_id) s/Uuid
 ;     (s/optional-key :email) s/Str}]})
-
-
-
 
 (defn handle_get-group-user [req]
   (let [group-id (-> req :parameters :path :group-id)

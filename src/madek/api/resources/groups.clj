@@ -2,12 +2,12 @@
   (:require [clj-uuid]
             [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
+            [madek.api.db.dynamic_schema.common :refer [get-schema]]
             [madek.api.pagination :as pagination]
             [madek.api.resources.groups.shared :as groups]
             [madek.api.resources.groups.users :as group-users]
-            [madek.api.resources.shared :as sd]
 
-            [madek.api.db.dynamic_schema.common :refer [get-schema]]
+            [madek.api.resources.shared :as sd]
 
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
             [madek.api.utils.helper :refer [convert-groupid f mslurp t]]
@@ -37,7 +37,7 @@
 (defn get-group [id-or-institutional-group-id tx]
   (if-let [group (groups/find-group id-or-institutional-group-id tx)]
     {:body (dissoc group :previous_id :searchable)}
-    {:status 404 :body "No such group found"}))             ; TODO: toAsk 204 No Content
+    {:status 404 :body "No such group found"})) ; TODO: toAsk 204 No Content
 
 ;### delete group ##############################################################
 
@@ -50,7 +50,7 @@
         update-count (get res :next.jdbc/update-count)]
 
     (if (= 1 update-count)
-      {:status 204 :content-type "application/json"}        ;TODO / FIXME: response should support octet-stream as well?
+      {:status 204 :content-type "application/json"} ;TODO / FIXME: response should support octet-stream as well?
       {:status 404})))
 
 ;### patch group ##############################################################
@@ -295,8 +295,8 @@
                                ;:body schema_update-group}
                                :body (get-schema :groups.schema-update-group)}
 
-                  :responses {200 {:body s/Any}             ;groups/schema_export-group}
-                              404 {:body s/Any}}}}]         ; TODO error handling
+                  :responses {200 {:body s/Any} ;groups/schema_export-group}
+                              404 {:body s/Any}}}}] ; TODO error handling
 
    ; groups-users/ring-routes
    ["/:group-id/users/" {:get {:summary "Get group users by id"
@@ -328,9 +328,8 @@
                                             ;:body group-users/schema_update-group-user-list}
                                             :body {:users [(get-schema :groups.schema-update-group-user-list)]}}
 
-
-                                            :responses {200 {:body s/Any} ;groups/schema_export-group}
-                                                        404 {:body s/Str}}}}]
+                               :responses {200 {:body s/Any} ;groups/schema_export-group}
+                                           404 {:body s/Str}}}}]
 
    ["/:group-id/users/:user-id" {:get {:summary "Get group user by group-id and user-id"
                                        :description "gid= uuid/institutional_id\n

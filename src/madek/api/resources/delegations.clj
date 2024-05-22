@@ -4,8 +4,7 @@
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
 
-[madek.api.db.dynamic_schema.common :refer [get-schema]]
-
+   [madek.api.db.dynamic_schema.common :refer [get-schema]]
 
    [madek.api.resources.shared :as sd]
    [next.jdbc :as jdbc]
@@ -82,9 +81,6 @@
     (fn [request] (sd/req-find-data request handler param
                                     :delegations colname :delegation send404))))
 
-
-
-
 ;(def schema_import_delegations
 ;  {;:id s/Str
 ;   :name s/Str
@@ -109,9 +105,6 @@
 ;   :name s/Str
 ;   :description s/Str
 ;   :admin_comment (s/maybe s/Str)})
-
-
-
 
 ; TODO more checks
 ; TODO response coercion

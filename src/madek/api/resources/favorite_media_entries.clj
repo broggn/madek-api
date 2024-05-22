@@ -4,10 +4,9 @@
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [madek.api.authorization :as authorization]
+   [madek.api.db.dynamic_schema.common :refer [get-schema]]
+
    [madek.api.resources.shared :as sd]
-
-[madek.api.db.dynamic_schema.common :refer [get-schema]]
-
 
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.helper :refer [t]]
@@ -123,7 +122,6 @@
 ;   :updated_at s/Any
 ;   :created_at s/Any})
 ;
-
 
 ; TODO docu
 ; TODO tests

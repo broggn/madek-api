@@ -4,8 +4,7 @@
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
 
-[madek.api.db.dynamic_schema.common :refer [get-schema]]
-
+   [madek.api.db.dynamic_schema.common :refer [get-schema]]
 
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
@@ -90,8 +89,6 @@
                                     :usage_terms :id
                                     :usage_term true))))
 
-
-
 ;(def schema_import_usage_terms
 ;  {;:id is db assigned or optional
 ;   :title s/Str
@@ -115,9 +112,6 @@
 ;   (s/optional-key :body) s/Str
 ;   (s/optional-key :created_at) s/Any ; TODO as Inst
 ;   (s/optional-key :updated_at) s/Any})
-
-
-
 
 ; TODO auth admin
 ; TODO response coercion

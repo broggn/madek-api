@@ -6,9 +6,9 @@
             [honey.sql.helpers :as sql]
             [madek.api.authorization :as authorization]
 
-            [madek.api.db.dynamic_schema.common :refer [get-schema]]
-
             [madek.api.constants :refer [FILE_STORAGE_DIR]]
+
+            [madek.api.db.dynamic_schema.common :refer [get-schema]]
             [madek.api.resources.media-entries.index :refer [get-index
                                                              get-index_related_data]]
             [madek.api.resources.media-entries.media-entry :refer [get-media-entry]]
@@ -365,7 +365,7 @@
       :handler handle_query_media_entry
       :middleware [sd/ring-wrap-parse-json-query-parameters]
       :coercion reitit.coercion.schema/coercion
-      :parameters {:query (get-schema  :media-entries.schema_query_media_entries )}
+      :parameters {:query (get-schema :media-entries.schema_query_media_entries)}
       :responses {200 {:body s/Any}
                   422 {:body s/Any}}}}]
    ["media-entries-related-data"
@@ -376,7 +376,7 @@
       :handler handle_query_media_entry-related-data
       :middleware [sd/ring-wrap-parse-json-query-parameters]
       :coercion reitit.coercion.schema/coercion
-      :parameters {:query (get-schema  :media-entries.schema_query_media_entries )}
+      :parameters {:query (get-schema :media-entries.schema_query_media_entries)}
       :responses {200 {:body (get-schema :media-entries-schema-schema_query_media_entries_related_result)}}}}]])
 
 (sa/def ::copy_me_id string?)
@@ -432,7 +432,7 @@
                         sd/ring-wrap-authorization-edit-metadata]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_entry_id s/Uuid}}
-           :responses {200 {:body (get-schema  :media-entries.schema_export_media_entry )}
+           :responses {200 {:body (get-schema :media-entries.schema_export_media_entry)}
                        406 {:body (get-schema :media-entries-schema-schema_publish_failed)}}}}]])
 
 ;### Debug ####################################################################

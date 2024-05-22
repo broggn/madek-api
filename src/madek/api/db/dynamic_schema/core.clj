@@ -6,8 +6,7 @@
    [madek.api.db.dynamic_schema.schema_definitions :refer [type-mapping type-mapping-enums]]
    [madek.api.db.dynamic_schema.schema_logger :refer [slog]]
    [madek.api.db.dynamic_schema.statics :refer [TYPE_EITHER TYPE_MAYBE TYPE_NOTHING TYPE_OPTIONAL TYPE_REQUIRED]]
-   [schema.core :as s]
-   ))
+   [schema.core :as s]))
 
 (require '[schema.core :as schema])
 
@@ -21,16 +20,13 @@
     (convert-to-enum-spec enum)))
 
 (defn init-enums-by-db []
-  (let [
-        ;;; init enums
+  (let [;;; init enums
         _ (set-enum :collections_sorting (create-enum-spec "collection_sorting"))
         _ (set-enum :collections_layout (create-enum-spec "collection_layout"))
         _ (set-enum :collections_default_resource_type (create-enum-spec "collection_default_resource_type"))
 
         ;;;; TODO: revise db-ddl to use enum
-        _ (set-enum :groups.type (s/enum "AuthenticationGroup" "InstitutionalGroup" "Group"))
-        ])
-  )
+        _ (set-enum :groups.type (s/enum "AuthenticationGroup" "InstitutionalGroup" "Group"))]))
 
 (defn remove-maps-by-entry-values
   "Removes maps from a list where the specified entry key matches any of the values in the provided list."
@@ -66,39 +62,38 @@
 
 (defn postgres-cfg-to-schema [table-name metadata]
   (into {}
-    (map (fn [{:keys [column_name data_type key-type value-type]}]
-           (let [keySection (cond (= key-type TYPE_REQUIRED) (s/required-key (keyword column_name))
-                                  (= key-type TYPE_OPTIONAL) (s/optional-key (keyword column_name))
-                                  :else (keyword column_name))
+        (map (fn [{:keys [column_name data_type key-type value-type]}]
+               (let [keySection (cond (= key-type TYPE_REQUIRED) (s/required-key (keyword column_name))
+                                      (= key-type TYPE_OPTIONAL) (s/optional-key (keyword column_name))
+                                      :else (keyword column_name))
 
                  ;; FYI, expected: <table>.<column> eg.: "groups.type"
-                 type-mapping-key (str (name table-name) "." column_name)
-                 type-mapping-enums-res (type-mapping-enums type-mapping-key get-enum)
-                 type-mapping-res (type-mapping data_type)
+                     type-mapping-key (str (name table-name) "." column_name)
+                     type-mapping-enums-res (type-mapping-enums type-mapping-key get-enum)
+                     type-mapping-res (type-mapping data_type)
 
-                 valueSection (cond
-                                (not (nil? type-mapping-enums-res)) (if (= value-type TYPE_MAYBE)
-                                                                      (s/maybe type-mapping-enums-res)
-                                                                      type-mapping-enums-res)
-                                (not (nil? type-mapping-res)) (if (= value-type TYPE_MAYBE)
-                                                                (s/maybe type-mapping-res)
-                                                                type-mapping-res)
-                                (= value-type TYPE_MAYBE) (s/maybe s/Any)
-                                :else s/Any)
+                     valueSection (cond
+                                    (not (nil? type-mapping-enums-res)) (if (= value-type TYPE_MAYBE)
+                                                                          (s/maybe type-mapping-enums-res)
+                                                                          type-mapping-enums-res)
+                                    (not (nil? type-mapping-res)) (if (= value-type TYPE_MAYBE)
+                                                                    (s/maybe type-mapping-res)
+                                                                    type-mapping-res)
+                                    (= value-type TYPE_MAYBE) (s/maybe s/Any)
+                                    :else s/Any)
 
-                 _ (slog (str "[postgres-cfg-to-schema] table= " table-name ", final-result =>> " {keySection valueSection}))
-                 ]
-             {keySection valueSection}))
-      metadata)))
+                     _ (slog (str "[postgres-cfg-to-schema] table= " table-name ", final-result =>> " {keySection valueSection}))]
+                 {keySection valueSection}))
+             metadata)))
 
 (defn rename-column-names
   [maps key-map]
   (map
-    (fn [m]
-      (if-let [new-col-name (get key-map (:column_name m))]
-        (assoc m :column_name new-col-name)
-        m))
-    maps))
+   (fn [m]
+     (if-let [new-col-name (get key-map (:column_name m))]
+       (assoc m :column_name new-col-name)
+       m))
+   maps))
 
 (defn create-raw-schema [data]
   (let [raw (data :raw)
@@ -106,17 +101,17 @@
         result []
 
         res (reduce
-              (fn [acc item]
-                (reduce (fn [inner-acc [key value]]
-                          (cond (not (str/starts-with? (name key) "_"))
-                                (let [                                      table-name key
-                                      wl-attr (:wl value)
-                                      bl-attr (:bl value)
-                                      rename-attr (:rename value)
-                                      key (name key)
-                                      res (fetch-table-metadata key)
+             (fn [acc item]
+               (reduce (fn [inner-acc [key value]]
+                         (cond (not (str/starts-with? (name key) "_"))
+                               (let [table-name key
+                                     wl-attr (:wl value)
+                                     bl-attr (:bl value)
+                                     rename-attr (:rename value)
+                                     key (name key)
+                                     res (fetch-table-metadata key)
 
-                                      _ (slog (str "[handle not-additional] \n
+                                     _ (slog (str "[handle not-additional] \n
                                   table-name=" table-name "\n
                                   wl-attr=" wl-attr "\n
                                   bl-attr=" bl-attr "\n
@@ -124,22 +119,22 @@
                                   key=" key "\n
                                   db-data=" res "\n"))
 
-                                      res-renamed (if (nil? rename-attr)
-                                                    res
-                                                    (rename-column-names res rename-attr))
-                                      res-wl-bl (cond
-                                                  (not (nil? bl-attr)) (remove-maps-by-entry-values res-renamed :column_name bl-attr)
-                                                  (not (nil? wl-attr)) (keep-maps-by-entry-values res-renamed :column_name wl-attr)
-                                                  :else res-renamed)
-                                      res3 (postgres-cfg-to-schema table-name res-wl-bl)]
-                                  (into inner-acc res3))
+                                     res-renamed (if (nil? rename-attr)
+                                                   res
+                                                   (rename-column-names res rename-attr))
+                                     res-wl-bl (cond
+                                                 (not (nil? bl-attr)) (remove-maps-by-entry-values res-renamed :column_name bl-attr)
+                                                 (not (nil? wl-attr)) (keep-maps-by-entry-values res-renamed :column_name wl-attr)
+                                                 :else res-renamed)
+                                     res3 (postgres-cfg-to-schema table-name res-wl-bl)]
+                                 (into inner-acc res3))
 
-                                (= (name key) "_additional") (let [table-name key
-                                                                   res2 (postgres-cfg-to-schema table-name value)]
-                                                               (into inner-acc res2))
-                                :else inner-acc))
-                  acc item))
-              result raw)
+                               (= (name key) "_additional") (let [table-name key
+                                                                  res2 (postgres-cfg-to-schema table-name value)]
+                                                              (into inner-acc res2))
+                               :else inner-acc))
+                       acc item))
+             result raw)
 
         _ (set-schema raw-schema-name res)]
     res))
@@ -147,15 +142,15 @@
 (defn rename-by-keys
   [maps key-map]
   (map
-    (fn [m]
-      (reduce
-        (fn [acc [old-key new-key]]
-          (if (contains? m old-key)
-            (assoc acc new-key (m old-key))
-            acc))
-        (apply dissoc m (keys key-map))
-        key-map))
-    maps))
+   (fn [m]
+     (reduce
+      (fn [acc [old-key new-key]]
+        (if (contains? m old-key)
+          (assoc acc new-key (m old-key))
+          acc))
+      (apply dissoc m (keys key-map))
+      key-map))
+   maps))
 
 (defn fetch-value-by-key
   [maps key]
@@ -178,8 +173,7 @@
                          (= key-type TYPE_NOTHING) (keyword column_name)
                          :else (keyword column_name))
 
-
-        ;; revise schema types by mapping
+;; revise schema types by mapping
         type-mapping-key (str (name table-name) "." (name column_name))
         type-mapping-enums-res (type-mapping-enums type-mapping-key get-enum)
         valueSection (cond
@@ -190,7 +184,6 @@
                        (= value-type TYPE_MAYBE) (s/maybe column_type)
                        :else column_type)
 
-
         _ (slog (str "[revise-schema-types] <<<<<<<<<<<<<<< before <<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n
         type-mapping-key=" type-mapping-key "\n
         column_name=" column_name "\n
@@ -198,19 +191,18 @@
         value-type=" value-type "\n"))
 
         ;; TODO: quiet helpful for debugging
-        _ (slog (str ">>o> !!! [set-schema] =>> " {keySection valueSection}))
-        ]
+        _ (slog (str ">>o> !!! [set-schema] =>> " {keySection valueSection}))]
     {keySection valueSection}))
 
 (defn process-revision-of-schema-types
   [table-name list-of-maps types key-types value-types]
   (map
-    (fn [[col-name col-type]]
-      (let [type-spec (some (fn [type-map]
-                              (get type-map col-name))
-                        types)]
-        (revise-schema-types table-name col-name col-type type-spec types key-types value-types)))
-    list-of-maps))
+   (fn [[col-name col-type]]
+     (let [type-spec (some (fn [type-map]
+                             (get type-map col-name))
+                           types)]
+       (revise-schema-types table-name col-name col-type type-spec types key-types value-types)))
+   list-of-maps))
 
 (defn remove-by-keys [data keys-to-remove]
   (remove (fn [[key _]]
@@ -221,8 +213,7 @@
             (some #{key} keys-to-keep)) data))
 
 (defn create-schemas-by-config [data]
-  (let [
-        schema-def (:schemas data)
+  (let [schema-def (:schemas data)
         raw-schema-name (:raw-schema-name data)
 
         _ (if (nil? schema-def)
@@ -233,38 +224,36 @@
 
         result []
         res (reduce
-              (fn [acc item]
-                (reduce (fn [inner-acc [key value]]
-                          (let [schema-raw (get-schema raw-schema-name)
-                                table-name key
-                                wl-attr (:wl value)
-                                bl-attr (:bl value)
-                                cache-as-attr (:cache-as value)
+             (fn [acc item]
+               (reduce (fn [inner-acc [key value]]
+                         (let [schema-raw (get-schema raw-schema-name)
+                               table-name key
+                               wl-attr (:wl value)
+                               bl-attr (:bl value)
+                               cache-as-attr (:cache-as value)
 
-                                types-attr (:types value)
-                                key-types-attr (:key-types value)
-                                value-types-attr (:value-types value)
+                               types-attr (:types value)
+                               key-types-attr (:key-types value)
+                               value-types-attr (:value-types value)
 
-                                result-bl-wl (cond
-                                               (not (nil? bl-attr)) (remove-by-keys schema-raw bl-attr)
-                                               (not (nil? wl-attr)) (keep-by-keys schema-raw wl-attr)
-                                               :else schema-raw)
+                               result-bl-wl (cond
+                                              (not (nil? bl-attr)) (remove-by-keys schema-raw bl-attr)
+                                              (not (nil? wl-attr)) (keep-by-keys schema-raw wl-attr)
+                                              :else schema-raw)
 
-                                result (process-revision-of-schema-types table-name result-bl-wl types-attr key-types-attr value-types-attr)
+                               result (process-revision-of-schema-types table-name result-bl-wl types-attr key-types-attr value-types-attr)
 
-                                _ (set-schema (keyword key) result)
-                                _ (when (not (nil? cache-as-attr))
-                                    (doseq [kw cache-as-attr]
-                                      (set-schema (keyword kw) result)))]
+                               _ (set-schema (keyword key) result)
+                               _ (when (not (nil? cache-as-attr))
+                                   (doseq [kw cache-as-attr]
+                                     (set-schema (keyword kw) result)))]
 
-                            (into inner-acc result)))
-                  acc item))
-              result schema-def)
-        ] res))
+                           (into inner-acc result)))
+                       acc item))
+             result schema-def)] res))
 
 (defn create-dynamic-schema [cfg-array]
   (doseq [c cfg-array]
     (let [_ (create-raw-schema c)
           _ (when (contains? c :schemas)
-              (create-schemas-by-config c)
-              )])))
+              (create-schemas-by-config c))])))

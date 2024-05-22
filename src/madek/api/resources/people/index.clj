@@ -3,11 +3,11 @@
    [cuerdas.core :refer [empty-or-nil?]]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
+   [madek.api.db.dynamic_schema.common :refer [get-schema]]
    [madek.api.resources.people.common :as common]
    [madek.api.resources.people.get :as get-person]
-   [madek.api.resources.shared :as sd]
 
-[madek.api.db.dynamic_schema.common :refer [get-schema]]
+   [madek.api.resources.shared :as sd]
 
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.helper :refer [parse-specific-keys t]]

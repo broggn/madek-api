@@ -3,10 +3,9 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
+   [madek.api.db.dynamic_schema.common :refer [get-schema]]
+
    [madek.api.pagination :as pagination]
-
-[madek.api.db.dynamic_schema.common :refer [get-schema]]
-
 
    [madek.api.resources.shared :as sd]
    [next.jdbc :as jdbc]
@@ -119,14 +118,6 @@
                  :collection_id :media_entry_id
                  :col-me-arc true)))
 
-
-
-
-
-
-
-
-
 ;(def schema_collection-media-entry-arc-export
 ;  {:id s/Uuid
 ;   :collection_id s/Uuid
@@ -159,13 +150,6 @@
 ;   (s/optional-key :cover) s/Bool
 ;   (s/optional-key :order) s/Num
 ;   (s/optional-key :position) s/Int})
-
-
-
-
-
-
-
 
 (def ring-routes
   ["/collection-media-entry-arcs"
