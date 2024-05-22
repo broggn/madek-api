@@ -120,16 +120,16 @@
                             :raw-schema-name :groups-schema-raw
                             :schemas [{:groups.schema-update-group {:alias "schema_update-group"
                                                                     :key-types "optional"
-                                                                    :value-types "maybe"
+                                                                    :value-types TYPE_MAYBE
                                                                     :types [{:name {:value-type TYPE_NOTHING}} {:type {:value-type TYPE_NOTHING}}]
                                                                     :wl [:name :type :institution :institutional_id :institutional_name :created_by_user_id]}}
                                       {:groups.schema-export-group {:alias "schema_export-group"
                                                                     :key-types TYPE_OPTIONAL
                                                                     :types [{:id {:key-type TYPE_NOTHING}}
-                                                                            {:created_by_user_id {:value-type "maybe"}}
-                                                                            {:institutional_id {:value-type "maybe"}}
-                                                                            {:institutional_name {:value-type "maybe"}}
-                                                                            {:institution {:value-type "maybe"}}]}}
+                                                                            {:created_by_user_id {:value-type TYPE_MAYBE}}
+                                                                            {:institutional_id {:value-type TYPE_MAYBE}}
+                                                                            {:institutional_name {:value-type TYPE_MAYBE}}
+                                                                            {:institution {:value-type TYPE_MAYBE}}]}}
 
                                       {:groups.schema-import-group {:alias "schema_import-group"
                                                                     :key-types TYPE_OPTIONAL
@@ -137,17 +137,17 @@
                                                                     :types [;{:id {:key-type TYPE_NOTHING}}
                                                                             {:name {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
                                                                             {:type {:value-type TYPE_NOTHING}}
-                                                                            {:created_by_user_id {:value-type "maybe"}}
-                                                                            {:institutional_id {:value-type "maybe"}}
-                                                                            {:institutional_name {:value-type "maybe"}}
-                                                                            {:institution {:value-type "maybe"}}]}}]}
+                                                                            {:created_by_user_id {:value-type TYPE_MAYBE}}
+                                                                            {:institutional_id {:value-type TYPE_MAYBE}}
+                                                                            {:institutional_name {:value-type TYPE_MAYBE}}
+                                                                            {:institution {:value-type TYPE_MAYBE}}]}}]}
 
                            {:raw [;; TODO: fix this to handle [:foo :bar]
                                   {:users {:wl ["id" "email" "institutional_id" "login" "created_at" "updated_at" "person_id"]}}],
                             :raw-schema-name :groups-schema-response-user-simple-raw
 
                             :schemas [{:groups.schema-response-user-simple {:alias "schema_response-user-simple"
-                                                                            :value-types "maybe"
+                                                                            :value-types TYPE_MAYBE
                                                                             :types [{:id {:value-type TYPE_NOTHING}}]
                                                                             :bl [:login :created_at :updated_at]}}
 
@@ -165,7 +165,7 @@
                                                              :wl [:accepted_usage_terms_id :autocomplete :email :institution :first_name :last_name :login :note :searchable]}}
 
                                      {:get.users-schema-payload {:alias "mar.users.get/schema"
-                                                                 :value-types "maybe"
+                                                                 :value-types TYPE_MAYBE
                                                                  :types [{:created_at {:value-type TYPE_NOTHING}}
                                                                          {:email {:key-type TYPE_OPTIONAL :value-type TYPE_NOTHING}}
                                                                          {:id {:value-type TYPE_NOTHING}}
@@ -303,7 +303,7 @@
 
                                             {:app_settings-raw.schema_export-app-settings {:alias "mar.app-settings/schema_export-app-settings"
                                                                                            :key-types "optional"
-                                                                                           :value-types "maybe"
+                                                                                           :value-types TYPE_MAYBE
                                                                                            :types [{:available_locales {:value-type TYPE_NOTHING}}
                                                                                                    {:catalog_context_keys {:value-type TYPE_NOTHING}}
                                                                                                    {:contexts_for_collection_edit {:value-type TYPE_NOTHING}}
@@ -327,13 +327,13 @@
 
                                                   {:confidential_links.schema_update_conf_link {:alias "mar.confidential_links/schema_update_conf_link"
                                                                                                 :key-types "optional"
-                                                                                                :value-types "maybe"
+                                                                                                :value-types TYPE_MAYBE
                                                                                                 :wl [:revoked :description :expires_at]
                                                                                                 :types [{:revoked {:value-type TYPE_NOTHING}}]}}
 
                                                   {:confidential_links.schema_import_conf_link {:alias "mar.confidential_links/schema_import_conf_link"
                                                                                                 :key-types "optional"
-                                                                                                :value-types "maybe"
+                                                                                                :value-types TYPE_MAYBE
                                                                                                 :wl [:revoked :description :expires_at]
                                                                                                 :types [{:revoked {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}]}}]}])
 
@@ -360,14 +360,14 @@
 
                                             {:context_keys.schema_update_context_keys {:alias "mar.context_keys/schema_update_context_keys"
                                                                                        :key-types "optional"
-                                                                                       :value-types "maybe"
+                                                                                       :value-types TYPE_MAYBE
                                                                                        :types [{:is_required {:value-type TYPE_NOTHING}}
                                                                                                {:position {:value-type TYPE_NOTHING}}]
                                                                                        :bl [:id :context_id :meta_key_id :admin_comment :updated_at :created_at]}}
 
                                             {:context_keys.schema_import_context_keys {:alias "mar.context_keys/schema_import_context_keys"
                                                                                        :key-types "optional"
-                                                                                       :value-types "maybe"
+                                                                                       :value-types TYPE_MAYBE
                                                                                        :types [{:context_id {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
                                                                                                {:meta_key_id {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
                                                                                                {:is_required {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
@@ -379,11 +379,11 @@
 
                              :schemas [{:contexts.schema_import_contexts {:alias "mar.contexts/schema_import_contexts"
                                                                           :cache-as [:contexts.schema_export_contexts_adm]
-                                                                          :value-types "maybe"
+                                                                          :value-types TYPE_MAYBE
                                                                           :types [{:id {:value-type TYPE_NOTHING}}]}}
 
                                        {:contexts.schema_update_contexts {:alias "mar.contexts/schema_update_contexts"
-                                                                          :value-types "maybe"
+                                                                          :value-types TYPE_MAYBE
                                                                           :key-types "optional"
                                                                           :types [{:id {:value-type TYPE_NOTHING}}]}}
 
@@ -553,14 +553,14 @@
                             :schemas [{:people.schema {;; TODO: fix definition
                                                        :alias "marp.create/schema"
                                                        :key-types "optional"
-                                                       :value-types "maybe"
+                                                       :value-types TYPE_MAYBE
 
                                                        :types [{:subtype {:key-type TYPE_NOTHING}}]
                                                        :bl [:id :created_at :updated_at :searchable]}}
 
                                       {:people.get.schema {;; TODO: fix definition
                                                            :alias "marp.get/schema"
-                                                           :value-types "maybe"
+                                                           :value-types TYPE_MAYBE
                                                            :types [{:description {:value-type TYPE_MAYBE}}
                                                                    {:first_name {:value-type TYPE_MAYBE}}
                                                                    {:institutional_id {:value-type TYPE_MAYBE}}
@@ -821,14 +821,14 @@
                                                                                                :types [{:get_metadata_and_previews {:value-type TYPE_NOTHING}}]
 
                                                                                                :key-types "optional"
-                                                                                               :value-types "maybe"
+                                                                                               :value-types TYPE_MAYBE
                                                                                                :wl [:get_metadata_and_previews :responsible_user_id :clipboard_user_id :workflow_id :responsible_delegation_id]}}
                                            {:collections-perms.schema_export-collection-perms {:alias "mar.permissions/schema_export-collection-perms"
                                                                                                :types [{:id {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
                                                                                                        {:creator_id {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
                                                                                                        {:get_metadata_and_previews {:value-type TYPE_NOTHING}}]
                                                                                                :key-types "optional"
-                                                                                               :value-types "maybe"
+                                                                                               :value-types TYPE_MAYBE
                                                                                                :wl [:id :creator_id :get_metadata_and_previews :responsible_user_id :clipboard_user_id :workflow_id :responsible_delegation_id]}}]}
 
                                 {:raw [{:media_entry_group_permissions {}}],
@@ -868,7 +868,7 @@
 
                                             {:vocabularies.schema_update-vocabulary {:alias "mar.vocabularies/schema_update-vocabulary"
                                                                                      :key-types "optional"
-                                                                                     :value-types "maybe"
+                                                                                     :value-types TYPE_MAYBE
                                                                                      :types [{:position {:value-type TYPE_NOTHING}}]
                                                                                      :bl [:id :enabled_for_public_view :enabled_for_public_use]}}
 

@@ -191,7 +191,8 @@
         value-type=" value-type "\n"))
 
         ;; TODO: quiet helpful for debugging
-        _ (slog (str ">>o> !!! [set-schema] =>> " {keySection valueSection}))]
+        ;_ (slog (str ">>o> !!! [set-schema] =>> " {keySection valueSection}))]
+        _ (slog "??? [set-schema] =>> " {keySection valueSection})]
     {keySection valueSection}))
 
 (defn process-revision-of-schema-types
