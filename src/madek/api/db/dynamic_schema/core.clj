@@ -67,8 +67,6 @@
 (defn postgres-cfg-to-schema [table-name metadata]
   (into {}
     (map (fn [{:keys [column_name data_type key-type value-type]}]
-           (println ">o> postgres-cfg-to-schema =>" table-name column_name data_type key-type value-type)
-
            (let [keySection (cond (= key-type TYPE_REQUIRED) (s/required-key (keyword column_name))
                                   (= key-type TYPE_OPTIONAL) (s/optional-key (keyword column_name))
                                   :else (keyword column_name))
@@ -88,7 +86,7 @@
                                 (= value-type TYPE_MAYBE) (s/maybe s/Any)
                                 :else s/Any)
 
-                 _ (slog (str ">o> [postgres-cfg-to-schema] table= " table-name ", final-result =>> " {keySection valueSection}))
+                 _ (slog (str "[postgres-cfg-to-schema] table= " table-name ", final-result =>> " {keySection valueSection}))
                  ]
              {keySection valueSection}))
       metadata)))
@@ -111,8 +109,7 @@
               (fn [acc item]
                 (reduce (fn [inner-acc [key value]]
                           (cond (not (str/starts-with? (name key) "_"))
-                                (let [p (println ">o> [handle not-additional]")
-                                      table-name key
+                                (let [                                      table-name key
                                       wl-attr (:wl value)
                                       bl-attr (:bl value)
                                       rename-attr (:rename value)
@@ -194,7 +191,7 @@
                        :else column_type)
 
 
-        _ (slog (str ">o> [revise-schema-types] <<<<<<<<<<<<<<< before <<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n
+        _ (slog (str "[revise-schema-types] <<<<<<<<<<<<<<< before <<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n
         type-mapping-key=" type-mapping-key "\n
         column_name=" column_name "\n
         key-type=" key-type "\n

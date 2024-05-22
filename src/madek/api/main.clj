@@ -60,8 +60,6 @@
     (initialize-fn options)))
 
 (defn run [options]
-  (println ">o> INIT DB!!!!!!!!!!!!!!!!!!!!!")
-
   (catcher/snatch
     {:level :fatal
      :throwable Throwable
@@ -84,19 +82,8 @@
     (madek.api.constants/initialize (get-config))
 
     ;; TODO: fetch schemas from db
-    (println ">o> INIT SCHEMA!!!!!!!!!!!!!!!!!!!!!")
     (init-schema-by-db)
-    
-    ;(try (dynamic-web-initialize options)
-    ;     (catch Throwable e
-    ;       (println ">o> Error initializing web failed, ok when using REPL")
-    ;     ))
-
     (dynamic-web-initialize options)
-
-
-    ;(madek.api.web/initialize options)
-
     (info 'madek.api.main "... initialized")))
 
 ;; main ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
