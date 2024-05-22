@@ -11,7 +11,7 @@
 
    [madek.api.db.core :refer [get-ds]]
 
-   [madek.api.db.dynamic_schema.common :refer [get-enum set-enum set-schema get-schema]]
+   [madek.api.db.dynamic_schema.common :refer [get-enum get-schema set-enum set-schema]]
 
    [madek.api.db.dynamic_schema.schema_definitions :refer [raw-type-mapping type-mapping type-mapping-enums]]
    [madek.api.db.dynamic_schema.statics :refer [TYPE_EITHER TYPE_MAYBE TYPE_NOTHING TYPE_OPTIONAL TYPE_REQUIRED]]
@@ -113,9 +113,7 @@
 
 
 (defn init-enums-by-db []
-
   (let [
-
         ;;; init enums
         _ (set-enum :collections_sorting (create-enum-spec "collection_sorting"))
         _ (set-enum :collections_layout (create-enum-spec "collection_layout"))
@@ -125,7 +123,6 @@
         _ (set-enum :groups.type (s/enum "AuthenticationGroup" "InstitutionalGroup" "Group"))
         ;
         ])
-
   )
 
 
@@ -281,7 +278,7 @@
          res (concat res update-data)
 
          ;res (type-mapping table-name res)
-         res (process-raw-type-mapping table-name res)
+         ;res (process-raw-type-mapping table-name res)
 
          ;res (map normalize-map res)
          ;p (println ">o> 2res=" res)
@@ -631,12 +628,8 @@
 
 
 (defn create-enum-spec [table-name]
-  (let [
-        res (fetch-enum table-name)
-        p (println ">o> 1ares=" res)
+  (let [res (fetch-enum table-name)
         res (convert-to-enum-spec res)
-        p (println ">o> 2ares=" res)
-
         ] res))
 
 
