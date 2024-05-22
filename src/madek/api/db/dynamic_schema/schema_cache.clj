@@ -282,6 +282,19 @@
 
 
 
+(defn set-schema-by-array [schema-map]
+
+
+  (map (fn [[k v]]
+         (set-schema k v)
+    schema-map))
+
+  ;(let [(doseq [c schema-array]
+  ;        (let [key (:key c)
+  ;              value (:value c)]
+  ;          (set-schema key value)))
+  ;  ] )
+  )
 
 
 
@@ -313,10 +326,13 @@
 
         _ (create-dynamic-schema d/create-vocabularies-schema)
         ;_ (create-vocabularies-schema2)
-        _  (doseq [c d/create-vocabularies-schema2]
-             (let [key (:key c)
-                   value (:value c)]
-               (set-schema key value)))
+        ;_  (doseq [c d/create-vocabularies-schema2]
+        ;     (let [key (:key c)
+        ;           value (:value c)]
+        ;       (set-schema key value)))
+
+        _ (set-schema-by-array [d/create-vocabularies-schema2])
+
 
 
 
@@ -324,19 +340,26 @@
         _ (create-dynamic-schema d/create-static_pages-schema)
         _ (create-dynamic-schema d/create-roles-schema)
         _ (create-dynamic-schema d/create-previews-schema)
-        ;_ (create-dynamic-schema d/create-permissions-schema)
-        ;
-        ;_ (create-dynamic-schema d/create-people-schema)
-        ;_ (create-dynamic-schema d/create-keywords-schema)
-        ;_ (create-dynamic-schema d/create-meta_keys-schema)
-        ;_ (create-dynamic-schema d/create-media_entries-schema)
+
+        _ (create-dynamic-schema d/create-permissions-schema)
+        _ (set-schema-by-array [d/top-level-permissions-schema])
+
+        _ (create-dynamic-schema d/create-people-schema)
+        _ (create-dynamic-schema d/create-keywords-schema)
+
+        _ (create-dynamic-schema d/create-meta_keys-schema)
+
+
+
+        _ (create-dynamic-schema d/create-media_entries-schema)
+        _ (set-schema-by-array [d/top-level-media_entries-schema])
 
         _ (create-dynamic-schema d/create-delegations_users-schema)
-        ;_ (create-dynamic-schema d/create-io_interfaces-schema)
-        ;_ (create-dynamic-schema d/create-media-files-schema)
-        ;_ (create-dynamic-schema d/create-meta-data-schema)
-        ;_ (create-dynamic-schema d/create-meta-data-role-schema)
-        ;_ (create-dynamic-schema d/create-favorite-media-entries-schema)
+        _ (create-dynamic-schema d/create-io_interfaces-schema)
+        _ (create-dynamic-schema d/create-media-files-schema)
+        _ (create-dynamic-schema d/create-meta-data-schema)
+        _ (create-dynamic-schema d/create-meta-data-role-schema)
+        _ (create-dynamic-schema d/create-favorite-media-entries-schema)
 
 
 

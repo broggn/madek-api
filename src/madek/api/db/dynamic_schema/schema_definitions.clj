@@ -1,11 +1,9 @@
 (ns madek.api.db.dynamic_schema.schema_definitions
   (:require
-   [madek.api.db.dynamic_schema.statics :refer [TYPE_MAYBE TYPE_NOTHING TYPE_OPTIONAL]]
+   [madek.api.db.dynamic_schema.common :refer [get-schema]]
+   [madek.api.db.dynamic_schema.statics :refer [TYPE_MAYBE TYPE_NOTHING TYPE_OPTIONAL TYPE_EITHER]]
    [madek.api.utils.validation :refer [vector-or-hashmap-validation]]
    [schema.core :as s]
-   [madek.api.db.dynamic_schema.common :refer [get-enum set-enum set-schema get-schema]]
-
-
 
    ))
 
@@ -866,847 +864,739 @@
                                       ])
 
 
-;(defn create-io_interfaces-schema []
-;  (let [
-;        data {
-;              :raw [{:io_interfaces {}}],
-;              :raw-schema-name :io_interfaces-raw
-;              :schemas [
-;                        {:io_interfaces.schema_export_io_interfaces {
-;                                                                     :alias "mar.io_interfaces/schema_export_io_interfaces"
-;                                                                     :types [
-;                                                                             {:description {:value-type TYPE_MAYBE}}
-;                                                                             ]
-;                                                                     }}
-;
-;                        {:io_interfaces.schema_export_io_interfaces_opt {
-;                                                                         :alias "mar.io_interfaces/schema_export_io_interfaces_opt"
-;                                                                         :key-values "optional"
-;                                                                         :types [
-;                                                                                 {:id {:key-type TYPE_NOTHING}}
-;                                                                                 {:description {:value-type TYPE_MAYBE}}
-;                                                                                 ]
-;                                                                         }}
-;
-;                        {:io_interfaces.schema_update_io_interfaces {
-;                                                                     :alias "mar.io_interfaces/schema_update_io_interfaces"
-;                                                                     :key-values "optional"
-;                                                                     :wl [:description]
-;                                                                     }}
-;
-;                        {:io_interfaces.schema_import_io_interfaces {
-;                                                                     :alias "mar.io_interfaces/schema_import_io_interfaces"
-;                                                                     :wl [:id :description]
-;                                                                     }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;        ]))
-;
-;
-;(defn create-io_interfaces-schema []
-;  (let [
-;        data {
-;              :raw [
-;                    {:favorite_collections {}}
-;                    ],
-;              :raw-schema-name :favorite_collections-raw
-;
-;              :schemas [
-;
-;                        {:favorite_collections.schema_favorite_collection_export {
-;                                                                                  :alias "mar.favorite_collections/schema_favorite_collection_export"
-;                                                                                  :key-values "optional"
-;                                                                                  :types [
-;                                                                                          {:user_id {:key-type TYPE_NOTHING}}
-;                                                                                          ]
-;                                                                                  }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;
-;        ]))
-;
-;
-;
-;(defn create-media-files-schema []
-;  (let [
-;        data {
-;              :raw [
-;                    {:media_files {:wl ["id" "media_entry_id" "media_type" "content_type" "filename" "previews" "size" "updated_at" "created_at"]}}
-;                    ],
-;              :raw-schema-name :media_files-raw
-;              :schemas [
-;                        {:media_files.schema_export-media-file {
-;                                                                :alias "mar.media-files/schema_export-media-file"
-;                                                                :types [{:media_type {:value-type TYPE_MAYBE}}]
-;                                                                }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;        ]))
-;
-;
-;(defn create-meta-data-schema []
-;  (let [
-;        data {
-;              :raw [{:meta_data {}}
-;                    {:_additional [{:column_name "value", :data_type "str"}]}],
-;              :raw-schema-name :meta_data-schema-raw
-;
-;              :schemas [
-;                        {:meta-data-schema.schema_export_meta-datum {
-;                                                                     :alias "mar.meta-data/schema_export_meta-datum"
-;                                                                     :wl [:id :meta_key_id :type :value :media_entry_id :collection_id]
-;                                                                     :types [
-;                                                                             {:value {:value-type TYPE_EITHER
-;                                                                                      :either-condition [[{:id s/Uuid}] s/Str]}}
-;                                                                             {:media_entry_id {:key-type TYPE_OPTIONAL}}
-;                                                                             {:collection_id {:key-type TYPE_OPTIONAL}}
-;                                                                             ]
-;                                                                     }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;        ]))
-;
-;
-;(defn create-meta-data-role-schema []
-;  (let [
-;        data {
-;              :raw [
-;                    {:meta_data_roles {}}
-;                    ],
-;              :raw-schema-name :meta_data_roles-schema-raw
-;
-;              :schemas [
-;                        {:meta-data-role-schema.schema_export_mdrole {
-;                                                                      :alias "mar.meta-data/schema_export_mdrole"
-;                                                                      :types [
-;                                                                              {:role_id {:value-type TYPE_MAYBE}}
-;                                                                              ]
-;                                                                      }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;        ]))
-;
-;
-;(defn create-favorite-media-entries-schema []
-;  (let [
-;        data {
-;              :raw [{:favorite-media-entries {}}],
-;              :raw-schema-name :favorite-media-entries-raw
-;
-;              :schemas [
-;                        {:favorite-media-entries-raw.schema_favorite_media_entries_export {
-;                                                                                           :alias "mar.favorite-media-entries-raw/schema_favorite_media_entries_export"
-;                                                                                           }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;        ]))
-;
-;(defn create-people-schema []
-;  (let [
-;        data {
-;              :raw [{:people {}}],
-;              :raw-schema-name :people-raw
-;
-;              :schemas [
-;                        {:people.schema {
-;                                         ;; TODO: fix definition
-;                                         :alias "marp.create/schema"
-;                                         :key-types "optional"
-;                                         :value-types "maybe"
-;
-;                                         :types [{:subtype {:key-type TYPE_NOTHING}}]
-;                                         :bl [:id :created_at :updated_at :searchable]
-;                                         }}
-;
-;                        {:people.get.schema {
-;                                             ;; TODO: fix definition
-;                                             :alias "marp.get/schema"
-;                                             :value-types "maybe"
-;                                             :types [
-;                                                     {:description {:value-type TYPE_MAYBE}}
-;                                                     {:first_name {:value-type TYPE_MAYBE}}
-;                                                     {:institutional_id {:value-type TYPE_MAYBE}}
-;                                                     {:last_name {:value-type TYPE_MAYBE}}
-;                                                     {:admin_comment {:value-type TYPE_MAYBE}}
-;                                                     {:pseudonym {:value-type TYPE_MAYBE}}
-;                                                     ]
-;                                             :bl [:searchable]
-;                                             }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;
-;        ]))
-;
-;
-;(defn create-media_entries-schema []
-;  (let [
-;        data {
-;              :raw [{:media_entries {}}],
-;              :raw-schema-name :media_entries-raw
-;
-;              :schemas [
-;                        {:media-entries.schema_export_media_entry {
-;                                                                   :alias "mar.media-entries/schema_export_media_entry"
-;                                                                   :key-types "optional"
-;                                                                   :types [
-;                                                                           {:id {:key-type TYPE_NOTHING}}
-;                                                                           {:responsible_delegation_id {:value-type TYPE_MAYBE}}
-;                                                                           ]
-;                                                                   }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;
-;
-;        data {
-;              :raw [{:collection_media_entry_arcs {}}],
-;              :raw-schema-name :collection_media_entry_arcs-raw
-;
-;              :schemas [
-;                        {:media-entries.schema_export_col_arc {
-;                                                               :alias "mar.media-entries/schema_export_col_arc"
-;                                                               :types [
-;                                                                       {:order {:value-type TYPE_MAYBE}}
-;                                                                       {:position {:value-type TYPE_MAYBE}}
-;                                                                       ]
-;                                                               :wl [:media_entry_id :id :order :position :created_at :updated_at]
-;                                                               }}
-;                        {:media-entries.schema_export_preview {
-;                                                               :alias "mar.media-entries/schema_export_preview"
-;                                                               :raw-schema-name :preview-raw ;;TODO
-;                                                               :types [
-;                                                                       {:width {:value-type TYPE_MAYBE}}
-;                                                                       {:height {:value-type TYPE_MAYBE}}
-;                                                                       {:conversion_profile {:value-type TYPE_MAYBE}}
-;                                                                       ]
-;                                                               }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;
-;
-;        data {
-;              :raw [{:meta_data {}}],
-;              :raw-schema-name :meta_data-raw
-;
-;              :schemas [
-;                        {:media-entries.schema_export_meta_data {
-;                                                                 :alias "mar.media-entries/schema_export_meta_data"
-;                                                                 :types [
-;                                                                         {:media_entry_id {:value-type TYPE_MAYBE}}
-;                                                                         {:collection_id {:value-type TYPE_MAYBE}}
-;                                                                         {:string {:value-type TYPE_MAYBE}}
-;                                                                         {:json {:value-type TYPE_MAYBE}}
-;                                                                         {:other_media_entry_id {:value-type TYPE_MAYBE}}
-;                                                                         ]
-;                                                                 :bl [:created_by_id]
-;                                                                 }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;
-;
-;        data {
-;              :raw [
-;                    {:media_entries {:wl ["public_get_metadata_and_previews" "public_get_full_size"]
-;                                     :rename {"get_metadata_and_previews" "public_get_metadata_and_previews"
-;                                              "get_full_size" "public_get_full_size"
-;                                              }
-;                                     }}
-;                    {:collection_media_entry_arcs {:wl ["collection_id" "order"]}}
-;
-;                    {:media_entry_user_permissions {:wl ["me_get_metadata_and_previews" "me_get_full_size" "me_edit_metadata" "me_edit_permissions"]
-;                                                    :rename {"get_metadata_and_previews" "me_get_metadata_and_previews"
-;                                                             "get_full_size" "me_get_full_size"
-;                                                             "edit_metadata" "me_edit_metadata"
-;                                                             "edit_permissions" "me_edit_permissions"
-;                                                             }
-;                                                    }}
-;                    {:_additional (concat schema_pagination_raw schema_full_data_raw [{:column_name "filter_by", :data_type "str"}])}
-;                    ],
-;              :raw-schema-name :media_entries-media_entry_user_permission-collection_media_entry_arcs-raw
-;
-;              :schemas [
-;                        {:media-entries.schema_query_media_entries {
-;                                                                    :alias "mar.media-entries/schema_query_media_entries"
-;                                                                    :key-types "optional"
-;                                                                    }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;
-;        data {
-;              :raw [{:media_files {}}],
-;              :raw-schema-name :media_files-raw
-;
-;              :schemas [
-;                        {:media-files.schema_export_media_file {
-;                                                                :alias "mar.media-entries/schema_export_media_file"
-;                                                                :types [
-;                                                                        {:media_type {:value-type TYPE_MAYBE}}
-;                                                                        {:width {:value-type TYPE_MAYBE}}
-;                                                                        {:height {:value-type TYPE_MAYBE}}
-;                                                                        {:meta_data {:value-type TYPE_MAYBE}}
-;                                                                        ]
-;                                                                }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;
-;
-;        _ (set-schema :media-entries-schema-schema_publish_failed {:message {:is_publishable s/Bool
-;                                                                             :media_entry_id s/Uuid
-;                                                                             :has_meta_data [{s/Any s/Bool}]}})
-;
-;        _ (set-schema :media-entries-schema-schema_query_media_entries_related_result {:media_entries [(get-schema :media-entries.schema_export_media_entry)]
-;                                                                                       :meta_data [[(get-schema :media-entries.schema_export_meta_data)]]
-;                                                                                       :media_files [(s/maybe (get-schema :media-files.schema_export_media_file))]
-;                                                                                       :previews [[(s/maybe (get-schema :media-entries.schema_export_preview))]]
-;                                                                                       (s/optional-key :col_arcs) [(get-schema :media-entries.schema_export_col_arc)]
-;                                                                                       (s/optional-key :col_meta_data) [(get-schema :media-entries.schema_export_meta_data)]})
-;        ]))
-;
-;
-;(defn create-meta_keys-schema []
-;  (let [
-;        data {
-;              :raw [{:meta_keys {}}],
-;              :raw-schema-name :meta_keys-raw
-;
-;              :schemas [
-;                        {:meta-keys.schema_create-meta-key {
-;                                                            ;; TODO: fix definition
-;                                                            :alias "mar.meta-keys/schema_create-meta-key"
-;                                                            :key-types "optional"
-;                                                            :types [
-;                                                                    {:id {:key-type TYPE_NOTHING}}
-;                                                                    {:is_extensible_list {:key-type TYPE_NOTHING}}
-;                                                                    {:meta_datum_object_type {:key-type TYPE_NOTHING}}
-;                                                                    {:is_enabled_for_media_entries {:key-type TYPE_NOTHING}}
-;                                                                    {:is_enabled_for_collections {:key-type TYPE_NOTHING}}
-;                                                                    {:vocabulary_id {:key-type TYPE_NOTHING}}
-;
-;                                                                    {:allowed_rdf_class {:value-type TYPE_MAYBE}}
-;                                                                    {:labels {:value-type TYPE_MAYBE}}
-;                                                                    {:descriptions {:value-type TYPE_MAYBE}}
-;                                                                    {:hints {:value-type TYPE_MAYBE}}
-;                                                                    {:documentation_urls {:value-type TYPE_MAYBE}}
-;                                                                    {:admin_comment {:value-type TYPE_MAYBE}}
-;                                                                    ]
-;                                                            }}
-;
-;                        {:meta-keys.schema_update-meta-key {
-;                                                            ;; TODO: fix definition
-;                                                            :alias "mar.meta-keys/schema_update-meta-key"
-;                                                            :key-types "optional"
-;                                                            :types [
-;                                                                    {:id {:key-type TYPE_NOTHING}}
-;                                                                    {:is_extensible_list {:key-type TYPE_NOTHING}}
-;                                                                    {:meta_datum_object_type {:key-type TYPE_NOTHING}}
-;                                                                    {:is_enabled_for_media_entries {:key-type TYPE_NOTHING}}
-;                                                                    {:is_enabled_for_collections {:key-type TYPE_NOTHING}}
-;                                                                    {:vocabulary_id {:key-type TYPE_NOTHING}}
-;
-;                                                                    {:allowed_rdf_class {:value-type TYPE_MAYBE}}
-;                                                                    {:labels {:value-type TYPE_MAYBE}}
-;                                                                    {:descriptions {:value-type TYPE_MAYBE}}
-;                                                                    {:hints {:value-type TYPE_MAYBE}}
-;                                                                    {:documentation_urls {:value-type TYPE_MAYBE}}
-;                                                                    {:admin_comment {:value-type TYPE_MAYBE}}
-;                                                                    ]
-;
-;                                                            :bl [:id :vocabulary_id :meta_datum_object_type]
-;                                                            }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;
-;
-;        data {
-;              :raw [{:meta_keys {}}
-;                    {:_additional [{:column_name "scope", :data_type "any"}]}
-;                    ],
-;              :raw-schema-name :meta_keys-scope-raw
-;
-;              :schemas [
-;                        {:meta-keys.schema_query-meta-key {
-;                                                           :alias "mar.meta-keys/schema_query-meta-key"
-;                                                           :key-types "optional"
-;                                                           :wl [:id :vocabulary_id :meta_datum_object_type :is_enabled_for_collections :is_enabled_for_media_entries :scope]
-;                                                           }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;
-;
-;        data {
-;              :raw [
-;                    {:meta_keys {}}
-;                    {:vocabularies {:rename {
-;                                             "id" "id_2"
-;                                             "enabled_for_public_use" "enabled_for_public_use_2"
-;                                             "enabled_for_public_view" "enabled_for_public_view_2"
-;                                             "position" "position_2"
-;                                             "labels" "labels_2"
-;                                             "descriptions" "descriptions_2"
-;                                             "admin_comment" "admin_comment_2"
-;                                             }
-;                                    }}
-;                    {:_additional [{:column_name "io_mappings", :data_type "any"}]}
-;
-;                    ],
-;              :raw-schema-name :meta_keys-vocabularies-raw
-;
-;              :schemas [
-;                        {:meta-keys.schema_export-meta-key-usr {
-;                                                                ;; TODO: fix definition
-;                                                                :alias "mar.meta-keys/schema_export-meta-key-usr"
-;                                                                :key-types "optional"
-;                                                                :types [
-;                                                                        {:id {:key-type TYPE_NOTHING}}
-;                                                                        {:labels {:key-type TYPE_NOTHING}}
-;                                                                        {:descriptions {:key-type TYPE_NOTHING}}
-;                                                                        {:hints {:key-type TYPE_NOTHING}}
-;                                                                        {:documentation_urls {:key-type TYPE_NOTHING}}
-;                                                                        {:vocabulary_id {:key-type TYPE_NOTHING}}
-;
-;                                                                        {:allowed_rdf_class {:value-type TYPE_MAYBE}}
-;                                                                        {:labels {:value-type TYPE_MAYBE}}
-;                                                                        {:descriptions {:value-type TYPE_MAYBE}}
-;                                                                        {:hints {:value-type TYPE_MAYBE}}
-;                                                                        {:documentation_urls {:value-type TYPE_MAYBE}}
-;                                                                        ]
-;                                                                :bl [:admin_comment]
-;                                                                }}
-;
-;                        {:meta-keys.schema_export-meta-key-adm {
-;                                                                ;; TODO: fix definition
-;                                                                :alias "mar.meta-keys/schema_export-meta-key-adm"
-;                                                                :key-types "optional"
-;                                                                :types [
-;                                                                        {:id {:key-type TYPE_NOTHING}}
-;                                                                        {:labels {:key-type TYPE_NOTHING}}
-;                                                                        {:descriptions {:key-type TYPE_NOTHING}}
-;                                                                        {:hints {:key-type TYPE_NOTHING}}
-;                                                                        {:documentation_urls {:key-type TYPE_NOTHING}}
-;                                                                        {:vocabulary_id {:key-type TYPE_NOTHING}}
-;
-;                                                                        {:admin_comment {:key-type TYPE_NOTHING :value-type TYPE_MAYBE}}
-;
-;                                                                        {:allowed_rdf_class {:value-type TYPE_MAYBE}}
-;                                                                        {:labels {:value-type TYPE_MAYBE}}
-;                                                                        {:descriptions {:value-type TYPE_MAYBE}}
-;                                                                        {:hints {:value-type TYPE_MAYBE}}
-;                                                                        {:documentation_urls {:value-type TYPE_MAYBE}}
-;                                                                        {:admin_comment_2 {:value-type TYPE_MAYBE}}
-;                                                                        ]
-;                                                                }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;        ]))
-;
-;
-;(defn create-keywords-schema []
-;  (let [
-;        data {
-;              :raw [{:keywords {}}],
-;              :raw-schema-name :keywords-raw
-;
-;              :schemas [
-;                        {:keywords.schema_create_keyword {
-;                                                          :alias "mar.keywords/schema_create_keyword"
-;                                                          :key-types "optional"
-;                                                          :types [
-;                                                                  {:meta_key_id {:key-type TYPE_NOTHING}}
-;                                                                  {:term {:key-type TYPE_NOTHING}}
-;
-;                                                                  {:description {:value-type TYPE_MAYBE}}
-;                                                                  {:position {:value-type TYPE_MAYBE}}
-;                                                                  ]
-;                                                          :wl [:meta_key_id :term :description :position :external_uris :rdf_class]
-;                                                          }}
-;
-;                        {:keywords.schema_update_keyword {
-;                                                          :alias "mar.keywords/schema_update_keyword"
-;                                                          :key-types "optional"
-;
-;                                                          :types [
-;                                                                  {:description {:value-type TYPE_MAYBE}}
-;                                                                  ]
-;
-;                                                          :wl [:term :description :position :external_uris :rdf_class]
-;                                                          }}
-;
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;
-;
-;        data {
-;              :raw [{:keywords {}}
-;                    {:_additional [{:column_name "external_uri", :data_type "str"}]}
-;                    ],
-;              :raw-schema-name :keywords-extended-raw
-;
-;              :schemas [
-;                        {:keywords.schema_export_keyword_usr {
-;                                                              :alias "mar.keywords/schema_export_keyword_usr"
-;                                                              ;:key-types "optional"
-;
-;                                                              :types [
-;                                                                      {:description {:value-type TYPE_MAYBE}}
-;                                                                      {:position {:value-type TYPE_MAYBE}}
-;                                                                      {:external_uri {:value-type TYPE_MAYBE}}
-;                                                                      ]
-;
-;                                                              :bl [:created_at :updated_at :creator_id]
-;                                                              }}
-;
-;                        {:keywords.schema_export_keyword_adm {
-;                                                              :alias "mar.keywords/schema_export_keyword_adm"
-;                                                              :types [
-;                                                                      {:description {:value-type TYPE_MAYBE}}
-;                                                                      {:position {:value-type TYPE_MAYBE}}
-;                                                                      {:external_uri {:value-type TYPE_MAYBE}}
-;                                                                      {:creator_id {:value-type TYPE_MAYBE}}
-;                                                                      ]
-;                                                              }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;
-;
-;        data {
-;              :raw [{:keywords {
-;                                :wl [:id :meta_key_id :term :description :rdf_class]
-;                                }}
-;                    {:_additional schema_pagination_raw}
-;                    ],
-;              :raw-schema-name :keywords-raw
-;
-;              :schemas [
-;                        {:keywords.schema_query_keyword {
-;                                                         :alias "mar.keywords/schema_query_keyword"
-;                                                         :key-types "optional"
-;                                                         }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;        ]))
-;
-;
-;(defn create-permissions-schema []
-;  (let [
-;        data {
-;              :raw [{:collection_user_permissions {}}],
-;              :raw-schema-name :collection_user_permissions-raw
-;
-;              :schemas [
-;                        {:collection_user_permissions.schema_export-collection-user-permission {
-;                                                                                                :alias "mar.permissions/schema_export-collection-user-permission"
-;                                                                                                :types [
-;                                                                                                        {:updator_id {:value-type TYPE_MAYBE}}
-;                                                                                                        {:delegation_id {:value-type TYPE_MAYBE}}
-;                                                                                                        ]
-;                                                                                                }}
-;
-;                        {:collection_user_permissions.schema_create-collection-user-permission {
-;                                                                                                :alias "mar.permissions/schema_create-collection-user-permission"
-;                                                                                                :wl [:get_metadata_and_previews :edit_metadata_and_relations :edit_permissions]
-;                                                                                                }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;
-;
-;        data {
-;              :raw [{:collection_group_permissions {}}],
-;              :raw-schema-name :collection_group_permissions-raw
-;
-;              :schemas [
-;                        {:collection_group_permissions.schema_export-collection-group-permission {
-;                                                                                                  :alias "mar.permissions/schema_export-collection-group-permission"
-;                                                                                                  :types [
-;                                                                                                          {:updator_id {:value-type TYPE_MAYBE}}
-;                                                                                                          ]
-;                                                                                                  }}
-;
-;                        {:collection_group_permissions.schema_create-collection-group-permission {
-;                                                                                                  :alias "mar.permissions/schema_create-collection-group-permission"
-;                                                                                                  :wl [:get_metadata_and_previews :edit_metadata_and_relations]
-;                                                                                                  }}
-;
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;
-;
-;        data {
-;              :raw [{:media_entry_user_permissions {}}],
-;              :raw-schema-name :media_entry_user_permissions-raw
-;
-;              :schemas [
-;                        {:collection_user_permissions.schema_export-media-entry-user-permission {
-;                                                                                                 :alias "mar.permissions/schema_export-media-entry-user-permission"
-;                                                                                                 :types [
-;                                                                                                         {:updator_id {:value-type TYPE_MAYBE}}
-;                                                                                                         {:delegation_id {:value-type TYPE_MAYBE}}
-;                                                                                                         ]
-;                                                                                                 }}
-;
-;                        {:collection_user_permissions.schema_create-media-entry-user-permission {
-;                                                                                                 :alias "mar.permissions/schema_create-media-entry-user-permission"
-;                                                                                                 :wl [:get_metadata_and_previews :get_full_size :edit_metadata :edit_permissions]
-;                                                                                                 }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;
-;
-;        data {
-;              :raw [{:media_entries {}}],
-;              :raw-schema-name :media_entries-raw
-;
-;              :schemas [
-;                        {:media_entries.schema_export-media-entry-perms {
-;                                                                         :alias "mar.permissions/schema_export-media-entry-perms"
-;                                                                         :types [
-;                                                                                 {:id {:key-type TYPE_NOTHING}}
-;                                                                                 {:creator_id {:key-type TYPE_NOTHING}}
-;                                                                                 {:is_published {:key-type TYPE_NOTHING}}
-;
-;                                                                                 {:responsible_user_id {:value-type TYPE_MAYBE}}
-;                                                                                 {:responsible_delegation_id {:value-type TYPE_MAYBE}}
-;                                                                                 ]
-;                                                                         :key-types "optional"
-;                                                                         :wl [:id :creator_id :is_published :get_metadata_and_previews :get_full_size :responsible_user_id :responsible_delegation_id]
-;                                                                         }}
-;
-;                        {:media_entries.schema_update-media-entry-perms {
-;                                                                         :alias "mar.permissions/schema_update-media-entry-perms"
-;                                                                         :types [
-;                                                                                 {:responsible_user_id {:value-type TYPE_MAYBE}}
-;                                                                                 {:responsible_delegation_id {:value-type TYPE_MAYBE}}
-;                                                                                 ]
-;                                                                         :key-types "optional"
-;                                                                         :wl [:get_metadata_and_previews :get_full_size :responsible_user_id :responsible_delegation_id]
-;                                                                         }}
-;
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;
-;
-;        data {
-;              :raw [{:collections {}}],
-;              :raw-schema-name :collections-perms-raw
-;
-;              :schemas [
-;                        {:collections-perms.schema_update-collection-perms {
-;                                                                            :alias "mar.permissions/schema_update-collection-perms"
-;                                                                            :types [
-;                                                                                    {:get_metadata_and_previews {:value-type TYPE_NOTHING}}
-;                                                                                    ]
-;
-;                                                                            :key-types "optional"
-;                                                                            :value-types "maybe"
-;                                                                            :wl [:get_metadata_and_previews :responsible_user_id :clipboard_user_id :workflow_id :responsible_delegation_id]
-;                                                                            }}
-;
-;
-;                        {:collections-perms.schema_export-collection-perms {
-;                                                                            :alias "mar.permissions/schema_export-collection-perms"
-;                                                                            :types [
-;                                                                                    {:id {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
-;                                                                                    {:creator_id {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
-;                                                                                    {:get_metadata_and_previews {:value-type TYPE_NOTHING}}
-;                                                                                    ]
-;
-;                                                                            :key-types "optional"
-;                                                                            :value-types "maybe"
-;
-;
-;                                                                            :wl [:id :creator_id :get_metadata_and_previews :responsible_user_id :clipboard_user_id :workflow_id :responsible_delegation_id]
-;                                                                            }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;
-;
-;        data {
-;              :raw [{:media_entry_group_permissions {}}],
-;              :raw-schema-name :media_entry_group_permissions-raw
-;
-;              :schemas [
-;                        {:media_entry_group_permissions.schema_export-media-entry-group-permission {
-;                                                                                                    :alias "mar.permissions/schema_export-media-entry-group-permission"
-;                                                                                                    :types [
-;                                                                                                            {:updator_id {:value-type TYPE_MAYBE}}
-;                                                                                                            ]
-;                                                                                                    }}
-;
-;
-;                        {:media_entry_group_permissions.schema_create-media-entry-group-permission {
-;                                                                                                    :alias "mar.permissions/schema_create-media-entry-group-permission"
-;                                                                                                    :wl [:get_metadata_and_previews :get_full_size :edit_metadata]
-;                                                                                                    }}
-;
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;
-;
-;        _ (set-schema :media_entry_user_permissions.schema_export_media-entry-permissions-all {:media_entry (get-schema :media_entries.schema_export-media-entry-perms)
-;                                                                                               :users [(get-schema :media_entry_user_permissions.schema_export-media-entry-user-permission)]
-;                                                                                               :groups [(get-schema :media_entry_group_permissions.schema_export-media-entry-group-permission)]})
-;
-;        _ (set-schema :collection_permissions-all.schema_export-collection-permissions-all {:media-resource (get-schema :collections-perms.schema_export-collection-perms)
-;                                                                                            :users [(get-schema :collection_user_permissions.schema_export-collection-user-permission)]
-;                                                                                            :groups [(get-schema :collection_group_permissions.schema_export-collection-group-permission)]})
-;        ]))
-;
-;
-;
-(def create-vocabularies-schema [{
-                                   :raw [{:vocabularies {}}],
-                                   :raw-schema-name :vocabularies-raw
+(def create-io_interfaces-schema [{
+                                    :raw [{:io_interfaces {}}],
+                                    :raw-schema-name :io_interfaces-raw
+                                    :schemas [
+                                              {:io_interfaces.schema_export_io_interfaces {
+                                                                                           :alias "mar.io_interfaces/schema_export_io_interfaces"
+                                                                                           :types [
+                                                                                                   {:description {:value-type TYPE_MAYBE}}
+                                                                                                   ]
+                                                                                           }}
 
-                                   :schemas [
-                                             {:vocabularies.schema_export-vocabulary {
-                                                                                      :alias "mar.vocabularies/schema_export-vocabulary"
-                                                                                      :types [
-                                                                                              {:labels {:value-type TYPE_MAYBE}}
-                                                                                              {:descriptions {:value-type TYPE_MAYBE}}
-                                                                                              {:admin_comment {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
-                                                                                              ]
-                                                                                      :bl [:enabled_for_public_view :enabled_for_public_use]
-                                                                                      }}
-
-                                             {:vocabularies.schema_export-vocabulary-admin {
-                                                                                            :alias "mar.vocabularies/schema_export-vocabulary-admin"
-                                                                                            :types [
-                                                                                                    {:labels {:value-type TYPE_MAYBE}}
-                                                                                                    {:descriptions {:value-type TYPE_MAYBE}}
-                                                                                                    {:admin_comment {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
-                                                                                                    ]
-                                                                                            }}
-
-                                             {:vocabularies.schema_import-vocabulary {
-                                                                                      :alias "mar.vocabularies/schema_import-vocabulary"
-                                                                                      :types [
-                                                                                              {:labels {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
-                                                                                              {:descriptions {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
-                                                                                              {:admin_comment {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
-                                                                                              ]
-                                                                                      }}
-
-                                             {:vocabularies.schema_update-vocabulary {
-                                                                                      :alias "mar.vocabularies/schema_update-vocabulary"
-                                                                                      :key-types "optional"
-                                                                                      :value-types "maybe"
-                                                                                      :types [
-                                                                                              {:position {:value-type TYPE_NOTHING}}
-                                                                                              ]
-                                                                                      :bl [:id :enabled_for_public_view :enabled_for_public_use]
-                                                                                      }}
-
-                                             {:vocabularies.schema_perms-update {
-                                                                                 :alias "mar.vocabularies/schema_perms-update"
-                                                                                 :key-types "optional"
-                                                                                 :wl [:enabled_for_public_view :enabled_for_public_use]
-                                                                                 }}
-
-                                             {:vocabularies.schema_export-perms_all_vocabulary {
-                                                                                                :alias "mar.vocabularies/schema_export-perms_all"
-                                                                                                :wl [:id :enabled_for_public_view :enabled_for_public_use]
-                                                                                                }}
-                                             ]
-                                   }
-                                  {
-                                   :raw [{:vocabulary_group_permissions {}}],
-                                   :raw-schema-name :vocabulary_group_permissions-raw
-
-                                   :schemas [
-                                             {:vocabularies.schema_export-group-perms {:alias "mar.vocabularies/schema_export-group-perms"}}
-                                             ]
-                                   }
-                                  {
-                                   :raw [{:vocabulary_user_permissions {}}],
-                                   :raw-schema-name :vocabulary_user_permissions-raw
-
-                                   :schemas [
-                                             {:vocabularies.vocabulary_user_permissions {
-                                                                                         :alias "mar.vocabularies/vocabulary_user_permissions"
-                                                                                         }}
-
-                                             {:vocabularies.schema_perms-update-user-or-group {
-                                                                                               :alias "mar.vocabularies/schema_perms-update-user-or-group"
-                                                                                               :wl [:use :view]
+                                              {:io_interfaces.schema_export_io_interfaces_opt {
+                                                                                               :alias "mar.io_interfaces/schema_export_io_interfaces_opt"
+                                                                                               :key-values "optional"
+                                                                                               :types [
+                                                                                                       {:id {:key-type TYPE_NOTHING}}
+                                                                                                       {:description {:value-type TYPE_MAYBE}}
+                                                                                                       ]
                                                                                                }}
+
+                                              {:io_interfaces.schema_update_io_interfaces {
+                                                                                           :alias "mar.io_interfaces/schema_update_io_interfaces"
+                                                                                           :key-values "optional"
+                                                                                           :wl [:description]
+                                                                                           }}
+
+                                              {:io_interfaces.schema_import_io_interfaces {
+                                                                                           :alias "mar.io_interfaces/schema_import_io_interfaces"
+                                                                                           :wl [:id :description]
+                                                                                           }}
+                                              ]
+                                    }
+
+                                   ])
+
+
+(def create-io_interfaces-schema [{
+                                   :raw [
+                                         {:favorite_collections {}}
+                                         ],
+                                   :raw-schema-name :favorite_collections-raw
+
+                                   :schemas [
+
+                                             {:favorite_collections.schema_favorite_collection_export {
+                                                                                                       :alias "mar.favorite_collections/schema_favorite_collection_export"
+                                                                                                       :key-values "optional"
+                                                                                                       :types [
+                                                                                                               {:user_id {:key-type TYPE_NOTHING}}
+                                                                                                               ]
+                                                                                                       }}
                                              ]
                                    }
 
                                   ])
 
+
+
+(def create-media-files-schema [{
+                                 :raw [
+                                       {:media_files {:wl ["id" "media_entry_id" "media_type" "content_type" "filename" "previews" "size" "updated_at" "created_at"]}}
+                                       ],
+                                 :raw-schema-name :media_files-raw
+                                 :schemas [
+                                           {:media_files.schema_export-media-file {
+                                                                                   :alias "mar.media-files/schema_export-media-file"
+                                                                                   :types [{:media_type {:value-type TYPE_MAYBE}}]
+                                                                                   }}
+                                           ]
+                                 }
+                                ])
+
+
+(def create-meta-data-schema [{
+                               :raw [{:meta_data {}}
+                                     {:_additional [{:column_name "value", :data_type "str"}]}],
+                               :raw-schema-name :meta_data-schema-raw
+
+                               :schemas [
+                                         {:meta-data-schema.schema_export_meta-datum {
+                                                                                      :alias "mar.meta-data/schema_export_meta-datum"
+                                                                                      :wl [:id :meta_key_id :type :value :media_entry_id :collection_id]
+                                                                                      :types [
+                                                                                              {:value {:value-type TYPE_EITHER
+                                                                                                       :either-condition [[{:id s/Uuid}] s/Str]}}
+                                                                                              {:media_entry_id {:key-type TYPE_OPTIONAL}}
+                                                                                              {:collection_id {:key-type TYPE_OPTIONAL}}
+                                                                                              ]
+                                                                                      }}
+                                         ]
+                               }])
+
+
+(def create-meta-data-role-schema [{
+                                    :raw [
+                                          {:meta_data_roles {}}
+                                          ],
+                                    :raw-schema-name :meta_data_roles-schema-raw
+
+                                    :schemas [
+                                              {:meta-data-role-schema.schema_export_mdrole {
+                                                                                            :alias "mar.meta-data/schema_export_mdrole"
+                                                                                            :types [
+                                                                                                    {:role_id {:value-type TYPE_MAYBE}}
+                                                                                                    ]
+                                                                                            }}
+                                              ]
+                                    }
+                                   ])
+
+
+(def create-favorite-media-entries-schema [{
+                                            :raw [{:favorite-media-entries {}}],
+                                            :raw-schema-name :favorite-media-entries-raw
+
+                                            :schemas [
+                                                      {:favorite-media-entries-raw.schema_favorite_media_entries_export {
+                                                                                                                         :alias "mar.favorite-media-entries-raw/schema_favorite_media_entries_export"
+                                                                                                                         }}
+                                                      ]
+                                            }
+                                           ])
+
+(def create-people-schema [{
+                            :raw [{:people {}}],
+                            :raw-schema-name :people-raw
+
+                            :schemas [
+                                      {:people.schema {
+                                                       ;; TODO: fix definition
+                                                       :alias "marp.create/schema"
+                                                       :key-types "optional"
+                                                       :value-types "maybe"
+
+                                                       :types [{:subtype {:key-type TYPE_NOTHING}}]
+                                                       :bl [:id :created_at :updated_at :searchable]
+                                                       }}
+
+                                      {:people.get.schema {
+                                                           ;; TODO: fix definition
+                                                           :alias "marp.get/schema"
+                                                           :value-types "maybe"
+                                                           :types [
+                                                                   {:description {:value-type TYPE_MAYBE}}
+                                                                   {:first_name {:value-type TYPE_MAYBE}}
+                                                                   {:institutional_id {:value-type TYPE_MAYBE}}
+                                                                   {:last_name {:value-type TYPE_MAYBE}}
+                                                                   {:admin_comment {:value-type TYPE_MAYBE}}
+                                                                   {:pseudonym {:value-type TYPE_MAYBE}}
+                                                                   ]
+                                                           :bl [:searchable]
+                                                           }}
+                                      ]
+                            }
+                           ])
+
+
+(def create-media_entries-schema [{
+                                   :raw [{:media_entries {}}],
+                                   :raw-schema-name :media_entries-raw
+
+                                   :schemas [
+                                             {:media-entries.schema_export_media_entry {
+                                                                                        :alias "mar.media-entries/schema_export_media_entry"
+                                                                                        :key-types "optional"
+                                                                                        :types [
+                                                                                                {:id {:key-type TYPE_NOTHING}}
+                                                                                                {:responsible_delegation_id {:value-type TYPE_MAYBE}}
+                                                                                                ]
+                                                                                        }}
+                                             ]
+                                   }
+                                  {
+                                   :raw [{:collection_media_entry_arcs {}}],
+                                   :raw-schema-name :collection_media_entry_arcs-raw
+
+                                   :schemas [
+                                             {:media-entries.schema_export_col_arc {
+                                                                                    :alias "mar.media-entries/schema_export_col_arc"
+                                                                                    :types [
+                                                                                            {:order {:value-type TYPE_MAYBE}}
+                                                                                            {:position {:value-type TYPE_MAYBE}}
+                                                                                            ]
+                                                                                    :wl [:media_entry_id :id :order :position :created_at :updated_at]
+                                                                                    }}
+                                             {:media-entries.schema_export_preview {
+                                                                                    :alias "mar.media-entries/schema_export_preview"
+                                                                                    :raw-schema-name :preview-raw ;;TODO
+                                                                                    :types [
+                                                                                            {:width {:value-type TYPE_MAYBE}}
+                                                                                            {:height {:value-type TYPE_MAYBE}}
+                                                                                            {:conversion_profile {:value-type TYPE_MAYBE}}
+                                                                                            ]
+                                                                                    }}
+                                             ]
+                                   }
+                                  {
+                                   :raw [{:meta_data {}}],
+                                   :raw-schema-name :meta_data-raw
+
+                                   :schemas [
+                                             {:media-entries.schema_export_meta_data {
+                                                                                      :alias "mar.media-entries/schema_export_meta_data"
+                                                                                      :types [
+                                                                                              {:media_entry_id {:value-type TYPE_MAYBE}}
+                                                                                              {:collection_id {:value-type TYPE_MAYBE}}
+                                                                                              {:string {:value-type TYPE_MAYBE}}
+                                                                                              {:json {:value-type TYPE_MAYBE}}
+                                                                                              {:other_media_entry_id {:value-type TYPE_MAYBE}}
+                                                                                              ]
+                                                                                      :bl [:created_by_id]
+                                                                                      }}
+                                             ]
+                                   }
+
+                                  {
+                                   :raw [
+                                         {:media_entries {:wl ["public_get_metadata_and_previews" "public_get_full_size"]
+                                                          :rename {"get_metadata_and_previews" "public_get_metadata_and_previews"
+                                                                   "get_full_size" "public_get_full_size"
+                                                                   }
+                                                          }}
+                                         {:collection_media_entry_arcs {:wl ["collection_id" "order"]}}
+
+                                         {:media_entry_user_permissions {:wl ["me_get_metadata_and_previews" "me_get_full_size" "me_edit_metadata" "me_edit_permissions"]
+                                                                         :rename {"get_metadata_and_previews" "me_get_metadata_and_previews"
+                                                                                  "get_full_size" "me_get_full_size"
+                                                                                  "edit_metadata" "me_edit_metadata"
+                                                                                  "edit_permissions" "me_edit_permissions"
+                                                                                  }
+                                                                         }}
+                                         {:_additional (concat schema_pagination_raw schema_full_data_raw [{:column_name "filter_by", :data_type "str"}])}
+                                         ],
+                                   :raw-schema-name :media_entries-media_entry_user_permission-collection_media_entry_arcs-raw
+
+                                   :schemas [
+                                             {:media-entries.schema_query_media_entries {
+                                                                                         :alias "mar.media-entries/schema_query_media_entries"
+                                                                                         :key-types "optional"
+                                                                                         }}
+                                             ]
+                                   }
+                                  {
+                                   :raw [{:media_files {}}],
+                                   :raw-schema-name :media_files-raw
+
+                                   :schemas [
+                                             {:media-files.schema_export_media_file {
+                                                                                     :alias "mar.media-entries/schema_export_media_file"
+                                                                                     :types [
+                                                                                             {:media_type {:value-type TYPE_MAYBE}}
+                                                                                             {:width {:value-type TYPE_MAYBE}}
+                                                                                             {:height {:value-type TYPE_MAYBE}}
+                                                                                             {:meta_data {:value-type TYPE_MAYBE}}
+                                                                                             ]
+                                                                                     }}
+                                             ]
+                                   }
+
+                                  ])
+
+(def top-level-media_entries-schema {
+
+                                      :media-entries-schema-schema_publish_failed {:message {:is_publishable s/Bool
+                                                                                             :media_entry_id s/Uuid
+                                                                                             :has_meta_data [{s/Any s/Bool}]}}
+
+                                      :media-entries-schema-schema_query_media_entries_related_result {:media_entries [(get-schema :media-entries.schema_export_media_entry)]
+                                                                                                       :meta_data [[(get-schema :media-entries.schema_export_meta_data)]]
+                                                                                                       :media_files [(s/maybe (get-schema :media-files.schema_export_media_file))]
+                                                                                                       :previews [[(s/maybe (get-schema :media-entries.schema_export_preview))]]
+                                                                                                       (s/optional-key :col_arcs) [(get-schema :media-entries.schema_export_col_arc)]
+                                                                                                       (s/optional-key :col_meta_data) [(get-schema :media-entries.schema_export_meta_data)]}
+                                      })
+
+
+
+
+(def create-meta_keys-schema [{
+                               :raw [{:meta_keys {}}],
+                               :raw-schema-name :meta_keys-raw
+
+                               :schemas [
+                                         {:meta-keys.schema_create-meta-key {
+                                                                             ;; TODO: fix definition
+                                                                             :alias "mar.meta-keys/schema_create-meta-key"
+                                                                             :key-types "optional"
+                                                                             :types [
+                                                                                     {:id {:key-type TYPE_NOTHING}}
+                                                                                     {:is_extensible_list {:key-type TYPE_NOTHING}}
+                                                                                     {:meta_datum_object_type {:key-type TYPE_NOTHING}}
+                                                                                     {:is_enabled_for_media_entries {:key-type TYPE_NOTHING}}
+                                                                                     {:is_enabled_for_collections {:key-type TYPE_NOTHING}}
+                                                                                     {:vocabulary_id {:key-type TYPE_NOTHING}}
+
+                                                                                     {:allowed_rdf_class {:value-type TYPE_MAYBE}}
+                                                                                     {:labels {:value-type TYPE_MAYBE}}
+                                                                                     {:descriptions {:value-type TYPE_MAYBE}}
+                                                                                     {:hints {:value-type TYPE_MAYBE}}
+                                                                                     {:documentation_urls {:value-type TYPE_MAYBE}}
+                                                                                     {:admin_comment {:value-type TYPE_MAYBE}}
+                                                                                     ]
+                                                                             }}
+
+                                         {:meta-keys.schema_update-meta-key {
+                                                                             ;; TODO: fix definition
+                                                                             :alias "mar.meta-keys/schema_update-meta-key"
+                                                                             :key-types "optional"
+                                                                             :types [
+                                                                                     {:id {:key-type TYPE_NOTHING}}
+                                                                                     {:is_extensible_list {:key-type TYPE_NOTHING}}
+                                                                                     {:meta_datum_object_type {:key-type TYPE_NOTHING}}
+                                                                                     {:is_enabled_for_media_entries {:key-type TYPE_NOTHING}}
+                                                                                     {:is_enabled_for_collections {:key-type TYPE_NOTHING}}
+                                                                                     {:vocabulary_id {:key-type TYPE_NOTHING}}
+
+                                                                                     {:allowed_rdf_class {:value-type TYPE_MAYBE}}
+                                                                                     {:labels {:value-type TYPE_MAYBE}}
+                                                                                     {:descriptions {:value-type TYPE_MAYBE}}
+                                                                                     {:hints {:value-type TYPE_MAYBE}}
+                                                                                     {:documentation_urls {:value-type TYPE_MAYBE}}
+                                                                                     {:admin_comment {:value-type TYPE_MAYBE}}
+                                                                                     ]
+
+                                                                             :bl [:id :vocabulary_id :meta_datum_object_type]
+                                                                             }}
+                                         ]
+                               }
+                              {
+                               :raw [{:meta_keys {}}
+                                     {:_additional [{:column_name "scope", :data_type "any"}]}
+                                     ],
+                               :raw-schema-name :meta_keys-scope-raw
+
+                               :schemas [
+                                         {:meta-keys.schema_query-meta-key {
+                                                                            :alias "mar.meta-keys/schema_query-meta-key"
+                                                                            :key-types "optional"
+                                                                            :wl [:id :vocabulary_id :meta_datum_object_type :is_enabled_for_collections :is_enabled_for_media_entries :scope]
+                                                                            }}
+                                         ]
+                               }
+                              {
+                               :raw [
+                                     {:meta_keys {}}
+                                     {:vocabularies {:rename {
+                                                              "id" "id_2"
+                                                              "enabled_for_public_use" "enabled_for_public_use_2"
+                                                              "enabled_for_public_view" "enabled_for_public_view_2"
+                                                              "position" "position_2"
+                                                              "labels" "labels_2"
+                                                              "descriptions" "descriptions_2"
+                                                              "admin_comment" "admin_comment_2"
+                                                              }
+                                                     }}
+                                     {:_additional [{:column_name "io_mappings", :data_type "any"}]}
+
+                                     ],
+                               :raw-schema-name :meta_keys-vocabularies-raw
+
+                               :schemas [
+                                         {:meta-keys.schema_export-meta-key-usr {
+                                                                                 ;; TODO: fix definition
+                                                                                 :alias "mar.meta-keys/schema_export-meta-key-usr"
+                                                                                 :key-types "optional"
+                                                                                 :types [
+                                                                                         {:id {:key-type TYPE_NOTHING}}
+                                                                                         {:labels {:key-type TYPE_NOTHING}}
+                                                                                         {:descriptions {:key-type TYPE_NOTHING}}
+                                                                                         {:hints {:key-type TYPE_NOTHING}}
+                                                                                         {:documentation_urls {:key-type TYPE_NOTHING}}
+                                                                                         {:vocabulary_id {:key-type TYPE_NOTHING}}
+
+                                                                                         {:allowed_rdf_class {:value-type TYPE_MAYBE}}
+                                                                                         {:labels {:value-type TYPE_MAYBE}}
+                                                                                         {:descriptions {:value-type TYPE_MAYBE}}
+                                                                                         {:hints {:value-type TYPE_MAYBE}}
+                                                                                         {:documentation_urls {:value-type TYPE_MAYBE}}
+                                                                                         ]
+                                                                                 :bl [:admin_comment]
+                                                                                 }}
+
+                                         {:meta-keys.schema_export-meta-key-adm {
+                                                                                 ;; TODO: fix definition
+                                                                                 :alias "mar.meta-keys/schema_export-meta-key-adm"
+                                                                                 :key-types "optional"
+                                                                                 :types [
+                                                                                         {:id {:key-type TYPE_NOTHING}}
+                                                                                         {:labels {:key-type TYPE_NOTHING}}
+                                                                                         {:descriptions {:key-type TYPE_NOTHING}}
+                                                                                         {:hints {:key-type TYPE_NOTHING}}
+                                                                                         {:documentation_urls {:key-type TYPE_NOTHING}}
+                                                                                         {:vocabulary_id {:key-type TYPE_NOTHING}}
+
+                                                                                         {:admin_comment {:key-type TYPE_NOTHING :value-type TYPE_MAYBE}}
+
+                                                                                         {:allowed_rdf_class {:value-type TYPE_MAYBE}}
+                                                                                         {:labels {:value-type TYPE_MAYBE}}
+                                                                                         {:descriptions {:value-type TYPE_MAYBE}}
+                                                                                         {:hints {:value-type TYPE_MAYBE}}
+                                                                                         {:documentation_urls {:value-type TYPE_MAYBE}}
+                                                                                         {:admin_comment_2 {:value-type TYPE_MAYBE}}
+                                                                                         ]
+                                                                                 }}
+                                         ]
+                               }
+
+                              ])
+
+
+(def create-keywords-schema [{
+                              :raw [{:keywords {}}],
+                              :raw-schema-name :keywords-raw
+
+                              :schemas [
+                                        {:keywords.schema_create_keyword {
+                                                                          :alias "mar.keywords/schema_create_keyword"
+                                                                          :key-types "optional"
+                                                                          :types [
+                                                                                  {:meta_key_id {:key-type TYPE_NOTHING}}
+                                                                                  {:term {:key-type TYPE_NOTHING}}
+
+                                                                                  {:description {:value-type TYPE_MAYBE}}
+                                                                                  {:position {:value-type TYPE_MAYBE}}
+                                                                                  ]
+                                                                          :wl [:meta_key_id :term :description :position :external_uris :rdf_class]
+                                                                          }}
+
+                                        {:keywords.schema_update_keyword {
+                                                                          :alias "mar.keywords/schema_update_keyword"
+                                                                          :key-types "optional"
+
+                                                                          :types [
+                                                                                  {:description {:value-type TYPE_MAYBE}}
+                                                                                  ]
+
+                                                                          :wl [:term :description :position :external_uris :rdf_class]
+                                                                          }}
+
+                                        ]
+                              }
+                             {
+                              :raw [{:keywords {}}
+                                    {:_additional [{:column_name "external_uri", :data_type "str"}]}
+                                    ],
+                              :raw-schema-name :keywords-extended-raw
+
+                              :schemas [
+                                        {:keywords.schema_export_keyword_usr {
+                                                                              :alias "mar.keywords/schema_export_keyword_usr"
+                                                                              ;:key-types "optional"
+
+                                                                              :types [
+                                                                                      {:description {:value-type TYPE_MAYBE}}
+                                                                                      {:position {:value-type TYPE_MAYBE}}
+                                                                                      {:external_uri {:value-type TYPE_MAYBE}}
+                                                                                      ]
+
+                                                                              :bl [:created_at :updated_at :creator_id]
+                                                                              }}
+
+                                        {:keywords.schema_export_keyword_adm {
+                                                                              :alias "mar.keywords/schema_export_keyword_adm"
+                                                                              :types [
+                                                                                      {:description {:value-type TYPE_MAYBE}}
+                                                                                      {:position {:value-type TYPE_MAYBE}}
+                                                                                      {:external_uri {:value-type TYPE_MAYBE}}
+                                                                                      {:creator_id {:value-type TYPE_MAYBE}}
+                                                                                      ]
+                                                                              }}
+                                        ]
+                              } {
+                                 :raw [{:keywords {
+                                                   :wl [:id :meta_key_id :term :description :rdf_class]
+                                                   }}
+                                       {:_additional schema_pagination_raw}
+                                       ],
+                                 :raw-schema-name :keywords-raw
+
+                                 :schemas [
+                                           {:keywords.schema_query_keyword {
+                                                                            :alias "mar.keywords/schema_query_keyword"
+                                                                            :key-types "optional"
+                                                                            }}
+                                           ]
+                                 }
+
+                             ])
+
+
+(def create-permissions-schema [{
+                                 :raw [{:collection_user_permissions {}}],
+                                 :raw-schema-name :collection_user_permissions-raw
+
+                                 :schemas [
+                                           {:collection_user_permissions.schema_export-collection-user-permission {
+                                                                                                                   :alias "mar.permissions/schema_export-collection-user-permission"
+                                                                                                                   :types [
+                                                                                                                           {:updator_id {:value-type TYPE_MAYBE}}
+                                                                                                                           {:delegation_id {:value-type TYPE_MAYBE}}
+                                                                                                                           ]
+                                                                                                                   }}
+
+                                           {:collection_user_permissions.schema_create-collection-user-permission {
+                                                                                                                   :alias "mar.permissions/schema_create-collection-user-permission"
+                                                                                                                   :wl [:get_metadata_and_previews :edit_metadata_and_relations :edit_permissions]
+                                                                                                                   }}
+                                           ]
+                                 }
+                                {
+                                 :raw [{:collection_group_permissions {}}],
+                                 :raw-schema-name :collection_group_permissions-raw
+
+                                 :schemas [
+                                           {:collection_group_permissions.schema_export-collection-group-permission {
+                                                                                                                     :alias "mar.permissions/schema_export-collection-group-permission"
+                                                                                                                     :types [
+                                                                                                                             {:updator_id {:value-type TYPE_MAYBE}}
+                                                                                                                             ]
+                                                                                                                     }}
+
+                                           {:collection_group_permissions.schema_create-collection-group-permission {
+                                                                                                                     :alias "mar.permissions/schema_create-collection-group-permission"
+                                                                                                                     :wl [:get_metadata_and_previews :edit_metadata_and_relations]
+                                                                                                                     }}
+
+                                           ]
+                                 }
+                                {
+                                 :raw [{:media_entry_user_permissions {}}],
+                                 :raw-schema-name :media_entry_user_permissions-raw
+
+                                 :schemas [
+                                           {:collection_user_permissions.schema_export-media-entry-user-permission {
+                                                                                                                    :alias "mar.permissions/schema_export-media-entry-user-permission"
+                                                                                                                    :types [
+                                                                                                                            {:updator_id {:value-type TYPE_MAYBE}}
+                                                                                                                            {:delegation_id {:value-type TYPE_MAYBE}}
+                                                                                                                            ]
+                                                                                                                    }}
+
+                                           {:collection_user_permissions.schema_create-media-entry-user-permission {
+                                                                                                                    :alias "mar.permissions/schema_create-media-entry-user-permission"
+                                                                                                                    :wl [:get_metadata_and_previews :get_full_size :edit_metadata :edit_permissions]
+                                                                                                                    }}
+                                           ]
+                                 }
+                                {
+                                 :raw [{:media_entries {}}],
+                                 :raw-schema-name :media_entries-raw
+
+                                 :schemas [
+                                           {:media_entries.schema_export-media-entry-perms {
+                                                                                            :alias "mar.permissions/schema_export-media-entry-perms"
+                                                                                            :types [
+                                                                                                    {:id {:key-type TYPE_NOTHING}}
+                                                                                                    {:creator_id {:key-type TYPE_NOTHING}}
+                                                                                                    {:is_published {:key-type TYPE_NOTHING}}
+
+                                                                                                    {:responsible_user_id {:value-type TYPE_MAYBE}}
+                                                                                                    {:responsible_delegation_id {:value-type TYPE_MAYBE}}
+                                                                                                    ]
+                                                                                            :key-types "optional"
+                                                                                            :wl [:id :creator_id :is_published :get_metadata_and_previews :get_full_size :responsible_user_id :responsible_delegation_id]
+                                                                                            }}
+
+                                           {:media_entries.schema_update-media-entry-perms {
+                                                                                            :alias "mar.permissions/schema_update-media-entry-perms"
+                                                                                            :types [
+                                                                                                    {:responsible_user_id {:value-type TYPE_MAYBE}}
+                                                                                                    {:responsible_delegation_id {:value-type TYPE_MAYBE}}
+                                                                                                    ]
+                                                                                            :key-types "optional"
+                                                                                            :wl [:get_metadata_and_previews :get_full_size :responsible_user_id :responsible_delegation_id]
+                                                                                            }}
+
+                                           ]
+                                 }
+
+                                {
+                                 :raw [{:collections {}}],
+                                 :raw-schema-name :collections-perms-raw
+
+                                 :schemas [
+                                           {:collections-perms.schema_update-collection-perms {
+                                                                                               :alias "mar.permissions/schema_update-collection-perms"
+                                                                                               :types [
+                                                                                                       {:get_metadata_and_previews {:value-type TYPE_NOTHING}}
+                                                                                                       ]
+
+                                                                                               :key-types "optional"
+                                                                                               :value-types "maybe"
+                                                                                               :wl [:get_metadata_and_previews :responsible_user_id :clipboard_user_id :workflow_id :responsible_delegation_id]
+                                                                                               }}
+
+
+                                           {:collections-perms.schema_export-collection-perms {
+                                                                                               :alias "mar.permissions/schema_export-collection-perms"
+                                                                                               :types [
+                                                                                                       {:id {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
+                                                                                                       {:creator_id {:key-type TYPE_NOTHING :value-type TYPE_NOTHING}}
+                                                                                                       {:get_metadata_and_previews {:value-type TYPE_NOTHING}}
+                                                                                                       ]
+
+                                                                                               :key-types "optional"
+                                                                                               :value-types "maybe"
+
+
+                                                                                               :wl [:id :creator_id :get_metadata_and_previews :responsible_user_id :clipboard_user_id :workflow_id :responsible_delegation_id]
+                                                                                               }}
+                                           ]
+                                 }
+                                {
+                                 :raw [{:media_entry_group_permissions {}}],
+                                 :raw-schema-name :media_entry_group_permissions-raw
+
+                                 :schemas [
+                                           {:media_entry_group_permissions.schema_export-media-entry-group-permission {
+                                                                                                                       :alias "mar.permissions/schema_export-media-entry-group-permission"
+                                                                                                                       :types [
+                                                                                                                               {:updator_id {:value-type TYPE_MAYBE}}
+                                                                                                                               ]
+                                                                                                                       }}
+
+
+                                           {:media_entry_group_permissions.schema_create-media-entry-group-permission {
+                                                                                                                       :alias "mar.permissions/schema_create-media-entry-group-permission"
+                                                                                                                       :wl [:get_metadata_and_previews :get_full_size :edit_metadata]
+                                                                                                                       }}
+
+                                           ]
+                                 }
+
+                                ])
+
+
+
+(def top-level-permissions-schema {
+                                   :media_entry_user_permissions.schema_export_media-entry-permissions-all {:media_entry (get-schema :media_entries.schema_export-media-entry-perms)
+                                                                                                            :users [(get-schema :media_entry_user_permissions.schema_export-media-entry-user-permission)]
+                                                                                                            :groups [(get-schema :media_entry_group_permissions.schema_export-media-entry-group-permission)]}
+
+                                   :collection_permissions-all.schema_export-collection-permissions-all {:media-resource (get-schema :collections-perms.schema_export-collection-perms)
+                                                                                                         :users [(get-schema :collection_user_permissions.schema_export-collection-user-permission)]
+                                                                                                         :groups [(get-schema :collection_group_permissions.schema_export-collection-group-permission)]}
+                                  } )
+
+
+
+(def create-vocabularies-schema [{
+                                  :raw [{:vocabularies {}}],
+                                  :raw-schema-name :vocabularies-raw
+
+                                  :schemas [
+                                            {:vocabularies.schema_export-vocabulary {
+                                                                                     :alias "mar.vocabularies/schema_export-vocabulary"
+                                                                                     :types [
+                                                                                             {:labels {:value-type TYPE_MAYBE}}
+                                                                                             {:descriptions {:value-type TYPE_MAYBE}}
+                                                                                             {:admin_comment {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
+                                                                                             ]
+                                                                                     :bl [:enabled_for_public_view :enabled_for_public_use]
+                                                                                     }}
+
+                                            {:vocabularies.schema_export-vocabulary-admin {
+                                                                                           :alias "mar.vocabularies/schema_export-vocabulary-admin"
+                                                                                           :types [
+                                                                                                   {:labels {:value-type TYPE_MAYBE}}
+                                                                                                   {:descriptions {:value-type TYPE_MAYBE}}
+                                                                                                   {:admin_comment {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
+                                                                                                   ]
+                                                                                           }}
+
+                                            {:vocabularies.schema_import-vocabulary {
+                                                                                     :alias "mar.vocabularies/schema_import-vocabulary"
+                                                                                     :types [
+                                                                                             {:labels {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
+                                                                                             {:descriptions {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
+                                                                                             {:admin_comment {:key-type TYPE_OPTIONAL :value-type TYPE_MAYBE}}
+                                                                                             ]
+                                                                                     }}
+
+                                            {:vocabularies.schema_update-vocabulary {
+                                                                                     :alias "mar.vocabularies/schema_update-vocabulary"
+                                                                                     :key-types "optional"
+                                                                                     :value-types "maybe"
+                                                                                     :types [
+                                                                                             {:position {:value-type TYPE_NOTHING}}
+                                                                                             ]
+                                                                                     :bl [:id :enabled_for_public_view :enabled_for_public_use]
+                                                                                     }}
+
+                                            {:vocabularies.schema_perms-update {
+                                                                                :alias "mar.vocabularies/schema_perms-update"
+                                                                                :key-types "optional"
+                                                                                :wl [:enabled_for_public_view :enabled_for_public_use]
+                                                                                }}
+
+                                            {:vocabularies.schema_export-perms_all_vocabulary {
+                                                                                               :alias "mar.vocabularies/schema_export-perms_all"
+                                                                                               :wl [:id :enabled_for_public_view :enabled_for_public_use]
+                                                                                               }}
+                                            ]
+                                  }
+                                 {
+                                  :raw [{:vocabulary_group_permissions {}}],
+                                  :raw-schema-name :vocabulary_group_permissions-raw
+
+                                  :schemas [
+                                            {:vocabularies.schema_export-group-perms {:alias "mar.vocabularies/schema_export-group-perms"}}
+                                            ]
+                                  }
+                                 {
+                                  :raw [{:vocabulary_user_permissions {}}],
+                                  :raw-schema-name :vocabulary_user_permissions-raw
+
+                                  :schemas [
+                                            {:vocabularies.vocabulary_user_permissions {
+                                                                                        :alias "mar.vocabularies/vocabulary_user_permissions"
+                                                                                        }}
+
+                                            {:vocabularies.schema_perms-update-user-or-group {
+                                                                                              :alias "mar.vocabularies/schema_perms-update-user-or-group"
+                                                                                              :wl [:use :view]
+                                                                                              }}
+                                            ]
+                                  }
+
+                                 ])
+
 (def create-vocabularies-schema2 [
-        { :vocabularies.schema_export-perms_all {:vocabulary (get-schema :vocabularies.schema_export-perms_all_vocabulary)
-                                                             :users [(get-schema :vocabularies.vocabulary_user_permissions)]
-                                                             :groups [(get-schema :vocabularies.schema_export-group-perms)]}
-         }
-        ])
+                                  {:vocabularies.schema_export-perms_all {:vocabulary (get-schema :vocabularies.schema_export-perms_all_vocabulary)
+                                                                          :users [(get-schema :vocabularies.vocabulary_user_permissions)]
+                                                                          :groups [(get-schema :vocabularies.schema_export-group-perms)]}
+                                   }
+                                  ])
