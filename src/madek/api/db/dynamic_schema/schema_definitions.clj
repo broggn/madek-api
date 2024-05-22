@@ -4,7 +4,6 @@
    [madek.api.db.dynamic_schema.statics :refer [TYPE_EITHER TYPE_MAYBE TYPE_NOTHING TYPE_OPTIONAL]]
    [madek.api.utils.validation :refer [vector-or-hashmap-validation]]
    [schema.core :as s]
-
    ))
 
 (def type-mapping {"varchar" s/Str
