@@ -21,12 +21,6 @@
                    "any" s/Any
                    })
 
-(def raw-type-mapping {
-                       ;:delegations.test "enum::test"
-                       ;:groups.id "enum::what-the-fuck"
-                       :groups.type "enum::groups.type"
-                       })
-
 (def schema_full_data_raw [{:column_name "full_data", :data_type "boolean"}])
 
 (def schema_pagination_raw [{:column_name "page", :data_type "int4"}

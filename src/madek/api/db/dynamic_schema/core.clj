@@ -1,76 +1,18 @@
 (ns madek.api.db.dynamic_schema.core
   (:require
-   ;; all needed imports
-   ;[leihs.core.db :as db]
-
    [clojure.string :as str]
    [honey.sql :refer [format] :rename {format sql-format}]
-
    [honey.sql.helpers :as sql]
-
-
    [madek.api.db.core :refer [get-ds]]
-
    [madek.api.db.dynamic_schema.common :refer [get-enum get-schema set-enum set-schema]]
-
-   [madek.api.db.dynamic_schema.schema_definitions :refer [raw-type-mapping type-mapping type-mapping-enums]]
+   [madek.api.db.dynamic_schema.schema_definitions :refer [type-mapping type-mapping-enums]]
    [madek.api.db.dynamic_schema.statics :refer [TYPE_EITHER TYPE_MAYBE TYPE_NOTHING TYPE_OPTIONAL TYPE_REQUIRED]]
-
-   ;[madek.api.utils.helper :refer [merge-query-parts to-uuids]]
-
-   ; [taoensso.timbre :as timbre]
-   ; [clojure.core.cache :as cache]
    [next.jdbc :as jdbc]
-
    [schema.core :as s]
-   [schema.core :as s]
-   [taoensso.timbre :refer [spy]]
-
-
-   ; [taoensso.timbre :as timbre]
-   ; [clojure.core.cache :as cache]
    [taoensso.timbre :refer [spy]])
   )
 
-(defn pr [key fnc]
-  (println ">oo> HELPER / " key "=" fnc)
-  fnc
-  )
-
-
-
-
-
-
-
-
-;(def TYPE_NOTHING "nothing")
-;(def TYPE_REQUIRED "required")
-;(def TYPE_OPTIONAL "optional")
-;(def TYPE_MAYBE "maybe")
-;(def TYPE_EITHER "either")
-
-
 (require '[schema.core :as schema])
-
-;;;; db-operations
-
-;;;; cache access helpers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;(def enum-cache (atom {}))
-;(defn get-enum [key & [default]]
-;
-;  (let [
-;        val (get @enum-cache key default)
-;        p (println ">o> key=" key)
-;        p (println ">o> val=" val)
-;        p (println ">o> default=" default)
-;
-;        ] val)
-;
-;  ;(println ">oo> get-enum.key=" key)
-;  ;(pr key (get @enum-cache key default))
-;  )
-
 
 (defn fetch-enum [enum-name]
   (println ">o> fetch-enum by DB!!!!!!!!")
@@ -90,26 +32,11 @@
 (defn convert-to-enum-spec
   "Creates a Spec enum definition from a sequence of maps with namespaced keys."
   [enum-data]
-
-  (println ">o> enum-data=" enum-data)
-
   (apply s/enum (mapv #(:enumlabel %) enum-data)))
-;(apply s/enum (mapv #(:pg_enum/enumlabel %) enum-data)))
-
 
 (defn create-enum-spec [table-name]
-  (let [
-        res (fetch-enum table-name)
-        p (println ">o> 1ares=" res)
-        res (convert-to-enum-spec res)
-        p (println ">o> 2ares=" res)
-
-        ] res))
-
-
-;(defn set-enum [key value]
-;  (println ">oo> set-enum.key=" key)
-;  (swap! enum-cache assoc key value))
+  (let [enum (fetch-enum table-name)]
+    (convert-to-enum-spec enum)))
 
 
 (defn init-enums-by-db []
@@ -121,12 +48,8 @@
 
         ;;;; TODO: revise db-ddl to use enum
         _ (set-enum :groups.type (s/enum "AuthenticationGroup" "InstitutionalGroup" "Group"))
-        ;
         ])
   )
-
-
-
 
 (defn fetch-table-metadata [table-name]
   (println ">o> fetch-table-metadata by DB!!!!!!!!" table-name)
@@ -143,58 +66,12 @@
            (println ">o> ERROR: fetch-table-metadata" (.getMessage e))
            (throw (Exception. "Unable to establish a database connection"))))))
 
-
-
-
-
-
 (defn transform-column [row table-name enum-map]
-  (let [
-        mkey (keyword (str table-name "." (row :column_name)))
-        new-data-type (get enum-map mkey)
-
-        ;p (println ">o> mkey=" mkey)
-        ;p (println ">o> new-data-type=" new-data-type)
-        ]
+  (let [mkey (keyword (str table-name "." (row :column_name)))
+        new-data-type (get enum-map mkey)]
     (if new-data-type
       (assoc row :data_type new-data-type)
       row)))
-
-(defn transform-schema [data table-name enum-map]
-  (map #(transform-column % table-name enum-map) data))
-
-
-
-
-
-;; TODO: remove this
-(defn process-raw-type-mapping [table-name metadata]
-
-  (let [
-
-        ;raw-type-mapping {
-        ;                  ;:delegations.test "enum::test"
-        ;                  ;:groups.id "enum::what-the-fuck"
-        ;                  :groups.type "enum::groups.type"
-        ;
-        ;                  }
-
-        res metadata
-
-        p (println ">o> !!!!!!1 res=" res)
-
-        ;; FYI: modify raw-type if raw-type-mapping-mapping is found
-        res (transform-schema metadata table-name raw-type-mapping)
-
-        p (println ">o> !!!!!!2 res=" res)
-
-        ;p (System/exit 0)
-
-        ]
-
-    res
-    )
-  )
 
 (defn remove-maps-by-entry-values
   "Removes maps from a list where the specified entry key matches any of the values in the provided list."
@@ -205,20 +82,14 @@
 
   ;; TODO: fix this to handle [:foo :bar]
   ([maps entry-key target-values]
-
    (if (empty? target-values)
      maps
-     ; else
-     (remove #(some #{(entry-key %)} target-values) maps)))
-
-  )
+     (remove #(some #{(entry-key %)} target-values) maps))))
 
 
 
 (defn keep-maps-by-entry-values
   "Keeps only maps from a list where the specified entry key matches any of the values in the provided list."
-
-
   ([maps target-values]
    (keep-maps-by-entry-values maps :column_name target-values)
    )
@@ -229,22 +100,7 @@
    (if (empty? target-values)
      maps
      ; else
-     (filter #(some #{(entry-key %)} target-values) maps)))
-
-  )
-
-
-
-
-
-
-
-
-
-
-
-
-
+     (filter #(some #{(entry-key %)} target-values) maps))))
 
 
 (defn fetch-column-names
@@ -264,7 +120,6 @@
 
 
 (defn fetch-table-meta-raw
-
   ([table-name]
    (fetch-table-meta-raw table-name [])
    )
@@ -272,130 +127,40 @@
   ([table-name update-data]
    (let [
          res (fetch-table-metadata table-name)
-         p (println ">o> 1res=" res)
-
-
-         res (concat res update-data)
-
-         ;res (type-mapping table-name res)
-         ;res (process-raw-type-mapping table-name res)
-
-         ;res (map normalize-map res)
-         ;p (println ">o> 2res=" res)
-
-
-         ;res (replace-elem res update-data :column_name)    ;;??
-
-         ] res))
-  )
-
-
-
-
-
-
+         res (concat res update-data)]
+     res)))
 
 (defn postgres-cfg-to-schema [table-name metadata]
-
-  (println ">oo> postgres-cfg-to-schema --------------------------------")
-  (println ">oo> postgres-cfg-to-schema.table-name=" table-name)
-  (println ">oo> postgres-cfg-to-schema.metadata=" metadata)
-  ;(println ">oo> postgres-cfg-to-schema.metadata.keys=" (keys metadata))
-
   (into {}
     (map (fn [{:keys [column_name data_type key-type value-type]}]
            (println ">o> postgres-cfg-to-schema =>" table-name column_name data_type key-type value-type)
 
-           (let [
-
-                 ;key-type TYPE_OPTIONAL
-                 ;value-type TYPE_MAYBE
-
-                 p (println ">o> key-type" key-type)
-                 p (println ">o> key-type?" (= key-type TYPE_OPTIONAL))
-
-                 keySection (cond (= key-type TYPE_REQUIRED)
-                                  (s/required-key (keyword column_name))
-                                  ;(do
-                                  ;                             p (println ">o> require")
-                                  ;
-                                  ;                             (s/required-key (keyword column_name)))
-
+           (let [keySection (cond (= key-type TYPE_REQUIRED) (s/required-key (keyword column_name))
                                   (= key-type TYPE_OPTIONAL) (s/optional-key (keyword column_name))
-                                  ;(= key-type TYPE_MAYBE) (s/maybe (s/optional-key (keyword column_name)))
-                                  ;:else (error ">o> ERROR: key-type not supported")
-                                  :else (do
-                                          p (println ">o> nix")
-                                          (keyword column_name))
-                                  )
+                                  :else (keyword column_name))
 
-                 ;; FYI: <table>.<column> eg.: "groups.type"
+                 ;; FYI, expected: <table>.<column> eg.: "groups.type"
                  type-mapping-key (str (name table-name) "." column_name)
-
                  type-mapping-enums-res (type-mapping-enums type-mapping-key get-enum)
-                 type-mapping-res (type-mapping data_type)  ;raw-mapping
-
-                 p (println ">>o> !!! [set-schema] =>> key=" type-mapping-key ", type=" data_type ", type: >" type-mapping-res "<")
-
-
-                 p (println ">o> abc?????????" type-mapping-key)
-
-                 ;_ (if (= type-mapping-key :groups.type)
-                 ;     (do
-                 p (println ">o> groups.type")
-                 p (println ">o> groups.type =>> type-mapping-res=" type-mapping-res "(" data_type ")")
-                 p (println ">o> groups.type =>> type-mapping-enums-res=" type-mapping-enums-res)
-                 ;(throw (Exception. "groups.type INFO????????????")
-                 ;)
-                 ;))
-
-                 ;p (println ">o> final-result =>> type-mapping-key=" type-mapping-key)
-
+                 type-mapping-res (type-mapping data_type)
 
                  valueSection (cond
-                                (str/starts-with? data_type "enum::") (get-enum (keyword (str/replace data_type #"enum::" "")))
-
-                                ;(= value-type TYPE_MAYBE) (s/maybe data_type)
-                                ;:else valueSection
-
-
+                                ;(str/starts-with? data_type "enum::") (get-enum (keyword (str/replace data_type #"enum::" "")))
                                 (not (nil? type-mapping-enums-res)) (if (= value-type TYPE_MAYBE)
                                                                       (s/maybe type-mapping-enums-res)
                                                                       type-mapping-enums-res)
-
-
                                 (not (nil? type-mapping-res)) (if (= value-type TYPE_MAYBE)
-                                                                ;(s/maybe (type-mapping data_type))
-                                                                ;(type-mapping data_type)
-
                                                                 (s/maybe type-mapping-res)
-                                                                type-mapping-res
-                                                                )
-
-
-
-
-
-
-
-                                ;(= value-type TYPE_MAYBE) (s/maybe (type-mapping data_type))
-                                ;:else (type-mapping data_type)
-
+                                                                type-mapping-res)
                                 (= value-type TYPE_MAYBE) (s/maybe s/Any)
-                                :else s/Any
-                                )
+                                :else s/Any)
 
 
                  p (println ">o> [postgres-cfg-to-schema] table= " table-name ", final-result =>> " {keySection valueSection})
                  p (println ">oo>  --------------------------------")
 
-
-                 ;_ (System/exit 0)
-
                  ]
-             {keySection valueSection}
-             ;nil
-             ))
+             {keySection valueSection}             ))
 
       metadata)))
 
