@@ -5,7 +5,7 @@
    [madek.api.resources.meta-keys.index :as mkindex]
    [madek.api.resources.meta-keys.meta-key :as mk]
 
-[madek.api.db.dynamic_schema.core :refer [get-schema]]
+[madek.api.db.dynamic_schema.common :refer [get-schema]]
 
 
    [madek.api.resources.shared :as sd]

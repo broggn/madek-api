@@ -5,7 +5,7 @@
    [logbug.catcher :as catcher]
    [madek.api.resources.shared :as sd]
 
-[madek.api.db.dynamic_schema.core :refer [get-schema]]
+[madek.api.db.dynamic_schema.common :refer [get-schema]]
 
 
 

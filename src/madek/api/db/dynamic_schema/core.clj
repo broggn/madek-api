@@ -11,7 +11,7 @@
 
    [madek.api.db.core :refer [get-ds]]
 
-   ;[madek.api.db.dynamic_schema.schema_cache :refer [get-enum set-enum]]
+   [madek.api.db.dynamic_schema.common :refer [get-enum set-enum set-schema get-schema]]
 
    [madek.api.db.dynamic_schema.schema_definitions :refer [raw-type-mapping type-mapping type-mapping-enums]]
    [madek.api.db.dynamic_schema.statics :refer [TYPE_EITHER TYPE_MAYBE TYPE_NOTHING TYPE_OPTIONAL TYPE_REQUIRED]]
@@ -39,7 +39,6 @@
 
 
 
-(def schema-cache (atom {}))
 
 
 
@@ -57,33 +56,25 @@
 ;;;; db-operations
 
 ;;;; cache access helpers ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(def enum-cache (atom {}))
-(defn get-enum [key & [default]]
-
-  (let [
-        val (get @enum-cache key default)
-        p (println ">o> key=" key)
-        p (println ">o> val=" val)
-        p (println ">o> default=" default)
-
-        ] val)
-
-  ;(println ">oo> get-enum.key=" key)
-  ;(pr key (get @enum-cache key default))
-  )
+;(def enum-cache (atom {}))
+;(defn get-enum [key & [default]]
+;
+;  (let [
+;        val (get @enum-cache key default)
+;        p (println ">o> key=" key)
+;        p (println ">o> val=" val)
+;        p (println ">o> default=" default)
+;
+;        ] val)
+;
+;  ;(println ">oo> get-enum.key=" key)
+;  ;(pr key (get @enum-cache key default))
+;  )
 
 
 (defn fetch-enum [enum-name]
   (println ">o> fetch-enum by DB!!!!!!!!")
-  (let [ds (get-ds)
-
-        ;;; TODO: FIXME: use get-ds
-        ;ds {:dbtype "postgresql"
-        ;              :dbname "madek_test"
-        ;              :user "madek_sql"
-        ;              :port 5415
-        ;              :password "madek_sql"}
-        ]
+  (let [ds (get-ds)]
     (try (jdbc/execute! ds
            (-> (sql/select :enumlabel)
                (sql/from :pg_enum)
@@ -116,9 +107,9 @@
         ] res))
 
 
-(defn set-enum [key value]
-  (println ">oo> set-enum.key=" key)
-  (swap! enum-cache assoc key value))
+;(defn set-enum [key value]
+;  (println ">oo> set-enum.key=" key)
+;  (swap! enum-cache assoc key value))
 
 
 (defn init-enums-by-db []
@@ -495,16 +486,16 @@
 
 
 
-(defn set-schema [key value]
-  (let [
-        ;; TODO: quiet helpful for debugging
-        p (println ">o> !!! [set-schema] (" key ") ->" value)
-
-        value (into {} value)
-
-        res (swap! schema-cache assoc key value)
-        ] res)
-  )
+;(defn set-schema [key value]
+;  (let [
+;        ;; TODO: quiet helpful for debugging
+;        p (println ">o> !!! [set-schema] (" key ") ->" value)
+;
+;        value (into {} value)
+;
+;        res (swap! schema-cache assoc key value)
+;        ] res)
+;  )
 
 
 
@@ -866,32 +857,32 @@
 ;  (swap! enum-cache assoc key value))
 
 
-(defn get-schema [key & [default]]
-  (let [
-        val (get @schema-cache key default)
-        ;val2 (get @schema-cache (name key) default)
-        ;p (println ">o>s get-schema.key=" key)
-        ;p (println ">o>s get-schema.val=" val)
-        ;p (println ">o>s val2=" val2)
-
-        ;_ (if (nil? val) (System/exit 0 ))
-        val (if (nil? val)
-              (do
-                ;(println ">o> CAUTION !!!!! no-schema-found!!!" key)
-                s/Any)
-              ;(s/Any)
-              ;s/Any
-
-              ;val)
-              (into {} val)
-              )
-
-
-
-        p (println ">o> [get-schema] " key "=" val)
-
-        ] val)
-  )
+;(defn get-schema [key & [default]]
+;  (let [
+;        val (get @schema-cache key default)
+;        ;val2 (get @schema-cache (name key) default)
+;        ;p (println ">o>s get-schema.key=" key)
+;        ;p (println ">o>s get-schema.val=" val)
+;        ;p (println ">o>s val2=" val2)
+;
+;        ;_ (if (nil? val) (System/exit 0 ))
+;        val (if (nil? val)
+;              (do
+;                ;(println ">o> CAUTION !!!!! no-schema-found!!!" key)
+;                s/Any)
+;              ;(s/Any)
+;              ;s/Any
+;
+;              ;val)
+;              (into {} val)
+;              )
+;
+;
+;
+;        p (println ">o> [get-schema] " key "=" val)
+;
+;        ] val)
+;  )
 
 
 
@@ -1006,7 +997,11 @@
 
   )
 
-
+;(defn create-vocabularies-schema2 []
+;  (doseq [c create-vocabularies-schema2]
+;    (let [key (:key c)
+;          value (:value c)]
+;      (set-schema key value))))
 
 
 (defn create-dynamic-schema [cfg-array]

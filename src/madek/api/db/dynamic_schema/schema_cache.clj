@@ -10,6 +10,9 @@
 
    [madek.api.db.dynamic_schema.schema_definitions :as d]
 
+   [madek.api.db.dynamic_schema.common :refer [get-enum set-enum set-schema get-schema]]
+
+
    ;[madek.api.utils.helper :refer [merge-query-parts to-uuids]]))
    ;(def type-mapping {"varchar" s/Str
    ;                   "int4" s/Int
@@ -306,25 +309,37 @@
         _ (create-dynamic-schema d/create-custom-urls-schema)
         _ (create-dynamic-schema d/create-delegation-schema)
 
-        ;_ (create-dynamic-schema d/create-edit_session-schema)
-        ;_ (create-dynamic-schema d/create-vocabularies-schema)
-        ;_ (create-dynamic-schema d/create-usage_terms-schema)
-        ;_ (create-dynamic-schema d/create-static_pages-schema)
-        ;_ (create-dynamic-schema d/create-roles-schema)
-        ;_ (create-dynamic-schema d/create-previews-schema)
+        _ (create-dynamic-schema d/create-edit_session-schema)
+
+        _ (create-dynamic-schema d/create-vocabularies-schema)
+        ;_ (create-vocabularies-schema2)
+        _  (doseq [c d/create-vocabularies-schema2]
+             (let [key (:key c)
+                   value (:value c)]
+               (set-schema key value)))
+
+
+
+        _ (create-dynamic-schema d/create-usage_terms-schema)
+        _ (create-dynamic-schema d/create-static_pages-schema)
+        _ (create-dynamic-schema d/create-roles-schema)
+        _ (create-dynamic-schema d/create-previews-schema)
         ;_ (create-dynamic-schema d/create-permissions-schema)
         ;
         ;_ (create-dynamic-schema d/create-people-schema)
         ;_ (create-dynamic-schema d/create-keywords-schema)
         ;_ (create-dynamic-schema d/create-meta_keys-schema)
         ;_ (create-dynamic-schema d/create-media_entries-schema)
-        ;
-        ;_ (create-dynamic-schema d/create-delegations_users-schema)
+
+        _ (create-dynamic-schema d/create-delegations_users-schema)
         ;_ (create-dynamic-schema d/create-io_interfaces-schema)
         ;_ (create-dynamic-schema d/create-media-files-schema)
         ;_ (create-dynamic-schema d/create-meta-data-schema)
         ;_ (create-dynamic-schema d/create-meta-data-role-schema)
         ;_ (create-dynamic-schema d/create-favorite-media-entries-schema)
+
+
+
         ]))
 
 

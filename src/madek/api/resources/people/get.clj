@@ -4,7 +4,7 @@
    [madek.api.resources.people.common :refer [person-query]]
    [madek.api.resources.shared :as sd]
 
-[madek.api.db.dynamic_schema.core :refer [get-schema]]
+[madek.api.db.dynamic_schema.common :refer [get-schema]]
 
    [madek.api.utils.helper :refer [t]]
    [next.jdbc :as jdbc]

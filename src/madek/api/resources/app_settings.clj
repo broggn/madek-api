@@ -6,7 +6,7 @@
    [madek.api.resources.shared :as sd]
 
 
-[madek.api.db.dynamic_schema.core :refer [get-schema]]
+[madek.api.db.dynamic_schema.common :refer [get-schema]]
 
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
    [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist t]]

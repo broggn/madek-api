@@ -4,7 +4,7 @@
    [madek.api.resources.shared :as sd]
    [madek.api.utils.helper :refer [t]]
 
-[madek.api.db.dynamic_schema.core :refer [get-schema]]
+[madek.api.db.dynamic_schema.common :refer [get-schema]]
 
 
    [madek.api.utils.validation :refer [positive-number-0-to-100-validation positive-number-1-to-1000-validation]]
