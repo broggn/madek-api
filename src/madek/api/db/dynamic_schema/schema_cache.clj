@@ -302,10 +302,10 @@
         _ (create-dynamic-schema d/create-app-settings-schema)
         _ (create-dynamic-schema d/create-confidential-links-schema)
         _ (create-dynamic-schema d/create-context-keys-schema)
-        ;_ (create-dynamic-schema d/create-context-schema)
-        ;_ (create-dynamic-schema d/create-custom-urls-schema)
-        ;_ (create-dynamic-schema d/create-delegation-schema)
-        ;
+        _ (create-dynamic-schema d/create-context-schema)
+        _ (create-dynamic-schema d/create-custom-urls-schema)
+        _ (create-dynamic-schema d/create-delegation-schema)
+
         ;_ (create-dynamic-schema d/create-edit_session-schema)
         ;_ (create-dynamic-schema d/create-vocabularies-schema)
         ;_ (create-dynamic-schema d/create-usage_terms-schema)

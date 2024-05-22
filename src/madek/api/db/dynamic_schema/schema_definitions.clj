@@ -1,18 +1,9 @@
 (ns madek.api.db.dynamic_schema.schema_definitions
   (:require
-   ;[madek.api.db.dynamic_schema.core :refer [create-dynamic-schema get-enum]]
    [madek.api.db.dynamic_schema.statics :refer [TYPE_MAYBE TYPE_NOTHING TYPE_OPTIONAL]]
-
    [madek.api.utils.validation :refer [vector-or-hashmap-validation]]
-
    [schema.core :as s]
-
-   )
-  ;(:declare get-enum)
-  )
-
-
-
+   ))
 
 (def type-mapping {"varchar" s/Str
                    "int4" s/Int
@@ -26,18 +17,13 @@
                    ;; helper
                    "str" s/Str
                    "any" s/Any
-                   }
-  )
-
+                   })
 
 (def raw-type-mapping {
                        ;:delegations.test "enum::test"
                        ;:groups.id "enum::what-the-fuck"
                        :groups.type "enum::groups.type"
-
                        })
-
-
 
 (def schema_full_data_raw [{:column_name "full_data", :data_type "boolean"}])
 
@@ -616,127 +602,114 @@
                                   }])
 
 
-;(defn create-context-schema []
-;  (let [
-;        data {
-;              :raw [{:contexts {}}],
-;              :raw-schema-name :contexts-raw
-;
-;              :schemas [
-;                        {:contexts.schema_import_contexts {
-;                                                           :alias "mar.contexts/schema_import_contexts"
-;                                                           :cache-as [:contexts.schema_export_contexts_adm]
-;                                                           :value-types "maybe"
-;                                                           :types [
-;                                                                   {:id {:value-type TYPE_NOTHING}}
-;                                                                   ]
-;                                                           }}
-;
-;                        {:contexts.schema_update_contexts {
-;                                                           :alias "mar.contexts/schema_update_contexts"
-;                                                           :value-types "maybe"
-;                                                           :key-types "optional"
-;                                                           :types [
-;                                                                   {:id {:value-type TYPE_NOTHING}}
-;                                                                   ]
-;                                                           }}
-;                        {:contexts.schema_export_contexts_usr {
-;                                                               :alias "mar.contexts/schema_export_contexts_usr"
-;                                                               :bl [:admin_comment]
-;                                                               :types [
-;                                                                       {:labels {:value-type TYPE_MAYBE}}
-;                                                                       {:descriptions {:value-type TYPE_MAYBE}}
-;                                                                       ]
-;                                                               }}
-;                        ]
-;
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;        ]))
-;
-;(defn create-custom-urls-schema []
-;  (let [
-;        data {
-;              :raw [{:custom_urls {}}],
-;              :raw-schema-name :custom_urls-raw
-;
-;              :schemas [
-;                        {:custom_urls.schema_export_custom_url {
-;                                                                :alias "mar.custom_urls/schema_export_custom_url"
-;                                                                :types [
-;                                                                        {:media_entry_id {:value-type TYPE_MAYBE}}
-;                                                                        {:collection_id {:value-type TYPE_MAYBE}}
-;                                                                        ]
-;                                                                }}
-;                        {:custom_urls.schema_update_custom_url {
-;                                                                :alias "mar.custom_urls/schema_update_custom_url"
-;                                                                :key-types "optional"
-;                                                                :wl [:id :is_primary]
-;                                                                }}
-;                        {:custom_urls.schema_create_custom_url {
-;                                                                :alias "mar.custom_urls/schema_create_custom_url"
-;                                                                :wl [:id :is_primary]
-;                                                                }}
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;        ]))
-;
-;
-;(defn create-delegation-schema []
-;  (let [
-;        data {
-;              :raw [{:delegations {}}],
-;              :raw-schema-name :delegations-raw
-;
-;              :schemas [
-;                        {:delegations.schema_export_delegations {
-;                                                                 :alias "mar.delegations/schema_export_delegations"
-;                                                                 :types [
-;                                                                         {:admin_comment {:value-type TYPE_MAYBE}}
-;                                                                         ]
-;                                                                 }}
-;
-;
-;                        {:delegations.schema_get_delegations {
-;                                                              :alias "mar.delegations/schema_get_delegations"
-;                                                              :key-types "optional"
-;                                                              :types [
-;                                                                      {:admin_comment {:value-type TYPE_MAYBE}}
-;                                                                      {:id {:key-type TYPE_NOTHING}}
-;                                                                      ]
-;                                                              }}
-;
-;                        {:delegations.schema_update_delegations {
-;                                                                 :alias "mar.delegations/schema_update_delegations"
-;                                                                 :key-types "optional"
-;                                                                 :types [
-;                                                                         {:admin_comment {:value-type TYPE_MAYBE}}
-;                                                                         ]
-;                                                                 :bl [:id]
-;                                                                 }}
-;
-;
-;                        {:delegations.schema_import_delegations {
-;                                                                 :alias "mar.delegations/schema_import_delegations"
-;                                                                 :types [
-;                                                                         {:admin_comment {:value-type TYPE_MAYBE}}
-;                                                                         ]
-;                                                                 :bl [:id]
-;                                                                 }}
-;
-;                        ]
-;              }
-;
-;        res (create-raw-schema data)
-;        res2 (create-schemas-by-config data)
-;
-;        ]))
-;
+(def create-context-schema [ {
+              :raw [{:contexts {}}],
+              :raw-schema-name :contexts-raw
+
+              :schemas [
+                        {:contexts.schema_import_contexts {
+                                                           :alias "mar.contexts/schema_import_contexts"
+                                                           :cache-as [:contexts.schema_export_contexts_adm]
+                                                           :value-types "maybe"
+                                                           :types [
+                                                                   {:id {:value-type TYPE_NOTHING}}
+                                                                   ]
+                                                           }}
+
+                        {:contexts.schema_update_contexts {
+                                                           :alias "mar.contexts/schema_update_contexts"
+                                                           :value-types "maybe"
+                                                           :key-types "optional"
+                                                           :types [
+                                                                   {:id {:value-type TYPE_NOTHING}}
+                                                                   ]
+                                                           }}
+                        {:contexts.schema_export_contexts_usr {
+                                                               :alias "mar.contexts/schema_export_contexts_usr"
+                                                               :bl [:admin_comment]
+                                                               :types [
+                                                                       {:labels {:value-type TYPE_MAYBE}}
+                                                                       {:descriptions {:value-type TYPE_MAYBE}}
+                                                                       ]
+                                                               }}
+                        ]
+
+              }
+
+        ])
+
+(def create-custom-urls-schema [ {
+              :raw [{:custom_urls {}}],
+              :raw-schema-name :custom_urls-raw
+
+              :schemas [
+                        {:custom_urls.schema_export_custom_url {
+                                                                :alias "mar.custom_urls/schema_export_custom_url"
+                                                                :types [
+                                                                        {:media_entry_id {:value-type TYPE_MAYBE}}
+                                                                        {:collection_id {:value-type TYPE_MAYBE}}
+                                                                        ]
+                                                                }}
+                        {:custom_urls.schema_update_custom_url {
+                                                                :alias "mar.custom_urls/schema_update_custom_url"
+                                                                :key-types "optional"
+                                                                :wl [:id :is_primary]
+                                                                }}
+                        {:custom_urls.schema_create_custom_url {
+                                                                :alias "mar.custom_urls/schema_create_custom_url"
+                                                                :wl [:id :is_primary]
+                                                                }}
+                        ]
+              }
+
+
+        ])
+
+
+(def create-delegation-schema [ {
+              :raw [{:delegations {}}],
+              :raw-schema-name :delegations-raw
+
+              :schemas [
+                        {:delegations.schema_export_delegations {
+                                                                 :alias "mar.delegations/schema_export_delegations"
+                                                                 :types [
+                                                                         {:admin_comment {:value-type TYPE_MAYBE}}
+                                                                         ]
+                                                                 }}
+
+
+                        {:delegations.schema_get_delegations {
+                                                              :alias "mar.delegations/schema_get_delegations"
+                                                              :key-types "optional"
+                                                              :types [
+                                                                      {:admin_comment {:value-type TYPE_MAYBE}}
+                                                                      {:id {:key-type TYPE_NOTHING}}
+                                                                      ]
+                                                              }}
+
+                        {:delegations.schema_update_delegations {
+                                                                 :alias "mar.delegations/schema_update_delegations"
+                                                                 :key-types "optional"
+                                                                 :types [
+                                                                         {:admin_comment {:value-type TYPE_MAYBE}}
+                                                                         ]
+                                                                 :bl [:id]
+                                                                 }}
+
+
+                        {:delegations.schema_import_delegations {
+                                                                 :alias "mar.delegations/schema_import_delegations"
+                                                                 :types [
+                                                                         {:admin_comment {:value-type TYPE_MAYBE}}
+                                                                         ]
+                                                                 :bl [:id]
+                                                                 }}
+
+                        ]
+              }
+        ])
+
 ;(defn create-edit_session-schema []
 ;  (let [
 ;        data {
