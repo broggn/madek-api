@@ -3,7 +3,13 @@
    [madek.api.db.dynamic_schema.common :refer [set-schema]]
    [madek.api.db.dynamic_schema.core :refer [create-dynamic-schema
                                              init-enums-by-db]]
-   [madek.api.db.dynamic_schema.schema_definitions :as d]))
+
+   [madek.api.db.dynamic_schema.common :refer [get-validation-cache]]
+   [madek.api.db.dynamic_schema.schema_definitions :as d]
+
+   [taoensso.timbre :refer [debug info warn error errorf]]
+
+  ))
 
 (defn set-schema-by-map [schema-map]
   (map (fn [[k v]]
@@ -52,7 +58,17 @@
         _ (create-dynamic-schema d/create-media-files-schema)
         _ (create-dynamic-schema d/create-meta-data-schema)
         _ (create-dynamic-schema d/create-meta-data-role-schema)
-        _ (create-dynamic-schema d/create-favorite-media-entries-schema)]))
+        _ (create-dynamic-schema d/create-favorite-media-entries-schema)
+
+        _ (let [
+                errors (get-validation-cache)
+                _ (if (empty? errors)
+                    (info "[init-schema-by-db] Schema-Validation is OK, no differences between db and generated schema-definitions recognized.")
+                    (error "[init-schema-by-db] Schema-Validation failed:" errors)
+                    )
+                ])
+
+        ]))
 
 ;;; Example to save/fetch schema-configuration ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

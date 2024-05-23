@@ -110,11 +110,21 @@
         res (get enum-map key nil)]
     res))
 
-(def create-groups-schema [{:raw [{:groups {}}
+(def create-groups-schema [{:raw [{:groups
+
+                                   {}
+
+                                   ;{:bl ["test-id" "abc"]} ;; test-case
+
+                                   },
                                   {:_additional (concat schema_pagination_raw schema_full_data_raw)}]
                             :raw-schema-name :groups-schema-with-pagination-raw
 
-                            :schemas [{:groups.schema-query-groups {:key-types "optional" :alias "schema_query-groups"}}]}
+                            :schemas [{:groups.schema-query-groups {:key-types "optional" :alias "schema_query-groups"
+
+                                                                    ;:wl [:test-id :abc] ;; test-case
+
+                                                                    }}]}
 
                            {:raw [{:groups {}}],
                             :raw-schema-name :groups-schema-raw
@@ -162,7 +172,7 @@
                            :schemas [{:users-schema-payload {:alias "maru.update/schema"
                                                              :key-types "optional"
                                                              :types [{:accepted_usage_terms_id {:value-type TYPE_MAYBE}} {:notes {:value-type TYPE_MAYBE}}]
-                                                             :wl [:accepted_usage_terms_id :autocomplete :email :institution :first_name :last_name :login :note :searchable]}}
+                                                             :wl [:accepted_usage_terms_id :autocomplete :email :institution :first_name :last_name :login :notes :searchable]}}
 
                                      {:get.users-schema-payload {:alias "mar.users.get/schema"
                                                                  :value-types TYPE_MAYBE
@@ -180,7 +190,7 @@
                                                                     :types [{:person_id {:key-type TYPE_NOTHING}}
                                                                             {:accepted_usage_terms_id {:value-type TYPE_MAYBE}}
                                                                             {:notes {:value-type TYPE_MAYBE}}]
-                                                                    :wl [:person_id :accepted_usage_terms_id :email :institution :institution_id :first_name :last_name :login :note :settings]}}]}])
+                                                                    :wl [:person_id :accepted_usage_terms_id :email :institution :institution_id :first_name :last_name :login :notes :settings]}}]}])
 
 (def create-admins-schema [{:raw [{:admins {}}],
                             :raw-schema-name :groups-schema-raw
