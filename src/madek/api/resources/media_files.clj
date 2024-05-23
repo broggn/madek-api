@@ -76,7 +76,7 @@
                         media-files.authorization/wrap-auth-media-file-metadata-and-previews]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:media_file_id s/Str}}
-           :responses {200 {:body (get-schema :create-media-files-schema)}
+           :responses {200 {:body (get-schema :media_files.schema_export-media-file)}
                        404 {:body s/Any}}}}]
 
    ["/:media_file_id/data-stream"
@@ -101,7 +101,7 @@
                    sd/ring-wrap-authorization-view]
       :coercion reitit.coercion.schema/coercion
       :parameters {:path {:media_entry_id s/Str}}
-      :responses {200 {:body (get-schema :create-media-files-schema)}
+      :responses {200 {:body (get-schema :media_files.schema_export-media-file)}
                   404 {:body s/Any}}}}]
 
    ["/:media_entry_id/media-file/data-stream"

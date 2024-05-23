@@ -1,20 +1,32 @@
 (ns madek.api.db.dynamic_schema.schema_cache
   (:require
-   [madek.api.db.dynamic_schema.common :refer [set-schema]]
    [madek.api.db.dynamic_schema.core :refer [create-dynamic-schema
                                              init-enums-by-db]]
 
-   [madek.api.db.dynamic_schema.common :refer [get-validation-cache]]
+   [madek.api.db.dynamic_schema.common :refer [get-validation-cache set-schema]]
    [madek.api.db.dynamic_schema.schema_definitions :as d]
 
    [taoensso.timbre :refer [debug info warn error errorf]]
 
   ))
 
+;(defn set-schema-by-map [schema-map]
+;         (println ">o> WTF1????  set-schema-by-map")
+;  ;(map (fn [[k v]]
+;  ;
+;  ;       (println ">o> WTF2????" key)
+;  ;       (set-schema k v)
+;  ;       schema-map)))
+;
+;(doseq [[k v] schema-map]
+;  (println ">o> WTF????" k)
+;  (set-schema k v)))
+
 (defn set-schema-by-map [schema-map]
-  (map (fn [[k v]]
-         (set-schema k v)
-         schema-map)))
+  (println ">o> set-schema => ANY ????, " schema-map)
+  (doseq [[k v] (seq schema-map)]
+    (println ">o> set-schema => ANY ????" k v)
+    (set-schema k v)))
 
 (defn init-schema-by-db []
   (let [_ (init-enums-by-db)
@@ -36,7 +48,7 @@
         _ (create-dynamic-schema d/create-edit_session-schema)
 
         _ (create-dynamic-schema d/create-vocabularies-schema)
-        _ (set-schema-by-map [d/top-level-vocabularies-schema])
+        _ (set-schema-by-map d/top-level-vocabularies-schema)
 
         _ (create-dynamic-schema d/create-usage_terms-schema)
         _ (create-dynamic-schema d/create-static_pages-schema)
@@ -44,17 +56,18 @@
         _ (create-dynamic-schema d/create-previews-schema)
 
         _ (create-dynamic-schema d/create-permissions-schema)
-        _ (set-schema-by-map [d/top-level-permissions-schema])
+        _ (set-schema-by-map d/top-level-permissions-schema)
 
         _ (create-dynamic-schema d/create-people-schema)
         _ (create-dynamic-schema d/create-keywords-schema)
         _ (create-dynamic-schema d/create-meta_keys-schema)
 
         _ (create-dynamic-schema d/create-media_entries-schema)
-        _ (set-schema-by-map [d/top-level-media_entries-schema])
+        _ (d/top-level-media_entries-schema set-schema-by-map)
 
         _ (create-dynamic-schema d/create-delegations_users-schema)
         _ (create-dynamic-schema d/create-io_interfaces-schema)
+        _ (create-dynamic-schema d/create-favorite_collections-schema)
         _ (create-dynamic-schema d/create-media-files-schema)
         _ (create-dynamic-schema d/create-meta-data-schema)
         _ (create-dynamic-schema d/create-meta-data-role-schema)

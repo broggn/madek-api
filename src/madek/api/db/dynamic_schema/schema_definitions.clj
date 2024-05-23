@@ -190,11 +190,11 @@
                                                                     :types [{:person_id {:key-type TYPE_NOTHING}}
                                                                             {:accepted_usage_terms_id {:value-type TYPE_MAYBE}}
                                                                             {:notes {:value-type TYPE_MAYBE}}]
-                                                                    :wl [:person_id :accepted_usage_terms_id :email :institution :institution_id :first_name :last_name :login :notes :settings]}}]}])
+                                                                    :wl [:person_id :accepted_usage_terms_id :email :institution :institutional_id :first_name :last_name :login :notes :settings]}}]}])
 
 (def create-admins-schema [{:raw [{:admins {}}],
                             :raw-schema-name :groups-schema-raw
-                            :schemas [{:admins.schema-export-admin {:alias "mar.admin/schema_export-admin"
+                            :schemas [{:admins.schema_export-admin {:alias "mar.admin/schema_export-admin"
                                                                     :key-types "optional"
                                                                     :types [{:id {:key-type TYPE_NOTHING}}]}}]}])
 
@@ -245,7 +245,8 @@
                                                                                            {:workflow_id {:value-type TYPE_MAYBE}}]
                                                                                    :wl [:layout :is_master :sorting :default_context_id :workflow_id :default_resource_type]}}]}
 
-                                {:raw [{:collections {:wl ["collection_id" "order" "creator_id" "responsible_user_id" "clipboard_user_id" "workflow_id" "responsible_delegation_id" "public_get_metadata_and_previews"]
+                                {:raw [{:collections {:wl ["collection_id" "creator_id" "responsible_user_id" "clipboard_user_id" "workflow_id" "responsible_delegation_id" "public_get_metadata_and_previews"]
+                                                      :_additional [{:column_name "order", :data_type "any"}]
                                                       :rename {"get_metadata_and_previews" "public_get_metadata_and_previews"
                                                                "id" "collection_id"}}}
                                        {:collection_user_permissions {:wl ["me_get_metadata_and_previews" "me_edit_permission" "me_edit_metadata_and_relations"]
@@ -523,14 +524,17 @@
                                              {:io_interfaces.schema_import_io_interfaces {:alias "mar.io_interfaces/schema_import_io_interfaces"
                                                                                           :wl [:id :description]}}]}])
 
-(def create-io_interfaces-schema [{:raw [{:favorite_collections {}}],
+(def create-favorite_collections-schema [{:raw [{:favorite_collections {}}],
                                    :raw-schema-name :favorite_collections-raw
 
                                    :schemas [{:favorite_collections.schema_favorite_collection_export {:alias "mar.favorite_collections/schema_favorite_collection_export"
                                                                                                        :key-values "optional"
                                                                                                        :types [{:user_id {:key-type TYPE_NOTHING}}]}}]}])
 
-(def create-media-files-schema [{:raw [{:media_files {:wl ["id" "media_entry_id" "media_type" "content_type" "filename" "previews" "size" "updated_at" "created_at"]}}],
+(def create-media-files-schema [{:raw [{:media_files {
+                                                      :wl ["id" "media_entry_id" "media_type" "content_type" "filename" "size" "updated_at" "created_at"]
+                                                      :_additional [{:column_name "previews", :data_type "any"}]
+                                                      }}],
                                  :raw-schema-name :media_files-raw
                                  :schemas [{:media_files.schema_export-media-file {:alias "mar.media-files/schema_export-media-file"
                                                                                    :types [{:media_type {:value-type TYPE_MAYBE}}]}}]}])
@@ -902,7 +906,7 @@
                                             {:vocabularies.schema_perms-update-user-or-group {:alias "mar.vocabularies/schema_perms-update-user-or-group"
                                                                                               :wl [:use :view]}}]}])
 
-(def top-level-vocabularies-schema [{:vocabularies.schema_export-perms_all
+(def top-level-vocabularies-schema {:vocabularies.schema_export-perms_all
                                      {:vocabulary (get-schema :vocabularies.schema_export-perms_all_vocabulary)
                                       :users [(get-schema :vocabularies.vocabulary_user_permissions)]
-                                      :groups [(get-schema :vocabularies.schema_export-group-perms)]}}])
+                                      :groups [(get-schema :vocabularies.schema_export-group-perms)]}})
