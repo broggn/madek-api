@@ -150,7 +150,7 @@
                                                                             {:institution {:value-type TYPE_MAYBE}}]}}]}
 
                            {:raw [;; TODO: fix this to handle [:foo :bar]
-                                  {:users {:wl ["id" "email" "institutional_id" "login" "created_at" "updated_at" "person_id"]}}],
+                                  {:users {:wl ["id" "email" "institutional_id" "login" "created_at" "updated_at" "person_id" "abc-test"]}}],
                             :raw-schema-name :groups-schema-response-user-simple-raw
 
                             :schemas [{:groups.schema-response-user-simple {:alias "schema_response-user-simple"
@@ -510,12 +510,12 @@
                                                                                           :types [{:description {:value-type TYPE_MAYBE}}]}}
 
                                              {:io_interfaces.schema_export_io_interfaces_opt {:alias "mar.io_interfaces/schema_export_io_interfaces_opt"
-                                                                                              :key-values "optional"
+                                                                                              :key-types "optional"
                                                                                               :types [{:id {:key-type TYPE_NOTHING}}
                                                                                                       {:description {:value-type TYPE_MAYBE}}]}}
 
                                              {:io_interfaces.schema_update_io_interfaces {:alias "mar.io_interfaces/schema_update_io_interfaces"
-                                                                                          :key-values "optional"
+                                                                                          :key-types "optional"
                                                                                           :wl [:description]}}
 
                                              {:io_interfaces.schema_import_io_interfaces {:alias "mar.io_interfaces/schema_import_io_interfaces"
@@ -525,7 +525,7 @@
                                           :raw-schema-name :favorite_collections-raw
 
                                           :schemas [{:favorite_collections.schema_favorite_collection_export {:alias "mar.favorite_collections/schema_favorite_collection_export"
-                                                                                                              :key-values "optional"
+                                                                                                              :key-types "optional"
                                                                                                               :types [{:user_id {:key-type TYPE_NOTHING}}]}}]}])
 
 (def create-media-files-schema [{:raw [{:media_files {:wl ["id" "media_entry_id" "media_type" "content_type" "filename" "size" "updated_at" "created_at"]}}
