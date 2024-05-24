@@ -1,12 +1,9 @@
 (ns madek.api.db.dynamic_schema.schema_cache
   (:require
    [madek.api.db.dynamic_schema.common :refer [get-validation-cache set-schema]]
-
-   [madek.api.db.dynamic_schema.core :refer [create-dynamic-schema
-                                             init-enums-by-db]]
+   [madek.api.db.dynamic_schema.core :refer [create-dynamic-schema init-enums-by-db]]
    [madek.api.db.dynamic_schema.schema_definitions :as d]
-
-   [taoensso.timbre :refer [debug info warn error errorf]]))
+   [taoensso.timbre :refer [error info]]))
 
 ;(defn set-schema-by-map [schema-map]
 ;         (println ">o> WTF1????  set-schema-by-map")

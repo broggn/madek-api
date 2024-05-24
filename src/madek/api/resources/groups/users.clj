@@ -9,7 +9,6 @@
    [madek.api.utils.helper :refer [convert-groupid-userid]]
    [madek.api.utils.helper :refer [to-uuid]]
    [next.jdbc :as jdbc]
-   [schema.core :as s]
    [taoensso.timbre :refer [info]]))
 
 ;;; temporary users stuff ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -18,9 +17,9 @@
   ([] (sql-select {}))
   ([sql-map]
    (sql/select sql-map :*
-               ;:users.id :users.email :users.institutional_id :users.login
-               ;:users.created_at :users.updated_at
-               ;:users.person_id
+     ;:users.id :users.email :users.institutional_id :users.login
+     ;:users.created_at :users.updated_at
+     ;:users.person_id
                )))
 
 (defn sql-merge-user-where-id

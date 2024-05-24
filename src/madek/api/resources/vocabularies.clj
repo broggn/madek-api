@@ -4,16 +4,14 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
-
    [madek.api.db.dynamic_schema.common :refer [get-schema]]
-
    [madek.api.resources.shared :as sd]
    [madek.api.resources.shared :refer [generate-swagger-pagination-params]]
    [madek.api.resources.vocabularies.index :refer [get-index]]
    [madek.api.resources.vocabularies.permissions :as permissions]
    [madek.api.resources.vocabularies.vocabulary :refer [get-vocabulary]]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist f mslurp t]]
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist mslurp]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]

@@ -2,12 +2,9 @@
   (:require [clj-uuid]
             [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
-            [logbug.catcher :as catcher]
             [madek.api.pagination :as pagination]
             [madek.api.resources.shared :as sd]
-            [next.jdbc :as jdbc]
-            [reitit.coercion.schema]
-            [schema.core :as s]))
+            [reitit.coercion.schema]))
 
 ; TODO clean code
 ;(defn transform_export [person]

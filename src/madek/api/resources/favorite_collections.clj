@@ -4,11 +4,9 @@
             [logbug.catcher :as catcher]
             [madek.api.authorization :as authorization]
             [madek.api.db.dynamic_schema.common :refer [get-schema]]
-
             [madek.api.resources.shared :as sd]
-
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-            [madek.api.utils.helper :refer [f t]]
+            [madek.api.utils.helper :refer [f]]
             [next.jdbc :as jdbc]
             [reitit.coercion.schema]
             [schema.core :as s]

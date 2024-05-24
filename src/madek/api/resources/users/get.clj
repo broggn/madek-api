@@ -4,10 +4,7 @@
    [madek.api.db.dynamic_schema.common :refer [get-schema]]
    [madek.api.resources.shared :as sd]
    [madek.api.resources.users.common :refer [wrap-find-user]]
-
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-
-   [madek.api.utils.validation :refer [vector-or-hashmap-validation]]
    [reitit.coercion.schema]
    [schema.core :as s]))
 
@@ -66,7 +63,6 @@
    :coercion reitit.coercion.schema/coercion
    :content-type "application/json"
    :parameters {:path {:id s/Str}}
-   ;:responses {200 {:body schema}
    :responses {200 {:body (get-schema :get.users-schema-payload)}
                404 {:description "Not Found."
                     :schema s/Str

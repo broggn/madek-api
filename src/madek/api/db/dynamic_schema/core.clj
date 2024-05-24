@@ -188,7 +188,7 @@
                               db-meta (zipmap all-keys all-keys2)
                               ;_ (println ">o> 3sart" db-meta)
 
-;p (println ">o> ????? before-res=" all-keys)
+                              ;p (println ">o> ????? before-res=" all-keys)
 
                               ;res (into [] (map (comp name first) db-meta))
                               res (into #{} (map (comp name first) db-meta))
@@ -212,7 +212,7 @@
                               db-meta (zipmap all-keys all-keys2)
                               _ (println ">o> XX 3sart" db-meta)
 
-;p (println ">o> ????? before-res=" all-keys)
+                              ;p (println ">o> ????? before-res=" all-keys)
 
                               ;res (into [] (map (comp name first) db-meta))
                               res (into #{} (map (comp name first) db-meta))
@@ -233,7 +233,7 @@
                           ;(println ">o> db-meta="  (set (map :column_name (into [] db-meta))))
                           (System/exit 0)))
 
-;;existing-keys (set (map :column_name db-meta))
+        ;;existing-keys (set (map :column_name db-meta))
         ;p (println ">o> ?????6 existing-keys=" existing-keys)
         ;p (println ">o> ?????6 aa existing-keys=" (type (first existing-keys)))
         ;p (println ">o> ?????6 keys=" keys)
@@ -274,7 +274,7 @@
         ;keys ["collection_id" "order" "creator_id" ]
         ;map2 [{:column_name "default_resource_type", :data_type "USER-DEFINED"} {:column_name "get_metadata_and_previews", :data_type "boolean"}]
 
-;; works / OK
+        ;; works / OK
         ;keys (vector "collection_id" "order" "creator_id" )
         keys (vector "collection_id")
         keys (vector "institution")
@@ -300,7 +300,7 @@
         ;                                                   :institutional_name "Institutional Name"
         ;                                                   :created_at (java.util.Date.))
 
-;all-keys (into [] (map first map2))
+        ;all-keys (into [] (map first map2))
         ;all-keys2 (into [] (map second map2))
         ;
         ;map2 (zipmap all-keys all-keys2)
@@ -371,7 +371,7 @@
                                   key=" key "\n
                                   db-data=" db-meta "\n"))
 
-;debug-info {
+                                      ;debug-info {
                                       ;            ;:table table-name
                                       ;            ;:wl-attr wl-attr
                                       ;            ;:bl-attr bl-attr

@@ -5,12 +5,8 @@
    [honey.sql.helpers :as sql]
    [madek.api.db.dynamic_schema.common :refer [get-schema]]
    [madek.api.resources.shared :as sd]
-
    [madek.api.resources.users.common :refer [wrap-find-user]]
-
-   [madek.api.resources.users.get :as get-user]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.helper :refer [t]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]))
@@ -44,7 +40,6 @@
    :coercion reitit.coercion.schema/coercion
    :content-type "application/json"
    :parameters {:path {:id s/Str}}
-   ;:responses {200 {:body get-user/schema}
    :responses {200 {:body (get-schema :get.users-schema-payload)}
                403 {:description "Forbidden."
                     :schema s/Str

@@ -4,13 +4,10 @@
    [honey.sql.helpers :as sql]
    [madek.api.db.dynamic_schema.common :refer [get-schema]]
    [madek.api.resources.shared :as sd]
-
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-
    [madek.api.utils.helper :refer [convert-map-if-exist]]
-   [madek.api.utils.helper :refer [convert-map-if-exist f t]]
+   [madek.api.utils.helper :refer [convert-map-if-exist]]
    [madek.api.utils.helper :refer [mslurp]]
-   [madek.api.utils.validation :refer [email-validation vector-or-hashmap-validation]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
@@ -57,7 +54,6 @@
    :description (mslurp "./md/admin-users-post.md")
    :handler handle-create-user
    :middleware [wrap-authorize-admin!]
-   ;:parameters {:body schema}
    :parameters {:body (get-schema :create.users-schema-payload)}
    :responses {201 {:description "Created."
                     :body s/Any

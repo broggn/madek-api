@@ -4,13 +4,11 @@
    [honey.sql.helpers :as sql]
    [madek.api.db.dynamic_schema.common :refer [get-schema]]
    [madek.api.resources.meta-keys.index :as mkindex]
-
    [madek.api.resources.meta-keys.meta-key :as mk]
-
    [madek.api.resources.shared :as sd]
    [madek.api.resources.shared :refer [generate-swagger-pagination-params]]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist f replace-java-hashmaps t v]]
+   [madek.api.utils.helper :refer [cast-to-hstore convert-map-if-exist replace-java-hashmaps v]]
    [madek.api.utils.helper :refer [mslurp]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]

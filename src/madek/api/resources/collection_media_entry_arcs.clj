@@ -4,9 +4,7 @@
    [honey.sql.helpers :as sql]
    [logbug.catcher :as catcher]
    [madek.api.db.dynamic_schema.common :refer [get-schema]]
-
    [madek.api.pagination :as pagination]
-
    [madek.api.resources.shared :as sd]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
@@ -188,8 +186,8 @@
     {:post
      {:summary (sd/sum_usr "Create collection media-entry arc")
       :handler handle_create-col-me-arc
-       ; TODO check: if collection edit md and relations is allowed checked
-       ; not the media entry edit md
+      ; TODO check: if collection edit md and relations is allowed checked
+      ; not the media entry edit md
       :middleware [sd/ring-wrap-add-media-resource
                    sd/ring-wrap-authorization-edit-metadata]
       :swagger {:produces "application/json" :consumes "application/json"}

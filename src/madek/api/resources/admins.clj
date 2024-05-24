@@ -6,9 +6,6 @@
    [madek.api.db.dynamic_schema.common :refer [get-schema]]
    [madek.api.resources.shared :as sd]
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-
-   [madek.api.utils.helper :refer [t]]
-
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]))

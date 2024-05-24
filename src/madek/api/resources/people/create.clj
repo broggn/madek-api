@@ -5,12 +5,9 @@
    [madek.api.db.dynamic_schema.common :refer [get-schema]]
    [madek.api.resources.people.common]
    [madek.api.resources.people.common :refer [find-person-by-uid]]
-   [madek.api.resources.people.get :as get-person]
-
    [madek.api.resources.shared :as sd]
-
    [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-   [madek.api.utils.helper :refer [convert-map-if-exist t]]
+   [madek.api.utils.helper :refer [convert-map-if-exist]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
@@ -50,7 +47,6 @@
    :handler handle-create-person
    :middleware [wrap-authorize-admin!]
    :parameters {:body (get-schema :people.schema)}
-   ;:responses {201 {:body get-person/schema}
    :responses {201 {:body (get-schema :people.get.schema)}
                409 {:description "Conflict."
                     :schema s/Str

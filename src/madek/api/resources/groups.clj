@@ -6,11 +6,9 @@
             [madek.api.pagination :as pagination]
             [madek.api.resources.groups.shared :as groups]
             [madek.api.resources.groups.users :as group-users]
-
             [madek.api.resources.shared :as sd]
-
             [madek.api.utils.auth :refer [wrap-authorize-admin!]]
-            [madek.api.utils.helper :refer [convert-groupid f mslurp t]]
+            [madek.api.utils.helper :refer [convert-groupid f mslurp]]
             [madek.api.utils.sql-next :refer [convert-sequential-values-to-sql-arrays]]
             [next.jdbc :as jdbc]
             [reitit.coercion.schema]

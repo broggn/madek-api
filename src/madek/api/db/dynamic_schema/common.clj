@@ -2,7 +2,6 @@
   (:require
    [madek.api.db.dynamic_schema.schema_logger :refer [slog]]
    [schema.core :as s]
-
    [taoensso.timbre :refer [error]]))
 
 (def schema-cache (atom {}))
@@ -31,8 +30,4 @@
 
 (defn add-to-validation-cache [new-element]
   (error "[add-to-validation-cache]" new-element)
-  ;(errorf "2[add-to-validation-cache]" new-element)
-  ;(error "3[add-to-validation-cache] wtf?????????" {})
-  ;(warn "4[add-to-validation-cache] wtf?????????" {})
-
   (swap! validation-cache conj new-element))

@@ -6,10 +6,8 @@
    [madek.api.authorization :as authorization]
    [madek.api.db.dynamic_schema.common :refer [get-schema]]
    [madek.api.resources.collections.index :refer [get-index]]
-
    [madek.api.resources.shared :as sd]
-
-   [madek.api.utils.helper :refer [convert-map-if-exist f t]]
+   [madek.api.utils.helper :refer [convert-map-if-exist]]
    [madek.api.utils.helper :refer [mslurp]]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]

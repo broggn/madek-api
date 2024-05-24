@@ -5,9 +5,7 @@
             [honey.sql :refer [format] :rename {format sql-format}]
             [honey.sql.helpers :as sql]
             [madek.api.authorization :as authorization]
-
             [madek.api.constants :refer [FILE_STORAGE_DIR]]
-
             [madek.api.db.dynamic_schema.common :refer [get-schema]]
             [madek.api.resources.media-entries.index :refer [get-index
                                                              get-index_related_data]]
@@ -141,19 +139,19 @@
     (io/copy (io/file temp-path) (io/file store-location))
     (sd/response_ok {:media_entry (assoc media-entry :media_file media-file)})))
 
-    ; We dont do add meta-data or collection.
-    ; This is done via front-end.
-    ;(me_add-default-license new-mer)
-    ;(me_exract-and-store-metadata new-mer)
-    ;(me_add-to-collection new-mer (or col_id_param (-> workflow :master_collection :id)))
-    ;(if-let [collection (sd/query-eq-find-one "collections" "id" collection-id)]
-    ;  (if-let [add-col-res (collection-media-entry-arcs/create-col-me-arc collection-id (:id media-entry) {} tx)]
-    ;    (info "handle_uploaded_file_resp_ok: added to collection: " collection-id "\nresult\n" add-col-res)
-    ;    (error "Failed: handle_uploaded_file_resp_ok: add to collection: " collection-id))
-    ;    (sd/response_ok {:media_entry (assoc media-entry :media_file media-file :collection_id collection-id)})
-    ;    (sd/response_ok {:media_entry (assoc media-entry :media_file media-file)}))
+; We dont do add meta-data or collection.
+; This is done via front-end.
+;(me_add-default-license new-mer)
+;(me_exract-and-store-metadata new-mer)
+;(me_add-to-collection new-mer (or col_id_param (-> workflow :master_collection :id)))
+;(if-let [collection (sd/query-eq-find-one "collections" "id" collection-id)]
+;  (if-let [add-col-res (collection-media-entry-arcs/create-col-me-arc collection-id (:id media-entry) {} tx)]
+;    (info "handle_uploaded_file_resp_ok: added to collection: " collection-id "\nresult\n" add-col-res)
+;    (error "Failed: handle_uploaded_file_resp_ok: add to collection: " collection-id))
+;    (sd/response_ok {:media_entry (assoc media-entry :media_file media-file :collection_id collection-id)})
+;    (sd/response_ok {:media_entry (assoc media-entry :media_file media-file)}))
 
-  ;))
+;))
 
 (defn create-media_entry
   "Only for testing. Does not trigger media convert. So previews are missing."

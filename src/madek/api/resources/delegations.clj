@@ -2,10 +2,7 @@
   (:require
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
-   [logbug.catcher :as catcher]
-
    [madek.api.db.dynamic_schema.common :refer [get-schema]]
-
    [madek.api.resources.shared :as sd]
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
@@ -135,7 +132,7 @@
                                    :type "boolean"}]}
            :responses {200 {:body [(get-schema :delegations.schema_get_delegations)]}}}}]
 
-; edit delegation
+   ; edit delegation
    ["/:id"
     {:get {:summary (sd/sum_adm "Get delegations by id.")
            :handler handle_get-delegation

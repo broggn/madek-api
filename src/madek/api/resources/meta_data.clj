@@ -6,9 +6,7 @@
             [logbug.catcher :as catcher]
             [madek.api.db.core :refer [builder-fn-options-default]]
             [madek.api.db.dynamic_schema.common :refer [get-schema]]
-
             [madek.api.resources.meta-data.index :as meta-data.index]
-
             [madek.api.resources.meta-data.meta-datum :as meta-datum]
             [madek.api.resources.shared :as sd]
             [madek.api.utils.helper :refer [convert-map-if-exist to-uuid]]

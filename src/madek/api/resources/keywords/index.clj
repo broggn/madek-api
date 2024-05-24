@@ -3,7 +3,6 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [madek.api.resources.meta-keys.meta-key :as meta-key]
-
    [next.jdbc :as jdbc]))
 
 (defn get-index [meta-datum tx]

@@ -4,9 +4,6 @@
    [honey.sql.helpers :as sql]
    [madek.api.db.dynamic_schema.common :refer [get-schema]]
    [madek.api.resources.shared :as sd]
-
-   [madek.api.utils.helper :refer [t]]
-
    [next.jdbc :as jdbc]
    [reitit.coercion.schema]
    [schema.core :as s]
@@ -29,7 +26,7 @@
                 user_id (sql/where [:= :user_id user_id]))
         db-result (jdbc/execute! (:tx req) (sql-format query))]
 
-;(->> db-result (map :id) set)
+    ;(->> db-result (map :id) set)
     (info "handle_list-delegations_user" "\nresult\n" db-result)
     (sd/response_ok db-result)))
 

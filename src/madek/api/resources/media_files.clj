@@ -1,11 +1,5 @@
 (ns madek.api.resources.media-files
   (:require
-   [clojure.tools.logging :as logging]
-   [logbug.catcher :as catcher]
-
-   [logbug.debug :as debug :refer [I>]]
-
-   [logbug.ring :as logbug-ring :refer [wrap-handler-with-logging]]
    [madek.api.db.dynamic_schema.common :refer [get-schema]]
    [madek.api.resources.media-files.authorization :as media-files.authorization]
    [madek.api.resources.media-files.media-file :as media-file]
