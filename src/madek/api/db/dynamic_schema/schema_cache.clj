@@ -21,9 +21,7 @@
 ;  (set-schema k v)))
 
 (defn set-schema-by-map [schema-map]
-  (println ">o> set-schema => ANY ????, " schema-map)
   (doseq [[k v] (seq schema-map)]
-    (println ">o> set-schema => ANY ????" k v)
     (set-schema k v)))
 
 (defn init-schema-by-db []
@@ -62,7 +60,6 @@
         _ (create-dynamic-schema d/create-meta-data-role-schema)
         _ (create-dynamic-schema d/create-favorite-media-entries-schema)
 
-        _ (println ">o> _et-schema => ANY after this >top-level-vocabularies-schema< will be called")
         _ (set-schema-by-map (d/top-level-vocabularies-schema))
         _ (set-schema-by-map (d/top-level-permissions-schema))
         _ (set-schema-by-map (d/top-level-media_entries-schema))

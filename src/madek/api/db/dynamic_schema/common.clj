@@ -11,30 +11,13 @@
 
 (defn get-schema [key & [default]]
   (let [val (or (get @schema-cache key default) s/Any)
-        ;; TODO: add entry to validation-cache
-        _ (if (= val s/Any) (println ">o> get-schema => ANY !!!!!!!!!!!!!!!!!!!!!!!, key=" key))]
+        _ (if (= val s/Any)
+            (swap! validation-cache conj "ERROR: no schema for key=" key))]
     (slog (str "[get-schema] " key "=" val))
     val))
 
 (defn set-schema [key value]
   (slog (str "[set-schema] (" key ") ->" value))
-
-  ;; TODO: remove this
-  (if (contains? [:media-entries.schema_export_media_entry
-                  :media-entries.schema_export_meta_data
-                  :media-files.schema_export_media_file
-                  :media-entries.schema_export_preview
-                  :media-entries.schema_export_col_arc
-                  :media_entries.schema_export-media-entry-perms
-                  :media_entry_user_permissions.schema_export-media-entry-user-permission
-                  :media_entry_group_permissions.schema_export-media-entry-group-permission
-                  :collections-perms.schema_export-collection-perms
-                  :collection_user_permissions.schema_export-collection-user-permission
-                  :collection_group_permissions.schema_export-collection-group-permission
-                  :vocabularies.schema_export-perms_all_vocabulary
-                  :vocabularies.vocabulary_user_permissions
-                  :vocabularies.schema_export-group-perms] key) (println ">o> set-schema => ANY ???, key=" (first key)))
-
   (swap! schema-cache assoc key (into {} value)))
 
 (defn get-enum [key & [default]]

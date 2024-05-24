@@ -178,9 +178,12 @@
             response)
           (catch Exception ex
             (def ^:dynamic debug-last-ex ex)
-            (error "RING-LOGGING-WRAPPER COUGHT EXCEPTION "
+
+            (println ">o> !!!!" (.getMessage ex))
+
+            (error "RING-LOGGING-WRAPPER CAUGHT EXCEPTION "
                    {:wrap-debug-level wrap-debug-level} (ex-message ex))
-            (error "RING-LOGGING-WRAPPER COUGHT EXCEPTION " (thrown/stringify ex))
+            (error "RING-LOGGING-WRAPPER CAUGHT EXCEPTION " (thrown/stringify ex))
             (throw ex))))))
   (let [mws middlewares]
     (def ^:dynamic middlewares

@@ -31,11 +31,11 @@
 (def schema-subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup"))
 
 (def schema-meta_datum (s/enum "MetaDatum::Text"
-                               "MetaDatum::TextDate"
-                               "MetaDatum::JSON"
-                               "MetaDatum::Keywords"
-                               "MetaDatum::People"
-                               "MetaDatum::Roles"))
+                         "MetaDatum::TextDate"
+                         "MetaDatum::JSON"
+                         "MetaDatum::Keywords"
+                         "MetaDatum::People"
+                         "MetaDatum::Roles"))
 
 (def schema-allowed_people_subtypes (s/enum "People" "PeopleGroup"))
 
@@ -213,12 +213,12 @@
 
 (def schema_sorting_types
   (s/enum "created_at ASC"
-          "created_at DESC"
-          "title ASC"
-          "title DESC"
-          "last_change"
-          "manual ASC"
-          "manual DESC"))
+    "created_at DESC"
+    "title ASC"
+    "title DESC"
+    "last_change"
+    "manual ASC"
+    "manual DESC"))
 
 (def create-collections-schema [{:raw [{:collections {}}],
                                  :raw-schema-name :collections-schema-raw
@@ -528,8 +528,8 @@
                                                                                                               :key-values "optional"
                                                                                                               :types [{:user_id {:key-type TYPE_NOTHING}}]}}]}])
 
-(def create-media-files-schema [{:raw [{:media_files {:wl ["id" "media_entry_id" "media_type" "content_type" "filename" "size" "updated_at" "created_at"]
-                                                      :_additional [{:column_name "previews", :data_type "any"}]}}],
+(def create-media-files-schema [{:raw [{:media_files {:wl ["id" "media_entry_id" "media_type" "content_type" "filename" "size" "updated_at" "created_at"]}}
+                                       {:_additional [{:column_name "previews", :data_type "any"}]}],
                                  :raw-schema-name :media_files-raw
                                  :schemas [{:media_files.schema_export-media-file {:alias "mar.media-files/schema_export-media-file"
                                                                                    :types [{:media_type {:value-type TYPE_MAYBE}}]}}]}])
