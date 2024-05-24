@@ -4,7 +4,6 @@
 
    [taoensso.timbre :refer [info]]))
 
-(def ENABLE_SCHEMA_LOGGING true)
 (def ENABLE_SCHEMA_LOGGING false)
 
 (defn slog

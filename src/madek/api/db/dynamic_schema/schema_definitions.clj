@@ -31,11 +31,11 @@
 (def schema-subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup"))
 
 (def schema-meta_datum (s/enum "MetaDatum::Text"
-                               "MetaDatum::TextDate"
-                               "MetaDatum::JSON"
-                               "MetaDatum::Keywords"
-                               "MetaDatum::People"
-                               "MetaDatum::Roles"))
+                         "MetaDatum::TextDate"
+                         "MetaDatum::JSON"
+                         "MetaDatum::Keywords"
+                         "MetaDatum::People"
+                         "MetaDatum::Roles"))
 
 (def schema-allowed_people_subtypes (s/enum "People" "PeopleGroup"))
 
@@ -110,19 +110,12 @@
         res (get enum-map key nil)]
     res))
 
-(def create-groups-schema [{:raw [{:groups
-
-                                   {}
-
-                                   ;{:bl ["test-id" "abc"]} ;; test-case
-                                   }
+(def create-groups-schema [{:raw [{:groups {}}
                                   {:_additional (concat schema_pagination_raw schema_full_data_raw)}]
                             :raw-schema-name :groups-schema-with-pagination-raw
+                            :schemas [{:groups.schema-query-groups {:key-types "optional"
+                                                                    :alias "schema_query-groups"}}]}
 
-                            :schemas [{:groups.schema-query-groups {:key-types "optional" :alias "schema_query-groups"
-
-                                                                    ;:wl [:test-id :abc] ;; test-case
-                                                                    }}]}
                            {:raw [{:groups {}}],
                             :raw-schema-name :groups-schema-raw
                             :schemas [{:groups.schema-update-group {:alias "schema_update-group"
@@ -130,6 +123,7 @@
                                                                     :value-types TYPE_MAYBE
                                                                     :types [{:name {:value-type TYPE_NOTHING}} {:type {:value-type TYPE_NOTHING}}]
                                                                     :wl [:name :type :institution :institutional_id :institutional_name :created_by_user_id]}}
+
                                       {:groups.schema-export-group {:alias "schema_export-group"
                                                                     :key-types TYPE_OPTIONAL
                                                                     :types [{:id {:key-type TYPE_NOTHING}}
@@ -149,8 +143,7 @@
                                                                             {:institutional_name {:value-type TYPE_MAYBE}}
                                                                             {:institution {:value-type TYPE_MAYBE}}]}}]}
 
-                           {:raw [;; TODO: fix this to handle [:foo :bar]
-                                  {:users {:wl ["id" "email" "institutional_id" "login" "created_at" "updated_at" "person_id" "abc-test"]}}],
+                           {:raw [{:users {:wl ["id" "email" "institutional_id" "login" "created_at" "updated_at" "person_id"]}}],
                             :raw-schema-name :groups-schema-response-user-simple-raw
 
                             :schemas [{:groups.schema-response-user-simple {:alias "schema_response-user-simple"
@@ -213,12 +206,12 @@
 
 (def schema_sorting_types
   (s/enum "created_at ASC"
-          "created_at DESC"
-          "title ASC"
-          "title DESC"
-          "last_change"
-          "manual ASC"
-          "manual DESC"))
+    "created_at DESC"
+    "title ASC"
+    "title DESC"
+    "last_change"
+    "manual ASC"
+    "manual DESC"))
 
 (def create-collections-schema [{:raw [{:collections {}}],
                                  :raw-schema-name :collections-schema-raw
@@ -559,16 +552,14 @@
 (def create-people-schema [{:raw [{:people {}}],
                             :raw-schema-name :people-raw
 
-                            :schemas [{:people.schema {;; TODO: fix definition
-                                                       :alias "marp.create/schema"
+                            :schemas [{:people.schema {:alias "marp.create/schema"
                                                        :key-types "optional"
                                                        :value-types TYPE_MAYBE
 
                                                        :types [{:subtype {:key-type TYPE_NOTHING}}]
                                                        :bl [:id :created_at :updated_at :searchable]}}
 
-                                      {:people.get.schema {;; TODO: fix definition
-                                                           :alias "marp.get/schema"
+                                      {:people.get.schema {:alias "marp.get/schema"
                                                            :value-types TYPE_MAYBE
                                                            :types [{:description {:value-type TYPE_MAYBE}}
                                                                    {:first_name {:value-type TYPE_MAYBE}}
@@ -592,8 +583,9 @@
                                                                                     :types [{:order {:value-type TYPE_MAYBE}}
                                                                                             {:position {:value-type TYPE_MAYBE}}]
                                                                                     :wl [:media_entry_id :id :order :position :created_at :updated_at]}}
+
                                              {:media-entries.schema_export_preview {:alias "mar.media-entries/schema_export_preview"
-                                                                                    :raw-schema-name :preview-raw ;;TODO
+                                                                                    :raw-schema-name :preview-raw
                                                                                     :types [{:width {:value-type TYPE_MAYBE}}
                                                                                             {:height {:value-type TYPE_MAYBE}}
                                                                                             {:conversion_profile {:value-type TYPE_MAYBE}}]}}]}
@@ -649,8 +641,7 @@
 (def create-meta_keys-schema [{:raw [{:meta_keys {}}],
                                :raw-schema-name :meta_keys-raw
 
-                               :schemas [{:meta-keys.schema_create-meta-key {;; TODO: fix definition
-                                                                             :alias "mar.meta-keys/schema_create-meta-key"
+                               :schemas [{:meta-keys.schema_create-meta-key {:alias "mar.meta-keys/schema_create-meta-key"
                                                                              :key-types "optional"
                                                                              :types [{:id {:key-type TYPE_NOTHING}}
                                                                                      {:is_extensible_list {:key-type TYPE_NOTHING}}
@@ -666,8 +657,7 @@
                                                                                      {:documentation_urls {:value-type TYPE_MAYBE}}
                                                                                      {:admin_comment {:value-type TYPE_MAYBE}}]}}
 
-                                         {:meta-keys.schema_update-meta-key {;; TODO: fix definition
-                                                                             :alias "mar.meta-keys/schema_update-meta-key"
+                                         {:meta-keys.schema_update-meta-key {:alias "mar.meta-keys/schema_update-meta-key"
                                                                              :key-types "optional"
                                                                              :types [{:id {:key-type TYPE_NOTHING}}
                                                                                      {:is_extensible_list {:key-type TYPE_NOTHING}}
@@ -706,8 +696,7 @@
 
                                :raw-schema-name :meta_keys-vocabularies-raw
 
-                               :schemas [{:meta-keys.schema_export-meta-key-usr {;; TODO: fix definition
-                                                                                 :alias "mar.meta-keys/schema_export-meta-key-usr"
+                               :schemas [{:meta-keys.schema_export-meta-key-usr {:alias "mar.meta-keys/schema_export-meta-key-usr"
                                                                                  :key-types "optional"
                                                                                  :types [{:id {:key-type TYPE_NOTHING}}
                                                                                          {:labels {:key-type TYPE_NOTHING}}
@@ -723,8 +712,7 @@
                                                                                          {:documentation_urls {:value-type TYPE_MAYBE}}]
                                                                                  :bl [:admin_comment]}}
 
-                                         {:meta-keys.schema_export-meta-key-adm {;; TODO: fix definition
-                                                                                 :alias "mar.meta-keys/schema_export-meta-key-adm"
+                                         {:meta-keys.schema_export-meta-key-adm {:alias "mar.meta-keys/schema_export-meta-key-adm"
                                                                                  :key-types "optional"
                                                                                  :types [{:id {:key-type TYPE_NOTHING}}
                                                                                          {:labels {:key-type TYPE_NOTHING}}

@@ -5,18 +5,6 @@
    [madek.api.db.dynamic_schema.schema_definitions :as d]
    [taoensso.timbre :refer [error info]]))
 
-;(defn set-schema-by-map [schema-map]
-;         (println ">o> WTF1????  set-schema-by-map")
-;  ;(map (fn [[k v]]
-;  ;
-;  ;       (println ">o> WTF2????" key)
-;  ;       (set-schema k v)
-;  ;       schema-map)))
-;
-;(doseq [[k v] schema-map]
-;  (println ">o> WTF????" k)
-;  (set-schema k v)))
-
 (defn set-schema-by-map [schema-map]
   (doseq [[k v] (seq schema-map)]
     (set-schema k v)))
