@@ -46,25 +46,16 @@
         _ (create-dynamic-schema d/create-custom-urls-schema)
         _ (create-dynamic-schema d/create-delegation-schema)
         _ (create-dynamic-schema d/create-edit_session-schema)
-
         _ (create-dynamic-schema d/create-vocabularies-schema)
-        _ (set-schema-by-map d/top-level-vocabularies-schema)
-
         _ (create-dynamic-schema d/create-usage_terms-schema)
         _ (create-dynamic-schema d/create-static_pages-schema)
         _ (create-dynamic-schema d/create-roles-schema)
         _ (create-dynamic-schema d/create-previews-schema)
-
         _ (create-dynamic-schema d/create-permissions-schema)
-        _ (set-schema-by-map d/top-level-permissions-schema)
-
         _ (create-dynamic-schema d/create-people-schema)
         _ (create-dynamic-schema d/create-keywords-schema)
         _ (create-dynamic-schema d/create-meta_keys-schema)
-
         _ (create-dynamic-schema d/create-media_entries-schema)
-        _ (d/top-level-media_entries-schema set-schema-by-map)
-
         _ (create-dynamic-schema d/create-delegations_users-schema)
         _ (create-dynamic-schema d/create-io_interfaces-schema)
         _ (create-dynamic-schema d/create-favorite_collections-schema)
@@ -72,6 +63,11 @@
         _ (create-dynamic-schema d/create-meta-data-schema)
         _ (create-dynamic-schema d/create-meta-data-role-schema)
         _ (create-dynamic-schema d/create-favorite-media-entries-schema)
+
+        _ (println ">o> _et-schema => ANY after this >top-level-vocabularies-schema< will be called")
+        _ (set-schema-by-map (d/top-level-vocabularies-schema))
+        _ (set-schema-by-map (d/top-level-permissions-schema))
+        _ (set-schema-by-map (d/top-level-media_entries-schema ))
 
         _ (let [
                 errors (get-validation-cache)

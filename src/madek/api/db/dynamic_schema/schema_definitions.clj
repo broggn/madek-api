@@ -640,7 +640,7 @@
                                                                                              {:height {:value-type TYPE_MAYBE}}
                                                                                              {:meta_data {:value-type TYPE_MAYBE}}]}}]}])
 
-(def top-level-media_entries-schema {:media-entries-schema-schema_publish_failed {:message {:is_publishable s/Bool
+(defn top-level-media_entries-schema [] {:media-entries-schema-schema_publish_failed {:message {:is_publishable s/Bool
                                                                                             :media_entry_id s/Uuid
                                                                                             :has_meta_data [{s/Any s/Bool}]}}
 
@@ -805,12 +805,37 @@
                                 {:raw [{:media_entry_user_permissions {}}],
                                  :raw-schema-name :media_entry_user_permissions-raw
 
-                                 :schemas [{:collection_user_permissions.schema_export-media-entry-user-permission {:alias "mar.permissions/schema_export-media-entry-user-permission"
+
+
+
+
+
+
+
+
+
+
+
+
+                                 :schemas [{:media_entry_user_permissions.schema_export-media-entry-user-permission {:alias "mar.permissions/schema_export-media-entry-user-permission"
                                                                                                                     :types [{:updator_id {:value-type TYPE_MAYBE}}
                                                                                                                             {:delegation_id {:value-type TYPE_MAYBE}}]}}
 
-                                           {:collection_user_permissions.schema_create-media-entry-user-permission {:alias "mar.permissions/schema_create-media-entry-user-permission"
+                                           {:media_entry_user_permissions.schema_create-media-entry-user-permission {:alias "mar.permissions/schema_create-media-entry-user-permission"
                                                                                                                     :wl [:get_metadata_and_previews :get_full_size :edit_metadata :edit_permissions]}}]}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
                                 {:raw [{:media_entries {}}],
                                  :raw-schema-name :media_entries-raw
@@ -853,7 +878,7 @@
                                            {:media_entry_group_permissions.schema_create-media-entry-group-permission {:alias "mar.permissions/schema_create-media-entry-group-permission"
                                                                                                                        :wl [:get_metadata_and_previews :get_full_size :edit_metadata]}}]}])
 
-(def top-level-permissions-schema {:media_entry_user_permissions.schema_export_media-entry-permissions-all {:media_entry (get-schema :media_entries.schema_export-media-entry-perms)
+(defn top-level-permissions-schema [] {:media_entry_user_permissions.schema_export_media-entry-permissions-all {:media_entry (get-schema :media_entries.schema_export-media-entry-perms)
                                                                                                             :users [(get-schema :media_entry_user_permissions.schema_export-media-entry-user-permission)]
                                                                                                             :groups [(get-schema :media_entry_group_permissions.schema_export-media-entry-group-permission)]}
 
@@ -906,7 +931,7 @@
                                             {:vocabularies.schema_perms-update-user-or-group {:alias "mar.vocabularies/schema_perms-update-user-or-group"
                                                                                               :wl [:use :view]}}]}])
 
-(def top-level-vocabularies-schema {:vocabularies.schema_export-perms_all
+(defn top-level-vocabularies-schema [] {:vocabularies.schema_export-perms_all
                                      {:vocabulary (get-schema :vocabularies.schema_export-perms_all_vocabulary)
                                       :users [(get-schema :vocabularies.vocabulary_user_permissions)]
                                       :groups [(get-schema :vocabularies.schema_export-group-perms)]}})

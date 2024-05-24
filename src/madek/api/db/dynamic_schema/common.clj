@@ -39,7 +39,7 @@
                   :vocabularies.schema_export-perms_all_vocabulary
                   :vocabularies.vocabulary_user_permissions
                   :vocabularies.schema_export-group-perms
-                  ] key) (println ">o> set-schema => ANY ???, key=" key))
+                  ] key) (println ">o> set-schema => ANY ???, key=" (first key)))
 
   (swap! schema-cache assoc key (into {} value)))
 
