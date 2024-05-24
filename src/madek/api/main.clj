@@ -5,9 +5,7 @@
    [clojure.tools.cli :as cli]
    [logbug.catcher :as catcher]
    [logbug.thrown]
-
    [madek.api.cli_config_parser :as cli_parser]
-
    [madek.api.constants]
    [madek.api.db.core :as db]
    [madek.api.db.dynamic_schema.schema_cache :refer [init-schema-by-db]]
@@ -15,11 +13,7 @@
    [madek.api.utils.exit :as exit]
    [madek.api.utils.logging :as logging]
    [madek.api.utils.nrepl :as nrepl]
-   ;; TODO: this will cause initial loading
-   ;[madek.api.web :as web]
-
    [madek.api.utils.rdbms :as rdbms]
-
    [pg-types.all]
    [taoensso.timbre :refer [info]]))
 
@@ -75,13 +69,11 @@
    (info "Effective startup options " options)
    (info "Effective startup config " (get-config))
     ; WIP switching to new db container; remove old rdbms later
-    ;(rdbms/initialize (config/get-db-spec :api))
+   (rdbms/initialize (config/get-db-spec :api))
    (db/init options)
     ;
    (nrepl/init options)
    (madek.api.constants/initialize (get-config))
-
-    ;; TODO: fetch schemas from db
    (init-schema-by-db)
    (dynamic-web-initialize options)
    (info 'madek.api.main "... initialized")))
