@@ -641,7 +641,7 @@
                         sd/ring-wrap-authorization-view]
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:collection_id s/Uuid}}
-           :responses {200 {:body [(get-schema :media_entry_user_permissions.schema_export-collection-user-permission)]}}}}]
+           :responses {200 {:body [(get-schema :collection_user_permissions.schema_export-collection-user-permission)]}}}}]
 
    ["/user/:user_id"
     {:get {:summary "Get collection user permissions."
@@ -653,7 +653,7 @@
            :coercion reitit.coercion.schema/coercion
            :parameters {:path {:collection_id s/Uuid
                                :user_id s/Uuid}}
-           :responses {200 {:body (get-schema :media_entry_user_permissions.schema_export-collection-user-permission)}}}
+           :responses {200 {:body (get-schema :collection_user_permissions.schema_export-collection-user-permission)}}}
 
      :post {:summary "Create collection user permissions."
             :swagger {:produces "application/json"}
@@ -664,8 +664,8 @@
             :coercion reitit.coercion.schema/coercion
             :parameters {:path {:collection_id s/Uuid
                                 :user_id s/Uuid}
-                         :body (get-schema :media_entry_user_permissions.schema_create-collection-user-permission)}
-            :responses {200 {:body (get-schema :media_entry_user_permissions.schema_export-collection-user-permission)}}}
+                         :body (get-schema :collection_user_permissions.schema_create-collection-user-permission)}
+            :responses {200 {:body (get-schema :collection_user_permissions.schema_export-collection-user-permission)}}}
 
      :delete {:summary "Delete collection user permissions."
               :swagger {:produces "application/json"}
@@ -676,7 +676,7 @@
               :coercion reitit.coercion.schema/coercion
               :parameters {:path {:collection_id s/Uuid
                                   :user_id s/Uuid}}
-              :responses {200 {:body (get-schema :media_entry_user_permissions.schema_export-collection-user-permission)}}}}]
+              :responses {200 {:body (get-schema :collection_user_permissions.schema_export-collection-user-permission)}}}}]
 
    ["/user/:user_id/:perm_name/:perm_val"
     {:put {:summary "Update collection user permissions"
@@ -690,7 +690,7 @@
                                                   "edit_metadata_and_relations"
                                                   "edit_permissions")
                                :perm_val s/Bool}}
-           :responses {200 {:body (get-schema :media_entry_user_permissions.schema_export-collection-user-permission)}}}}]
+           :responses {200 {:body (get-schema :collection_user_permissions.schema_export-collection-user-permission)}}}}]
 
    ["/groups"
     {:get
