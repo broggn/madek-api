@@ -2,6 +2,7 @@
   (:require
    [madek.api.db.dynamic_schema.schema_logger :refer [slog]]
    [schema.core :as s]
+
    [taoensso.timbre :refer [error]]))
 
 (def schema-cache (atom {}))

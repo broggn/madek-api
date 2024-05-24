@@ -31,11 +31,11 @@
 (def schema-subtype (s/enum "Person" "PeopleGroup" "PeopleInstitutionalGroup"))
 
 (def schema-meta_datum (s/enum "MetaDatum::Text"
-                         "MetaDatum::TextDate"
-                         "MetaDatum::JSON"
-                         "MetaDatum::Keywords"
-                         "MetaDatum::People"
-                         "MetaDatum::Roles"))
+                               "MetaDatum::TextDate"
+                               "MetaDatum::JSON"
+                               "MetaDatum::Keywords"
+                               "MetaDatum::People"
+                               "MetaDatum::Roles"))
 
 (def schema-allowed_people_subtypes (s/enum "People" "PeopleGroup"))
 
@@ -206,12 +206,12 @@
 
 (def schema_sorting_types
   (s/enum "created_at ASC"
-    "created_at DESC"
-    "title ASC"
-    "title DESC"
-    "last_change"
-    "manual ASC"
-    "manual DESC"))
+          "created_at DESC"
+          "title ASC"
+          "title DESC"
+          "last_change"
+          "manual ASC"
+          "manual DESC"))
 
 (def create-collections-schema [{:raw [{:collections {}}],
                                  :raw-schema-name :collections-schema-raw
