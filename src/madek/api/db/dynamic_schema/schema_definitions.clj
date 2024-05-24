@@ -251,7 +251,7 @@
                                                                "id" "collection_id"}}}
                                        {:collection_user_permissions {:wl ["me_get_metadata_and_previews" "me_edit_permission" "me_edit_metadata_and_relations"]
                                                                       :rename {"get_metadata_and_previews" "me_get_metadata_and_previews"
-                                                                               "edit_permission" "me_edit_permission"
+                                                                               "edit_permissions" "me_edit_permission"
                                                                                "edit_metadata_and_relations" "me_edit_metadata_and_relations"}}}
                                        {:_additional (concat schema_pagination_raw schema_full_data_raw)}],
                                  :raw-schema-name :collections-collection_user_permission-schema-raw

@@ -182,11 +182,10 @@
   (let [
 
         existing-keys (cond
-                        (instance? clojure.lang.PersistentVector db-meta) ;; OK
+                        (or (instance? clojure.lang.PersistentVector db-meta)(instance?  clojure.lang.LazySeq db-meta)) ;; OK
                         (do
                           ;(println ">o> ?????3 clojure.lang.PersistentVector")
                           (set (map :column_name (into [] db-meta))))
-
 
                         (instance? clojure.lang.PersistentHashMap db-meta)
 
@@ -247,7 +246,10 @@
 
                         :else
                         (do
-                          (println ">o> Something failed" (class db-meta))
+                          (println ">o> ERROR: Something failed, missing handler for db-meta.type=" (class db-meta))
+                          ;(println ">o> type?" (type db-meta))
+                          ;(println ">o> db-meta="  db-meta)
+                          ;(println ">o> db-meta="  (set (map :column_name (into [] db-meta))))
                           (System/exit 0))
                         )
 
@@ -425,7 +427,6 @@
 
 
 
-                                      _ (validate-keys table-name db-meta wl-attr bl-attr "RAW-DEFINITION")
 
                                       ;debug-info {
                                       ;            ;:table table-name
@@ -445,15 +446,17 @@
                                       ;_ (when-not (and (nil? wl-attr) (nil? bl-attr))
                                       ;    (println ">o> !!!!!!!!!!! VALIDATION:" wl-validation " / " bl-validation))
 
-
-
-                                      res-renamed (if (nil? rename-attr)
+                                      db-meta (if (nil? rename-attr)
                                                     db-meta
                                                     (rename-column-names db-meta rename-attr))
+
+                                      _ (validate-keys table-name db-meta wl-attr bl-attr "RAW-DEFINITION")
+
+
                                       res-wl-bl (cond
-                                                  (not (nil? bl-attr)) (remove-maps-by-entry-values res-renamed :column_name bl-attr)
-                                                  (not (nil? wl-attr)) (keep-maps-by-entry-values res-renamed :column_name wl-attr)
-                                                  :else res-renamed)
+                                                  (not (nil? bl-attr)) (remove-maps-by-entry-values db-meta :column_name bl-attr)
+                                                  (not (nil? wl-attr)) (keep-maps-by-entry-values db-meta :column_name wl-attr)
+                                                  :else db-meta)
                                       res3 (postgres-cfg-to-schema table-name res-wl-bl)]
                                   (into inner-acc res3))
 
