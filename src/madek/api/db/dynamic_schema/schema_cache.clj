@@ -1,14 +1,12 @@
 (ns madek.api.db.dynamic_schema.schema_cache
   (:require
+   [madek.api.db.dynamic_schema.common :refer [get-validation-cache set-schema]]
+
    [madek.api.db.dynamic_schema.core :refer [create-dynamic-schema
                                              init-enums-by-db]]
-
-   [madek.api.db.dynamic_schema.common :refer [get-validation-cache set-schema]]
    [madek.api.db.dynamic_schema.schema_definitions :as d]
 
-   [taoensso.timbre :refer [debug info warn error errorf]]
-
-  ))
+   [taoensso.timbre :refer [debug info warn error errorf]]))
 
 ;(defn set-schema-by-map [schema-map]
 ;         (println ">o> WTF1????  set-schema-by-map")
@@ -67,17 +65,12 @@
         _ (println ">o> _et-schema => ANY after this >top-level-vocabularies-schema< will be called")
         _ (set-schema-by-map (d/top-level-vocabularies-schema))
         _ (set-schema-by-map (d/top-level-permissions-schema))
-        _ (set-schema-by-map (d/top-level-media_entries-schema ))
+        _ (set-schema-by-map (d/top-level-media_entries-schema))
 
-        _ (let [
-                errors (get-validation-cache)
+        _ (let [errors (get-validation-cache)
                 _ (if (empty? errors)
                     (info "[init-schema-by-db] Schema-Validation is OK, no differences between db and generated schema-definitions recognized.")
-                    (error "[init-schema-by-db] Schema-Validation failed:" errors)
-                    )
-                ])
-
-        ]))
+                    (error "[init-schema-by-db] Schema-Validation failed:" errors))])]))
 
 ;;; Example to save/fetch schema-configuration ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

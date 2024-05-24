@@ -752,4 +752,3 @@
                                                   "edit_metadata_and_relations")
                                :perm_val s/Bool}}
            :responses {200 {:body (get-schema :collection_group_permissions.schema_export-collection-group-permission)}}}}]])
-

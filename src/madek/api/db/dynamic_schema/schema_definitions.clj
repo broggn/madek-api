@@ -115,17 +115,14 @@
                                    {}
 
                                    ;{:bl ["test-id" "abc"]} ;; test-case
-
-                                   },
+                                   }
                                   {:_additional (concat schema_pagination_raw schema_full_data_raw)}]
                             :raw-schema-name :groups-schema-with-pagination-raw
 
                             :schemas [{:groups.schema-query-groups {:key-types "optional" :alias "schema_query-groups"
 
                                                                     ;:wl [:test-id :abc] ;; test-case
-
                                                                     }}]}
-
                            {:raw [{:groups {}}],
                             :raw-schema-name :groups-schema-raw
                             :schemas [{:groups.schema-update-group {:alias "schema_update-group"
@@ -525,16 +522,14 @@
                                                                                           :wl [:id :description]}}]}])
 
 (def create-favorite_collections-schema [{:raw [{:favorite_collections {}}],
-                                   :raw-schema-name :favorite_collections-raw
+                                          :raw-schema-name :favorite_collections-raw
 
-                                   :schemas [{:favorite_collections.schema_favorite_collection_export {:alias "mar.favorite_collections/schema_favorite_collection_export"
-                                                                                                       :key-values "optional"
-                                                                                                       :types [{:user_id {:key-type TYPE_NOTHING}}]}}]}])
+                                          :schemas [{:favorite_collections.schema_favorite_collection_export {:alias "mar.favorite_collections/schema_favorite_collection_export"
+                                                                                                              :key-values "optional"
+                                                                                                              :types [{:user_id {:key-type TYPE_NOTHING}}]}}]}])
 
-(def create-media-files-schema [{:raw [{:media_files {
-                                                      :wl ["id" "media_entry_id" "media_type" "content_type" "filename" "size" "updated_at" "created_at"]
-                                                      :_additional [{:column_name "previews", :data_type "any"}]
-                                                      }}],
+(def create-media-files-schema [{:raw [{:media_files {:wl ["id" "media_entry_id" "media_type" "content_type" "filename" "size" "updated_at" "created_at"]
+                                                      :_additional [{:column_name "previews", :data_type "any"}]}}],
                                  :raw-schema-name :media_files-raw
                                  :schemas [{:media_files.schema_export-media-file {:alias "mar.media-files/schema_export-media-file"
                                                                                    :types [{:media_type {:value-type TYPE_MAYBE}}]}}]}])
@@ -641,15 +636,15 @@
                                                                                              {:meta_data {:value-type TYPE_MAYBE}}]}}]}])
 
 (defn top-level-media_entries-schema [] {:media-entries-schema-schema_publish_failed {:message {:is_publishable s/Bool
-                                                                                            :media_entry_id s/Uuid
-                                                                                            :has_meta_data [{s/Any s/Bool}]}}
+                                                                                                :media_entry_id s/Uuid
+                                                                                                :has_meta_data [{s/Any s/Bool}]}}
 
-                                     :media-entries-schema-schema_query_media_entries_related_result {:media_entries [(get-schema :media-entries.schema_export_media_entry)]
-                                                                                                      :meta_data [[(get-schema :media-entries.schema_export_meta_data)]]
-                                                                                                      :media_files [(s/maybe (get-schema :media-files.schema_export_media_file))]
-                                                                                                      :previews [[(s/maybe (get-schema :media-entries.schema_export_preview))]]
-                                                                                                      (s/optional-key :col_arcs) [(get-schema :media-entries.schema_export_col_arc)]
-                                                                                                      (s/optional-key :col_meta_data) [(get-schema :media-entries.schema_export_meta_data)]}})
+                                         :media-entries-schema-schema_query_media_entries_related_result {:media_entries [(get-schema :media-entries.schema_export_media_entry)]
+                                                                                                          :meta_data [[(get-schema :media-entries.schema_export_meta_data)]]
+                                                                                                          :media_files [(s/maybe (get-schema :media-files.schema_export_media_file))]
+                                                                                                          :previews [[(s/maybe (get-schema :media-entries.schema_export_preview))]]
+                                                                                                          (s/optional-key :col_arcs) [(get-schema :media-entries.schema_export_col_arc)]
+                                                                                                          (s/optional-key :col_meta_data) [(get-schema :media-entries.schema_export_meta_data)]}})
 
 (def create-meta_keys-schema [{:raw [{:meta_keys {}}],
                                :raw-schema-name :meta_keys-raw
@@ -805,37 +800,12 @@
                                 {:raw [{:media_entry_user_permissions {}}],
                                  :raw-schema-name :media_entry_user_permissions-raw
 
-
-
-
-
-
-
-
-
-
-
-
-
                                  :schemas [{:media_entry_user_permissions.schema_export-media-entry-user-permission {:alias "mar.permissions/schema_export-media-entry-user-permission"
-                                                                                                                    :types [{:updator_id {:value-type TYPE_MAYBE}}
-                                                                                                                            {:delegation_id {:value-type TYPE_MAYBE}}]}}
+                                                                                                                     :types [{:updator_id {:value-type TYPE_MAYBE}}
+                                                                                                                             {:delegation_id {:value-type TYPE_MAYBE}}]}}
 
                                            {:media_entry_user_permissions.schema_create-media-entry-user-permission {:alias "mar.permissions/schema_create-media-entry-user-permission"
-                                                                                                                    :wl [:get_metadata_and_previews :get_full_size :edit_metadata :edit_permissions]}}]}
-
-
-
-
-
-
-
-
-
-
-
-
-
+                                                                                                                     :wl [:get_metadata_and_previews :get_full_size :edit_metadata :edit_permissions]}}]}
 
                                 {:raw [{:media_entries {}}],
                                  :raw-schema-name :media_entries-raw
@@ -879,12 +849,12 @@
                                                                                                                        :wl [:get_metadata_and_previews :get_full_size :edit_metadata]}}]}])
 
 (defn top-level-permissions-schema [] {:media_entry_user_permissions.schema_export_media-entry-permissions-all {:media_entry (get-schema :media_entries.schema_export-media-entry-perms)
-                                                                                                            :users [(get-schema :media_entry_user_permissions.schema_export-media-entry-user-permission)]
-                                                                                                            :groups [(get-schema :media_entry_group_permissions.schema_export-media-entry-group-permission)]}
+                                                                                                                :users [(get-schema :media_entry_user_permissions.schema_export-media-entry-user-permission)]
+                                                                                                                :groups [(get-schema :media_entry_group_permissions.schema_export-media-entry-group-permission)]}
 
-                                   :collection_permissions-all.schema_export-collection-permissions-all {:media-resource (get-schema :collections-perms.schema_export-collection-perms)
-                                                                                                         :users [(get-schema :collection_user_permissions.schema_export-collection-user-permission)]
-                                                                                                         :groups [(get-schema :collection_group_permissions.schema_export-collection-group-permission)]}})
+                                       :collection_permissions-all.schema_export-collection-permissions-all {:media-resource (get-schema :collections-perms.schema_export-collection-perms)
+                                                                                                             :users [(get-schema :collection_user_permissions.schema_export-collection-user-permission)]
+                                                                                                             :groups [(get-schema :collection_group_permissions.schema_export-collection-group-permission)]}})
 
 (def create-vocabularies-schema [{:raw [{:vocabularies {}}],
                                   :raw-schema-name :vocabularies-raw
@@ -932,6 +902,6 @@
                                                                                               :wl [:use :view]}}]}])
 
 (defn top-level-vocabularies-schema [] {:vocabularies.schema_export-perms_all
-                                     {:vocabulary (get-schema :vocabularies.schema_export-perms_all_vocabulary)
-                                      :users [(get-schema :vocabularies.vocabulary_user_permissions)]
-                                      :groups [(get-schema :vocabularies.schema_export-group-perms)]}})
+                                        {:vocabulary (get-schema :vocabularies.schema_export-perms_all_vocabulary)
+                                         :users [(get-schema :vocabularies.vocabulary_user_permissions)]
+                                         :groups [(get-schema :vocabularies.schema_export-group-perms)]}})
