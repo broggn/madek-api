@@ -95,7 +95,14 @@
        m))
    maps))
 
-(defn create-raw-schema [data]
+(defn create-raw-schema
+  "Creates a schema by :raw-config and fetched meta-config from the database.
+  Expects an array of maps like this:
+[{
+  :raw [{:<table-name> {}}]
+  :raw-schema-name <name-how-it-should-be-saved-within-cache>
+}]"
+  [data]
   (let [raw (data :raw)
         raw-schema-name (data :raw-schema-name)
         result []
@@ -216,7 +223,14 @@
   (filter (fn [[key _]]
             (some #{key} keys-to-keep)) data))
 
-(defn create-schemas-by-config [data]
+(defn create-schemas-by-config
+  "Creates a specific schema by already existing schema (:raw-schema-name).
+Expects an array of maps like this:
+[{
+:raw-schema-name <name-how-it-should-be-saved-within-cache>
+:schemas [{:<name-how-it-should-be-saved-within-cache> {:wl [] :bl [] :cache-as [] :types [] :key-types [] :value-types []}}]
+}]"
+  [data]
   (let [schema-def (:schemas data)
         raw-schema-name (:raw-schema-name data)
 
@@ -258,7 +272,16 @@
                        acc item))
              result schema-def)] res))
 
-(defn create-dynamic-schema [cfg-array]
+(defn create-dynamic-schema
+  "Expects an array of maps like this: (:schemas is optional)
+  [{
+    :raw [{:<table-name> {}}]
+    :raw-schema-name <name-how-it-should-be-saved-within-cache>
+
+    :schemas [{:<name-how-it-should-be-saved-within-cache> {:wl [] :bl [] :cache-as [] :types [] :key-types [] :value-types []}}]
+  }]
+  "
+  [cfg-array]
   (doseq [c cfg-array]
     (let [_ (create-raw-schema c)
           _ (when (contains? c :schemas)

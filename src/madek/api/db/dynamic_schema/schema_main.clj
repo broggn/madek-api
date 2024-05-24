@@ -1,4 +1,4 @@
-(ns madek.api.db.dynamic_schema.schema_cache
+(ns madek.api.db.dynamic_schema.schema_main
   (:require
    [madek.api.db.dynamic_schema.common :refer [get-validation-cache set-schema]]
    [madek.api.db.dynamic_schema.core :refer [create-dynamic-schema init-enums-by-db]]
@@ -52,7 +52,7 @@
         _ (let [errors (get-validation-cache)
                 _ (if (empty? errors)
                     (info "[init-schema-by-db] Schema-Validation is OK, no differences between db and generated schema-definitions recognized.")
-                    (error "[init-schema-by-db] Schema-Validation failed:" errors))])]))
+                    (error "[init-schema-by-db] Schema-Validation failed: " (count errors) " erros occured\nDetails:\n" errors))])]))
 
 ;;; Example to save/fetch schema-configuration ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
