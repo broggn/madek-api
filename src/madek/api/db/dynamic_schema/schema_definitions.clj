@@ -18,6 +18,7 @@
                    "str" s/Str
                    "any" s/Any})
 
+;; ### TODO: not yet defined by db? ###################################################
 (def schema_full_data_raw [{:column_name "full_data", :data_type "boolean"}])
 
 (def schema_pagination_raw [{:column_name "page", :data_type "int4"}
@@ -40,6 +41,17 @@
 (def schema-allowed_people_subtypes (s/enum "People" "PeopleGroup"))
 
 (def schema-scope (s/enum "view" "use"))
+
+(def schema_sorting_types
+  (s/enum "created_at ASC"
+          "created_at DESC"
+          "title ASC"
+          "title DESC"
+          "last_change"
+          "manual ASC"
+          "manual DESC"))
+
+;; ####################################################################################
 
 (defn type-mapping-enums [key get-enum] "Maps a <table>.<key> to a Spec type, eg.: enum OR schema-definition "
   (let [enum-map {"collections.default_resource_type" (get-enum :collections_default_resource_type)
@@ -203,15 +215,6 @@
                                                                              :key-types "optional"
                                                                              :types [{:id {:key-type TYPE_NOTHING}}]
                                                                              :wl [:name :is_active :configuration :creator_id :created_at :updated_at]}}]}])
-
-(def schema_sorting_types
-  (s/enum "created_at ASC"
-          "created_at DESC"
-          "title ASC"
-          "title DESC"
-          "last_change"
-          "manual ASC"
-          "manual DESC"))
 
 (def create-collections-schema [{:raw [{:collections {}}],
                                  :raw-schema-name :collections-schema-raw

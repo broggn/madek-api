@@ -14,22 +14,22 @@
 ;       :external_uri (first (person :external_uris)))
 ;      (dissoc :previous_id :searchable)))
 
-(defn id-where-clause
-  [id]
-  (if
-   (re-matches
-    #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-    id)
-    (sql/where [:or [:= :id id] [:= :institutional_id id]])
-    (sql/where [:= :institutional_id id])))
+;(defn id-where-clause
+;  [id]
+;  (if
+;   (re-matches
+;    #"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+;    id)
+;    (sql/where [:or [:= :id id] [:= :institutional_id id]])
+;    (sql/where [:= :institutional_id id])))
 
-(defn jdbc-id-where-clause
-  [id]
-  (->
-   id
-   id-where-clause
-   sql-format
-   (update-in [0] #(clojure.string/replace % "WHERE" ""))))
+;(defn jdbc-id-where-clause
+;  [id]
+;  (->
+;   id
+;   id-where-clause
+;   sql-format
+;   (update-in [0] #(clojure.string/replace % "WHERE" ""))))
 
 ;### create person
 ;#############################################################
@@ -57,26 +57,26 @@
 ;##############################################################
 
 ;### index ####################################################################
-(defn- sql-base-query [full-data]
-  (let [sel (if (true? full-data)
-              (sql/select :*)
-              (sql/select :id :subtype :first_name :last_name :searchable))]
-    (-> sel (sql/from :people))))
+;(defn- sql-base-query [full-data]
+;  (let [sel (if (true? full-data)
+;              (sql/select :*)
+;              (sql/select :id :subtype :first_name :last_name :searchable))]
+;    (-> sel (sql/from :people))))
 
-(defn build-index-query
-  [query-params]
-  (let [full-data (-> query-params :full_data)]
-    (->
-     (sql-base-query full-data)
-     (sd/build-query-param-like query-params :searchable)
-     (sd/build-query-param-like query-params :description)
-     (sd/build-query-param-like query-params :institutional_id)
-     (sd/build-query-param-like query-params :pseudonym)
-     (sd/build-query-param-like query-params :first_name)
-     (sd/build-query-param-like query-params :last_name)
-     (sd/build-query-param query-params :subtype)
-     (pagination/add-offset-for-honeysql query-params)
-     sql-format)))
+;(defn build-index-query
+;  [query-params]
+;  (let [full-data (-> query-params :full_data)]
+;    (->
+;     (sql-base-query full-data)
+;     (sd/build-query-param-like query-params :searchable)
+;     (sd/build-query-param-like query-params :description)
+;     (sd/build-query-param-like query-params :institutional_id)
+;     (sd/build-query-param-like query-params :pseudonym)
+;     (sd/build-query-param-like query-params :first_name)
+;     (sd/build-query-param-like query-params :last_name)
+;     (sd/build-query-param query-params :subtype)
+;     (pagination/add-offset-for-honeysql query-params)
+;     sql-format)))
 
 ;; TODO: not in use?
 ;(defn handle_query-people

@@ -184,7 +184,7 @@
                          (= key-type TYPE_NOTHING) (keyword column_name)
                          :else (keyword column_name))
 
-        ;; revise schema types by mapping
+        ;; revise schema types by mapping (TODO: raw-handling is already doing this, to remove?)
         type-mapping-key (str (name table-name) "." (name column_name))
         type-mapping-enums-res (type-mapping-enums type-mapping-key get-enum)
         valueSection (cond
